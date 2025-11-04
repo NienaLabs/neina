@@ -78,7 +78,7 @@ const data = [
       icon: GalleryVerticalEnd,
     },
     {
-      label: "Show delete pages",
+      label: "Show deleted pages",
       icon: Trash,
     },
     {

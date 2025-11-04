@@ -3,11 +3,13 @@
 import { type LucideIcon } from "lucide-react"
 import {usePathname} from 'next/navigation'
 import {useState,useEffect} from 'react'
+import Link from 'next/link'
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+
 
 export function NavMain({
   items,
@@ -16,7 +18,6 @@ export function NavMain({
     title: string
     url: string
     icon: LucideIcon
-    isActive?: boolean
   }[]
 }) {
   const pathname = usePathname()
@@ -31,10 +32,10 @@ export function NavMain({
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild isActive={clientPathname===item.url}>
-            <a href={item.url} className="ml-2">
+            <Link href={item.url} className="ml-2">
               <item.icon />
               <span>{item.title}</span>
-            </a>
+            </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}

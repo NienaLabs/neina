@@ -32,8 +32,7 @@ export const data = {
     {
       title: "Interview AI",
       url: "/interview",
-      icon: Inbox,
-      badge: "10",
+      icon: Inbox
     },
   ],
   navSecondary: [

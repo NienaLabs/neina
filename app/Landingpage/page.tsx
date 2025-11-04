@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { ArrowRightIcon, CheckIcon } from "lucide-react";
+import { ArrowRightIcon, CheckIcon } from "@heroicons/react/24/outline";
 
 type Feature = {
   name: string;
@@ -68,11 +68,12 @@ export default function LandingPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem("authToken", "dummy-token");
     }
-    router.push('/auth/sign-up');
+   
+    router.push('/Onboarding');
   };
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] w-full bg-linear-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 overflow-y-auto">
+    <main className="min-h-[calc(100vh-4rem)] w-full bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 overflow-y-auto">
       {/* Hero Section */}
       <section className="relative w-full py-16 md:py-20">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
@@ -82,7 +83,7 @@ export default function LandingPage() {
 
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight">
             Land Your Dream Job with{" "}
-            <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               AI-Powered
             </span>{" "}
             Tools
@@ -96,7 +97,7 @@ export default function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleGetStarted}
-              className="px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center"
             >
               Get Started for Free
               <ArrowRightIcon className="ml-2 h-5 w-5" />
@@ -120,7 +121,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-        <div className="absolute inset-0 bg-grid-gray-200/50 dark:bg-grid-gray-800/50 mask-[linear-gradient(180deg,white,transparent)]"></div>
+        <div className="absolute inset-0 bg-grid-gray-200/50 dark:bg-grid-gray-800/50 [mask-image:linear-gradient(180deg,white,transparent)]"></div>
       </section>
 
       {/* Features Section */}
@@ -132,7 +133,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
               Our comprehensive tools are designed to give you an edge in
-              today&apos;s competitive job market.
+              today's competitive job market.
             </p>
           </div>
 
@@ -197,7 +198,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-linear-to-r from-blue-600 to-purple-600 w-full">
+      <section className="bg-gradient-to-r from-blue-600 to-purple-600 w-full">
         <div className="w-full max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">

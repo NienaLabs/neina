@@ -18,5 +18,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
     // Protected routes
-    matcher: ["/account/settings"]
+    matcher: ["/account/settings", "/Onboarding", "/Dashboard", "/Pricing"]
 }

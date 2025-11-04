@@ -1,5 +1,8 @@
+'use client'
+
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { NavActions } from "@/components/sidebar/nav-actions"
+import {usePathname} from 'next/navigation'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,7 +17,14 @@ import {
 } from "@/components/ui/sidebar"
 
 export default function Layout({children}:{children:React.ReactNode}) {
-  return (
+    const pathname = usePathname()
+      
+
+const breadcrumbText = pathname === '/dashboard' ? 'Dashboard' 
+  : pathname === '/resume' ? 'Resume AI'
+  : pathname === '/job-search' ? 'Job Search'
+  : 'Job AI';
+    return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
@@ -29,7 +39,7 @@ export default function Layout({children}:{children:React.ReactNode}) {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbPage className="line-clamp-1">
-                    Project Management & Task Tracking
+                    {breadcrumbText}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>

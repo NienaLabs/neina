@@ -4,6 +4,7 @@ import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 import { AuthProvider } from "@/providers/AuthUIProvider";
 import {Toaster} from 'sonner'
+import Header from "@/components/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/*<Header/>*/}
         {children}
       </body>
     </html>

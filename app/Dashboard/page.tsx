@@ -133,7 +133,7 @@ const Stat: React.FC<StatProps> = ({ label, value, color }) => {
       </div>
       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
         <div
-          className={`h-2.5 rounded-full bg-gradient-to-r ${getGradient(color)}`}
+          className={`h-2.5 rounded-full bg-linear-to-r ${getGradient(color)}`}
           style={{
             width: `${safeValue}%`,
             transition: "width 1s ease-in-out",
@@ -357,7 +357,7 @@ const Dashboard = () => {
         <main className="flex-1 overflow-y-auto pt-6 pb-10 px-4 sm:px-6 lg:px-8">
           {/* Welcome Section */}
           <section className="mb-8">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 md:p-8 text-white">
+            <div className="bg-linear-to-r from-blue-600 to-purple-600 rounded-2xl p-6 md:p-8 text-white">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm font-medium text-blue-100">Welcome back, {new Date().toLocaleDateString('en-US', { weekday: 'long' })}! 👋</p>
@@ -457,7 +457,7 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   {userData.recentActivity?.slice(0, 3).map((activity, index) => (
                     <div key={index} className="flex items-start pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0 last:pb-0">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                      <div className="shrink-0 h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
                         {activity.type === 'application' && <DocumentTextIcon className="h-5 w-5" />}
                         {activity.type === 'interview' && <ChatBubbleLeftRightIcon className="h-5 w-5" />}
                         {activity.type === 'resume_updated' && <ArrowUpRightIcon className="h-5 w-5" />}
@@ -524,7 +524,7 @@ const Dashboard = () => {
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div 
-                        className="h-2 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500"
+                        className="h-2 rounded-full bg-linear-to-r from-yellow-500 to-orange-500"
                         style={{ width: `${userData.aiInsight.readiness}%` }}
                       ></div>
                     </div>
@@ -537,7 +537,7 @@ const Dashboard = () => {
                   </h4>
                   <div className="space-y-3">
                     <div className="flex items-start">
-                      <div className="flex-shrink-0 h-5 w-5 text-green-500 mr-2 mt-0.5">
+                      <div className="shrink-0 h-5 w-5 text-green-500 mr-2 mt-0.5">
                         <CheckCircleIcon className="h-5 w-5" />
                       </div>
                       <p className="text-sm text-gray-700 dark:text-gray-300">

@@ -68,7 +68,8 @@ export default function LandingPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem("authToken", "dummy-token");
     }
-    router.push('/auth/sign-up');
+   
+    router.push('/Onboarding');
   };
 
   return (

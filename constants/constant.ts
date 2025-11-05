@@ -53,3 +53,8 @@ export const data = {
     },
   ],
   }
+
+  export const resumeTags =[
+   "critical",
+   "urgent"
+  ]

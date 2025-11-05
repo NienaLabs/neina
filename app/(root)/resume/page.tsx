@@ -206,7 +206,7 @@ const Page = () => {
           {/* Tags */}
           <div className="items-center justify-center flex-col flex gap-3">
             <h1 className="text-center font-semibold">Issues</h1>
-            <div className="gap-5 flex flex-row justify-between ml-auto items-center">
+            <div className="gap-5 flex flex-col sm:flex-row justify-between ml-auto items-center">
               {resumeTags.map((tag: string) => (
                 <div
                   key={tag}

@@ -89,7 +89,7 @@ const columns: ColumnDef<ResumeData>[] = [
           {/* Name + Status */}
           <div className="flex flex-col">
             <Link
-              href={`/dashboard/resumee/edit/${resume.id}`}
+              href={`/resume/edit/${resume.id}`}
               className="font-medium text-gray-900 dark:text-white hover:text-amber-600 transition-colors"
             >
               {resume.name}

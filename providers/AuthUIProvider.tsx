@@ -20,9 +20,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 router.refresh()
             }}
             Link={Link}
-             social={{
-            providers: ["google"]
-          }}
+            social={{
+                providers: ["google"]
+            }}
+            redirectTo="/dashboard"
         >
             {children}
         </AuthUIProvider>

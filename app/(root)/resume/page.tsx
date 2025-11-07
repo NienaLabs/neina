@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { resumeTags } from '@/constants/constant'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, Edit, FileDown, Trash2, Star ,Upload} from 'lucide-react'
+import { MoreHorizontal, Edit, FileDown, Trash2, Star ,Upload,Info} from 'lucide-react'
 import {
   ColumnDef,
   flexRender,
@@ -198,13 +198,16 @@ const Page = () => {
           </div>
 
           {/* Resume Details */}
-          <div className="w-0 flex-1 text-sm text-gray-950 dark:text-white">
+          <div className="flex flex-col gap-5 text-sm text-gray-950 dark:text-white">
             <p className="font-medium">Resume strength: 70%</p>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">Fairly good</p>
+              <Badge>
+              Fairly good
+              <Info/>
+            </Badge>
           </div>
 
           {/* Tags */}
-          <div className="items-center justify-center flex-col flex gap-3">
+          <div className="items-center ml-auto justify-center flex-col flex gap-3">
             <h1 className="text-center font-semibold">Issues</h1>
             <div className="gap-5 flex flex-col sm:flex-row justify-between ml-auto items-center">
               {resumeTags.map((tag: string) => (

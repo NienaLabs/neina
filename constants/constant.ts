@@ -6,6 +6,8 @@ import {
   Search,
   Settings2,
   Sparkles,
+  DownloadIcon,
+  Trash2
 } from "lucide-react"
 
 
@@ -67,7 +69,7 @@ export const data = {
     "linkedInProfile": "https://linkedin.com/in/username",
     "githubProfile": "https://github.com/username",
     "portfolio": "https://portfolio.com",
-    "otherLinks": ["https://medium.com/@username"]
+    "otherLinks": ["https://medium.com/@username","http://fuck you"]
   },
   "profile": "I am Adusei Williams, a self-motivated AI and software development student.",
   "objective": "To obtain a software engineering role to grow my technical expertise.",
@@ -159,101 +161,48 @@ export const data = {
 }
 
 export const analysisData={
-  "address": {
-    "email": "example@email.com",
-    "location": "Accra, Ghana",
-    "telephone": "+233 123 456 789",
-    "linkedInProfile": "https://linkedin.com/in/username",
-    "githubProfile": "https://github.com/username",
-    "portfolio": "https://portfolio.com",
-    "otherLinks": ["https://medium.com/@username"]
-  },
-  "profile": "I am Adusei Williams, a self-motivated AI and software development student.",
-  "objective": "To obtain a software engineering role to grow my technical expertise.",
-  "education": [
-    {
-      "institution": "University of Ghana",
-      "degree": "BSc. Computer Science",
-      "fieldOfStudy": "Computer Science",
-      "startDate": "2020-09",
-      "endDate": "2024-07",
-      "grade": "First Class",
-      "location": "Accra, Ghana",
-      "description": "Relevant coursework: AI, Algorithms, Data Structures"
-    }
-  ],
-  "experience": [
-    {
-      "title": "Software Engineer Intern",
-      "company": "LoopIn Technologies",
-      "location": "Remote",
-      "startDate": "2023-06",
-      "endDate": "2023-09",
-      "responsibilities": [
-        "Developed frontend components using React Native",
-        "Integrated Firebase Cloud Messaging"
-      ],
-      "achievements": ["Improved engagement by 30%"]
-    }
-  ],
-  "projects": [
-    {
-      "name": "Maya AI Assistant",
-      "description": "AI chatbot that personalizes user interactions.",
-      "technologies": ["Python", "TensorFlow", "React Native"],
-      "role": "Lead Developer",
-      "githubUrl": "https://github.com/username/maya-ai"
-    }
-  ],
-  "skills": {
-    "technical": ["Python", "React", "Spring Boot"],
-    "soft": ["Leadership", "Teamwork"],
-    "languages": ["English", "French"]
-  },
-  "certifications": [
-    {
-      "title": "AWS Cloud Practitioner",
-      "organization": "Amazon Web Services",
-      "year": "2024"
-    }
-  ],
-  "awards": [
-    {
-      "title": "Best Student Developer",
-      "issuer": "University of Ghana",
-      "year": "2023"
-    }
-  ],
-  "publications": [
-    {
-      "title": "Enhancing Resume Screening using NLP",
-      "journal": "IEEE Student Journal",
-      "year": "2024",
-      "link": "https://ieeexplore.ieee.org/document/xxxxxx"
-    }
-  ],
-  "customSections": [
-    {
-      "sectionName": "Volunteering",
-      "entries": [
+  "criticalFixes": 2,
+  "urgentFixes": 1,
+  "totalFixes": 5,
+  "fixes": {
+    "profile": [
+      {
+        "issue": "Too brief; lacks measurable achievements.",
+        "suggestion": "Add quantifiable results to demonstrate impact.",
+        "severity": "medium"
+      }
+    ],
+    "experience": [
+      {
+        "issue": "Missing employment dates.",
+        "suggestion": "Add start and end dates for each position.",
+        "severity": "critical"
+      }
+    ],
+    "skills": [
+      {
+        "issue": "List does not include role-relevant tools.",
+        "suggestion": "Include tools like Docker and CI/CD.",
+        "severity": "urgent"
+      }
+    ],
+    "volunteering": [
+      {
+        "issue": "Descriptions are vague.",
+        "suggestion": "Specify role, contribution, and results.",
+        "severity": "low"
+      }
+    ],
+    "customSections": {
+      "patents": [
         {
-          "title": "Volunteer Developer",
-          "organization": "Tech4Good",
-          "description": "Developed mobile apps for NGOs",
-          "year": "2023"
-        }
-      ]
-    },
-    {
-      "sectionName": "Hobbies",
-      "entries": [
-        {
-          "title": "Photography",
-          "description": "Landscape and urban photography enthusiast"
+          "issue": "Patent description too long.",
+          "suggestion": "Summarize it in one or two lines.",
+          "severity": "low"
         }
       ]
     }
-  ]
+  }
 }
 
 export const scoreData ={
@@ -289,3 +238,15 @@ export const scoreData ={
     ]
   }
 }
+
+export const editorButtons = [
+  {
+    name:"Export",
+    icon: DownloadIcon,
+   
+  },
+  {
+    name:"Delete",
+    icon: Trash2
+  }
+]

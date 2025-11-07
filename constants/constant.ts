@@ -31,7 +31,7 @@ export const data = {
     },
     {
       title: "Interview AI",
-      url: "/interview",
+      url: "/interview-ai",
       icon: Inbox
     },
   ],

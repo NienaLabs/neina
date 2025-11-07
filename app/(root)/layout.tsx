@@ -1,8 +1,8 @@
-'use client'
-
+"use client"
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { NavActions } from "@/components/sidebar/nav-actions"
 import {usePathname} from 'next/navigation'
+
 import {
   Breadcrumb,
   BreadcrumbItem,

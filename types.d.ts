@@ -95,13 +95,16 @@ interface ResumeAnalysis {
   /**
    * Number of issues considered critical (must-fix)
    */
-  criticalFixesCount: number
+  criticalFixes: number
 
   /**
    * Number of issues considered urgent but not critical
    */
-  urgentFixesCount: number
+  urgentFixes: number
 
+  low:number
+
+  totalFixes:number
   /**
    * Detailed fixes per section
    * Each section contains an array of issue objects
@@ -111,25 +114,42 @@ interface ResumeAnalysis {
     {
       issue: string
       suggestion: string
-      severity: 'critical' | 'urgent' | 'minor'
-    }[]
+      severity: 'critical' | 'urgent' | 'low'
+    }[],
+    string,Record<
+    string,
+       {
+          issue: string,
+          suggestion: string,
+          severity: string
+        }
+    
+    >
   >
 }
 
 interface ResumeScore {
-  /**
-   * Section-wise scoring between 0–100
-   */
-  sectionScores: Record<string, number>
-
-  /**
-   * Overall resume score for a specific job role
-   */
-  overallScore: number
-
-  /**
-   * Optional textual feedback summarizing performance
-   */
-  feedback?: string
+  scores: {
+    profile: number;
+    education: number;
+    experience: number;
+    projects: number;
+    skills: number;
+    certifications: number;
+    awards: number;
+    publications: number;
+    overallScore: number;
+  };
+  customSections: {
+    sectionName: string;
+    score: number;
+    remarks: string;
+  }[];
+  roleMatch: {
+    targetRole: string;
+    matchPercentage: number;
+    missingSkills: string[];
+    recommendations: string[];
+  };
 }
 

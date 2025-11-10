@@ -160,9 +160,10 @@ export const data = {
   ]
 }
 
-export const analysisData={
+export const analysisData:ResumeAnalysis={
   "criticalFixes": 2,
   "urgentFixes": 1,
+  "low":2,
   "totalFixes": 5,
   "fixes": {
     "profile": [
@@ -174,6 +175,10 @@ export const analysisData={
     ],
     "experience": [
       {
+        "issue": "Missing employment dates.",
+        "suggestion": "Add start and end dates for each position.",
+        "severity": "critical"
+      },{
         "issue": "Missing employment dates.",
         "suggestion": "Add start and end dates for each position.",
         "severity": "critical"
@@ -193,8 +198,15 @@ export const analysisData={
         "severity": "low"
       }
     ],
-    "customSections": {
+    "otherSections": {
       "patents": [
+        {
+          "issue": "Patent description too long.",
+          "suggestion": "Summarize it in one or two lines.",
+          "severity": "low"
+        }
+      ],
+       "volunteering": [
         {
           "issue": "Patent description too long.",
           "suggestion": "Summarize it in one or two lines.",
@@ -205,7 +217,7 @@ export const analysisData={
   }
 }
 
-export const scoreData ={
+export const scoreData:ResumeScore ={
   "scores": {
     "profile": 8.5,
     "education": 9.0,

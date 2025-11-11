@@ -612,7 +612,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
     <div className="text-xl font-semibold  flex items-center justify-between">
       <div className="flex flex-row gap-2 items-center">
            <h2 className="text-xl font-semibold mb-3">Certifications</h2>
-          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("certifcations")}</div>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("certifications")}</div>
         </div><Button
         variant="outline"
         size="sm"

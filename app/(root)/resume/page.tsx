@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { resumeTags } from '@/constants/constant'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, Edit, FileDown, Trash2, Star ,Upload,Info} from 'lucide-react'
+import { MoreHorizontal, Edit, FileDown, Trash2, Star ,Upload,Info, Aperture} from 'lucide-react'
 import {
   ColumnDef,
   flexRender,
@@ -207,27 +207,9 @@ const Page = () => {
           </div>
 
           {/* Tags */}
-          <div className="items-center ml-auto justify-center flex-col flex gap-3">
-            <h1 className="text-center font-semibold">Issues</h1>
-            <div className="gap-5 flex flex-col sm:flex-row justify-between ml-auto items-center">
-              {resumeTags.map((tag: string) => (
-                <div
-                  key={tag}
-                  className={cn(
-                    'p-2 rounded-lg border-l-10 ring-1',
-                    tag === 'critical'
-                      ? 'border-red-200 ring-red-300 bg-red-100'
-                      : 'border-green-200 bg-green-100 ring-green-300'
-                  )}
-                >
-                  <p>1 {tag}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          
           {/* Popover for Actions */}
-          <div className="mt-auto">
+          <div className="mt-auto ml-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -243,10 +225,16 @@ const Page = () => {
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                <DropdownMenuItem  className="flex items-center gap-2 cursor-pointer">
                   <Edit className="h-4 w-4 text-blue-500" />
                   Edit
                 </DropdownMenuItem>
+
+            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <Aperture className="h-4 w-4 text-blue-500" />
+                  Create New Extension
+                </DropdownMenuItem>
+
 
                 <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
                   <Upload className="h-4 w-4 text-amber-600" />

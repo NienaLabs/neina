@@ -4,10 +4,12 @@ import { Input } from '../ui/input'
 import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import { useState } from 'react'
-import { CircleArrowRight, Plus, Trash2,Blinds } from 'lucide-react'
+import { CircleArrowRight, Plus, Trash2,Blinds, Info } from 'lucide-react'
 import { extractionData } from '../../constants/constant'
+import Hint from '../hint'
+import { Badge } from '../ui/badge'
 
-const ResumeEditor = () => {
+const ResumeEditor = ({fixes}) => {
   const [editorState, setEditorState] = useState<ResumeExtraction>(extractionData)
 
   // ---------- Generic Updaters ----------
@@ -88,7 +90,92 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
     }))
   }
 
-  // ---------- Utility Renderer for simple array fields ----------
+ const handleFixes = (section: string) => {
+  let issue = ""
+  let suggestion = ""
+
+  // Normal (non-custom) sections
+  if (section !== "otherSections") {
+    const sectionFixes = fixes[section] || []
+    sectionFixes.forEach((fix) => {
+      issue += `\n ${fix.severity}: ${fix.issue}`
+      suggestion += `\n ${fix.suggestion}`
+    })
+
+    if (!sectionFixes.length) return null
+
+    return (
+      <Hint
+        hint={
+          <div className="space-y-2 max-w-md text-sm">
+            <div>
+              <Badge variant="destructive">Issues</Badge>
+              <pre className="whitespace-pre-wrap">{issue}</pre>
+            </div>
+            <div>
+              <Badge>Suggestions</Badge>
+              <pre className="whitespace-pre-wrap">{suggestion}</pre>
+            </div>
+          </div>
+        }
+      >
+        <Badge className="flex items-center gap-1">
+          report <Info className="size-4" />
+        </Badge>
+      </Hint>
+    )
+  }
+
+  // Custom Sections
+  else if (section === "otherSections") {
+    const customFixes = fixes.otherSections || {}
+
+    if (Object.keys(customFixes).length === 0) return null
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {Object.keys(customFixes).map((sectionName) => {
+          const sectionIssues = customFixes[sectionName] || []
+          let customIssue = ""
+          let customSuggestion = ""
+
+          sectionIssues.forEach((fix) => {
+            customIssue += `\n ${fix.severity}: ${fix.issue}`
+            customSuggestion += `\n ${fix.suggestion}`
+          })
+
+          return (
+            <Hint
+              key={sectionName}
+              hint={
+                <div className="space-y-2 max-w-md text-sm">
+                  <div>
+                    <Badge variant="outline" className="bg-gray-200 text-black">
+                      {sectionName}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Badge variant="destructive">Issues</Badge>
+                    <pre className="whitespace-pre-wrap">{customIssue}</pre>
+                  </div>
+                  <div>
+                    <Badge>Suggestions</Badge>
+                    <pre className="whitespace-pre-wrap">{customSuggestion}</pre>
+                  </div>
+                </div>
+              }
+            >
+              <Badge className="flex items-center gap-1">
+                {sectionName} <Info className="size-4" />
+              </Badge>
+            </Hint>
+          )
+        })}
+      </div>
+    )
+  }
+}
+ // ---------- Utility Renderer for simple array fields ----------
  const renderStringArray = (
   section: keyof ResumeExtraction,
   index: number,
@@ -140,7 +227,10 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       {/* =============== ADDRESS =============== */}
       {editorState.address && (
         <section>
-          <h2 className="text-xl font-semibold mb-3">Address</h2>
+        <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Address</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("address")}</div>
+        </div>
           <div className="grid grid-cols-3 gap-3">
             {Object.keys(editorState.address).map((key) => {
               if (key === 'otherLinks') {
@@ -184,7 +274,10 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       {/* =============== PROFILE + OBJECTIVE =============== */}
       {editorState.profile && (
         <section>
-          <h2 className="text-xl font-semibold mb-3">Profile</h2>
+          <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Profile</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("profile")}</div>
+        </div>
           <Textarea
             rows={4}
             value={editorState.profile}
@@ -195,7 +288,10 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 
       {editorState.objective && (
         <section>
-          <h2 className="text-xl font-semibold mb-3">Objective</h2>
+          <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Objective</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("objective")}</div>
+        </div>
           <Textarea
             rows={3}
             value={editorState.objective}
@@ -207,8 +303,11 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       {/* =============== EDUCATION =============== */}
       {editorState.education && (
         <section>
-          <h2 className="text-xl font-semibold mb-3 flex items-center justify-between">
-            Education
+          <div className="text-xl font-semibold flex items-center justify-between">
+            <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Education</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("education")}</div>
+        </div>
             <Button
               variant="outline"
               size="sm"
@@ -227,7 +326,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
             >
               <Plus className="w-4 h-4 mr-2" /> Add Education
             </Button>
-          </h2>
+          </div>
 
           <div className="flex flex-col gap-6">
             {editorState.education.map((edu, index) => (
@@ -312,8 +411,11 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       {/* =============== EXPERIENCE =============== */}
       {editorState.experience && (
         <section>
-          <h2 className="text-xl font-semibold mb-3 flex items-center justify-between">
-            Experience
+          <div className="text-xl font-semibold  flex items-center justify-between">
+           <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Experience</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("experience")}</div>
+        </div>
             <Button
               variant="outline"
               size="sm"
@@ -331,7 +433,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
             >
               <Plus className="w-4 h-4 mr-2" /> Add Experience
             </Button>
-          </h2>
+          </div>
 
           <div className="flex flex-col gap-6">
             {editorState.experience.map((exp, index) => (
@@ -398,14 +500,14 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
         </section>
       )}
 
-      {/* =============== PROJECTS, SKILLS, CERTIFICATIONS, AWARDS, PUBLICATIONS, CUSTOM SECTIONS =============== */}
-      {/* You can repeat similar pattern for remaining sections */}
-    
     {/* =============== PROJECTS =============== */}
 {editorState.projects && (
   <section>
-    <h2 className="text-xl font-semibold mb-3 flex items-center justify-between">
-      Projects
+    <div className="text-xl font-semibold  flex items-center justify-between">
+      <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Projects</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("projects")}</div>
+        </div>
       <Button
         variant="outline"
         size="sm"
@@ -421,7 +523,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       >
         <Plus className="w-4 h-4 mr-2" /> Add Project
       </Button>
-    </h2>
+    </div>
 
     <div className="flex flex-col gap-6">
       {editorState.projects.map((proj, index) => (
@@ -474,8 +576,10 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 {/* =============== SKILLS =============== */}
 {editorState.skills && (
   <section>
-    <h2 className="text-xl font-semibold mb-3">Skills</h2>
-
+    <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Skills</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("skills")}</div>
+        </div>
     {Object.entries(editorState.skills).map(([type, skills]) => (
       <div key={type} className="mb-4">
         <p className="font-medium capitalize">{type} Skills</p>
@@ -505,9 +609,11 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 {/* =============== CERTIFICATIONS =============== */}
 {editorState.certifications && (
   <section>
-    <h2 className="text-xl font-semibold mb-3 flex items-center justify-between">
-      Certifications
-      <Button
+    <div className="text-xl font-semibold  flex items-center justify-between">
+      <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Certifications</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("certifcations")}</div>
+        </div><Button
         variant="outline"
         size="sm"
         onClick={() =>
@@ -521,7 +627,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       >
         <Plus className="w-4 h-4 mr-2" /> Add Certification
       </Button>
-    </h2>
+    </div>
 
     <div className="flex flex-col gap-6">
       {editorState.certifications.map((cert, index) => (
@@ -575,9 +681,11 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 {/* =============== AWARDS =============== */}
 {editorState.awards && (
   <section>
-    <h2 className="text-xl font-semibold mb-3 flex items-center justify-between">
-      Awards
-      <Button
+    <div className="text-xl font-semibold mb-3 flex items-center justify-between">
+      <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Awards</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("awards")}</div>
+        </div>      <Button
         variant="outline"
         size="sm"
         onClick={() =>
@@ -590,7 +698,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       >
         <Plus className="w-4 h-4 mr-2" /> Add Award
       </Button>
-    </h2>
+    </div>
 
     <div className="flex flex-col gap-6">
       {editorState.awards.map((award, index) => (
@@ -636,8 +744,11 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 {/* =============== PUBLICATIONS =============== */}
 {editorState.publications && (
   <section>
-    <h2 className="text-xl font-semibold mb-3 flex items-center justify-between">
-      Publications
+    <div className="text-xl font-semibold mb-3 flex items-center justify-between">
+      <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Publications</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("publications")}</div>
+        </div>
       <Button
         variant="outline"
         size="sm"
@@ -652,7 +763,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       >
         <Plus className="w-4 h-4 mr-2" /> Add Publication
       </Button>
-    </h2>
+    </div>
 
     <div className="flex flex-col gap-6">
       {editorState.publications.map((pub, index) => (
@@ -705,8 +816,11 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 {/* =============== CUSTOM SECTIONS =============== */}
 {editorState.customSections && (
   <section>
-    <h2 className="text-xl font-semibold mb-3 flex items-center justify-between">
-      Custom Sections
+    <div className="text-xl font-semibold mb-3 flex items-center justify-between">
+      <div className="flex flex-row gap-2 items-center">
+           <h2 className="text-xl font-semibold mb-3">Other Sections</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">{handleFixes("otherSections")}</div>
+        </div>
       <Button
         variant="outline"
         size="sm"
@@ -716,7 +830,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
       >
         <Plus className="w-4 h-4 mr-2" /> Add Custom Section
       </Button>
-    </h2>
+    </div>
 
     <div className="flex flex-col gap-6">
       {editorState.customSections.map((section, secIndex) => (

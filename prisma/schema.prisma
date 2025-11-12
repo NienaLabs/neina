@@ -108,7 +108,7 @@ model TailoredResume {
   content        String
   role           String?
   jobDescription String?
-   name           String
+  name           String 
   extractedData  Json?
   analysisData   Json?
   scoreData      Json?

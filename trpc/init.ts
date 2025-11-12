@@ -31,7 +31,7 @@ const isAuthed = t.middleware(({next,ctx})=>{
   }
   return next({
     ctx:{
-      session:ctx.session
+      data:ctx.session
     }
   })
 })

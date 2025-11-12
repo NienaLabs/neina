@@ -262,3 +262,75 @@ export const editorButtons = [
     icon: Trash2
   }
 ]
+
+export const primaryResumes = [
+  {
+    id: '1',
+    name: 'Software Engineer Resume',
+    score: 88,
+    isPrimary: true,
+    createdAt: '2025-10-15',
+    tailoredResumes: [
+      {
+        id: '101',
+        name: 'Frontend Developer @ TechCorp',
+        score: 92,
+        isPrimary: false,
+        createdAt: '2025-10-20',
+        targetRole: 'Frontend Developer',
+      },
+      {
+        id: '102',
+        name: 'Full Stack Engineer @ Innovate Inc.',
+        score: 85,
+        isPrimary: false,
+        createdAt: '2025-10-22',
+        targetRole: 'Full Stack Engineer',
+      },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Product Manager Resume',
+    score: 94,
+    isPrimary: true,
+    createdAt: '2025-09-28',
+    tailoredResumes: [
+      {
+        id: '201',
+        name: 'Senior Product Manager @ Solutions Co.',
+        score: 96,
+        isPrimary: false,
+        createdAt: '2025-10-05',
+        targetRole: 'Senior Product Manager',
+      },
+    ],
+  },
+];
+
+export const tailoredResumes = [
+  {
+    id: '101',
+    name: 'Frontend Developer @ TechCorp',
+    score: 92,
+    isPrimary: false,
+    createdAt: '2025-10-20',
+    targetRole: 'Frontend Developer',
+  },
+  {
+    id: '102',
+    name: 'Full Stack Engineer @ Innovate Inc.',
+    score: 85,
+    isPrimary: false,
+    createdAt: '2025-10-22',
+    targetRole: 'Full Stack Engineer',
+  },
+  {
+    id: '201',
+    name: 'Senior Product Manager @ Solutions Co.',
+    score: 96,
+    isPrimary: false,
+    createdAt: '2025-10-05',
+    targetRole: 'Senior Product Manager',
+  },
+];

@@ -19,26 +19,26 @@ import dynamic from 'next/dynamic';
 
 // Dynamically import components with no SSR
 
-const Header = dynamic(() => import('../dashboard components/Header'), {
+const Header = dynamic(() => import('../../../components/dashboard/Header'), {
   ssr: false,
   loading: () => (
     <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"></div>
   )
 });
 
-const CareerSnapshot = dynamic(() => import('../dashboard components/CareerSnapshot'), {
+const CareerSnapshot = dynamic(() => import('../../../components/dashboard/CareerSnapshot'), {
   loading: () => <Skeleton className="h-64 w-full rounded-2xl" />
 });
 
-const AIInsights = dynamic(() => import('../dashboard components/AIInsights'), {
+const AIInsights = dynamic(() => import('../../../components/dashboard/AIInsights'), {
   loading: () => <Skeleton className="h-48 w-full rounded-2xl" />
 });
 
-const JobOpenings = dynamic(() => import('../dashboard components/JobOpenings'), {
+const JobOpenings = dynamic(() => import('../../../components/dashboard/JobOpenings'), {
   loading: () => <Skeleton className="h-64 w-full rounded-2xl" />
 });
 
-const QuickActions = dynamic(() => import('../dashboard components/QuickActions'), {
+const QuickActions = dynamic(() => import('../../../components/dashboard/QuickActions'), {
   loading: () => <Skeleton className="h-48 w-full rounded-2xl" />
 });
 

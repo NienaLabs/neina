@@ -17,14 +17,21 @@ export const TestimonialsColumn = (props: {
   return (
     <div className={props.className}>
       <motion.div
+        initial={{ y: 0 }}
         animate={{
-          translateY: "-50%",
+          y: "-50%",
         }}
         transition={{
-          duration: props.duration || 10,
+          duration: props.duration || 20,
           repeat: Infinity,
           ease: "linear",
           repeatType: "loop",
+        }}
+        style={{
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          transformStyle: 'preserve-3d',
+          transform: 'translate3d(0,0,0)'
         }}
         className="flex flex-col gap-6 pb-6 bg-background"
       >

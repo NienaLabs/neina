@@ -87,7 +87,7 @@ export default function Header() {
               asChild
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              <Link href="/settings">
+              <Link href="/account/settings">
                 <Cog6ToothIcon className="h-5 w-5" />
                 <span className="sr-only">Settings</span>
               </Link>
@@ -106,7 +106,9 @@ export default function Header() {
             <div className="relative ml-2">
               <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                 <div className="h-8 w-8 rounded-full bg-linear-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+                  <Link href="/account/settings">
                   <span>U</span>
+                  </Link>
                 </div>
                 <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">
                   Profile

@@ -19,26 +19,26 @@ import dynamic from 'next/dynamic';
 
 // Dynamically import components with no SSR
 
-const Header = dynamic(() => import('../dashboard components/Header'), {
+const Header = dynamic(() => import('../../../components/dashboard/Header'), {
   ssr: false,
   loading: () => (
     <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"></div>
   )
 });
 
-const CareerSnapshot = dynamic(() => import('../dashboard components/CareerSnapshot'), {
+const CareerSnapshot = dynamic(() => import('../../../components/dashboard/CareerSnapshot'), {
   loading: () => <Skeleton className="h-64 w-full rounded-2xl" />
 });
 
-const AIInsights = dynamic(() => import('../dashboard components/AIInsights'), {
+const AIInsights = dynamic(() => import('../../../components/dashboard/AIInsights'), {
   loading: () => <Skeleton className="h-48 w-full rounded-2xl" />
 });
 
-const JobOpenings = dynamic(() => import('../dashboard components/JobOpenings'), {
+const JobOpenings = dynamic(() => import('../../../components/dashboard/JobOpenings'), {
   loading: () => <Skeleton className="h-64 w-full rounded-2xl" />
 });
 
-const QuickActions = dynamic(() => import('../dashboard components/QuickActions'), {
+const QuickActions = dynamic(() => import('../../../components/dashboard/QuickActions'), {
   loading: () => <Skeleton className="h-48 w-full rounded-2xl" />
 });
 
@@ -182,6 +182,13 @@ const StatCard = ({
   );
 };
 
+const getGreetingTime = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+};
+
 const Dashboard = () => {
   const router = useRouter();
   const { data: session, isPending } = useSession();
@@ -202,8 +209,8 @@ const Dashboard = () => {
         // Mock data for now
         setTimeout(() => {
           setUserData({
-            name: "Evan",
-            email: "evan@example.com",
+            name: session?.user?.name || "Evan",
+            email: session?.user?.email || "evan@example.com",
             role: "Junior Developer",
             profileCompletion: 75,
             credits: 5,
@@ -346,9 +353,11 @@ const Dashboard = () => {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 md:p-8 text-white">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-blue-100">Welcome back, {new Date().toLocaleDateString('en-US', { weekday: 'long' })}! 👋</p>
+                  <p className="text-sm font-medium text-blue-100">
+                    {getGreetingTime()}, 
+                  </p>
                   <h1 className="mt-1 text-2xl md:text-3xl font-bold">
-                    {userData.name}
+                    {userData.name}, 👋
                   </h1>
                   <p className="mt-2 text-blue-100 max-w-2xl">
                     {userData.aiInsight.summary}

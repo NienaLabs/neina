@@ -1,19 +1,28 @@
 'use client'
 
-import { useState } from 'react'
-import { primaryResumes } from '@/constants/constant'
+import { useState, useEffect } from 'react'
 import PrimaryResumeCard from './PrimaryResumeCard'
 import { Empty } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
-import { Resume } from '@/lib/generated/prisma/client'
+import { ResumeWithTailored } from './ResumePageClient'
 
-const PrimaryResumeSection = ({ onSelectResume }:{onSelectResume:(resume:any)=>void}) => {
-  const [selectedId, setSelectedId] = useState<string | null>(
-    primaryResumes.length > 0 ? primaryResumes[0].id : null
-  )
+const PrimaryResumeSection = ({
+  resumes,
+  onSelectResume,
+}: {
+  resumes: ResumeWithTailored[]
+  onSelectResume: (resume: ResumeWithTailored) => void
+}) => {
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const handleSelect = (resume:Resume) => {
+  useEffect(() => {
+    if (resumes && resumes.length > 0) {
+      setSelectedId(resumes[0].id)
+    }
+  }, [resumes])
+
+  const handleSelect = (resume: ResumeWithTailored) => {
     setSelectedId(resume.id)
     onSelectResume(resume)
   }
@@ -23,9 +32,9 @@ const PrimaryResumeSection = ({ onSelectResume }:{onSelectResume:(resume:any)=>v
       <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
         Primary Resumes
       </h2>
-      {primaryResumes.length > 0 ? (
+      {resumes && resumes.length > 0 ? (
         <div className="flex p-5 gap-4 overflow-x-auto pb-4">
-          {primaryResumes.map((resume:any) => (
+          {resumes.map(resume => (
             <PrimaryResumeCard
               key={resume.id}
               resume={resume}

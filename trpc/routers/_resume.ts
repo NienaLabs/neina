@@ -83,13 +83,18 @@ export const resumeRouter = createTRPCRouter({
     getPrimaryResumes: protectedProcedure
     .query(
         async({ctx})=>{
+            try{
             const resumes = await prisma.resume.findMany({
                 where:{
                     userId:ctx.session?.session.userId,
                     isPrimary:true
                 }
             })
-            return resumes
+            return resumes}
+            catch(e){
+                console.log(e)
+                throw new TRPCError({code:"NOT_FOUND",message:`error: + ${e}`})
+            }
         }
     ),
     getTailoredResumes: protectedProcedure

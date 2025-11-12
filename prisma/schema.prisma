@@ -24,6 +24,8 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
+  resumes       Resume[]  
+  tailoredResumes TailoredResume[] 
 
   @@unique([email])
   @@map("user")
@@ -74,3 +76,52 @@ model Verification {
   @@map("verification")
 }
 
+
+model Resume {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  content        String
+  name           String
+  isPrimary      Boolean  @default(false)
+
+  // extracted / analyzed / scored data (flexible JSON)
+  extractedData  Json?
+  analysisData   Json?
+  scoreData      Json?
+
+  // relation to user
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // one primary resume can have many tailored versions
+  tailoredResumes TailoredResume[]
+
+  @@index([userId])
+  @@map("resume")
+}
+
+model TailoredResume {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  content        String
+  role           String?
+  jobDescription String?
+  name           String 
+  extractedData  Json?
+  analysisData   Json?
+  scoreData      Json?
+
+  // relation to the primary resume it was created from
+  primaryResumeId String
+  primaryResume   Resume   @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
+
+  // relation to user
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([primaryResumeId])
+  @@index([userId])
+  @@map("tailored_resume")
+}

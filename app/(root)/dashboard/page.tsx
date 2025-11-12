@@ -182,6 +182,13 @@ const StatCard = ({
   );
 };
 
+const getGreetingTime = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+};
+
 const Dashboard = () => {
   const router = useRouter();
   const { data: session, isPending } = useSession();
@@ -202,8 +209,8 @@ const Dashboard = () => {
         // Mock data for now
         setTimeout(() => {
           setUserData({
-            name: "Evan",
-            email: "evan@example.com",
+            name: session?.user?.name || "Evan",
+            email: session?.user?.email || "evan@example.com",
             role: "Junior Developer",
             profileCompletion: 75,
             credits: 5,
@@ -346,9 +353,11 @@ const Dashboard = () => {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 md:p-8 text-white">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-blue-100">Welcome back, {new Date().toLocaleDateString('en-US', { weekday: 'long' })}! 👋</p>
+                  <p className="text-sm font-medium text-blue-100">
+                    {getGreetingTime()}, 
+                  </p>
                   <h1 className="mt-1 text-2xl md:text-3xl font-bold">
-                    {userData.name}
+                    {userData.name}, 👋
                   </h1>
                   <p className="mt-2 text-blue-100 max-w-2xl">
                     {userData.aiInsight.summary}

@@ -53,7 +53,7 @@ const StepCard: React.FC<StepCardProps> = ({
 );
 
 /**
- * A responsive "How It Works" section that displays a 3-step process.
+ * A responsive "How It Works" section that displays a 4-step process.
  * It is styled with shadcn/ui theme variables to support light and dark modes.
  */
 export const HowItWorks: React.FC<HowItWorksProps> = ({

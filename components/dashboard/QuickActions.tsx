@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   FileText as DocumentTextIcon, 
   Briefcase as BriefcaseIcon, 
@@ -9,6 +9,7 @@ import {
   GraduationCap as AcademicCapIcon,
   ArrowRight as ArrowRightIcon
 } from 'lucide-react';
+import { useState } from 'react';
 
 type ActionId = 'resume' | 'jobs' | 'interview' | 'roadmap' | 'skills';
 
@@ -30,112 +31,180 @@ const actions: ActionItem[] = [
     description: 'Create or update your resume with AI assistance',
     icon: DocumentTextIcon,
     iconColor: 'text-blue-500',
-    bgColor: 'bg-blue-50 dark:bg-blue-900/30',
-    hoverColor: 'hover:bg-blue-100 dark:hover:bg-blue-900/50',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    hoverColor: 'hover:bg-blue-100 dark:hover:bg-blue-900/30'
   },
   {
     id: 'jobs',
     name: 'Find Jobs',
-    description: 'Discover jobs that match your profile',
+    description: 'Discover jobs matching your profile',
     icon: BriefcaseIcon,
     iconColor: 'text-green-500',
-    bgColor: 'bg-green-50 dark:bg-green-900/30',
-    hoverColor: 'hover:bg-green-100 dark:hover:bg-green-900/50',
+    bgColor: 'bg-green-50 dark:bg-green-900/20',
+    hoverColor: 'hover:bg-green-100 dark:hover:bg-green-900/30'
   },
   {
     id: 'interview',
-    name: 'Start Interview',
-    description: 'Practice with AI-powered mock interviews',
+    name: 'Practice Interview',
+    description: 'Prepare with AI-powered mock interviews',
     icon: ChatBubbleLeftRightIcon,
     iconColor: 'text-purple-500',
-    bgColor: 'bg-purple-50 dark:bg-purple-900/30',
-    hoverColor: 'hover:bg-purple-100 dark:hover:bg-purple-900/50',
+    bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+    hoverColor: 'hover:bg-purple-100 dark:hover:bg-purple-900/30'
   },
   {
     id: 'roadmap',
-    name: 'View Roadmap',
-    description: 'Track your learning and career path',
+    name: 'Career Roadmap',
+    description: 'Plan your career growth path',
     icon: MapIcon,
-    iconColor: 'text-yellow-500',
-    bgColor: 'bg-yellow-50 dark:bg-yellow-900/30',
-    hoverColor: 'hover:bg-yellow-100 dark:hover:bg-yellow-900/50',
+    iconColor: 'text-amber-500',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    hoverColor: 'hover:bg-amber-100 dark:hover:bg-amber-900/30'
   },
   {
     id: 'skills',
-    name: 'Improve Skills',
-    description: 'Access learning resources and courses',
+    name: 'Skill Assessment',
+    description: 'Evaluate and improve your skills',
     icon: AcademicCapIcon,
-    iconColor: 'text-red-500',
-    bgColor: 'bg-red-50 dark:bg-red-900/30',
-    hoverColor: 'hover:bg-red-100 dark:hover:bg-red-900/50',
-  },
+    iconColor: 'text-rose-500',
+    bgColor: 'bg-rose-50 dark:bg-rose-900/20',
+    hoverColor: 'hover:bg-rose-100 dark:hover:bg-rose-900/30'
+  }
 ];
 
-const QuickActions: React.FC = () => {
-  const [activeAction, setActiveAction] = useState<ActionId | null>(null);
-
-  const handleAction = (id: ActionId): void => {
-    setActiveAction(id);
-    switch (id) {
-      case 'resume':
-        console.log('Navigate to Resume Builder');
-        // navigate('/resume-builder');
-        break;
-      case 'jobs':
-        console.log('Navigate to Job Finder');
-        // navigate('/jobs');
-        break;
-      case 'interview':
-        console.log('Navigate to Interview Practice');
-        // navigate('/interview');
-        break;
-      case 'roadmap':
-        console.log('Navigate to Roadmap');
-        // navigate('/roadmap');
-        break;
-      case 'skills':
-        console.log('Navigate to Learning Resources');
-        // navigate('/skills');
-        break;
-      default:
-        console.log(`Action ${id} clicked`);
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
     }
-  };
+  }
+};
+
+const item: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 200,
+      damping: 15
+    }
+  }
+};
+
+const hoverEffect = {
+  scale: 1.02,
+  transition: {
+    type: "spring" as const,
+    stiffness: 500,
+    damping: 15
+  }
+};
+
+const ActionCard = ({ action, hoveredId, onHover }: { action: ActionItem, hoveredId: ActionId | null, onHover: (id: ActionId | null) => void }) => (
+  <motion.div
+    className={`relative h-36 flex flex-col p-5 rounded-xl cursor-pointer transition-all duration-200 ${action.bgColor} ${action.hoverColor} border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md`}
+    variants={item}
+    whileHover={hoverEffect}
+    onHoverStart={() => onHover(action.id)}
+    onHoverEnd={() => onHover(null)}
+  >
+    <div className="flex items-start justify-between h-full">
+      <div className="flex flex-col h-full justify-between w-full pr-2">
+        <div className="flex items-start justify-between w-full mb-3">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${action.bgColor}`}>
+            <action.icon className={`w-5 h-5 ${action.iconColor}`} />
+          </div>
+        </div>
+        <div className="w-full">
+          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white mb-1.5 leading-tight">
+            {action.name}
+          </h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400 leading-tight line-clamp-2">
+            {action.description}
+          </p>
+        </div>
+        <motion.div
+          className="self-end mt-2"
+          animate={{
+            x: hoveredId === action.id ? 4 : 0,
+            opacity: hoveredId === action.id ? 1 : 0.7
+          }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        >
+          <ArrowRightIcon className="w-3.5 h-3.5 text-gray-400" />
+        </motion.div>
+      </div>
+    </div>
+    
+    {hoveredId === action.id && (
+      <motion.div
+        className="absolute inset-0 rounded-xl border-2 border-blue-400 pointer-events-none"
+        layoutId="hoverBorder"
+        initial={false}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      />
+    )}
+  </motion.div>
+);
+
+export default function QuickActions() {
+  const [hoveredId, setHoveredId] = useState<ActionId | null>(null);
+  const topRow = actions.slice(0, 2);
+  const bottomRow = actions.slice(2, 4);
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-5 pb-4 h-auto">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Quick Actions</h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Quick Actions
+        </h2>
+      </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2.5">
-        {actions.map((action) => (
-          <button
-            key={action.id}
-            onClick={() => handleAction(action.id)}
-            className={`group relative flex items-center space-x-3 rounded-xl border border-gray-200 dark:border-gray-700 ${action.bgColor} ${action.hoverColor} p-4 focus:outline-none transition-all duration-200 ${
-              activeAction === action.id ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''
-            }`}
+      <div className="space-y-5">
+        {/* Top Row */}
+        <motion.div 
+          className="grid gap-5 grid-cols-1 sm:grid-cols-2"
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          <AnimatePresence>
+            {topRow.map((action) => (
+              <ActionCard 
+                key={action.id} 
+                action={action} 
+                hoveredId={hoveredId}
+                onHover={setHoveredId}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Bottom Row */}
+        {bottomRow.length > 0 && (
+          <motion.div 
+            className="grid gap-5 grid-cols-1 sm:grid-cols-2"
+            variants={container}
+            initial="hidden"
+            animate="show"
           >
-            <div className={`flex-shrink-0 h-12 w-12 rounded-lg ${action.bgColor} flex items-center justify-center`}>
-              <action.icon 
-                className={`h-6 w-6 ${action.iconColor} transition-transform duration-200 group-hover:scale-110`} 
-                aria-hidden="true" 
-              />
-            </div>
-            <div className="min-w-0 flex-1 text-left space-y-0.5">
-              <p className="text-sm font-medium text-gray-900 dark:text-white leading-tight">{action.name}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{action.description}</p>
-            </div>
-            <div className="flex-shrink-0 self-stretch flex items-center">
-              <ArrowRightIcon 
-                className="h-4 w-4 text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-all duration-200 group-hover:translate-x-0.5" 
-                aria-hidden="true" 
-              />
-            </div>
-          </button>
-        ))}
+            <AnimatePresence>
+              {bottomRow.map((action) => (
+                <ActionCard 
+                  key={action.id} 
+                  action={action} 
+                  hoveredId={hoveredId}
+                  onHover={setHoveredId}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </div>
     </div>
   );
-};
-
-export default QuickActions;
+}

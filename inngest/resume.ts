@@ -1,8 +1,7 @@
-import { analysisPrompt, extractionPrompt, scorePrompt } from "@/constants/prompts";
 import { inngest } from "./client";
-import { createAgent, createNetwork, createState, openai } from "@inngest/agent-kit";
+import { createNetwork, createState } from "@inngest/agent-kit";
 import prisma from "@/lib/prisma";
-import { lastAssistantTextMessageContent } from "@/lib/utils";
+import { parserAgent, analysisAgent, scoreAgent } from "./agents";
 
 interface AgentState {
   parserAgent:string;
@@ -10,64 +9,8 @@ interface AgentState {
   scoreAgent:string;
 }
 
-const parserAgent = createAgent({
-  name: "parser-agent",
-  system: extractionPrompt,
-  model: openai({
-    model: process.env.OPENAI_MODEL!,
-    baseUrl: process.env.OPENAI_BASE_URL!,
-  }),
-  lifecycle:{
-    onResponse:async({result,network})=>{
-    const assistantMessage = lastAssistantTextMessageContent(result)
-    if(assistantMessage && network){
-      network.state.data.parserAgent = JSON.parse(assistantMessage)
-        }
-    return result
-    },
-  }
-});
-
-const analysisAgent = createAgent({
-  name: "analysis-agent",
-  system: analysisPrompt,
-  model: openai({
-    model: process.env.OPENAI_MODEL!,
-    baseUrl: process.env.OPENAI_BASE_URL!,
-  }),
-  lifecycle:{
-    onResponse:async({result,network})=>{
-    const assistantMessage = lastAssistantTextMessageContent(result)
-    if(assistantMessage && network){
-      network.state.data.analyserAgent = JSON.parse(assistantMessage)
-        }
-    return result
-    },
-  }
-
-});
-
-const scoreAgent = createAgent({
-  name: "score-agent",
-  system: scorePrompt,
-  model: openai({
-    model: process.env.OPENAI_MODEL!,
-    baseUrl: process.env.OPENAI_BASE_URL!,
-  }),
-  lifecycle:{
-    onResponse:async({result,network})=>{
-    const assistantMessage = lastAssistantTextMessageContent(result)
-    if(assistantMessage && network){
-      network.state.data.scoreAgent = JSON.parse(assistantMessage)
-    }
-    return result
-    },
-  }
-
-});
-
-// 2️⃣ Define a clean pipeline sequence
 const pipeline = [parserAgent, analysisAgent, scoreAgent];
+
 
 const state = createState<AgentState>({
   parserAgent:"",
@@ -75,7 +18,6 @@ const state = createState<AgentState>({
   scoreAgent:""
 })
 
-// 3️⃣ Create the network with static routing logic
 const network = createNetwork({
   name:'resume-processing-network',
   defaultState:state,
@@ -87,19 +29,18 @@ const network = createNetwork({
   },
 });
 
-// 4️⃣ Example Inngest function
 export const resumeCreated = inngest.createFunction(
   { id: "resume-AI-workflow" },
-  { event: "app/resume.created" },
+  { event: "app/primary-resume.created" },
   async ({step,event}) => {
+    const state = createState<AgentState>({
+      parserAgent:"",
+      analyserAgent:"",
+      scoreAgent:""
+    })
     const resumeText =`
     #Resume
     ${event.data.content}
-    
-    #Targetted Role
-    ${event.data.role}
-    #Job Description
-    ${event.data.description}
     `
     // Run through the network (parser → analysis → score)
     const result = await network.run(resumeText,{state});
@@ -108,7 +49,7 @@ export const resumeCreated = inngest.createFunction(
       data:{
       name:event.data.name,
       content:event.data.content,
-      isPrimary:event.data.isPrimary,
+      isPrimary:true,
       userId:event.data.userId,
       extractedData:result.state.data.parserAgent,
       analysisData:result.state.data.analyserAgent,

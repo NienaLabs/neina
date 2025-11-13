@@ -9,21 +9,21 @@ export const resumeRouter = createTRPCRouter({
     .input(
         z.object({
             content:z.string(),
-            role:z.string(),
-            description:z.string(),
-            isPrimary:z.boolean(),
             name:z.string()
         })
     )
     .mutation(
         async({input,ctx})=>{
+            try{
          await inngest.send({
-           name:"app/resume.created", 
+           name:"app/primary-resume.created", 
            data:{
             ...input,
             userId:ctx.session?.session.userId
            }
-        })
+        })}catch(e){
+            throw new TRPCError({code:"INTERNAL_SERVER_ERROR",message:`An unexpected error occured why trying to access Resume AI: +${e}`})
+        }
         }
     ),
     update: protectedProcedure
@@ -68,13 +68,13 @@ export const resumeRouter = createTRPCRouter({
                 throw new TRPCError({code:"NOT_FOUND",message:"Primary resume not found"})
             }
          await inngest.send({
-           name:"app/resume.created", 
+           name:"app/tailored-resume.created", 
            data:{
             content:primaryResume.content,
             role:input.role,
             description:input.description,
-            isPrimary:false,
             name:input.name,
+            resumeId:input.primaryResumeId,
             userId:ctx.session?.session.userId
            }
         })
@@ -88,6 +88,9 @@ export const resumeRouter = createTRPCRouter({
                 where:{
                     userId:ctx.session?.session.userId,
                     isPrimary:true
+                },
+                include:{
+                    tailoredResumes:true
                 }
             })
             return resumes}
@@ -100,10 +103,9 @@ export const resumeRouter = createTRPCRouter({
     getTailoredResumes: protectedProcedure
     .query(
         async({ctx})=>{
-            const resumes = await prisma.resume.findMany({
+            const resumes = await prisma.tailoredResume.findMany({
                 where:{
                     userId:ctx.session?.session.userId,
-                    isPrimary:false
                 }
             })
             return resumes
@@ -147,18 +149,42 @@ export const resumeRouter = createTRPCRouter({
     )
     .query(
        async({input,ctx})=>{
-         try{const resume = await prisma.resume.findUnique({
-            where:{
-                id:input.resumeId,
-                userId:ctx.session?.session.userId
-            }
-      
-         })
-        return resume
+         try{
+            const resume = await prisma.resume.findUnique({
+                where:{
+                    id:input.resumeId,
+                    userId:ctx.session?.session.userId
+                }
+            })
+            if(resume) return resume
+
+            const tailoredResume = await prisma.tailoredResume.findUnique({
+                where:{
+                    id:input.resumeId,
+                    userId:ctx.session?.session.userId
+                }
+            })
+            return tailoredResume
         }
          catch(e){
             throw new TRPCError({code:"NOT_FOUND",message:"The requested resource was not found"})
          }
        }  
+    ),
+    delete: protectedProcedure
+    .input(
+        z.object({
+            resumeId:z.string()
+        })
+    )
+    .mutation(
+        async({input,ctx})=>{
+            await prisma.resume.delete({
+                where:{
+                    id:input.resumeId,
+                    userId:ctx.session?.session.userId
+                }
+            })
+        }
     )
 })

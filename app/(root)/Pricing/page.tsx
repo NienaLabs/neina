@@ -269,7 +269,7 @@ const Pricing: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            Choose an affordable plan that's packed with the best features for engaging your audience, creating customer loyalty, and driving success.
+            Choose an affordable plan that&apos;s packed with the best features for engaging your audience, creating customer loyalty, and driving success.
           </motion.p>
         </motion.div>
 
@@ -340,12 +340,9 @@ const Pricing: React.FC = () => {
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center">
             Frequently asked questions
           </h2>
-          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 max-w-3xl mx-auto">
             {faqs.map((faq, index) => (
-              <div key={index} className="pt-6">
-                <dt className="text-lg font-medium text-gray-900 dark:text-white">{faq.question}</dt>
-                <dd className="mt-2 text-base text-gray-500 dark:text-gray-400">{faq.answer}</dd>
-              </div>
+              <FAQItem key={index} item={faq} index={index} />
             ))}
           </div>
         </div>

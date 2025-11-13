@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react'
 import PrimaryResumeSection from '@/components/resume/PrimaryResumeSection'
 import TailoredResumesSection from '@/components/resume/TailoredResumesSection'
-import { Button } from '@/components/ui/button'
-import { Upload } from 'lucide-react'
 import { trpc } from '@/trpc/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Resume } from '@/lib/generated/prisma/client'
+import CreateResumeDialog from './CreateResumeDialog'
 
 // Define the types for the resume data
 export type ScoreData = {
@@ -66,10 +65,7 @@ const ResumePageClient = () => {
             Manage and optimize your resumes with the power of AI.
           </p>
         </div>
-        <Button className="animate-fade-in-down animation-delay-400">
-          <Upload className="mr-2 h-4 w-4" />
-          Create New Resume
-        </Button>
+        <CreateResumeDialog />
       </div>
 
       <div className="space-y-8">

@@ -5,16 +5,125 @@ import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import { useState } from 'react'
 import { CircleArrowRight, Plus, Trash2,Blinds, Info } from 'lucide-react'
-import { extractionData } from '../../constants/constant'
 import Hint from '../hint'
 import { Badge } from '../ui/badge'
 
-const ResumeEditor = ({fixes}) => {
-  const [editorState, setEditorState] = useState<ResumeExtraction>(extractionData)
+interface ResumeExtraction {
+  address?: {
+    email?: string
+    location?: string
+    telephone?: string
+    linkedInProfile?: string
+    githubProfile?: string
+    portfolio?: string
+    otherLinks?: string[]
+  }
 
+  profile?: string
+  summary?: string
+  objective?: string
+
+  education?: {
+    institution?: string
+    degree?: string
+    fieldOfStudy?: string
+    startDate?: string
+    endDate?: string
+    grade?: string
+    description?: string
+    location?: string
+  }[]
+
+  experience?: {
+    company?: string
+    position?: string
+    startDate?: string
+    endDate?: string
+    location?: string
+    description?: string
+    achievements?: string[]
+    title?: string
+    responsibilities?: string[]
+  }[]
+
+  skills?: Record<string, string[]>
+
+  certifications?: {
+    name?: string
+    issuer?: string
+    year?: string
+    description?: string
+  }[]
+
+  projects?: {
+    name?: string
+    description?: string
+    technologies?: string[]
+    link?: string
+    role?: string
+  }[]
+
+  awards?: {
+    title?: string
+    issuer?: string
+    year?: string
+    description?: string
+  }[]
+
+  publications?: {
+    title?: string
+    publisher?: string
+    date?: string
+    description?: string
+    link?: string
+  }[]
+
+  languages?: {
+    name?: string
+    proficiency?: string
+  }[]
+
+  hobbies?: string[]
+
+  customSections?: {
+    sectionName: string
+    entries: {
+      title?: string
+      organization?: string
+      description?: string
+      year?: string
+    }[]
+  }[]
+}
+
+interface Fix {
+  severity: 'critical' | 'urgent' | 'low';
+  issue: string;
+  suggestion: string;
+}
+
+interface Fixes {
+  [section: string]: Fix[] | Record<string, Fix[]>;
+}
+
+
+const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: string | ResumeExtraction}) => {
+  const [editorState, setEditorState] = useState<ResumeExtraction | null>(() => {
+    if (!extractedData) return null;
+    try {
+      return typeof extractedData === 'string' ? JSON.parse(extractedData) : extractedData;
+    } catch (error) {
+      console.error("Failed to parse extractedData:", error);
+      return null;
+    }
+  });
+
+  if (!editorState) {
+    return <div>Error loading editor. The resume data might be corrupted.</div>
+  }
   // ---------- Generic Updaters ----------
   const handleFieldChange = (section: keyof ResumeExtraction, value: unknown) => {
-    setEditorState((prev) => ({ ...prev, [section]: value }))
+    setEditorState((prev) => ({ ...prev!, [section]: value }))
   }
 
   const handleNestedFieldChange = (
@@ -24,38 +133,38 @@ const ResumeEditor = ({fixes}) => {
     value: unknown
   ) => {
     setEditorState((prev) => {
-      const updated = [...(prev[section] as unknown[])]
-      updated[index] = { ...updated[index] as unknown[], [key]: value }
+      const updated = [...(prev![section] as any[])]
+      updated[index] = { ...updated[index], [key]: value }
       return { ...prev, [section]: updated }
     })
   }
 
   const handleArrayAdd = (section: keyof ResumeExtraction, newItem: unknown) => {
     setEditorState((prev) => ({
-      ...prev,
-      [section]: [...((prev[section] as unknown[]) || []), newItem],
+      ...prev!,
+      [section]: [...((prev![section] as any[]) || []), newItem],
     }))
   }
 
   const handleArrayDelete = (section: keyof ResumeExtraction, index: number) => {
     setEditorState((prev) => {
-      const updated = [...(prev[section] as unknown[])]
+      const updated = [...(prev![section] as any[])]
       updated.splice(index, 1)
       return { ...prev, [section]: updated }
     })
   }
 
   // ---------- Address Section ----------
-  const handleAddressChange = (key: keyof ResumeExtraction['address'], value: string) => {
+  const handleAddressChange = (key: keyof NonNullable<ResumeExtraction['address']>, value: string) => {
     setEditorState((prev) => ({
-      ...prev,
-      address: { ...prev.address, [key]: value },
+      ...prev!,
+      address: { ...prev!.address, [key]: value },
     }))
   }
 
-const handleSkillArrayChange = (type: keyof ResumeExtraction['skills'], index: number, value: string) => {
+const handleSkillArrayChange = (type: keyof NonNullable<ResumeExtraction['skills']>, index: number, value: string) => {
   setEditorState((prev) => {
-    const updatedSkills = { ...prev.skills };
+    const updatedSkills = { ...prev!.skills };
     const arr = [...(updatedSkills[type] || [])];
     arr[index] = value;
     updatedSkills[type] = arr;
@@ -63,9 +172,9 @@ const handleSkillArrayChange = (type: keyof ResumeExtraction['skills'], index: n
   });
 };
 
-const addSkill = (type: keyof ResumeExtraction['skills']) => {
+const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
   setEditorState((prev) => {
-    const updatedSkills = { ...prev.skills };
+    const updatedSkills = { ...prev!.skills };
     updatedSkills[type] = [...(updatedSkills[type] || []), ''];
     return { ...prev, skills: updatedSkills };
   });
@@ -74,18 +183,18 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 
   const handleOtherLinksChange = (index: number, value: string) => {
     setEditorState((prev) => {
-      const updatedLinks = [...(prev.address.otherLinks || [])]
+      const updatedLinks = [...(prev!.address!.otherLinks || [])]
       updatedLinks[index] = value
-      return { ...prev, address: { ...prev.address, otherLinks: updatedLinks } }
+      return { ...prev, address: { ...prev!.address, otherLinks: updatedLinks } }
     })
   }
 
   const addNewOtherLink = () => {
     setEditorState((prev) => ({
-      ...prev,
+      ...prev!,
       address: {
-        ...prev.address,
-        otherLinks: [...(prev.address.otherLinks || []), ''],
+        ...prev!.address,
+        otherLinks: [...(prev!.address!.otherLinks || []), ''],
       },
     }))
   }
@@ -96,7 +205,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 
   // Normal (non-custom) sections
   if (section !== "otherSections") {
-    const sectionFixes = fixes[section] || []
+    const sectionFixes = (fixes[section] as Fix[]) || []
     sectionFixes.forEach((fix) => {
       issue += `\n ${fix.severity}: ${fix.issue}`
       suggestion += `\n ${fix.suggestion}`
@@ -128,7 +237,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
 
   // Custom Sections
   else if (section === "otherSections") {
-    const customFixes = fixes.otherSections || {}
+    const customFixes = (fixes.otherSections as Record<string, Fix[]>) || {}
 
     if (Object.keys(customFixes).length === 0) return null
 
@@ -258,7 +367,7 @@ const addSkill = (type: keyof ResumeExtraction['skills']) => {
                 <div key={key}>
                   <p className="font-medium mb-1 capitalize">{key}</p>
                   <Input
-                    value={editorState.address[key as keyof ResumeExtraction['address']] || ''}
+                    value={editorState?.address[key as keyof ResumeExtraction['address']] ?? ''}
                     onChange={(e) =>
                       handleAddressChange(key as keyof ResumeExtraction['address'], e.target.value)
                     }

@@ -1,14 +1,17 @@
-import { authClient } from '@/auth-client';
+import { auth } from '@/lib/auth';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { cache } from 'react';
 import superjson from 'superjson';
+import {headers} from 'next/headers'
+
 export const createTRPCContext = cache(async () => {
   /**
    * @see: https://trpc.io/docs/server/context
    */
-const { data: session } = await authClient.getSession()
+  const session = await auth.api.getSession({headers:await headers()});
   return { session };
 });
+
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 
 // Avoid exporting the entire t-object
@@ -19,26 +22,26 @@ const t = initTRPC.context<Context>().create({
   /**
    * @see https://trpc.io/docs/server/data-transformers
    */
-   transformer: superjson,
+  transformer: superjson,
 });
 
-const isAuthed = t.middleware(({next,ctx})=>{
-  if(!ctx.session?.user){
+const isAuthed = t.middleware(({ next, ctx }) => {
+  if (!ctx.session?.user) {
     throw new TRPCError({
-      code:"UNAUTHORIZED",
-      message:"Not authenticated"
-    })
+      code: 'UNAUTHORIZED',
+      message: 'Not authenticated',
+    });
   }
   return next({
-    ctx:{
-      data:ctx.session
-    }
-  })
-})
-
+    ctx: {
+      ...ctx,
+      session: ctx.session,
+    },
+  });
+});
 
 // Base router and procedure helpers
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
 export const baseProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(isAuthed)
+export const protectedProcedure = t.procedure.use(isAuthed);

@@ -11,8 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Resume } from '@/lib/generated/prisma/client'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, Edit, PlusCircle, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Edit, Trash2, PlusCircle } from 'lucide-react'
 import { format } from 'date-fns'
+import { trpc } from '@/trpc/client'
+import { useQueryClient } from '@tanstack/react-query'
+import {useRouter} from 'next/navigation'
+
 
 // ✅ Define your score type
 type ScoreData = {
@@ -43,17 +47,31 @@ const PrimaryResumeCard = ({
   resume,
   isSelected,
   onSelect,
+  onCreateTailored,
 }: {
   resume: ResumeWithScore
   isSelected: boolean
   onSelect: () => void
+  onCreateTailored: (resumeId: string) => void
 }) => {
-  const overallScore = resume?.scoreData?.scores?.overallScore ?? null
+  const scoreData =
+    typeof resume.scoreData === 'string'
+      ? (JSON.parse(resume.scoreData) as ScoreData)
+      : resume.scoreData
+  const overallScore = scoreData?.scores?.overallScore ?? null
+  const queryClient = useQueryClient()
+
+  const deleteResumeMutation = trpc.resume.delete.useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.resume.getPrimaryResumes.useQuery())
+    },
+  })
+  const router = useRouter()
 
   return (
     <Card
       className={cn(
-        'w-80 shrink-0 cursor-pointer transition-all duration-300',
+        'cursor-pointer transition-all duration-300',
         isSelected
           ? 'ring-2 ring-blue-500 shadow-lg'
           : 'hover:shadow-md'
@@ -72,15 +90,18 @@ const PrimaryResumeCard = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={()=>router.push(`/resume/edit/${resume.id}`)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onCreateTailored(resume.id)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create Tailored
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-500">
+              <DropdownMenuItem
+                className="text-red-500"
+                onClick={() => deleteResumeMutation.mutate({ resumeId: resume.id })}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>

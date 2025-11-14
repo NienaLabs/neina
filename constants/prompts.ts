@@ -82,9 +82,6 @@ interface ResumeExtraction {
 
   hobbies?: string[]
 
-  /**
-   * Any sections not part of our schema (e.g., "Volunteer Experience", "Research", etc.)
-   */
   customSections?: {
     sectionName: string
     entries: {
@@ -98,16 +95,19 @@ interface ResumeExtraction {
 
 ---
 
-### Guidelines:
-- Return **only** a valid JSON object — no explanations or extra text.
-- If a section is **missing in the resume**, **do not include it** in the output.
-- Ensure the structure strictly matches the ResumeExtraction interface.
-- Use arrays for multi-entry sections like education, experience, projects, certifications, etc.
-- Detect and categorize **custom sections** (like “Volunteer Experience”, “Research”, “Clubs”) into the \`customSections\` array.
+### IMPORTANT INSTRUCTIONS
+- Return **ONLY the extracted JSON object**.
+- Do **NOT** include explanations, comments, or extra text.
+- If a section is missing in the resume, **omit** it (do not include empty arrays).
+- Detect sections not in the schema and put them inside \`customSections\`.
+- Follow the JSON structure EXACTLY.
 
 ---
 
-### Example 1:
+### REFERENCE EXAMPLES  
+#### (These are for understanding ONLY — DO NOT COPY them into the output)
+
+[BEGIN EXAMPLE 1]
 {
   "address": {
     "email": "example@email.com",
@@ -206,10 +206,11 @@ interface ResumeExtraction {
     }
   ]
 }
+[END EXAMPLE 1]
 
 ---
 
-### Example 2:
+[BEGIN EXAMPLE 2]
 {
   "address": {
     "email": "example2@email.com",
@@ -299,67 +300,57 @@ interface ResumeExtraction {
     }
   ]
 }
+[END EXAMPLE 2]
 
 ---
 
-IMPORTANT:
-- Do **not** include comments, explanations, or formatting outside of the JSON object.
-- Return **only** the extracted JSON data, strictly following the ResumeExtraction structure.
+Remember:
+**Your output must contain ONLY the JSON extracted from the user's resume.**
 `
-export const analysisPrompt = `You are an expert typescript programmer and expert resume analyst,
-your task is to provide an object containing the analysis of an object extracted from a resume
-your object must include number of critical fixes,number of urgent fixes,number of low fixes
-number of total fixes and fixes which includes an object of each section with an array of the issue
-associated with the section,the severity of the issue and the fix,this is the interface of your return object
+
+export const analysisPrompt = `
+You are an expert TypeScript programmer and resume analyst.
+
+Your task is to provide an object containing the analysis of a resume extraction object.  
+
+The object MUST strictly follow this TypeScript interface:
+
 interface ResumeAnalysis {
-  /**
-   * Number of issues considered critical (must-fix)
-   */
   criticalFixes: number
-
-  /**
-   * Number of issues considered urgent but not critical
-   */
   urgentFixes: number
-
-  low:number
-
-  totalFixes:number
-  /**
-   * Detailed fixes per section
-   * Each section contains an array of issue objects
-   */
+  low: number
+  totalFixes: number
   fixes: Record<
     string,
     {
       issue: string
       suggestion: string
       severity: 'critical' | 'urgent' | 'low'
-    }[],
-    string,Record<
-    string,
-       {
-          issue: string,
-          suggestion: string,
-          severity: string
-        }
-    
-    >
+    }[]
   >
 }
--The following are examples of the return objects you are to return  
-# example 1
+
+STRICT RULES:
+- Return ONLY one JSON object, no comments, no explanations, nothing else.
+- All custom sections from the input should be placed under "otherSections" inside fixes.
+- Provide actionable suggestions that the user can directly apply.
+- If a role description exists, tailor the analysis to that role. Otherwise, analyze based on a general resume.
+- Include only sections that have actual issues. Do not include empty arrays or missing fields.
+
+EXAMPLES (FOR REFERENCE ONLY — DO NOT INCLUDE IN OUTPUT):
+
+# Example 1
 {
   "criticalFixes": 2,
   "urgentFixes": 1,
-  "low":2,
+  "low": 2,
   "totalFixes": 5,
   "fixes": {
     "profile": [
       {
         "issue": "Too brief; lacks measurable achievements.",
         "suggestion": "Add quantifiable results to demonstrate impact.",
-        "severity": "medium"
+        "severity": "urgent"
       }
     ],
     "experience": [
@@ -367,108 +358,37 @@ interface ResumeAnalysis {
         "issue": "Missing employment dates.",
         "suggestion": "Add start and end dates for each position.",
         "severity": "critical"
-      },{
-        "issue": "Missing employment dates.",
-        "suggestion": "Add start and end dates for each position.",
-        "severity": "critical"
       }
-    ],
-    "skills": [
-      {
-        "issue": "List does not include role-relevant tools.",
-        "suggestion": "Include tools like Docker and CI/CD.",
-        "severity": "urgent"
-      }
-    ],
-    "volunteering": [
-      {
-        "issue": "Descriptions are vague.",
-        "suggestion": "Specify role, contribution, and results.",
-        "severity": "low"
-      }
-    ],
-    "otherSections": {
-      "patents": [
-        {
-          "issue": "Patent description too long.",
-          "suggestion": "Summarize it in one or two lines.",
-          "severity": "low"
-        }
-      ],
-       "volunteering": [
-        {
-          "issue": "Patent description too long.",
-          "suggestion": "Summarize it in one or two lines.",
-          "severity": "low"
-        }
-      ]
-    }
+    ]
   }
 }
 
-# example 2
-
+# Example 2
 {
   "criticalFixes": 4,
   "urgentFixes": 5,
-  "low":2,
-  "totalFixes": 5,
+  "low": 2,
+  "totalFixes": 11,
   "fixes": {
-    "profile": [
-      {
-        "issue": "Too brief; lacks measurable achievements.",
-        "suggestion": "Add quantifiable results to demonstrate impact.",
-        "severity": "medium"
-      }
-    ],
-    "experience": [
-      {
-        "issue": "Missing employment dates.",
-        "suggestion": "Add start and end dates for each position.",
-        "severity": "critical"
-      },{
-        "issue": "Missing employment dates.",
-        "suggestion": "Add start and end dates for each position.",
-        "severity": "critical"
-      }
-    ],
     "skills": [
       {
         "issue": "List does not include role-relevant tools.",
         "suggestion": "Include tools like Docker and CI/CD.",
         "severity": "urgent"
       }
-    ],
-    "otherSections": {
-      "patents": [
-        {
-          "issue": "Patent description too long.",
-          "suggestion": "Summarize it in one or two lines.",
-          "severity": "low"
-        }
-      ],
-       "volunteering": [
-        {
-          "issue": "Patent description too long.",
-          "suggestion": "Summarize it in one or two lines.",
-          "severity": "low"
-        }
-      ]
-    }
+    ]
   }
 }
 
--IMPORTANT
-*place all and only those placed under custom section from your input under other sections
-*For suggestions,provide fixes users that can be used directly by users in fields that require that
-*In cases where a role description is provided,your analysis should be tailored to that role,if that's not provided,
-your result should be based on the standard of a general resume,
-*Your result should be only the object,no explanations or comments or anything else
-`
-export const scorePrompt = `You are an expert typescript programmer and expert resume scorer.
-Your scores should be based on the analysis object and the extracted resume object that's been provided
-Score the resume based on completeness, relevance, and quality of information. 
-Your scores should be an object,this is the interface of your result
+Return ONLY the JSON object.
+`;
+export const scorePrompt = `
+You are an expert TypeScript programmer and resume scorer.
+
+Your task is to score a resume based on the extracted object and its analysis.
+
+The object MUST strictly follow this TypeScript interface:
+
 interface ResumeScore {
   scores: {
     profile?: number;
@@ -494,9 +414,19 @@ interface ResumeScore {
   };
 }
 
---examples of the results you are to provide
-# example 1
-{"scores": {
+STRICT RULES:
+- Return ONLY one JSON object. Do not add comments, explanations, markdown, or extra text.
+- If no role description is provided, score based on a general resume.
+- If a role is provided, tailor scores and recommendations to that role.
+- Include roleMatch ONLY if a role description exists.
+- Include customSections only if they exist in the input.
+- Do not include empty arrays or missing fields.
+
+EXAMPLES (FOR REFERENCE ONLY — DO NOT INCLUDE IN OUTPUT):
+
+# Example 1
+{
+  "scores": {
     "profile": 8.5,
     "education": 9.0,
     "experience": 8.0,
@@ -512,60 +442,30 @@ interface ResumeScore {
       "sectionName": "Volunteering",
       "score": 8.0,
       "remarks": "Strong community involvement, shows leadership."
-    },
-    {
-      "sectionName": "Hobbies",
-      "score": 6.0,
-      "remarks": "Only marginally relevant to target job."
     }
   ],
   "roleMatch": {
     "targetRole": "Software Engineer",
     "matchPercentage": 85,
     "missingSkills": ["Kubernetes", "CI/CD Pipelines"],
-    "recommendations": [
-      "Include DevOps-related work or certifications."
-    ]
+    "recommendations": ["Include DevOps-related work or certifications."]
   }
 }
 
-# example 2
-{"scores": {
-    "profile": 8.5,
-    "education": 9.0,
-    "experience": 8.0,
-    "projects": 9.5,
-    "skills": 8.8,
-    "certifications": 7.0,
+# Example 2
+{
+  "scores": {
+    "profile": 9,
+    "education": 8.5,
+    "experience": 8,
+    "projects": 9.0,
+    "skills": 8.5,
+    "certifications": 7.5,
     "awards": 6.5,
-    "publications": 7.5,
+    "publications": 7,
     "overallScore": 8.3
-  },
-  "customSections": [
-    {
-      "sectionName": "Volunteering",
-      "score": 8.0,
-      "remarks": "Strong community involvement, shows leadership."
-    },
-    {
-      "sectionName": "Hobbies",
-      "score": 6.0,
-      "remarks": "Only marginally relevant to target job."
-    }
-  ],
-  "roleMatch": {
-    "targetRole": "Python Engineer",
-    "matchPercentage": 90,
-    "missingSkills": ["Kubernetes", "CI/CD Pipelines"],
-    "recommendations": [
-      "Include DevOps-related work or certifications."
-    ]
   }
 }
---IMPORTANT
-*If no role description is provided in your input,it means your scores should be based on the
-standard of a general resume but if a role is found it means your scores should be tailored
-to the role
-*In cases where no targetted is provided don't add the roleMatch section in your result
-*Your result should only be the object and nothing else,no comment,no explanation
-`
+
+Return ONLY the JSON object.
+`;

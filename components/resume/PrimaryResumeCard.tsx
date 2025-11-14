@@ -75,7 +75,7 @@ const PrimaryResumeCard = ({
   return (
     <Card
       className={cn(
-        'cursor-pointer bg-linear-to-r from-purple-200 to-transparent transition-all duration-300 inset-shadow-sm/40',
+        'cursor-pointer  transition-all duration-300 inset-shadow-sm/40',
         isSelected
           ? ' p-2 shadow-lg'
           : 'hover:shadow-md'

@@ -4,7 +4,6 @@ import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 import { AuthProvider } from "@/providers/AuthUIProvider";
 import {Toaster} from 'sonner'
-import Header from "@/components/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

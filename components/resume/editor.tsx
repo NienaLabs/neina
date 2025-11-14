@@ -7,6 +7,8 @@ import { useState } from 'react'
 import { CircleArrowRight, Plus, Trash2,Blinds, Info } from 'lucide-react'
 import Hint from '../hint'
 import { Badge } from '../ui/badge'
+import { ButtonGroup, ButtonGroupSeparator } from '../ui/button-group'
+import { cn } from '@/lib/utils'
 
 interface ResumeExtraction {
   address?: {
@@ -108,7 +110,9 @@ interface Fixes {
 
 
 const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: string | ResumeExtraction}) => {
+ const [save,setSave] = useState(false)
   const [editorState, setEditorState] = useState<ResumeExtraction | null>(() => {
+ 
     if (!extractedData) return null;
     try {
       return typeof extractedData === 'string' ? JSON.parse(extractedData) : extractedData;
@@ -124,6 +128,7 @@ const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: stri
   // ---------- Generic Updaters ----------
   const handleFieldChange = (section: keyof ResumeExtraction, value: unknown) => {
     setEditorState((prev) => ({ ...prev!, [section]: value }))
+    if(save===false){setSave(true)}
   }
 
   const handleNestedFieldChange = (
@@ -137,6 +142,7 @@ const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: stri
       updated[index] = { ...updated[index], [key]: value }
       return { ...prev, [section]: updated }
     })
+    if(save===false){setSave(true)}
   }
 
   const handleArrayAdd = (section: keyof ResumeExtraction, newItem: unknown) => {
@@ -144,6 +150,7 @@ const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: stri
       ...prev!,
       [section]: [...((prev![section] as any[]) || []), newItem],
     }))
+    if(save===false){setSave(true)}
   }
 
   const handleArrayDelete = (section: keyof ResumeExtraction, index: number) => {
@@ -152,6 +159,7 @@ const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: stri
       updated.splice(index, 1)
       return { ...prev, [section]: updated }
     })
+    if(save===false){setSave(true)}
   }
 
   // ---------- Address Section ----------
@@ -160,6 +168,7 @@ const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: stri
       ...prev!,
       address: { ...prev!.address, [key]: value },
     }))
+    if(save===false){setSave(true)}
   }
 
 const handleSkillArrayChange = (type: keyof NonNullable<ResumeExtraction['skills']>, index: number, value: string) => {
@@ -170,6 +179,7 @@ const handleSkillArrayChange = (type: keyof NonNullable<ResumeExtraction['skills
     updatedSkills[type] = arr;
     return { ...prev, skills: updatedSkills };
   });
+  if(save===false){setSave(true)}
 };
 
 const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
@@ -178,6 +188,7 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
     updatedSkills[type] = [...(updatedSkills[type] || []), ''];
     return { ...prev, skills: updatedSkills };
   });
+  if(save===false){setSave(true)}
 };
 
 
@@ -187,6 +198,7 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
       updatedLinks[index] = value
       return { ...prev, address: { ...prev!.address, otherLinks: updatedLinks } }
     })
+    if(save===false){setSave(true)}
   }
 
   const addNewOtherLink = () => {
@@ -197,6 +209,7 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
         otherLinks: [...(prev!.address!.otherLinks || []), ''],
       },
     }))
+    if(save===false){setSave(true)}
   }
 
  const handleFixes = (section: string) => {
@@ -327,7 +340,10 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
 
   // ---------- UI ----------
   return (
+    <>
+     
     <div className="p-4 space-y-10">
+     
       <h1 className="text-3xl font-bold mt-5">Resume Editor</h1>
      
        <Button variant="ghost" className=' transition-all z-10 bottom-8 fixed right-10'>
@@ -1025,6 +1041,19 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
 )}
 
     </div>
+    <div className={cn("hidden flex-row gap-2 fixed transition-all bg-background bottom-5 place-self-center p-2 rounded-lg z-10 items-center",save?"flex":"")}>
+        Do you want to save the changes?
+        <ButtonGroup>
+          <Button variant="ghost">
+            Save
+          </Button>
+          <ButtonGroupSeparator/>
+          <Button variant="ghost" onClick={()=>setSave(false)}>
+            Cancel
+          </Button>
+        </ButtonGroup>
+      </div>
+    </>
   )
 }
 

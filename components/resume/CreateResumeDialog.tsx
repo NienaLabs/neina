@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { trpc } from '@/trpc/client'
-import { Upload } from 'lucide-react'
+import { SquarePen } from 'lucide-react'
 import { toast } from 'sonner'
 
 const CreateResumeDialog = () => {
@@ -45,7 +45,7 @@ const CreateResumeDialog = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="animate-fade-in-down animation-delay-400">
-          <Upload className="mr-2 h-4 w-4" />
+          <SquarePen className="mr-2 h-4 w-4" />
           Create New Resume
         </Button>
       </DialogTrigger>

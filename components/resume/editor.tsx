@@ -109,7 +109,7 @@ interface Fixes {
 }
 
 
-const ResumeEditor = ({fixes, extractedData}: {fixes: Fixes, extractedData: string | ResumeExtraction}) => {
+export default function ResumeEditor  ({fixes, extractedData}: {fixes: Fixes, extractedData: string | ResumeExtraction}){
  const [save,setSave] = useState(false)
   const [editorState, setEditorState] = useState<ResumeExtraction | null>(() => {
  
@@ -211,20 +211,20 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
     }))
     if(save===false){setSave(true)}
   }
-
- const handleFixes = (section: string) => {
-  let issue = ""
-  let suggestion = ""
+const handleFixes = (section: string) => {
+  let issue = "";
+  let suggestion = "";
 
   // Normal (non-custom) sections
-  if (section !== "otherSections") {
-    const sectionFixes = (fixes[section] as Fix[]) || []
-    sectionFixes.forEach((fix) => {
-      issue += `\n ${fix.severity}: ${fix.issue}`
-      suggestion += `\n ${fix.suggestion}`
-    })
+  if (section !== "customSections") {
+    const sectionFixes = (fixes[section] as Fix[]) || [];
 
-    if (!sectionFixes.length) return null
+    sectionFixes.forEach((fix) => {
+      issue += `\n ${fix.severity}: ${fix.issue}`;
+      suggestion += `\n ${fix.suggestion}`;
+    });
+
+    if (!sectionFixes.length) return null;
 
     return (
       <Hint
@@ -245,58 +245,58 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
           report <Info className="size-4" />
         </Badge>
       </Hint>
-    )
+    );
   }
 
   // Custom Sections
-  else if (section === "otherSections") {
-    const customFixes = (fixes.otherSections as Record<string, Fix[]>) || {}
+  const customFixes = (fixes.customSections as Record<string, Fix[]>) || {};
 
-    if (Object.keys(customFixes).length === 0) return null
+  if (Object.keys(customFixes).length === 0) return null;
 
-    return (
-      <div className="flex flex-wrap gap-2">
-        {Object.keys(customFixes).map((sectionName) => {
-          const sectionIssues = customFixes[sectionName] || []
-          let customIssue = ""
-          let customSuggestion = ""
+  return (
+    <div className="flex flex-wrap gap-2">
+      {Object.keys(customFixes).map((sectionName) => {
+        const entries = customFixes[sectionName] ?? [];
+        let customIssue = "";
+        let customSuggestion = "";
 
-          sectionIssues.forEach((fix) => {
-            customIssue += `\n ${fix.severity}: ${fix.issue}`
-            customSuggestion += `\n ${fix.suggestion}`
-          })
+        entries.forEach((fix) => {
+          customIssue += `\n ${fix.severity}: ${fix.issue}`;
+          customSuggestion += `\n ${fix.suggestion}`;
+        });
 
-          return (
-            <Hint
-              key={sectionName}
-              hint={
-                <div className="space-y-2 max-w-md text-sm">
-                  <div>
-                    <Badge variant="outline" className="bg-gray-200 text-black">
-                      {sectionName}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Badge variant="destructive">Issues</Badge>
-                    <pre className="whitespace-pre-wrap">{customIssue}</pre>
-                  </div>
-                  <div>
-                    <Badge>Suggestions</Badge>
-                    <pre className="whitespace-pre-wrap">{customSuggestion}</pre>
-                  </div>
+        return (
+          <Hint
+            key={sectionName}
+            hint={
+              <div className="space-y-2 max-w-md text-sm">
+                <Badge variant="outline" className="bg-gray-200 text-black">
+                  {sectionName}
+                </Badge>
+
+                <div>
+                  <Badge variant="destructive">Issues</Badge>
+                  <pre className="whitespace-pre-wrap">{customIssue}</pre>
                 </div>
-              }
-            >
-              <Badge className="flex items-center gap-1">
-                {sectionName} <Info className="size-4" />
-              </Badge>
-            </Hint>
-          )
-        })}
-      </div>
-    )
-  }
-}
+
+                <div>
+                  <Badge>Suggestions</Badge>
+                  <pre className="whitespace-pre-wrap">{customSuggestion}</pre>
+                </div>
+              </div>
+            }
+          >
+            <Badge className="flex items-center gap-1">
+              {sectionName} <Info className="size-4" />
+            </Badge>
+          </Hint>
+        );
+      })}
+    </div>
+  );
+};
+
+
  // ---------- Utility Renderer for simple array fields ----------
  const renderStringArray = (
   section: keyof ResumeExtraction,
@@ -1055,6 +1055,7 @@ const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
       </div>
     </>
   )
+
 }
 
-export default ResumeEditor
+

@@ -11,11 +11,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Resume } from '@/lib/generated/prisma/client'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, Edit, Trash2, PlusCircle } from 'lucide-react'
+import { MoreHorizontal, Edit, Trash2, PlusCircle,CircleStar } from 'lucide-react'
 import { format } from 'date-fns'
 import { trpc } from '@/trpc/client'
-import { useQueryClient } from '@tanstack/react-query'
 import {useRouter} from 'next/navigation'
+import { toast } from 'sonner'
 
 
 // ✅ Define your score type
@@ -59,21 +59,25 @@ const PrimaryResumeCard = ({
       ? (JSON.parse(resume.scoreData) as ScoreData)
       : resume.scoreData
   const overallScore = scoreData?.scores?.overallScore ?? null
-  const queryClient = useQueryClient()
+  const utils = trpc.useUtils()
 
   const deleteResumeMutation = trpc.resume.delete.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries(trpc.resume.getPrimaryResumes.useQuery())
+      utils.resume.getPrimaryResumes.invalidate()
+      toast.success("resume deleted successfully")
     },
+    onError:(e) => {
+      toast.error("An error occured: "+e)
+    }
   })
   const router = useRouter()
 
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all duration-300',
+        'cursor-pointer bg-linear-to-r from-purple-200 to-transparent transition-all duration-300 inset-shadow-sm/40',
         isSelected
-          ? 'ring-2 ring-blue-500 shadow-lg'
+          ? ' p-2 shadow-lg'
           : 'hover:shadow-md'
       )}
       onClick={onSelect}
@@ -123,7 +127,8 @@ const PrimaryResumeCard = ({
                   : 'bg-yellow-100 text-yellow-800'
               )}
             >
-              Score: {overallScore.toFixed(1)}
+              Score: {overallScore.toFixed(1)}/10
+              <CircleStar/>
             </Badge>
           ) : (
             <Badge className="bg-gray-100 text-gray-800">No Score</Badge>

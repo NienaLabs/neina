@@ -2,12 +2,12 @@ import ResumeEditor from '@/components/resume/editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { editorButtons } from '@/constants/constant'
-import { X,Star,BadgeAlert, Clover, RefreshCcw, MoreHorizontal } from 'lucide-react'
+import { X,Star, Clover, RefreshCcw, MoreHorizontal } from 'lucide-react'
 import { trpc } from '@/trpc/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-
+import Image from 'next/image'
 
 interface Props {
     params:Promise<{resumeId: string}>
@@ -31,6 +31,12 @@ const Page = async ({params}:Props) => {
     const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) : {fixes: {}}
     const {fixes,...fixCount} = parsedAnalysisData
     const score = scoreData ? (typeof scoreData === 'string' ? JSON.parse(scoreData) : scoreData) : {scores: {}, roleMatch: {}}
+const gradients = [
+   "bg-gradient-to-br from-rose-300 to-rose-600",
+  "bg-gradient-to-br from-blue-300 to-blue-600",
+  "bg-gradient-to-br from-green-300 to-green-600", 
+  "bg-gradient-to-br from-amber-300 to-amber-600",
+]
 
   return (
    <div className="p-5 flex min-h-screen flex-col flex-1 gap-5 bg-muted h-full w-full">
@@ -66,38 +72,57 @@ const Page = async ({params}:Props) => {
           </div>
         </div>
         <div className="bg-background rounded-3xl border flex-1">
-         <div className="border-b p-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-center">
-          <div className="flex items-center justify-center">
-            <div className="grid grid-cols-1 relative grid-rows-1">
-              <div className="border-4 border-gray-100 dark:border-gray-700 size-20 rounded-full" />
-              <div 
-               style={{'--value': (score?.roleMatch?.matchPercentage || 0) + "%"} as React.CSSProperties}
-              className="border-4 absolute z-2 border-amber-500 size-20 rounded-full dark:border-amber-400" />
-              <div className="absolute z-3 size-20 rounded-full items-center flex justify-center">
-                <h1 className="font-bold text-3xl">{(score?.scores?.overallScore || 0).toFixed(1)}</h1>
-              </div>
-            </div>
-          </div>
+         <div className="border-b bg-linear-to-r from-transparent via-purple-200 to-transparent p-4 flex-col flex md:flex-row flex-wrap gap-4 items-center">
+         <div className="relative flex items-center justify-center w-40 h-40">
+  {/* Laurel */}
+           <Image
+           src="/laurel.svg"
+           width={160}
+           height={160}
+           alt="laurel"
+           className="absolute inset-0 w-full h-full object-contain"
+           />
+
+  {/* Shield / Score container */}
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+    <div className="w-24 h-24 bg-background border rounded-bl-[50px] rounded-br-[50px]
+     rounded-tl-lg rounded-tr-lg flex items-center
+      bg-radial-[at_25%_25%] from-white inset-shadow-white 
+      to-zinc-900 to-75% justify-center shadow-md inset-shadow-sm/40">
+      <h1 className="font-bold text-3xl">
+        {(score?.scores?.overallScore || 0).toFixed(1)}
+      </h1>
+    </div>
+  </div>
+</div>
+
           <div className="flex flex-col gap-2 items-center md:items-start">
-            <h1>Resume strength: {score?.roleMatch?.matchPercentage || 0}%</h1>
+            {score?.roleMatch?.matchPercentage&&<h1>Role Match:{score?.roleMatch?.matchPercentage}%</h1>}
             <Badge>
               {(score?.roleMatch?.matchPercentage || 0) > 80 ? "Excellent" : (score?.roleMatch?.matchPercentage || 0) > 60 ? "Good" : "Fair"}
               <Clover/>
             </Badge>
+            <Button variant="outline" className="rounded-full">
+               <h2 className="text-xs">view full report</h2>
+            </Button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:col-span-2 lg:col-span-1">
+          <div className="flex justify-center md:ml-auto  items-center flex-col gap-6">
+          <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:col-span-2">
             {Object.keys(fixCount).map((key,index)=>(
-              <Badge variant="destructive" className="" key={index}>
-               {fixCount[key]}   {key.replace("Fixes","")+" fixe(s)".toLowerCase()}
-                <BadgeAlert/>
-              </Badge>              
+              <div key={index} className="flex flex-col items-center gap-1 justify-center">
+              <div   className={`size-10 rounded-full border-2 flex items-center justify-center ${gradients[index % gradients.length]} text-white shadow-md`}>
+               {fixCount[key]}  
+              </div>  
+              <h2 className="text-xs  text-center">{key.replace("Fixes","")+" fix(es)".toLowerCase()}</h2>            
+              </div>
             ))}
           </div>
-          <div className="flex justify-center md:justify-end">
+          <div className="flex justify-center mt-auto">
             <Button className="flex items-center gap-1">
             <span>Re-analyze</span>
             <RefreshCcw/>
             </Button>
+          </div>
           </div>
         </div>
         <ResumeEditor fixes={fixes} extractedData={extractedData}/>

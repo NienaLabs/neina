@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import PrimaryResumeCard from './PrimaryResumeCard'
 import { Empty } from '@/components/ui/empty'
@@ -5,6 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
 import { ResumeWithTailored } from './ResumePageClient'
 import CreateTailoredResumeDialog from './CreateTailoredResumeDialog'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
 
 const PrimaryResumeSection = ({
   resumes,
@@ -38,20 +47,33 @@ const PrimaryResumeSection = ({
       <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
         Primary Resumes
       </h2>
+
       {resumes && resumes.length > 0 ? (
         <>
-          <div className="flex flex-wrap flex-row gap-2 min-w-full p-2 -m-1">
-            {resumes.map((resume) => (
-              <div key={resume.id} className="p-1 w-full md:w-1/2 lg:w-1/3">
-                <PrimaryResumeCard
-                  resume={resume}
-                  isSelected={selectedId === resume.id}
-                  onSelect={() => handleSelect(resume)}
-                  onCreateTailored={handleCreateTailored}
-                />
-              </div>
-            ))}
-          </div>
+          <Carousel className="w-full max-w-6xl mx-auto relative">
+            <CarouselContent>
+              {resumes.map((resume) => (
+                <CarouselItem
+                  key={resume.id}
+                  className="basis-full sm:basis-1/2 lg:basis-1/3"
+                >
+                  <div className="p-2">
+                    <PrimaryResumeCard
+                      resume={resume}
+                      isSelected={selectedId === resume.id}
+                      onSelect={() => handleSelect(resume)}
+                      onCreateTailored={handleCreateTailored}
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+
+            {/* Ensure arrows are visible and positioned nicely */}
+            <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background shadow-md border rounded-full w-10 h-10 flex items-center justify-center" />
+            <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-background/80 hover:bg-background shadow-md border rounded-full w-10 h-10 flex items-center justify-center" />
+          </Carousel>
+
           {selectedResumeId && (
             <CreateTailoredResumeDialog
               primaryResumeId={selectedResumeId}

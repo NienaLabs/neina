@@ -61,7 +61,7 @@ const ResumePageClient = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white animate-fade-in-down">
             Resume AI
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 animate-fade-in-down animation-delay-200">
+          <p className="text-gray-500 text-sm dark:text-gray-400 animate-fade-in-down animation-delay-200">
             Manage and optimize your resumes with the power of AI.
           </p>
         </div>

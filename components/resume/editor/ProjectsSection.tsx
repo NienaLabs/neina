@@ -1,0 +1,119 @@
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
+import { ResumeExtraction, Fixes } from './types';
+import { FixesDisplay } from './FixesDisplay';
+import { JSX } from 'react';
+
+interface ProjectsSectionProps {
+  projects: NonNullable<ResumeExtraction['projects']>;
+  handleArrayAdd: (section: keyof ResumeExtraction, newItem: unknown) => void;
+  handleArrayDelete: (section: keyof ResumeExtraction, index: number) => void;
+  handleNestedFieldChange: (
+    section: keyof ResumeExtraction,
+    index: number,
+    key: string,
+    value: unknown
+  ) => void;
+  renderStringArray: (
+    section: keyof ResumeExtraction,
+    index: number,
+    key: string,
+    values: string[] | undefined
+  ) => JSX.Element;
+  fixes: Fixes;
+}
+
+/**
+ * Component for editing the projects section of a resume.
+ * @param projects - The projects data.
+ * @param handleArrayAdd - Function to add a new project entry.
+ * @param handleArrayDelete - Function to delete a project entry.
+ * @param handleNestedFieldChange - Function to handle changes to nested fields.
+ * @param renderStringArray - Utility function to render string arrays.
+ * @param fixes - The fixes object for displaying hints.
+ * @returns A section component for projects.
+ */
+export const ProjectsSection = ({
+  projects,
+  handleArrayAdd,
+  handleArrayDelete,
+  handleNestedFieldChange,
+  renderStringArray,
+  fixes,
+}: ProjectsSectionProps) => {
+  return (
+    <section>
+      <div className="text-xl font-semibold flex items-center justify-between">
+        <div className="flex flex-row gap-2 items-center">
+          <h2 className="text-xl font-semibold mb-3">Projects</h2>
+          <div className="p-1 mb-3 flex items-center justify-center">
+            <FixesDisplay fixes={fixes} section="projects" />
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            handleArrayAdd('projects', {
+              name: '',
+              description: '',
+              technologies: [''],
+              role: '',
+              link: '',
+            })
+          }
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add Project
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        {projects.map((proj, index) => (
+          <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2"
+              onClick={() => handleArrayDelete('projects', index)}
+            >
+              <Trash2 className="size-4 text-red-500" />
+            </Button>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                placeholder="Project Name"
+                value={proj.name}
+                onChange={(e) => handleNestedFieldChange('projects', index, 'name', e.target.value)}
+              />
+              <Input
+                placeholder="Role"
+                value={proj.role}
+                onChange={(e) => handleNestedFieldChange('projects', index, 'role', e.target.value)}
+              />
+              <Textarea
+                className="col-span-2"
+                placeholder="Description"
+                value={proj.description}
+                onChange={(e) =>
+                  handleNestedFieldChange('projects', index, 'description', e.target.value)
+                }
+              />
+              <div className="col-span-2">
+                <p className="font-medium">Technologies</p>
+                {renderStringArray('projects', index, 'technologies', proj.technologies)}
+              </div>
+              <Input
+                className="col-span-2"
+                placeholder="Project Link"
+                value={proj.link}
+                onChange={(e) => handleNestedFieldChange('projects', index, 'link', e.target.value)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};

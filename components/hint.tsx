@@ -1,20 +1,32 @@
 import React from 'react'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
-type side = "top" | "right" | "bottom" | "left"
+type Side = 'top' | 'right' | 'bottom' | 'left'
 
-const Hint = ({children,hint,side="top"}:{children:React.ReactNode,hint:string | React.ReactNode,side?:side}) => {
+interface HintProps {
+  children: React.ReactNode
+  hint: string | React.ReactNode
+  side?: Side
+}
+
+const Hint: React.FC<HintProps> = ({ children, hint, side = 'top' }) => {
   return (
-    <Tooltip>
-        <TooltipTrigger>
-            {children}
-        </TooltipTrigger>
-        <TooltipContent side={side}>
-            <span>
-              {hint}
-            </span>
-        </TooltipContent>
-    </Tooltip>
+    <Popover>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent
+        side={side}
+        className="w-96 max-h-[60vh] p-0 overflow-hidden"
+      >
+        <ScrollArea className="h-full">
+          <div className="p-4">{hint}</div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
   )
 }
 

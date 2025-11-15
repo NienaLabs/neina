@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {  Plus, Blinds } from 'lucide-react'
+import {  Plus } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { ResumeExtraction,  Fixes } from './editor/types'
@@ -135,9 +135,7 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
     <>
       <div className="p-4 space-y-10">
         <h1 className="text-3xl font-bold mt-5">Resume Editor</h1>
-        <Button variant="ghost" className=' transition-all z-10 bottom-8 fixed right-10'>
-          <Blinds className="size-13 hover:size-14 transition-all" />
-        </Button>
+       
 
         {/* =============== ADDRESS =============== */}
         {editorState.address && (

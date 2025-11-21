@@ -37,11 +37,12 @@ export const auth = betterAuth({
                  "api-key": process.env.BREVO_API_KEY!,
              },
             body: JSON.stringify({
-           sender: { name: "John Doe", email: "john@mycompany.com" },
-             to: [{ email: "recipient@example.com", name: "Jane" }],
+           sender: { 
+             name: process.env.EMAIL_SENDER_NAME || "Support", 
+             email: process.env.EMAIL_SENDER_ADDRESS! 
+           },             to: [{ email: user.email, name: name }],
              subject: `Hello ${name}`,
-             htmlContent: `<a href={"${url}"}>Click this link to verify your account </a>`,
-  }),
+             htmlContent: `<a href="${url}">Click this link to verify your account</a>`,  }),
 })
   .then((res) => res.json())
   .then((data) => console.log("Email sent:", data))

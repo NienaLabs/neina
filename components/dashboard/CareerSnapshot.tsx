@@ -78,7 +78,7 @@ const CareerSnapshot: React.FC<CareerSnapshotProps> = ({ userData }) => {
           >
             <div className="flex items-center gap-4">
               <div
-                className={`flex items-center justify-center p-3 rounded-lg bg-linear-to-r ${stat.color} text-white shadow`}
+                className={`flex items-center justify-center p-3 rounded-lg bg-gradient-to-r ${stat.color} text-white shadow`}
               >
                 <stat.icon className="h-6 w-6" />
               </div>
@@ -97,7 +97,7 @@ const CareerSnapshot: React.FC<CareerSnapshotProps> = ({ userData }) => {
             <div className="mt-4">
               <div className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                 <div
-                  className={`h-full bg-linear-to-r ${stat.color} transition-all duration-700`}
+                  className={`h-full bg-gradient-to-r ${stat.color} transition-all duration-700`}
                   style={{
                     width: `${
                       stat.id === "resume"

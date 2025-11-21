@@ -1,100 +1,105 @@
-import { TestimonialsColumn } from "@/components/ui/testimonials-columns-1";
-import { motion } from "motion/react";
+import { Testimonial } from "@/components/ui/testimonial-card"
+import { Star } from "lucide-react"
 
 const testimonials = [
   {
-    text: "The AI resume builder helped me land interviews at top tech companies. I went from no responses to multiple offers in just two weeks!",
-    image: "https://randomuser.me/api/portraits/men/1.jpg",
     name: "Michael Chen",
-    role: "Senior Software Engineer at Google",
+    role: "Software Engineer",
+    company: "TechCorp",
+    rating: 5,
+    image: "https://i.pravatar.cc/150?u=michael",
+    testimonial: "This platform cut my job search time in half! The AI helped me land 5 interviews in just 2 weeks by optimizing my applications for each role. The automated follow-ups were a game-changer."
   },
   {
-    text: "The interview preparation tools were a game-changer. The AI mock interviews helped me practice and build confidence before the real thing.",
-    image: "https://randomuser.me/api/portraits/women/2.jpg",
-    name: "Jessica Williams",
-    role: "Product Manager at Microsoft",
-  },
-  {
-    text: "I was able to tailor my application for each job using their AI suggestions. The difference in response rate was incredible!",
-    image: "https://randomuser.me/api/portraits/men/3.jpg",
-    name: "David Kim",
-    role: "Data Scientist at Amazon",
-  },
-  {
-    text: "The job matching algorithm found opportunities I would have never discovered on my own. Got my dream job in just a month!",
-    image: "https://randomuser.me/api/portraits/women/4.jpg",
     name: "Sarah Johnson",
-    role: "UX Designer at Spotify",
+    role: "Product Manager",
+    company: "InnoTech",
+    rating: 5,
+    image: "https://i.pravatar.cc/150?u=sarah",
+    testimonial: "As someone switching careers, I was struggling to get noticed. The AI helped me translate my experience into tech-relevant skills, and I got my first product manager interview within a week!"
   },
   {
-    text: "The salary negotiation tips helped me increase my offer by $25,000. This platform paid for itself a hundred times over!",
-    image: "https://randomuser.me/api/portraits/men/5.jpg",
-    name: "Robert Taylor",
-    role: "Engineering Lead at Stripe",
+    name: "David Kim",
+    role: "Recent Graduate",
+    company: "State University",
+    rating: 4,
+    image: "https://i.pravatar.cc/150?u=david",
+    testimonial: "The platform's resume builder and cover letter generator are incredible. I went from no responses to multiple interview requests after using the AI suggestions to improve my application materials."
   },
   {
-    text: "As a career changer, the skills gap analysis was invaluable. It showed me exactly what I needed to learn to break into tech.",
-    image: "https://randomuser.me/api/portraits/women/6.jpg",
-    name: "Emily Rodriguez",
-    role: "Frontend Developer at Airbnb",
+    name: "Priya Patel",
+    role: "UX Designer",
+    company: "DesignHub",
+    rating: 5,
+    image: "https://i.pravatar.cc/150?u=priya",
+    testimonial: "The interview preparation tools were a lifesaver! The AI mock interviews helped me practice and refine my answers. I felt so much more confident in my actual interviews."
   },
   {
-    text: "The AI-powered resume review caught issues I'd missed for years. My interview invitations tripled after making their suggested changes.",
-    image: "https://randomuser.me/api/portraits/men/7.jpg",
     name: "James Wilson",
-    role: "DevOps Engineer at Netflix",
+    role: "Senior Developer",
+    company: "CodeForge",
+    rating: 5,
+    image: "https://i.pravatar.cc/150?u=james",
+    testimonial: "After 10 years in the industry, I was skeptical about needing help, but the AI found ways to improve my resume I never considered. I landed a leadership role with a 30% salary increase!"
   },
   {
-    text: "I was skeptical about AI helping with job search, but the personalized cover letter generator saved me hours and got me noticed.",
-    image: "https://randomuser.me/api/portraits/women/8.jpg",
-    name: "Olivia Martin",
-    role: "Marketing Director at HubSpot",
-  },
-  {
-    text: "The interview question predictor was scarily accurate. I walked into every interview feeling prepared and confident.",
-    image: "https://randomuser.me/api/portraits/men/9.jpg",
-    name: "Daniel Lee",
-    role: "Senior Product Designer at Slack",
-  },
-];
+    name: "Emily Rodriguez",
+    role: "Marketing Specialist",
+    company: "BrandVista",
+    rating: 4,
+    image: "https://i.pravatar.cc/150?u=emily",
+    testimonial: "The job matching algorithm is spot-on. It found positions that were a perfect fit for my skills and experience that I wouldn't have found on my own. The application tracker kept me organized throughout the process."
+  }
+]
 
-const firstColumn = testimonials.slice(0, 3);
-const secondColumn = testimonials.slice(3, 6);
-const thirdColumn = testimonials.slice(6, 9);
-
-
-const Testimonials = () => {
+export function TestimonialDemo() {
   return (
-    <section id="testimonials" className="bg-background my-20 relative">
-
-      <div className="container z-10 mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          viewport={{ once: true }}
-          className="flex flex-col items-center justify-center max-w-[540px] mx-auto"
-        >
-          <div className="flex justify-center">
-            <div className="border py-1 px-4 rounded-lg">Testimonials</div>
-          </div>
-
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tighter mt-5">
-            What our users say
+    <section className="relative py-16 sm:py-24 lg:py-28">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)]" />
+      </div>
+      
+      <div className="container px-4 mx-auto sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+            Loved by developers and designers
           </h2>
-          <p className="text-center mt-5 opacity-75">
-            See what our customers have to say about us.
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+            Join thousands of satisfied users who have transformed their development workflow with our components.
           </p>
-        </motion.div>
+        </div>
 
-        <div className="flex justify-center gap-6 mt-10 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)] max-h-[740px] overflow-hidden">
-          <TestimonialsColumn testimonials={firstColumn} duration={15} />
-          <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={19} />
-          <TestimonialsColumn testimonials={thirdColumn} className="hidden lg:block" duration={17} />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {testimonials.map((testimonial) => (
+            <div 
+              key={testimonial.name}
+              className="h-full transition-transform duration-300 hover:scale-[1.02]"
+            >
+              <Testimonial 
+                {...testimonial} 
+                className="h-full transition-all duration-300 hover:shadow-lg hover:border-primary/20"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <div className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-muted-foreground bg-muted/50 rounded-full">
+            <div className="flex -space-x-2">
+              {testimonials.slice(0, 3).map((testimonial, index) => (
+                <img
+                  key={index}
+                  className="w-8 h-8 rounded-full border-2 border-background"
+                  src={testimonial.image}
+                  alt={testimonial.name}
+                />
+              ))}
+            </div>
+            <span>Trusted by developers from leading companies</span>
+          </div>
         </div>
       </div>
     </section>
-  );
-};
-
-export default Testimonials;
+  )
+}

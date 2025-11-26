@@ -1,12 +1,16 @@
 import { inngest } from "./client";
 import { createNetwork, createState } from "@inngest/agent-kit";
+import { v4 as uuidv4 } from 'uuid';
 import prisma from "@/lib/prisma";
-import { parserAgent, analysisAgent, scoreAgent } from "./agents";
+import { parserAgent, analysisAgent, scoreAgent, skillsExtractorAgent, experienceExtractorAgent } from "./agents";
+import generateChunksAndEmbeddings from "@/lib/embeddings";
 
 interface AgentState {
   parserAgent:string;
   analyserAgent:string;
   scoreAgent:string;
+  skillsExtractorAgent:string;
+  experienceExtractorAgent:string;
 }
 
 const pipeline = [parserAgent, analysisAgent, scoreAgent];
@@ -15,7 +19,9 @@ const pipeline = [parserAgent, analysisAgent, scoreAgent];
 const state = createState<AgentState>({
   parserAgent:"",
   analyserAgent:"",
-  scoreAgent:""
+  scoreAgent:"",
+  skillsExtractorAgent:"",
+  experienceExtractorAgent:""
 })
 
 const network = createNetwork({
@@ -29,23 +35,128 @@ const network = createNetwork({
   },
 });
 
+// Skills & Experience extraction pipeline (runs after main pipeline)
+const extractionPipeline = [skillsExtractorAgent, experienceExtractorAgent];
+const extractionNetwork = createNetwork({
+  name: 'resume-extraction-network',
+  defaultState: createState<AgentState>({
+    parserAgent: "",
+    analyserAgent: "",
+    scoreAgent: "",
+    skillsExtractorAgent: "",
+    experienceExtractorAgent: ""
+  }),
+  agents: extractionPipeline,
+  router: ({ callCount }) => {
+    const nextAgent = extractionPipeline[callCount];
+    return nextAgent ?? undefined;
+  },
+});
+
+/**
+ * Helper: Extract and embed skills and experience, then persist to DB
+ * Optimized to generate embeddings once per section to save costs.
+ * Enforces a SINGLE ROW per resume for skills and experience.
+ */
+async function embedAndSaveSkillsExperience(
+  resumeId: string,
+  skills: string[],
+  certifications: string[],
+  experiences: string[]
+) {
+  try {
+    const allSkills = [...skills, ...certifications].filter(Boolean).join(", ");
+    const allExperience = experiences.filter(Boolean).join("\n\n");
+    console.log(resumeId)
+    // Run parallel operations for Skills and Experience
+    await Promise.all([
+      // 1. Process Skills
+      (async () => {
+        if (!allSkills) return;
+        try {
+          const res = await generateChunksAndEmbeddings(allSkills);
+          const vector = res.vectorStore[0];
+          const formattedVector = `[${vector.join(',')}]`
+
+          if (!vector || vector.length === 0) {
+            console.warn(`[embedAndSave] No vector generated for skills. Skipping.`);
+            return;
+          }
+
+          // Transaction: Delete existing -> Insert New (Text + Vector)
+          // Using $executeRaw is safer than Unsafe; Prisma handles array serialization
+          await prisma.$executeRaw`
+              INSERT INTO "resume_skills" ("id", "resume_id", "skill_text", "embedding")
+              VALUES (
+                ${uuidv4()}, 
+                ${resumeId}, 
+                ${allSkills}, 
+                ${formattedVector}::vector
+              ) ON CONFLICT ("resume_id") 
+      DO UPDATE SET 
+        "embedding" = EXCLUDED."embedding"
+            `
+          console.log(`[embedAndSave] Saved single skills row for resume ${resumeId}`);
+        } catch (err) {
+          console.error(`[embedAndSave] Failed to process skills for ${resumeId}:`, err);
+        }
+      })(),
+
+      // 2. Process Experience
+      (async () => {
+        if (!allExperience) return;
+        try {
+          const res = await generateChunksAndEmbeddings(allExperience);
+          const vector = res.vectorStore[0];
+          const formattedVector = `[${vector.join(',')}]`
+
+          if (!vector || vector.length === 0) {
+            console.warn(`[embedAndSave] No vector generated for experience. Skipping.`);
+            return;
+          }
+
+          await prisma.$executeRaw`
+              INSERT INTO "resume_experience" ("id", "resume_id", "bullet_text", "embedding")
+              VALUES (
+                ${uuidv4()}, 
+                ${resumeId}, 
+                ${allExperience}, 
+                ${formattedVector}::vector
+              ) ON CONFLICT ("resume_id") 
+      DO UPDATE SET 
+        "embedding" = EXCLUDED."embedding"
+            `
+          console.log(`[embedAndSave] Saved single experience row for resume ${resumeId}`);
+        } catch (err) {
+          console.error(`[embedAndSave] Failed to process experience for ${resumeId}:`, err);
+        }
+      })()
+    ]);
+
+  } catch (err) {
+    console.error(`[embedAndSave] Fatal error for resume ${resumeId}:`, err);
+  }
+}
+
 export const resumeCreated = inngest.createFunction(
   { id: "resume-AI-workflow" },
   { event: "app/primary-resume.created" },
   async ({step,event}) => {
-    const state = createState<AgentState>({
+    const mainState = createState<AgentState>({
       parserAgent:"",
       analyserAgent:"",
-      scoreAgent:""
+      scoreAgent:"",
+      skillsExtractorAgent:"",
+      experienceExtractorAgent:""
     })
     const resumeText =`
     #Resume
     ${event.data.content}
     `
     // Run through the network (parser → analysis → score)
-    const result = await network.run(resumeText,{state});
-    await step.run("save-resume",async()=>{
-    await prisma.resume.create({
+    const result = await network.run(resumeText,{state: mainState});
+    const savedResumeId=await step.run("save-resume",async()=>{
+    const saved = await prisma.resume.create({
       data:{
       name:event.data.name,
       content:event.data.content,
@@ -55,7 +166,36 @@ export const resumeCreated = inngest.createFunction(
       analysisData:result.state.data.analyserAgent,
       scoreData:result.state.data.scoreAgent}
     })
+    return saved.id;
     })
+
+    // Run extraction pipeline (skills & experience) after main workflow
+    const extractionState = createState<AgentState>({
+      parserAgent:"",
+      analyserAgent:"",
+      scoreAgent:"",
+      skillsExtractorAgent:"",
+      experienceExtractorAgent:""
+    })
+    
+    // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
+    const extractionResult = await extractionNetwork.run(resumeText, { state: extractionState });
+
+    // Parse and embed skills/experience
+    await step.run("embed-and-save-skills-experience", async () => {
+      try {
+        const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
+        const experienceData = JSON.parse(extractionResult.state.data.experienceExtractorAgent || '{}');
+        
+        const skills = skillsData.skills || [];
+        const certifications = skillsData.certifications || [];
+        const experiences = experienceData.experiences || [];
+
+        await embedAndSaveSkillsExperience(savedResumeId, skills, certifications, experiences);
+      } catch (err) {
+        console.error("[resumeCreated] Failed to parse extraction results:", err);
+      }
+    });
 
     return result // Final stage (scoreAgent) output
   }
@@ -65,6 +205,13 @@ export const resumeUpdated = inngest.createFunction(
   { id: "resume-updated-workflow" },
   { event: "app/resume.updated" },
   async ({step,event}) => {
+    const mainState = createState<AgentState>({
+      parserAgent:"",
+      analyserAgent:"",
+      scoreAgent:"",
+      skillsExtractorAgent:"",
+      experienceExtractorAgent:""
+    })
     const resumeText =`
     #Resume
     ${event.data.content}
@@ -75,7 +222,7 @@ export const resumeUpdated = inngest.createFunction(
     ${event.data.description}
     `
     // Run through the network (parser → analysis → score)
-    const result = await network.run(resumeText,{state});
+    const result = await network.run(resumeText,{state: mainState});
     await step.run("update-resume",async()=>{
     await prisma.resume.update({
       where:{
@@ -90,6 +237,34 @@ export const resumeUpdated = inngest.createFunction(
       scoreData:result.state.data.scoreAgent}
     })
     })
+
+    // Run extraction pipeline (skills & experience) after main workflow
+    const extractionState = createState<AgentState>({
+      parserAgent:"",
+      analyserAgent:"",
+      scoreAgent:"",
+      skillsExtractorAgent:"",
+      experienceExtractorAgent:""
+    })
+    
+    // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
+    const extractionResult = await extractionNetwork.run(resumeText, { state: extractionState });
+
+    // Parse and embed skills/experience
+    await step.run("embed-and-save-skills-experience-update", async () => {
+      try {
+        const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
+        const experienceData = JSON.parse(extractionResult.state.data.experienceExtractorAgent || '{}');
+        
+        const skills = skillsData.skills || [];
+        const certifications = skillsData.certifications || [];
+        const experiences = experienceData.experiences || [];
+
+        await embedAndSaveSkillsExperience(event.data.resumeId, skills, certifications, experiences);
+      } catch (err) {
+        console.error("[resumeUpdated] Failed to parse extraction results:", err);
+      }
+    });
 
     return result // Final stage (scoreAgent) output
   }

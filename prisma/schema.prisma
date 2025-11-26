@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -11,30 +5,32 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  resumes       Resume[]  
-  tailoredResumes TailoredResume[] 
+  id                String           @id
+  name              String
+  email             String           @unique
+  emailVerified     Boolean          @default(false)
+  image             String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @default(now()) @updatedAt
+  remaining_minutes Int              @default(30)
+  subscription_id   String?
+  accounts          Account[]
+  interview         interview[]
+  resumes           Resume[]
+  sessions          Session[]
+  tailoredResumes   TailoredResume[]
+  subscription      subscription?    @relation(fields: [subscription_id], references: [id])
 
-  @@unique([email])
   @@map("user")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -42,7 +38,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -51,7 +46,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -61,6 +55,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -76,52 +71,154 @@ model Verification {
   @@map("verification")
 }
 
-
 model Resume {
-  id             String   @id @default(cuid())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  content        String
-  name           String
-  isPrimary      Boolean  @default(false)
-
-  // extracted / analyzed / scored data (flexible JSON)
-  extractedData  Json?
-  analysisData   Json?
-  scoreData      Json?
-
-  // relation to user
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // one primary resume can have many tailored versions
-  tailoredResumes TailoredResume[]
+  id                String             @id @default(cuid())
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  content           String
+  name              String
+  isPrimary         Boolean            @default(false)
+  extractedData     Json?
+  analysisData      Json?
+  scoreData         Json?
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume_experience resume_experience?
+  resume_skills     resume_skills?
+  tailoredResumes   TailoredResume[]
 
   @@index([userId])
   @@map("resume")
 }
 
 model TailoredResume {
-  id             String   @id @default(cuid())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  content        String
-  role           String?
-  jobDescription String?
-  name           String 
-  extractedData  Json?
-  analysisData   Json?
-  scoreData      Json?
-
-  // relation to the primary resume it was created from
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  content         String
+  role            String?
+  jobDescription  String?
+  name            String
+  extractedData   Json?
+  analysisData    Json?
+  scoreData       Json?
   primaryResumeId String
-  primaryResume   Resume   @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
-
-  // relation to user
   userId          String
+  primaryResume   Resume   @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([primaryResumeId])
   @@index([userId])
   @@map("tailored_resume")
+}
+
+model interview {
+  id               String          @id @default(cuid())
+  user_id          String
+  start_time       DateTime        @default(now())
+  end_time         DateTime?
+  duration_seconds Int             @default(0)
+  status           InterviewStatus @default(SCHEDULED)
+  role             String?
+  description      String?
+  conversation_id  String?
+  user             User            @relation(fields: [user_id], references: [id])
+}
+
+model subscription {
+  id            String   @id @default(cuid())
+  name          String
+  total_minutes Int
+  price         Float?
+  created_at    DateTime @default(now())
+  user          User[]
+}
+
+model job_categories {
+  id              String    @id @default(cuid())
+  category        String
+  location        String?
+  metadata        Json?
+  last_fetched_at DateTime?
+  active          Boolean   @default(true)
+  created_at      DateTime  @default(now())
+}
+
+model job_ingest_runs {
+  id           String    @id @default(cuid())
+  category_id  String?
+  created_at   DateTime  @default(now())
+  scheduled_at DateTime?
+  status       String    @default("scheduled")
+  started_at   DateTime?
+  finished_at  DateTime?
+  attempts     Int       @default(0)
+  notes        String?
+}
+
+model job_responsibilities {
+  id          String                 @id @default(cuid())
+  job_id      String?                @unique
+  bullet_text String[]
+  embedding   Unsupported("vector")?
+  jobs        jobs?                  @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([embedding], map: "idx_job_bullets_vector")
+}
+
+model job_skills {
+  id          String                 @id @default(cuid())
+  job_id      String?                @unique
+  skill_text  String[]
+  embedding   Unsupported("vector")?
+  is_required Boolean?               @default(true)
+  jobs        jobs?                  @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([embedding], map: "idx_job_skills_vector")
+}
+
+model jobs {
+  id                   String                @id @default(cuid())
+  job_publisher        String?
+  job_title            String?
+  employer_name        String?
+  employer_logo        String?
+  job_apply_link       String?
+  job_location         String?
+  job_description      String?
+  job_posted_at        String?
+  job_is_remote        Boolean?
+  qualifications       String[]
+  responsibilities     String[]
+  created_at           DateTime?             @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?             @default(now()) @db.Timestamptz(6)
+  job_responsibilities job_responsibilities?
+  job_skills           job_skills?
+}
+
+model resume_experience {
+  id          String                 @id @default(cuid())
+  resume_id   String?                @unique
+  bullet_text String
+  embedding   Unsupported("vector")?
+  resume      Resume?                @relation(fields: [resume_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([embedding], map: "idx_resume_bullets_vector")
+}
+
+model resume_skills {
+  id         String                 @id @default(cuid())
+  resume_id  String?                @unique
+  skill_text String
+  embedding  Unsupported("vector")?
+  resume     Resume?                @relation(fields: [resume_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([embedding], map: "idx_resume_skills_vector")
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  TIMEOUT
 }

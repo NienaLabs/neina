@@ -1,6 +1,8 @@
-import { analysisPrompt, extractionPrompt, scorePrompt } from "@/constants/prompts";
+import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt } from "@/constants/prompts";
 import { createAgent, openai } from "@inngest/agent-kit";
 import { lastAssistantTextMessageContent } from "@/lib/utils";
+
+
 
 function extractJson(str: string): string {
   const match = str.match(/```json\n([\s\S]*?)\n```/);
@@ -64,4 +66,42 @@ export const scoreAgent = createAgent({
     },
   }
 
+});
+
+// Skills & Certifications extractor agent
+export const skillsExtractorAgent = createAgent({
+  name: "skills-extractor-agent",
+  system: skillsExtractorPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.skillsExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+// Experience extractor agent
+export const experienceExtractorAgent = createAgent({
+  name: "experience-extractor-agent",
+  system: experienceExtractorPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.experienceExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
 });

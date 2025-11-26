@@ -85,7 +85,7 @@ const gradients = [
 
   {/* Shield / Score container */}
   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-    <div className="w-24 h-24 bg-background border rounded-bl-[50px] rounded-br-[50px]
+    <div className="w-24 h-24 bg-background border rounded-bl-full rounded-br-full
      rounded-tl-lg rounded-tr-lg flex items-center
       bg-radial-[at_25%_25%] from-white inset-shadow-white 
       to-zinc-900 to-75% justify-center shadow-md inset-shadow-sm/40">

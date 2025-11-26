@@ -12,7 +12,7 @@ export default function Layout({children}:{children:React.ReactNode}) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-                 <div className="flex flex-1 items-center gap-2 px-3">
+                 <div className="flex items-center gap-2 px-3">
             <SidebarTrigger />
             <Separator
               orientation="vertical"

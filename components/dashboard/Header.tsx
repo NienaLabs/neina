@@ -44,7 +44,7 @@ export default function Header() {
           {/* Logo */}
           <div className="shrink-0 flex items-center">
             <Link href="/dashboard" className="flex items-center">
-              <h1 className="text-xl font-bold bg-linear-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                 JobAI
               </h1>
             </Link>
@@ -105,7 +105,7 @@ export default function Header() {
             {/* Profile */}
             <div className="relative ml-2">
               <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
-                <div className="h-8 w-8 rounded-full bg-linear-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
                   <Link href="/account/settings">
                   <span>U</span>
                   </Link>

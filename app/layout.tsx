@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
+import { CVIProvider } from "@/components/cvi/components/cvi-provider";
 import { AuthProvider } from "@/providers/AuthUIProvider";
 import {Toaster} from 'sonner'
 import {ThemeProvider} from 'next-themes'
@@ -23,11 +24,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    
     <TRPCProvider>
       <AuthProvider>
         
@@ -49,6 +49,5 @@ export default function RootLayout({
     </html>     
       </AuthProvider>
     </TRPCProvider>
-  
   );
 }

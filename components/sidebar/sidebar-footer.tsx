@@ -1,6 +1,6 @@
 import { UserButton } from '@daveyplate/better-auth-ui'
 import React from 'react'
-import { SidebarMenu, SidebarMenuItem } from '../ui/sidebar'
+import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar"
 
 const SideBarFooter = () => {
   return (

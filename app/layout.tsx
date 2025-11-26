@@ -4,7 +4,8 @@ import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 import { CVIProvider } from "@/components/cvi/components/cvi-provider";
 import { AuthProvider } from "@/providers/AuthUIProvider";
-import { Toaster } from "sonner";
+import {Toaster} from 'sonner'
+import {ThemeProvider} from 'next-themes'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,13 +30,24 @@ export default function RootLayout({
   return (
     <TRPCProvider>
       <AuthProvider>
-        <html lang="en">
-          <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-            {/* Wrap children with CVIProvider only if a meetingUrl exists */}
-            {children}
-            <Toaster />
-          </body>
-        </html>      </AuthProvider>
+        
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+        {/*<Header/>*/}
+        {children}
+         <Toaster/>
+        </ThemeProvider>
+      </body>
+    </html>     
+      </AuthProvider>
     </TRPCProvider>
   );
 }

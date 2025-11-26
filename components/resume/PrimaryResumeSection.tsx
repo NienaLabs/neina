@@ -16,14 +16,21 @@ import {
 } from '@/components/ui/carousel'
 import { toast } from 'sonner'
 import {trpc} from '@/trpc/client'
+import { Skeleton } from '../ui/skeleton'
 
    
 const PrimaryResumeSection = ({
   resumes,
   onSelectResume,
+  isLoading,
+  isError,
+  error
 }: {
   resumes: ResumeWithTailored[]
   onSelectResume: (resume: ResumeWithTailored) => void
+  isLoading:boolean
+  isError:boolean
+  error:Error | null
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -97,6 +104,24 @@ if (res.success) {
     setIsDialogOpen(true)
   }
  
+  if (isLoading) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+        <Skeleton className="h-12 w-1/2" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl font-bold text-red-500">Error</h1>
+        <p className="text-red-500">Failed to load resumes: {error?.message}</p>
+      </div>
+    )
+  }
 
 
 

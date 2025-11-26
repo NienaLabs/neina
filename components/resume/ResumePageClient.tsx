@@ -6,7 +6,9 @@ import TailoredResumesSection from '@/components/resume/TailoredResumesSection'
 import { trpc } from '@/trpc/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Resume } from '@/lib/generated/prisma/client'
-import CreateResumeDialog from './CreateResumeDialog'
+import { Button } from '../ui/button'
+import {useRouter} from 'next/navigation'
+import { SquarePen } from 'lucide-react'
 
 // Define the types for the resume data
 export type ScoreData = {
@@ -26,16 +28,17 @@ export type ResumeWithTailored = Resume & {
 
 const ResumePageClient = () => {
   const { data: primaryResumes, isLoading, isError, error } = trpc.resume.getPrimaryResumes.useQuery()
-
   const [selectedResume, setSelectedResume] = useState<ResumeWithTailored | null>(null)
+   const router=useRouter()
+
 
   useEffect(() => {
     if (primaryResumes && primaryResumes.length > 0) {
       setSelectedResume(primaryResumes[0] as ResumeWithTailored)
     }
   }, [primaryResumes])
-
-  if (isLoading) {
+     
+    if (isLoading) {
     return (
       <div className="p-4 sm:p-6 lg:p-8 space-y-8">
         <Skeleton className="h-12 w-1/2" />
@@ -54,6 +57,7 @@ const ResumePageClient = () => {
     )
   }
 
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex items-center justify-between">
@@ -65,12 +69,18 @@ const ResumePageClient = () => {
             Manage and optimize your resumes with the power of AI.
           </p>
         </div>
-        <CreateResumeDialog />
+         <Button onClick={()=>router.push("/resume/new")} className="animate-fade-in-down animation-delay-400">
+          <SquarePen className="mr-2 h-4 w-4" />
+          Create New Resume
+          </Button>        
       </div>
 
       <div className="space-y-8">
         <div className="animate-fade-in-up">
           <PrimaryResumeSection
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
             resumes={primaryResumes as ResumeWithTailored[]}
             onSelectResume={setSelectedResume}
           />

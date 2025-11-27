@@ -126,3 +126,111 @@
   }
 }
 
+/* ========== SPACING UTILITIES ========== */
+@layer components {
+  .spacing-xs { @apply p-2; }
+  .spacing-sm { @apply p-3; }
+  .spacing-md { @apply p-4; }
+  .spacing-lg { @apply p-6; }
+  .spacing-xl { @apply p-8; }
+
+  .gap-xs { @apply gap-2; }
+  .gap-sm { @apply gap-3; }
+  .gap-md { @apply gap-4; }
+  .gap-lg { @apply gap-6; }
+  .gap-xl { @apply gap-8; }
+
+  /* ========== TYPOGRAPHY UTILITIES ========== */
+  .text-label {
+    @apply text-sm font-medium text-muted-foreground uppercase tracking-wide;
+  }
+
+  .text-headline-sm {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  .text-headline-md {
+    @apply text-2xl font-semibold text-foreground;
+  }
+
+  .text-body {
+    @apply text-base text-foreground leading-relaxed;
+  }
+
+  .text-body-sm {
+    @apply text-sm text-foreground leading-relaxed;
+  }
+
+  .text-caption {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* ========== JOB CARD UTILITIES ========== */
+  .job-card {
+    @apply border border-border rounded-lg p-4 bg-card hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer;
+  }
+
+  .job-card-header {
+    @apply flex items-start justify-between gap-4 mb-3;
+  }
+
+  .job-card-title {
+    @apply text-xl flex flex-row items-center  gap-4 font-semibold line-clamp-2;
+  }
+
+  .job-card-company {
+    @apply text-sm text-muted-foreground font-medium;
+  }
+
+  .job-card-meta {
+    @apply flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-2;
+  }
+
+  .match-score-badge {
+    @apply inline-flex items-center justify-center w-12 h-12 rounded-full font-bold text-sm;
+  }
+
+  .match-score-high {
+    @apply bg-green-500/10 text-green-700 dark:text-green-400;
+  }
+
+  .match-score-medium {
+    @apply bg-amber-500/10 text-amber-700 dark:text-amber-400;
+  }
+
+  .match-score-low {
+    @apply bg-red-500/10 text-red-700 dark:text-red-400;
+  }
+
+  /* ========== FILTER & SORT UTILITIES ========== */
+  .filter-container {
+    @apply flex flex-col gap-4 sticky top-0 z-10 bg-background py-4;
+  }
+
+  /* ========== RESULT GRID UTILITIES ========== */
+  .jobs-grid {
+    @apply grid grid-cols-1 gap-4;
+  }
+
+  .jobs-container {
+    @apply space-y-6;
+  }
+
+  /* ========== EMPTY STATE ========== */
+  .empty-state {
+    @apply flex flex-col items-center justify-center gap-3 text-center;
+  }
+
+  .empty-state-icon {
+    @apply w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center text-4xl;
+  }
+
+  .empty-state-title {
+    @apply text-2xl font-semibold;
+  }
+
+  .empty-state-description {
+    @apply text-sm text-muted-foreground max-w-xs;
+  }
+}
+

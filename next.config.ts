@@ -11,7 +11,15 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-  turbopack:{}
+  turbopack:{},
+    images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

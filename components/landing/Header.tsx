@@ -80,11 +80,10 @@ const Header = () => {
                           Testimonials
                         </Link>
                         <Link 
-                          href="#how-it-works" 
-                          onClick={(e) => scrollToSection(e, 'how-it-works')}
+                          href="/Pricing" 
                           className="nav-link"
                         >
-                          How It Works
+                          Pricing
                         </Link>
                        <Link 
                           href="#footer" 

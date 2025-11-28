@@ -1,116 +1,105 @@
-'use client';
+"use client"
+import {Button} from '@/components/ui/button'
+import Cube from './Cube'
+import { Star,Briefcase,FileText,MessageSquare } from 'lucide-react'
 
-import { motion, Variants } from 'framer-motion';
-import { Poppins } from 'next/font/google';
+const Features = () => {
+  return (
+    <section id="features" className="py-20 md:py-32 px-4 md:px-6 relative overflow-hidden bg-white">
+      {/* Background gradient effect */}
+      <div className="absolute inset-0 bg-linear-to-b from-transparent via-indigo-100/30 to-transparent pointer-events-none" />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Header */}
+        <div className="text-center mb-16 md:mb-20">
+          <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
+        Join The Few People Job Hunting With Ease
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Three powerful tools designed to accelerate your career journey
+          </p>
+        </div>
 
-const poppins = Poppins({
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-poppins',
-});
+        {/* Main Content: Cube + Features Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Cube */}
+          <div className="flex justify-center items-center">
+            <div className="relative">
+              {/* Glow effect behind cube */}
+              <div className="absolute inset-0 bg-linear-to-r from-indigo-400/40 to-purple-400/40 blur-3xl rounded-full" />
+              <Cube />
+            </div>
+          </div>
 
-const container: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2
-    }
-  }
-};
+          {/* Right: Features Grid */}
+          <div className="space-y-8">
+            {/* Star Rating */}
+            <div className="bg-linear-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-200">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={20}
+                      className={i < 4 ? "fill-amber-400 text-amber-400" : "fill-amber-200 text-amber-200"}
+                    />
+                  ))}
+                </div>
+                <span className="text-lg font-bold text-gray-900">4.5/5</span>
+              </div>
+              <p className="text-sm text-gray-600">Trusted by thousands of job seekers</p>
+            </div>
 
-const item: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      type: 'spring' as const,
-      stiffness: 100,
-      damping: 15
-    }
-  }
-};
+            {/* What We Do - Product Description */}
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">How We Help Your Career</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <div className="shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                    <FileText size={16} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Resume AI</p>
+                    <p className="text-sm text-gray-600">Optimize and tailor your resume for each job application with AI-powered suggestions that boost your ATS score</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="shrink-0 w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center mt-0.5">
+                    <Briefcase size={16} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Job Search</p>
+                    <p className="text-sm text-gray-600">Discover perfectly matched job opportunities based on your skills and preferences with intelligent AI matching</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center mt-0.5">
+                    <MessageSquare size={16} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Interview AI</p>
+                    <p className="text-sm text-gray-600">Prepare for an interview by having one with a humanoid AI avatar just like it will happen in a real world scenario with audio and video feedbacks</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
-export default function Features() {
-    return (
-        <section id="features" className={`py-16 px-4 sm:px-6 lg:px-8 ${poppins.variable} font-sans`}>
-            
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-16"
-            >
-                <h1 className="text-4xl font-bold text-center mx-auto bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                    Powerful Job Search Tools
-                </h1>
-                <p className="text-base text-slate-600 dark:text-slate-400 mt-4 max-w-2xl mx-auto">
-                    Everything you need to find your dream job, prepare for interviews, and track your applications.
-                </p>
-            </motion.div>
-            
-            <motion.div 
-                variants={container}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
-            >
-                <motion.div 
-                    variants={item}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
-                >
-                    <div className="relative overflow-hidden rounded-xl h-48 mb-6 group">
-                        <motion.img 
-                            className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-500" 
-                            src="https://helloi.ai/wp-content/uploads/elementor/thumbs/ai-resume-builder-qpa8fir5niayzt9g03ab11oc3hj0t0ooz716qqyfs6.jpeg" 
-                            alt="AI Resume Builder"
-                            initial={{ scale: 1 }}
-                            whileHover={{ scale: 1.05 }}
-                        />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">AI Resume Builder</h3>
-                    <p className="text-gray-600 dark:text-gray-300">Create ATS-optimized resumes that get you noticed by recruiters and hiring managers.</p>
-                </motion.div>
-                <motion.div 
-                    variants={item}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
-                >
-                    <div className="relative overflow-hidden rounded-xl h-48 mb-6 group">
-                        <motion.img 
-                            className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-500" 
-                            src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=1000&q=80" 
-                            alt="AI Interview Coach"
-                            initial={{ scale: 1 }}
-                            whileHover={{ scale: 1.05 }}
-                        />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">AI Interview Coach</h3>
-                    <p className="text-gray-600 dark:text-gray-300">Practice with realistic interview simulations and get instant feedback on your responses.</p>
-                </motion.div>
-                <motion.div 
-                    variants={item}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
-                >
-                    <div className="relative overflow-hidden rounded-xl h-48 mb-6 group">
-                        <motion.img 
-                            className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-500" 
-                            src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1000&q=80" 
-                            alt="Smart Job Matcher"
-                            initial={{ scale: 1 }}
-                            whileHover={{ scale: 1.05 }}
-                        />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Smart Job Matcher</h3>
-                    <p className="text-gray-600 dark:text-gray-300">Discover opportunities that perfectly match your skills and career aspirations.</p>
-                </motion.div>
-            </motion.div>
-        </section>
-    );
-};
+        {/* Bottom CTA */}
+        <div className="mt-16 text-center">
+          <p className="text-gray-600 mb-6">
+            Ready to revolutionize your career?
+          </p>
+          <Button  
+            className="inline-block px-8 py-3 rounded-full  font-semibold hover:opacity-90 transition-opacity"
+          >
+            Get Started Now
+          </Button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default Features

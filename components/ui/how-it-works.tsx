@@ -5,7 +5,7 @@ import { UserPlus, FileText, Mic, Briefcase } from "lucide-react";
 import type React from "react";
 
 // The main props for the HowItWorks component
-interface HowItWorksProps extends React.HTMLAttributes<HTMLElement> {}
+type HowItWorksProps = React.HTMLAttributes<HTMLElement>
 
 // The props for a single step card
 interface StepCardProps {
@@ -26,11 +26,8 @@ const StepCard: React.FC<StepCardProps> = ({
   benefits,
 }) => (
   <div
-    className={cn(
-      "relative rounded-2xl border bg-card p-6 text-card-foreground transition-all duration-300 ease-in-out",
-      "hover:scale-105 hover:shadow-lg hover:border-primary/50 hover:bg-muted"
-    )}
-  >
+    className={
+      "relative rounded-2xl border bg-card p-6 text-card-foreground transition-all ease-in-out hover:scale-105  hover:bg-muted"}>
     {/* Icon */}
     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-primary">
       {icon}
@@ -42,7 +39,7 @@ const StepCard: React.FC<StepCardProps> = ({
     <ul className="space-y-3">
       {benefits.map((benefit, index) => (
         <li key={index} className="flex items-center gap-3">
-          <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/20">
+          <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/20">
             <div className="h-2 w-2 rounded-full bg-primary"></div>
           </div>
           <span className="text-muted-foreground">{benefit}</span>

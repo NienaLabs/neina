@@ -9,6 +9,7 @@ import {
   Twitter,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image'
 
 const data = {
   facebookLink: 'https://facebook.com/mvpblocks',
@@ -100,15 +101,17 @@ const contactInfo = [
 
 export default function Footer4Col() {
   return (
-    <footer className="bg-secondary dark:bg-secondary/20 mt-16 w-full place-self-end rounded-t-xl">
+    <footer id="footer" className="bg-secondary dark:bg-secondary/20 mt-16 w-full place-self-end rounded-t-xl">
       <div className="mx-auto max-w-screen-xl px-4 pt-16 pb-6 sm:px-6 lg:px-8 lg:pt-24">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div>
             <div className="text-primary flex justify-center gap-2 sm:justify-start">
-              <img
+              <Image
                 src={data.company.logo || '/placeholder.svg'}
                 alt="logo"
                 className="h-8 w-8 rounded-full"
+                width={32}
+                height={32}
               />
               <span className="text-2xl font-semibold">
                 {data.company.name}

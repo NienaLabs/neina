@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function FAQWithSpiral() {
   const spiralRef = useRef<HTMLDivElement | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [query, setQuery] = useState("");
+
 
   // Spiral configuration
   const [cfg, setCfg] = useState({
@@ -45,34 +44,7 @@ export default function FAQWithSpiral() {
     []
   );
 
-  // --- Dev "tests" (runtime assertions) ------------------------------------
-  // These are lightweight checks of key invariants; they don't affect users.
-  useEffect(() => {
-    try {
-      console.assert(Array.isArray(gradients.none) && gradients.none.length === 0, "Gradient 'none' must be an empty array");
-      console.assert(cfg.sizeMin <= cfg.sizeMax, "sizeMin should be <= sizeMax");
-      console.assert(cfg.opacityMin <= cfg.opacityMax, "opacityMin should be <= opacityMax");
-      // Search filter sanity check
-      const sample = [
-        { q: "Alpha", a: "Lorem" },
-        { q: "Beta", a: "Ipsum yes" },
-      ];
-      const filtered = sample.filter(({ q, a }) => (q + a).toLowerCase().includes("yes"));
-      console.assert(filtered.length === 1, "Filter should match one item containing 'yes'");
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const k = e.key.toLowerCase();
-      if (k === "h") setPanelOpen((v) => !v);
-      if (k === "r") randomize();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   // Generate spiral SVG and mount
   useEffect(() => {
@@ -156,67 +128,37 @@ export default function FAQWithSpiral() {
     spiralRef.current.appendChild(svg);
   }, [cfg, gradients]);
 
-  // Randomizer with contrast awareness (b/w forward)
-  const randomize = () => {
-    const rand = (min: number, max: number) => Math.random() * (max - min) + min;
-    const lightColors = ["#ffffff"];
-    const darkColors = ["#222222", "#111111"];
-    const useLightBg = Math.random() > 0.5;
-
-    setCfg((c) => ({
-      ...c,
-      points: Math.floor(rand(300, 1600)),
-      dotRadius: rand(0.8, 3.2),
-      duration: rand(1.2, 7.5),
-      pulseEffect: Math.random() > 0.35,
-      opacityMin: rand(0.1, 0.4),
-      opacityMax: rand(0.6, 1.0),
-      sizeMin: rand(0.4, 0.9),
-      sizeMax: rand(1.2, 2.2),
-      background: useLightBg ? "#f5f5f5" : "#000000",
-      color: useLightBg
-        ? darkColors[Math.floor(Math.random() * darkColors.length)]
-        : lightColors[Math.floor(Math.random() * lightColors.length)],
-      gradient:
-        Math.random() > 0.6
-          ? (["rainbow", "ocean", "grayscale", "neon"] as const)[
-              Math.floor(Math.random() * 4)
-            ]
-          : "none",
-    }));
-  };
+  
 
   // FAQ content (edit freely)
   const faqs = [
     {
-      q: "What does your team do?",
-      a: "We design and build digital products end‑to‑end: research, UX/UI, front‑end/back‑end, infrastructure, and release support.",
+      q: "How does the Resume AI help me?",
+      a: "Our Resume AI analyzes your experience and the job description to tailor your resume, highlighting relevant skills and keywords to pass ATS scans and impress recruiters.",
     },
     {
-      q: "How is your workflow structured?",
-      a: "Iteratively. Solution storyboards → quick prototypes → user testing → prioritization → production integration. Transparent at every stage.",
+      q: "Can the Interview AI simulate real interviews?",
+      a: "Yes, our Interview AI provides realistic interview simulations with common questions, behavioral scenarios, and technical challenges, offering instant feedback on your responses.",
     },
     {
-      q: "Which stack and tools do you use?",
-      a: "TypeScript/React/Next.js, Node.js, Python, Postgres, Redis, Tailwind, Playwright, CI/CD on GitHub Actions. Deployment — containers and clouds.",
+      q: "How does the Smart Job Matcher work?",
+      a: "The Smart Job Matcher uses AI to analyze your resume and preferences, then scours thousands of job postings to find the most relevant opportunities, saving you time and effort.",
     },
     {
-      q: "Can we see code or a demo?",
-      a: "Yes. We prepare private demo environments, give repository access and supply documented examples.",
+      q: "Is my personal data safe with Job AI?",
+      a: "Absolutely. We prioritize your privacy and security. All your data is encrypted and stored securely, and we never share your information with third parties without your consent.",
     },
     {
-      q: "How do you estimate timelines and budgets?",
-      a: "We evaluate MVPs by impact metrics — value/complexity. We provide T‑shirt sizing bounds, then lock sprints with checkpoints.",
+      q: "Can I get feedback on my resume before applying?",
+      a: "Yes, our Resume AI provides detailed feedback on your resume's structure, content, and keywords, helping you optimize it for specific job applications.",
     },
     {
-      q: "Do you take over existing products?",
-      a: "Yes. We audit, clean up architecture/CI, eliminate debts, set up monitoring and take over under SLA.",
+      q: "How accurate is the Interview AI's feedback?",
+      a: "Our Interview AI's feedback is highly accurate, leveraging advanced natural language processing to evaluate your communication, confidence, and relevance of answers against best practices.",
     },
   ];
 
-  const filtered = query
-    ? faqs.filter(({ q, a }) => (q + a).toLowerCase().includes(query.toLowerCase()))
-    : faqs;
+
 
   return (
     <div
@@ -238,82 +180,21 @@ export default function FAQWithSpiral() {
           <div>
             <h1 className="text-4xl md:text-6xl font-black tracking-tight">FAQ</h1>
             <p className="mt-2 text-sm md:text-base text-white/70">
-              Clean, minimalistic, black‑and‑white.
+              Frequently Asked Questions
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search questions…"
-              className="h-10 w-56 rounded-xl border border-white/20 bg-transparent px-3 text-sm outline-none transition focus:border-white/60"
-            />
-          </div>
+
         </header>
 
         {/* Content */}
         <section className="relative">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {filtered.map((item, i) => (
+            {faqs.map((item, i) => (
               <FAQItem key={i} q={item.q} a={item.a} index={i + 1} />
             ))}
           </div>
         </section>
-
-        {/* Footer */}
-        <footer className="mt-16 border-t border-white/10 pt-6 text-xs text-white/50">
-          © {new Date().getFullYear()} Your team — products that move metrics.
-        </footer>
-      </div>
-
-      {/* Control Panel */}
-      {panelOpen && (
-        <aside className="fixed right-4 top-4 z-20 w-[320px] rounded-2xl border border-white/15 bg-black/70 p-4 backdrop-blur">
-          <h3 className="mb-3 text-sm font-semibold tracking-wide text-white/80">Spiral Controls</h3>
-          <div className="space-y-3 text-xs">
-            <Slider label="Points" min={100} max={2000} step={50} value={cfg.points} onChange={(v)=> setCfg({...cfg, points: v})} />
-            <Slider label="Dot radius" min={0.5} max={5} step={0.1} value={cfg.dotRadius} onChange={(v)=> setCfg({...cfg, dotRadius: v})} />
-            <Slider label="Duration" min={1} max={10} step={0.1} value={cfg.duration} onChange={(v)=> setCfg({...cfg, duration: v})} />
-
-            <Toggle label="Pulse" value={cfg.pulseEffect} onChange={(v)=> setCfg({...cfg, pulseEffect: v})} />
-            <Slider label="Opacity min" min={0} max={1} step={0.05} value={cfg.opacityMin} onChange={(v)=> setCfg({...cfg, opacityMin: v})} />
-            <Slider label="Opacity max" min={0} max={1} step={0.05} value={cfg.opacityMax} onChange={(v)=> setCfg({...cfg, opacityMax: v})} />
-            <Slider label="Size min" min={0.1} max={2} step={0.1} value={cfg.sizeMin} onChange={(v)=> setCfg({...cfg, sizeMin: v})} />
-            <Slider label="Size max" min={0.1} max={3} step={0.1} value={cfg.sizeMax} onChange={(v)=> setCfg({...cfg, sizeMax: v})} />
-
-            <Select
-              label="Gradient"
-              value={cfg.gradient}
-              options={[
-                { label: "None", value: "none" },
-                { label: "Rainbow", value: "rainbow" },
-                { label: "Sunset", value: "sunset" },
-                { label: "Ocean", value: "ocean" },
-                { label: "Fire", value: "fire" },
-                { label: "Neon", value: "neon" },
-                { label: "Pastel", value: "pastel" },
-                { label: "Grayscale", value: "grayscale" },
-              ]}
-              onChange={(v)=> setCfg({...cfg, gradient: v as any})}
-            />
-
-            <div className="flex gap-2">
-              <button
-                onClick={randomize}
-                className="w-full rounded-xl border border-white/20 px-3 py-2 text-xs hover:border-white/50"
-              >
-                Randomize (R)
-              </button>
-              <button
-                onClick={() => setPanelOpen(false)}
-                className="rounded-xl border border-white/20 px-3 py-2 text-xs hover:border-white/50"
-              >
-                Close (H)
-              </button>
-            </div>
-          </div>
-        </aside>
-      )}
+      </div>      
     </div>
   );
 }
@@ -351,83 +232,3 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
   );
 }
 
-function Slider({
-  label,
-  min,
-  max,
-  step,
-  value,
-  onChange,
-}: {
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <label className="block">
-      <div className="mb-1 flex items-center justify-between">
-        <span>{label}</span>
-        <span className="tabular-nums text-white/50">{value.toFixed(2)}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full"
-      />
-    </label>
-  );
-}
-
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex items-center justify-between">
-      <span>{label}</span>
-      <button
-        onClick={() => onChange(!value)}
-        className={`h-6 w-10 rounded-full border border-white/20 transition ${value ? "bg-white" : "bg-transparent"}`}
-        aria-pressed={value}
-      >
-        <span className={`block h-5 w-5 translate-x-0.5 rounded-full bg-black transition ${value ? "translate-x-4" : "translate-x-0"}`} />
-      </button>
-    </label>
-  );
-}
-
-function Select({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: { label: string; value: string }[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <label className="block">
-      <div className="mb-1">{label}</div>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-white/20 bg-black px-3 py-2 text-xs outline-none"
-        >
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/50">▾</span>
-      </div>
-    </label>
-  );
-}

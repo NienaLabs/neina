@@ -1,5 +1,6 @@
 import { Testimonial } from "@/components/ui/testimonial-card"
 import { Star } from "lucide-react"
+import Image from 'next/image'
 
 const testimonials = [
   {
@@ -63,10 +64,10 @@ export function TestimonialDemo() {
       <div className="container px-4 mx-auto sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-            Loved by developers and designers
+            Loved by Job Hunters across different domains
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of satisfied users who have transformed their development workflow with our components.
+            Join the satisfied users who have transformed their careers with our tools.
           </p>
         </div>
 
@@ -88,15 +89,17 @@ export function TestimonialDemo() {
           <div className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-muted-foreground bg-muted/50 rounded-full">
             <div className="flex -space-x-2">
               {testimonials.slice(0, 3).map((testimonial, index) => (
-                <img
+                <Image
                   key={index}
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-full border-2 border-background"
                   src={testimonial.image}
                   alt={testimonial.name}
                 />
               ))}
             </div>
-            <span>Trusted by developers from leading companies</span>
+            <span>Trusted by job seekers around the world</span>
           </div>
         </div>
       </div>

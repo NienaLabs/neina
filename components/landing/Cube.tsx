@@ -1,4 +1,6 @@
+'use client'
 import Image from 'next/image'
+import {useIsMobile} from '@/hooks/use-mobile'
 /**
  * 3D Tumbling Cube Component 
  * Fixed: Uses inline styles for 3D transforms to ensure depth renders correctly
@@ -6,8 +8,9 @@ import Image from 'next/image'
  */
 const Cube = () => {
   // Size of the cube (width/height). 
-  const sizeClass = "w-50 h-50"; 
-  const translateOffset = "6.25rem"; // 64px (Half of w-32)
+  const isMobile =useIsMobile()
+  const sizeClass = "w-32 h-32 md:w-50 md:h-50"; 
+  const translateOffset = isMobile?"4rem": "6.25rem"; // 64px (Half of w-32)
 
   // Common styles for all 6 faces
   const faceCommon = `
@@ -32,6 +35,7 @@ const Cube = () => {
         }
         .animate-tumble {
           animation: tumble 20s infinite linear;
+           will-change: transform; 
         }
         .group:hover .animate-tumble {
           animation-play-state: paused;
@@ -47,7 +51,8 @@ const Cube = () => {
       >
         <div 
           className="w-full h-full relative animate-tumble" 
-          style={{ transformStyle: 'preserve-3d' }}
+          style={{ transformStyle: 'preserve-3d',transform: 'translateZ(0)',
+ }}
         >
           
           {/* Front Face */}

@@ -22,15 +22,16 @@ const Cube = () => {
   return (
     <div className="relative group perspective-container">
       <style>{`
-        @keyframes tumble {
-          0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-          25% { transform: rotateX(90deg) rotateY(90deg) rotateZ(45deg); }
-          50% { transform: rotateX(180deg) rotateY(180deg) rotateZ(90deg); }
-          75% { transform: rotateX(270deg) rotateY(270deg) rotateZ(135deg); }
-          100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
+      @keyframes tumble {
+          0% { 
+            transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); 
+          }
+          100% { 
+            transform: rotateX(720deg) rotateY(720deg) rotateZ(360deg); 
+          }
         }
         .animate-tumble {
-          animation: tumble 10s infinite linear;
+          animation: tumble 20s infinite linear;
         }
         .group:hover .animate-tumble {
           animation-play-state: paused;

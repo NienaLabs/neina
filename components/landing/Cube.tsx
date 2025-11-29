@@ -16,7 +16,7 @@ const Cube = () => {
   const faceCommon = `
     absolute inset-0 
     flex items-center justify-center 
-    bg-indigo-900/20 backdrop-blur-sm
+    bg-indigo-900/20 
     shadow-[0_0_15px_rgba(99,102,241,0.3)]
     text-white font-bold text-xl
     backface-visible

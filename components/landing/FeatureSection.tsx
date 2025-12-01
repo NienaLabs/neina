@@ -49,19 +49,15 @@ const FeatureSection = ({
         </div>
 
         {/* Content Grid */}
-        <div className={`grid grid-cols-1 md:grid-cols-2  gap-8 md:gap-12 items-center ${reversed ? 'md:flex md:flex-row-reverse' : ''}`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2  gap-8 md:gap-12 items-center ${reversed ? 'md:flex md:flex-row-reverse justify-around' : ''}`}>
           {/* Media */}
-          <div className="flex items-center justify-center">
+          <div className=" relative h-[400] w-[300] place-self-center flex items-center">
             {media.type === 'image' ? (
-              <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl">
                 <Image
                   src={media.src}
                   alt={media.alt || featureName}
                   fill
-                  className="object-cover"
-                  priority
                 />
-              </div>
             ) : (
               <video
                 src={media.src}

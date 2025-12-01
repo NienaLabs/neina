@@ -16,7 +16,7 @@ const JobSearch = () => {
       ]}
       media={{
         type: 'image',
-        src: '/job-search-demo.jpg',
+        src: '/job-search2.jpg',
         alt: 'Job Search Feature Demo',
       }}
       ctaText="Explore Job Opportunities"

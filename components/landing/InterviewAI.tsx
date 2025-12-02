@@ -16,7 +16,7 @@ const InterviewAI = () => {
       ]}
       media={{
         type: 'video',
-        src: '/interview-ai-demo.mp4',
+        src: '/InterviewAI-Preview.mp4',
         alt: 'Interview AI Feature Demo',
       }}
       ctaText="Start Practicing"

@@ -32,10 +32,11 @@ export const useCVICall = (): {
               },
             },
           });
-          console.log('Successfully joined call with noise cancellation');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Successfully joined call with noise cancellation');
+          }
         } catch (e) {
-          // If joining with noise cancellation fails, try without it
-          console.log('Noise cancellation not supported, joining with default audio settings');
+          // Silently fall back to default audio if noise cancellation isn't available
           await daily.join({ url });
         }
         setError(null);

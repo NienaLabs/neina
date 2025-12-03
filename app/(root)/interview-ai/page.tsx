@@ -7,9 +7,9 @@ import { Conversation } from '@/components/cvi/components/conversation';
 import { CVIProvider } from '@/components/cvi/components/cvi-provider';
 import { useDaily } from '@daily-co/daily-react';
 import { InterviewTimer } from '@/components/interview-timer';
-import { 
+import {
   Loader2,
-  AlertCircle, 
+  AlertCircle,
   Clock,
   Maximize2,
   Minimize2,
@@ -30,18 +30,18 @@ type TavusConversationResponse = {
 };
 
 // VideoCallComponent that uses useDailyCall inside CVIProvider
-const VideoCallComponent = ({ 
+const VideoCallComponent = ({
   meetingUrl,
-  onLeave 
-}: { 
-  meetingUrl: string; 
+  onLeave
+}: {
+  meetingUrl: string;
   onLeave: () => Promise<void>;
 }) => {
   // We'll use the daily object from the Conversation component's context
   // instead of directly using useDailyCall here
-  
+
   return (
-    <Conversation 
+    <Conversation
       meetingUrl={meetingUrl}
       onLeave={onLeave}
     />
@@ -51,7 +51,7 @@ const VideoCallComponent = ({
 const VideoInterview = () => {
   const router = useRouter();
   const { data: session, isPending } = useSession();
-  
+
   // State
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -87,7 +87,7 @@ const VideoInterview = () => {
   // Create Tavus conversation with subscription check
   const createConversation = async (role: string, description?: string) => {
     let tavusData: { conversation_id?: string } = {};
-    
+
     if (isConnecting || conversationState === 'connecting' || conversationState === 'active') {
       return; // guard against duplicate starts
     }
@@ -105,16 +105,16 @@ const VideoInterview = () => {
         },
         body: JSON.stringify({ role, description }),
       });
-      
+
       const tavusData: TavusConversationResponse = await tavusResponse.json();
-      
+
       if (!tavusResponse.ok) {
         throw new Error(tavusData.error || 'Failed to create conversation');
       }
-      
+
       setConversationUrl(tavusData.url || null);
       setConversationId(tavusData.conversation_id || null);
-      
+
       // Now create interview with conversation_id
       const response = await fetch('/api/interviews/start', {
         method: 'POST',
@@ -127,9 +127,9 @@ const VideoInterview = () => {
           conversation_id: tavusData.conversation_id,
         }),
       });
-      
+
       const startData = await response.json();
-      
+
       if (!response.ok) {
         if (response.status === 400) {
           setError(startData.error);
@@ -138,7 +138,7 @@ const VideoInterview = () => {
         }
         throw new Error(startData.error || 'Failed to start interview');
       }
-      
+
       setInterviewId(startData.interview_id);
       setRemainingSeconds(startData.remaining_seconds);
       setConversationState('active');
@@ -146,12 +146,12 @@ const VideoInterview = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start video conversation');
       setConversationState('idle');
-      
+
       // Cleanup orphaned Tavus conversation if it was created
       if (tavusData?.conversation_id) {
         try {
-          await fetch(`/api/tavus/conversation/${tavusData.conversation_id}`, { 
-            method: 'DELETE' 
+          await fetch(`/api/tavus/conversation/${tavusData.conversation_id}`, {
+            method: 'DELETE'
           });
         } catch (cleanupErr) {
           console.error('Failed to cleanup Tavus conversation:', cleanupErr);
@@ -172,19 +172,19 @@ const VideoInterview = () => {
   // FIXED: Memoized endConversation with useCallback to prevent stale closures
   const endConversation = useCallback(async () => {
     console.log('endConversation called - ending interview...');
-    
+
     // ADDED: Prevent duplicate calls using ref
     if (isEndingRef.current) {
       console.log('Already ending, skipping duplicate call');
       return;
     }
-    
+
     isEndingRef.current = true;
-    
+
     // First update the UI to show we're ending the call
     setConversationState('ending');
     setIsVideoOn(false);
-    
+
     try {
       // End interview tracking if we have an interview ID
       if (interviewId) {
@@ -196,12 +196,12 @@ const VideoInterview = () => {
           },
           body: JSON.stringify({ interview_id: interviewId }),
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
           // If the interview was already ended (e.g., by timeout), just log it
-          if (error.error?.includes('Cannot end interview with status') || 
-              error.error?.includes('already')) {
+          if (error.error?.includes('Cannot end interview with status') ||
+            error.error?.includes('already')) {
             console.log('Interview already ended with status:', error.error);
           } else {
             console.error('Failed to end interview:', error);
@@ -245,7 +245,7 @@ const VideoInterview = () => {
   const dailyCall = useDaily();
 
   const [isEnding, setIsEnding] = useState(false);
-  
+
   // FIXED: Simplified handleTimeExpired with proper dependencies
   const handleTimeExpired = useCallback(async () => {
     console.log('Time expired handler called', {
@@ -253,15 +253,15 @@ const VideoInterview = () => {
       conversationState,
       interviewId
     });
-    
+
     // FIXED: Simplified guard - just check if we're already ending
     if (isEndingRef.current) {
       console.log('Already ending interview, skipping');
       return;
     }
-    
+
     console.log('Time expired: Ending interview in 10 seconds...');
-    
+
     // Set all the states immediately
     setShowTimeWarning('Your interview time has expired! The session will end in 10 seconds...');
     setConversationState('ending');
@@ -271,9 +271,9 @@ const VideoInterview = () => {
     try {
       // Show the warning for 10 seconds
       await new Promise(resolve => setTimeout(resolve, 10000));
-      
+
       console.log('10 seconds elapsed, ending interview now...');
-      
+
       // 1. First try to leave the call to stop any ongoing streams
       try {
         // FIXED: Check meetingState before leaving
@@ -286,10 +286,10 @@ const VideoInterview = () => {
         console.warn('Error leaving call:', callError);
         // Continue with cleanup even if leaving fails
       }
-      
+
       // 2. End the interview using the memoized function
       await endConversation();
-      
+
       // 3. Force-end as backup
       if (interviewId) {
         try {
@@ -302,7 +302,7 @@ const VideoInterview = () => {
           console.warn('Error force-ending interview:', forceEndError);
         }
       }
-      
+
     } catch (error) {
       console.error('Error in timeout cleanup:', error);
     } finally {
@@ -312,7 +312,7 @@ const VideoInterview = () => {
       setShowTimeWarning('');
     }
   }, [dailyCall, endConversation, interviewId, conversationState]); // FIXED: Proper dependencies
-  
+
   // Handle time warnings
   const handleTimeWarning = useCallback((level: 'low' | 'critical') => {
     if (level === 'critical') {
@@ -320,11 +320,11 @@ const VideoInterview = () => {
     } else {
       setShowTimeWarning('Warning: 15 seconds remaining');
     }
-    
+
     // Clear warning after 3 seconds
     setTimeout(() => setShowTimeWarning(''), 3000);
   }, []);
-  
+
   // Handle role submission
   const handleRoleSubmit = async () => {
     if (isConnecting) return; // prevent duplicate submits
@@ -370,7 +370,7 @@ const VideoInterview = () => {
             </p>
             {interviewId && (
               <div className="mt-2">
-                <InterviewTimer 
+                <InterviewTimer
                   interviewId={interviewId}
                   onTimeExpired={handleTimeExpired}
                   onWarning={handleTimeWarning}
@@ -385,9 +385,9 @@ const VideoInterview = () => {
               {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             </Button>
             {!isVideoOn && (
-              <Button 
-                variant="default" 
-                size="sm" 
+              <Button
+                variant="default"
+                size="sm"
                 onClick={toggleVideo}
                 disabled={isConnecting}
               >
@@ -412,7 +412,7 @@ const VideoInterview = () => {
       <div className="relative" style={{ height: 'calc(100vh - 80px)' }}>
         {conversationUrl ? (
           <CVIProvider meetingUrl={conversationUrl}>
-            <VideoCallComponent 
+            <VideoCallComponent
               meetingUrl={conversationUrl}
               onLeave={async () => {
                 try {
@@ -468,7 +468,7 @@ const VideoInterview = () => {
             </Alert>
           </div>
         )}
-        
+
         {/* Error Overlay */}
         {error && (
           <div className="absolute top-4 right-4 max-w-md">
@@ -489,13 +489,20 @@ const VideoInterview = () => {
 
       {/* Role Selection Dialog */}
       <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Tell us about the role you're interviewing for</DialogTitle>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="space-y-3 pb-4">
+            <DialogTitle className="text-2xl font-semibold">
+              Tell us about the role you're interviewing for
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Provide details about the position to help our AI interviewer prepare relevant questions.
+            </p>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="role">Role Position</Label>
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="role" className="text-base font-medium">
+                Role Position <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="role"
                 placeholder="e.g., Software Engineer, Product Manager"
@@ -507,31 +514,37 @@ const VideoInterview = () => {
                     if (!isConnecting) handleRoleSubmit();
                   }
                 }}
+                className="h-11"
               />
             </div>
-            <div>
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Input
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-base font-medium">
+                Job Description <span className="text-gray-400 font-normal">(Optional)</span>
+              </Label>
+              <textarea
                 id="description"
-                placeholder="e.g., 5 years experience with React and Node.js"
+                placeholder="Paste the full job description here, or add key requirements like '5 years experience with React and Node.js'..."
                 value={userDescription}
                 onChange={(e) => setUserDescription(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (!isConnecting) handleRoleSubmit();
-                  }
-                }}
+                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
-              <p className="text-sm text-gray-500 mt-1">
-                 Paste your job description here!
+              <p className="text-xs text-muted-foreground">
+                💡 Adding a job description helps the AI ask more relevant questions
               </p>
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowRoleDialog(false)}>
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setShowRoleDialog(false)}
+                className="min-w-[100px]"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleRoleSubmit} disabled={!userRole.trim() || isConnecting}>
+              <Button
+                onClick={handleRoleSubmit}
+                disabled={!userRole.trim() || isConnecting}
+                className="min-w-[140px]"
+              >
                 {isConnecting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -85,7 +85,7 @@ const MainVideo = React.memo(({ onLeave }: { onLeave: () => void }) => {
       <div className={styles.waitingContainer}>
         <p>{showTimeout ? "Interviewer is taking longer than expected. The interview link may have expired." : "Connecting..."}</p>
         {showTimeout && (
-          <button 
+          <button
             onClick={handleLeave}
             className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-white"
           >
@@ -133,7 +133,7 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
     if (meetingUrl) {
       joinCall({ url: meetingUrl });
     }
-    
+
     return () => {
       leaveCall();
     };
@@ -147,10 +147,10 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
       if (process.env.NODE_ENV === 'development') {
         console.log('Ending interview - calling backend API first...');
       }
-      
+
       // First leave the Daily call to stop the media streams
       leaveCall();
-      
+
       // Then call the onLeave handler to clean up the backend
       try {
         await onLeave();
@@ -158,7 +158,7 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
         console.error('Error in onLeave handler (non-fatal):', error);
         // Continue even if onLeave fails
       }
-      
+
       if (process.env.NODE_ENV === 'development') {
         console.log('Call cleanup completed');
       }
@@ -173,12 +173,8 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
   // Error Handling
   // ------------------------------
   useEffect(() => {
-    if (meetingState === 'error' || meetingState === 'left-meeting') {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Meeting ended - URL might be expired or meeting ended');
-      }
-      // Don't automatically call onLeave, let user see the error
-    }
+    // Meeting state changes are handled by the UI, no need to log errors
+    // The 'left-meeting' state is expected when user ends the call
   }, [meetingState]);
 
   return (
@@ -186,13 +182,13 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
       <div className={styles.videoContainer}>
         {/* Debug info - remove later */}
         {process.env.NODE_ENV === 'development' && (
-          <div style={{ 
-            position: 'absolute', 
-            top: '10px', 
-            left: '10px', 
-            background: 'rgba(0,0,0,0.8)', 
-            color: 'white', 
-            padding: '10px', 
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            background: 'rgba(0,0,0,0.8)',
+            color: 'white',
+            padding: '10px',
             borderRadius: '5px',
             fontSize: '12px',
             zIndex: 1000
@@ -207,7 +203,7 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
         {(meetingState === 'error' || meetingState === 'left-meeting') && (
           <div className={styles.errorContainer}>
             <p>Meeting has ended. The interview link may have expired.</p>
-            <button 
+            <button
               onClick={handleLeave}
               className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-white"
             >
@@ -215,7 +211,7 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
             </button>
           </div>
         )}
-        
+
         {hasMicError && (
           <div className={styles.errorContainer}>
             <p>Camera or microphone access denied. Please check your settings and try again.</p>
@@ -239,7 +235,7 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
           <button type="button" className={styles.leaveButton} onClick={handleLeave}>
             <span className={styles.leaveButtonIcon}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
           </button>

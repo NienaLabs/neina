@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { NavMain } from "@/components/sidebar/nav-main"
-import { NavSecondary } from "@/components/sidebar/nav-secondary"
 import {
   Sidebar,
   SidebarContent,
@@ -15,13 +14,12 @@ import SideBarFooter from "./sidebar-footer"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className="border-r-0" {...props}>
+    <Sidebar className="border-r-0 bg-linear-to-b from-transparent via-violet-200 to-transparent" {...props}>
       <SidebarHeader>
-        <h1>Job AI</h1>
+        <h1 className="ml-2">Job AI</h1>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary}/> 
         <SideBarFooter/>
       </SidebarContent>
       <SidebarRail />

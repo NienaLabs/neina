@@ -36,18 +36,19 @@ export const data = {
       url: "/interview-ai",
       icon: Inbox
     },
-  ],
-  navSecondary: [
     {
       title: "Settings",
-      url: "#",
+      url: "/accounts/settings",
       icon: Settings2,
     },
     {
-      title: "Templates",
+      title: "Help",
       url: "#",
       icon: Blocks,
     },
+  ],
+  navSecondary: [
+    
     {
       title: "Help",
       url: "#",

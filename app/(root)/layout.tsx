@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className="mr-2 data-[orientation=vertical]:h-4"
             />
           </div>
-        <main>
+        <main >
         {children}
         </main>
       </SidebarInset>

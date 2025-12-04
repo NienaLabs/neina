@@ -123,6 +123,9 @@ model interview {
   description      String?
   conversation_id  String?
   user             User            @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, status])
+  @@index([conversation_id])
 }
 
 model subscription {

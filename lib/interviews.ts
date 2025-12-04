@@ -1,6 +1,4 @@
-import { PrismaClient } from './generated/prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export interface InterviewData {
   user_id: string;
@@ -65,7 +63,7 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
 
   // Create interview record
   const conversation_id = data.conversation_id;
-  
+
   // Validate conversation_id format (should be a UUID-like string)
   if (!conversation_id || conversation_id.length < 10) {
     throw new Error("Invalid conversation_id format");
@@ -136,7 +134,7 @@ export async function endInterview(interviewId: string, userId: string): Promise
 
   // Atomic update: decrement remaining_minutes but never below 0
   const usedMinutes = Math.ceil(durationSeconds / 60);
-  
+
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
@@ -146,7 +144,7 @@ export async function endInterview(interviewId: string, userId: string): Promise
     },
     select: { remaining_minutes: true }
   });
-  
+
   // Ensure remaining_minutes never goes below 0
   if (updatedUser.remaining_minutes < 0) {
     await prisma.user.update({
@@ -209,7 +207,7 @@ export async function forceEndInterview(interviewId: string, userId: string): Pr
     },
     select: { remaining_minutes: true }
   });
-  
+
   // Ensure remaining_minutes never goes below 0
   if (updatedUser.remaining_minutes < 0) {
     await prisma.user.update({
@@ -250,7 +248,7 @@ export async function getRemainingTime(interviewId: string): Promise<{
   }
 
   const elapsedSeconds = Math.floor((new Date().getTime() - interview.start_time.getTime()) / 1000);
-  
+
   // If user has no minutes left, don't calculate negative time
   if (interview.user.remaining_minutes <= 0) {
     return { remaining_seconds: 0, should_end: true };

@@ -5,6 +5,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { ResumeExtraction, Fixes } from './types';
 import { FixesDisplay } from './FixesDisplay';
 import { JSX } from 'react';
+import { RemovableInput } from './RemovableInput';
 
 interface ProjectsSectionProps {
   projects: NonNullable<ResumeExtraction['projects']>;
@@ -16,6 +17,15 @@ interface ProjectsSectionProps {
     key: string,
     value: unknown
   ) => void;
+  handleCustomFieldChange: (
+    section: keyof ResumeExtraction,
+    index: number,
+    fieldIndex: number,
+    key: string,
+    value: string
+  ) => void;
+  addCustomField: (section: keyof ResumeExtraction, index: number) => void;
+  removeCustomField: (section: keyof ResumeExtraction, index: number, fieldIndex: number) => void;
   renderStringArray: (
     section: keyof ResumeExtraction,
     index: number,
@@ -31,6 +41,9 @@ interface ProjectsSectionProps {
  * @param handleArrayAdd - Function to add a new project entry.
  * @param handleArrayDelete - Function to delete a project entry.
  * @param handleNestedFieldChange - Function to handle changes to nested fields.
+ * @param handleCustomFieldChange - Function to handle changes to custom fields.
+ * @param addCustomField - Function to add a new custom field.
+ * @param removeCustomField - Function to remove a custom field.
  * @param renderStringArray - Utility function to render string arrays.
  * @param fixes - The fixes object for displaying hints.
  * @returns A section component for projects.
@@ -40,6 +53,9 @@ export const ProjectsSection = ({
   handleArrayAdd,
   handleArrayDelete,
   handleNestedFieldChange,
+  handleCustomFieldChange,
+  addCustomField,
+  removeCustomField,
   renderStringArray,
   fixes,
 }: ProjectsSectionProps) => {
@@ -62,6 +78,7 @@ export const ProjectsSection = ({
               technologies: [''],
               role: '',
               link: '',
+              customFields: [],
             })
           }
         >
@@ -72,44 +89,83 @@ export const ProjectsSection = ({
       <div className="flex flex-col gap-6">
         {projects.map((proj, index) => (
           <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2"
-              onClick={() => handleArrayDelete('projects', index)}
-            >
-              <Trash2 className="size-4 text-red-500" />
-            </Button>
+            <div className="flex justify-end mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                onClick={() => handleArrayDelete('projects', index)}
+              >
+                <Trash2 className="size-4 mr-2" /> Delete Entry
+              </Button>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Input
+              <RemovableInput
                 placeholder="Project Name"
                 value={proj.name}
                 onChange={(e) => handleNestedFieldChange('projects', index, 'name', e.target.value)}
+                onRemove={() => handleNestedFieldChange('projects', index, 'name', '')}
               />
-              <Input
+              <RemovableInput
                 placeholder="Role"
                 value={proj.role}
                 onChange={(e) => handleNestedFieldChange('projects', index, 'role', e.target.value)}
+                onRemove={() => handleNestedFieldChange('projects', index, 'role', '')}
               />
-              <Textarea
-                className="col-span-2"
-                placeholder="Description"
-                value={proj.description}
-                onChange={(e) =>
-                  handleNestedFieldChange('projects', index, 'description', e.target.value)
-                }
-              />
+              <div className="col-span-2">
+                <Textarea
+                  className="w-full"
+                  placeholder="Description"
+                  value={proj.description}
+                  onChange={(e) =>
+                    handleNestedFieldChange('projects', index, 'description', e.target.value)
+                  }
+                />
+              </div>
               <div className="col-span-2">
                 <p className="font-medium">Technologies</p>
                 {renderStringArray('projects', index, 'technologies', proj.technologies)}
               </div>
-              <Input
-                className="col-span-2"
-                placeholder="Project Link"
-                value={proj.link}
-                onChange={(e) => handleNestedFieldChange('projects', index, 'link', e.target.value)}
-              />
+              <div className="col-span-2">
+                <RemovableInput
+                  placeholder="Project Link"
+                  value={proj.link}
+                  onChange={(e) => handleNestedFieldChange('projects', index, 'link', e.target.value)}
+                  onRemove={() => handleNestedFieldChange('projects', index, 'link', '')}
+                />
+              </div>
+              
+              {/* Custom Fields */}
+              {proj.customFields?.map((field, fieldIndex) => (
+                <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
+                  <Input
+                    placeholder="Field Name"
+                    value={field.key}
+                    onChange={(e) =>
+                      handleCustomFieldChange('projects', index, fieldIndex, 'key', e.target.value)
+                    }
+                  />
+                  <RemovableInput
+                    placeholder="Field Value"
+                    value={field.value}
+                    onChange={(e) =>
+                      handleCustomFieldChange('projects', index, fieldIndex, 'value', e.target.value)
+                    }
+                    onRemove={() => removeCustomField('projects', index, fieldIndex)}
+                  />
+                </div>
+              ))}
+              
+              <div className="col-span-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCustomField('projects', index)}
+                >
+                  <Plus className="size-4 mr-2" /> Add Custom Field
+                </Button>
+              </div>
             </div>
           </div>
         ))}

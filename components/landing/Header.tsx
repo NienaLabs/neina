@@ -6,6 +6,7 @@ import Link from 'next/link'
 import {cn} from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { useScroll } from "@/hooks/use-scroll"
+import Image from 'next/image'
 
 const Header = () => {
     const router = useRouter()
@@ -24,15 +25,10 @@ const Header = () => {
   };
 
     return (
-<header className={cn("w-full fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-transparent", isScrolled && "bg-black/60 backdrop-blur-md border-b border-white/10 shadow-lg")}>
-                <div className="container mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+<header className={cn("w-full fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-transparent", isScrolled && "bg-black backdrop-blur-md border-b border-white/10 shadow-lg")}>
+                <div className=" px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
                     {/* Logo */}
-                    <div className="flex items-center">
-                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 to-purple-600">
-                            JobAI
-                        </span>
-                    </div>
-
+                        <Image src="/logo.png" className="mr-auto" height={180} width={180} alt="logo"/>
                     {/* Navigation */}
                     <nav className="hidden md:flex items-center justify-center flex-1 space-x-8">
                         {/* Products Dropdown */}
@@ -96,7 +92,7 @@ const Header = () => {
                     </nav>
 
                     {/* Auth Buttons */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center ml-auto gap-4">
                         <Link href="/auth/sign-in" className="hidden md:inline-block text-sm font-medium text-white/80 hover:text-white transition-colors">
                             Sign In
                         </Link>

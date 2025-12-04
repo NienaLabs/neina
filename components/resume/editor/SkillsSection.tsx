@@ -1,13 +1,14 @@
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { ResumeExtraction, Fixes } from './types';
 import { FixesDisplay } from './FixesDisplay';
+import { RemovableInput } from './RemovableInput';
 
 interface SkillsSectionProps {
   skills: NonNullable<ResumeExtraction['skills']>;
   handleSkillArrayChange: (type: keyof NonNullable<ResumeExtraction['skills']>, index: number, value: string) => void;
   addSkill: (type: keyof NonNullable<ResumeExtraction['skills']>) => void;
+  removeSkill: (type: keyof NonNullable<ResumeExtraction['skills']>, index: number) => void;
   fixes: Fixes;
 }
 
@@ -16,6 +17,7 @@ interface SkillsSectionProps {
  * @param skills - The skills data.
  * @param handleSkillArrayChange - Function to handle changes to individual skills.
  * @param addSkill - Function to add a new skill.
+ * @param removeSkill - Function to remove a skill.
  * @param fixes - The fixes object for displaying hints.
  * @returns A section component for skills.
  */
@@ -23,6 +25,7 @@ export const SkillsSection = ({
   skills,
   handleSkillArrayChange,
   addSkill,
+  removeSkill,
   fixes,
 }: SkillsSectionProps) => {
   return (
@@ -38,10 +41,11 @@ export const SkillsSection = ({
           <p className="font-medium capitalize">{type} Skills</p>
           <div className="flex flex-col gap-2">
             {skillList.map((skill, i) => (
-              <Input
+              <RemovableInput
                 key={i}
                 value={skill}
                 onChange={(e) => handleSkillArrayChange(type as keyof ResumeExtraction['skills'], i, e.target.value)}
+                onRemove={() => removeSkill(type as keyof ResumeExtraction['skills'], i)}
                 placeholder={`${type} skill ${i + 1}`}
               />
             ))}

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { ResumeExtraction, Fixes } from './types';
 import { FixesDisplay } from './FixesDisplay';
+import { RemovableInput } from './RemovableInput';
 
 interface PublicationsSectionProps {
   publications: NonNullable<ResumeExtraction['publications']>;
@@ -14,6 +15,15 @@ interface PublicationsSectionProps {
     key: string,
     value: unknown
   ) => void;
+  handleCustomFieldChange: (
+    section: keyof ResumeExtraction,
+    index: number,
+    fieldIndex: number,
+    key: string,
+    value: string
+  ) => void;
+  addCustomField: (section: keyof ResumeExtraction, index: number) => void;
+  removeCustomField: (section: keyof ResumeExtraction, index: number, fieldIndex: number) => void;
   fixes: Fixes;
 }
 
@@ -23,6 +33,9 @@ interface PublicationsSectionProps {
  * @param handleArrayAdd - Function to add a new publication entry.
  * @param handleArrayDelete - Function to delete a publication entry.
  * @param handleNestedFieldChange - Function to handle changes to nested fields.
+ * @param handleCustomFieldChange - Function to handle changes to custom fields.
+ * @param addCustomField - Function to add a new custom field.
+ * @param removeCustomField - Function to remove a custom field.
  * @param fixes - The fixes object for displaying hints.
  * @returns A section component for publications.
  */
@@ -31,6 +44,9 @@ export const PublicationsSection = ({
   handleArrayAdd,
   handleArrayDelete,
   handleNestedFieldChange,
+  handleCustomFieldChange,
+  addCustomField,
+  removeCustomField,
   fixes,
 }: PublicationsSectionProps) => {
   return (
@@ -51,6 +67,7 @@ export const PublicationsSection = ({
               publisher: '',
               date: '',
               link: '',
+              customFields: [],
             })
           }
         >
@@ -61,44 +78,81 @@ export const PublicationsSection = ({
       <div className="flex flex-col gap-6">
         {publications.map((pub, index) => (
           <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2"
-              onClick={() => handleArrayDelete('publications', index)}
-            >
-              <Trash2 className="size-4 text-red-500" />
-            </Button>
+            <div className="flex justify-end mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                onClick={() => handleArrayDelete('publications', index)}
+              >
+                <Trash2 className="size-4 mr-2" /> Delete Entry
+              </Button>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Input
+              <RemovableInput
                 placeholder="Title"
                 value={pub.title}
                 onChange={(e) =>
                   handleNestedFieldChange('publications', index, 'title', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('publications', index, 'title', '')}
               />
-              <Input
+              <RemovableInput
                 placeholder="Publisher"
                 value={pub.publisher}
                 onChange={(e) =>
                   handleNestedFieldChange('publications', index, 'publisher', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('publications', index, 'publisher', '')}
               />
-              <Input
+              <RemovableInput
                 placeholder="Date"
                 value={pub.date}
                 onChange={(e) =>
                   handleNestedFieldChange('publications', index, 'date', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('publications', index, 'date', '')}
               />
-              <Input
+              <RemovableInput
                 placeholder="Link"
                 value={pub.link}
                 onChange={(e) =>
                   handleNestedFieldChange('publications', index, 'link', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('publications', index, 'link', '')}
               />
+              
+              {/* Custom Fields */}
+              {pub.customFields?.map((field, fieldIndex) => (
+                <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
+                  <Input
+                    placeholder="Field Name"
+                    value={field.key}
+                    onChange={(e) =>
+                      handleCustomFieldChange('publications', index, fieldIndex, 'key', e.target.value)
+                    }
+                  />
+                  <RemovableInput
+                    placeholder="Field Value"
+                    value={field.value}
+                    onChange={(e) =>
+                      handleCustomFieldChange('publications', index, fieldIndex, 'value', e.target.value)
+                    }
+                    onRemove={() => removeCustomField('publications', index, fieldIndex)}
+                  />
+                </div>
+              ))}
+              
+              <div className="col-span-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCustomField('publications', index)}
+                >
+                  <Plus className="size-4 mr-2" /> Add Custom Field
+                </Button>
+              </div>
             </div>
           </div>
         ))}

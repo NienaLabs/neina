@@ -23,6 +23,7 @@ export interface ResumeExtraction {
     grade?: string
     description?: string
     location?: string
+    customFields?: { key: string; value: string }[]
   }[]
 
   experience?: {
@@ -35,6 +36,7 @@ export interface ResumeExtraction {
     achievements?: string[]
     title?: string
     responsibilities?: string[]
+    customFields?: { key: string; value: string }[]
   }[]
 
   skills?: Record<string, string[]>
@@ -44,6 +46,7 @@ export interface ResumeExtraction {
     issuer?: string
     year?: string
     description?: string
+    customFields?: { key: string; value: string }[]
   }[]
 
   projects?: {
@@ -52,6 +55,7 @@ export interface ResumeExtraction {
     technologies?: string[]
     link?: string
     role?: string
+    customFields?: { key: string; value: string }[]
   }[]
 
   awards?: {
@@ -59,6 +63,7 @@ export interface ResumeExtraction {
     issuer?: string
     year?: string
     description?: string
+    customFields?: { key: string; value: string }[]
   }[]
 
   publications?: {
@@ -67,6 +72,7 @@ export interface ResumeExtraction {
     date?: string
     description?: string
     link?: string
+    customFields?: { key: string; value: string }[]
   }[]
 
   languages?: {
@@ -83,6 +89,7 @@ export interface ResumeExtraction {
       organization?: string
       description?: string
       year?: string
+      customFields?: { key: string; value: string }[]
     }[]
   }[]
 }

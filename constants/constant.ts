@@ -14,23 +14,23 @@ import {
 export const data = {
   navMain: [
     {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: Home,
+      
+    },
+    {
       title: "Job Search",
       url: "/job-search",
       icon: Search,
-     
+      
     },
     {
       title: "Resume AI",
       url: "/resume",
       icon: Sparkles,
-      
     },
-    {
-      title: "Home",
-      url: "/dashboard",
-      icon: Home,
       
-    },
     {
       title: "Interview AI",
       url: "/interview-ai",

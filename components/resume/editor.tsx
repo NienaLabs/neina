@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import {  Plus } from 'lucide-react'
+import { trpc } from '@/trpc/client'
+import { toast } from 'sonner'
 import { Button } from '../ui/button'
 import { ResumeExtraction,  Fixes } from './editor/types'
 import { AddressSection } from './editor/AddressSection'
@@ -33,7 +35,7 @@ import {
 } from '@/lib/utils'
 
 
-export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, extractedData: string | ResumeExtraction }) {
+export default function ResumeEditor({ fixes, extractedData, resumeId, isTailored }: { fixes: Fixes, extractedData: string | ResumeExtraction, resumeId: string, isTailored: boolean }) {
   const [save, setSave] = useState(false)
   const [editorState, setEditorState] = useState<ResumeExtraction | null>(() => {
     if (!extractedData) return null;
@@ -44,6 +46,26 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
       return null;
     }
   });
+
+  const saveDataMutation = trpc.resume.saveData.useMutation({
+    onSuccess: () => {
+      toast.success("Resume changes saved successfully");
+      setSave(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to save changes");
+    },
+  });
+
+  const handleSave = () => {
+    if (!editorState) return;
+    
+    saveDataMutation.mutate({
+      resumeId,
+      extractedData: editorState,
+      isTailored,
+    });
+  };
 
   if (!editorState) {
     return <div>Error loading editor. The resume data might be corrupted.</div>
@@ -302,8 +324,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
 
       <SaveChangesPopup
         save={save}
-        onSave={() => { /* Implement save logic here */ setSave(false) }}
+        onSave={handleSave}
         onCancel={() => setSave(false)}
+        isLoading={saveDataMutation.isPending}
       />
     </>
   )

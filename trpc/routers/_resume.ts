@@ -171,6 +171,41 @@ export const resumeRouter = createTRPCRouter({
          }
        }  
     ),
+    saveData: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string(),
+            extractedData: z.any(),
+            isTailored: z.boolean()
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+            const { resumeId, extractedData, isTailored } = input;
+            
+            if (isTailored) {
+                await prisma.tailoredResume.update({
+                    where: {
+                        id: resumeId,
+                        userId: ctx.session?.session.userId
+                    },
+                    data: {
+                        extractedData
+                    }
+                });
+            } else {
+                await prisma.resume.update({
+                    where: {
+                        id: resumeId,
+                        userId: ctx.session?.session.userId
+                    },
+                    data: {
+                        extractedData
+                    }
+                });
+            }
+        }
+    ),
     delete: protectedProcedure
     .input(
         z.object({

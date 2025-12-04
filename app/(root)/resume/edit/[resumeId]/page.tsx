@@ -27,6 +27,7 @@ const Page = async ({params}:Props) => {
     
     const {analysisData,scoreData,extractedData,name} = resume
     const role = 'role' in resume ? resume.role : 'General'
+    const isTailored = 'primaryResumeId' in resume;
 
     const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) : {fixes: {}}
     const {fixes,...fixCount} = parsedAnalysisData
@@ -129,7 +130,7 @@ const gradients = [
           </div>
           </div>
         </div>
-        <ResumeEditor fixes={fixes} extractedData={extractedData}/>
+        <ResumeEditor fixes={fixes} extractedData={extractedData} resumeId={resumeId} isTailored={isTailored}/>
         </div>
    </div>
   )

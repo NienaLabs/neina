@@ -91,20 +91,21 @@ model Resume {
 }
 
 model TailoredResume {
-  id              String   @id @default(cuid())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  content         String
-  role            String?
-  jobDescription  String?
-  name            String
-  extractedData   Json?
-  analysisData    Json?
-  scoreData       Json?
-  primaryResumeId String
-  userId          String
-  primaryResume   Resume   @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      String                 @id @default(cuid())
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  content                 String
+  role                    String?
+  jobDescription          String?
+  jobDescriptionEmbedding Unsupported("vector")?
+  name                    String
+  extractedData           Json?
+  analysisData            Json?
+  scores                  Json?
+  primaryResumeId         String
+  userId                  String
+  primaryResume           Resume                 @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
+  user                    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([primaryResumeId])
   @@index([userId])

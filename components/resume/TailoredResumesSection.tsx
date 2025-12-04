@@ -27,21 +27,8 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { trpc } from '@/trpc/client'
-import { Resume } from '@/lib/generated/prisma/client'
+import { TailoredResume } from './ResumePageClient'
 import { toast } from 'sonner'
-
-type ScoreData = {
-  scores: {
-    overallScore: number
-  }
-  roleMatch: {
-    matchPercentage: number
-  }
-}
-
-type TailoredResume = Resume & {
-  scoreData: ScoreData | null
-}
 
 const TailoredResumesSection = ({
   tailoredResumes,
@@ -90,14 +77,11 @@ const TailoredResumesSection = ({
       ),
     },
     {
-      accessorKey: 'scoreData',
+      accessorKey: 'scores',
       header: 'Match Score',
       cell: ({ row }) => {
-        const scoreData =
-          typeof row.original.scoreData === 'string'
-            ? (JSON.parse(row.original.scoreData) as ScoreData)
-            : row.original.scoreData
-        const score = scoreData?.roleMatch?.matchPercentage
+        const scoreData = row.original.scores;
+        const score = scoreData ? Math.floor(scoreData.overallScore * 100) : null;
         return (
           <div className="flex items-center gap-2 font-medium">
             {score !== undefined && score !== null ? (

@@ -30,7 +30,11 @@ const Page = async ({params}:Props) => {
 
     const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) : {fixes: {}}
     const {fixes,...fixCount} = parsedAnalysisData
-    const score = scoreData ? (typeof scoreData === 'string' ? JSON.parse(scoreData) : scoreData) : {scores: {}, roleMatch: {}}
+    const score = scoreData ? (typeof scoreData === 'string' ? JSON.parse(scoreData) : scoreData) : null
+    
+    const overallScore = score?.overallScore ?? score?.scores?.overallScore ?? 0;
+    const roleMatchPercentage = score?.roleMatch?.matchPercentage;
+
 const gradients = [
    "bg-gradient-to-br from-rose-300 to-rose-600",
   "bg-gradient-to-br from-blue-300 to-blue-600",
@@ -90,16 +94,16 @@ const gradients = [
       bg-radial-[at_25%_25%] from-white inset-shadow-white 
       to-zinc-900 to-75% justify-center shadow-md inset-shadow-sm/40">
       <h1 className="font-bold text-3xl">
-        {(score?.scores?.overallScore || 0).toFixed(1)}
+        {(overallScore * 100).toFixed(1)}
       </h1>
     </div>
   </div>
 </div>
 
           <div className="flex flex-col gap-2 items-center md:items-start">
-            {score?.roleMatch?.matchPercentage&&<h1>Role Match:{score?.roleMatch?.matchPercentage}%</h1>}
+            {roleMatchPercentage && <h1>Role Match:{roleMatchPercentage}%</h1>}
             <Badge>
-              {(score?.roleMatch?.matchPercentage || 0) > 80 ? "Excellent" : (score?.roleMatch?.matchPercentage || 0) > 60 ? "Good" : "Fair"}
+              {(roleMatchPercentage || 0) > 80 ? "Excellent" : (roleMatchPercentage || 0) > 60 ? "Good" : "Fair"}
               <Clover/>
             </Badge>
             <Button variant="outline" className="rounded-full">

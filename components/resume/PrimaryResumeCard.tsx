@@ -75,9 +75,9 @@ const PrimaryResumeCard = ({
   return (
     <Card
       className={cn(
-        'cursor-pointer  transition-all duration-300 inset-shadow-sm/40',
+        'cursor-pointer  transition-all duration-300 border-2',
         isSelected
-          ? ' p-2 shadow-lg'
+          ? 'shadow-lg'
           : 'hover:shadow-md'
       )}
       onClick={onSelect}
@@ -124,7 +124,7 @@ const PrimaryResumeCard = ({
                 'font-bold',
                 overallScore >= 8
                   ? 'bg-green-100 text-green-800'
-                  : 'bg-yellow-100 text-yellow-800'
+                  : 'bg-indigo-100 text-indigo-800'
               )}
             >
               Score: {overallScore.toFixed(1)}/10

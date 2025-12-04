@@ -144,15 +144,176 @@ export const handleSkillArrayChange = (
   setSave(true);
 };
 
+
+
 export const addSkill = (
+
   type: keyof NonNullable<ResumeExtraction['skills']>,
+
   setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
+
   setSave: React.Dispatch<React.SetStateAction<boolean>>
+
 ) => {
+
   setEditorState((prev) => {
+
     const updatedSkills = { ...prev!.skills };
+
     updatedSkills[type] = [...(updatedSkills[type] || []), ''];
+
     return { ...prev, skills: updatedSkills };
+
   });
+
   setSave(true);
+
 };
+
+
+
+export function cosineSimilarity(vecA: number[], vecB: number[]): number {
+
+
+
+  if (vecA.length !== vecB.length) {
+
+
+
+    throw new Error("Vectors must be of the same length");
+
+
+
+  }
+
+
+
+
+
+
+
+  let dotProduct = 0;
+
+
+
+  let magnitudeA = 0;
+
+
+
+  let magnitudeB = 0;
+
+
+
+
+
+
+
+  for (let i = 0; i < vecA.length; i++) {
+
+
+
+    dotProduct += vecA[i] * vecB[i];
+
+
+
+    magnitudeA += vecA[i] * vecA[i];
+
+
+
+    magnitudeB += vecB[i] * vecB[i];
+
+
+
+  }
+
+
+
+
+
+
+
+  magnitudeA = Math.sqrt(magnitudeA);
+
+
+
+  magnitudeB = Math.sqrt(magnitudeB);
+
+
+
+
+
+
+
+  if (magnitudeA === 0 || magnitudeB === 0) {
+
+
+
+    return 0;
+
+
+
+  }
+
+
+
+
+
+
+
+  return dotProduct / (magnitudeA * magnitudeB);
+
+
+
+}
+
+
+
+
+
+
+
+export function parseVectorString(vectorStr: string | null | undefined): number[] {
+
+
+
+  if (!vectorStr) {
+
+
+
+    return [];
+
+
+
+  }
+
+
+
+  try {
+
+
+    console.log(JSON.parse(vectorStr));
+    return JSON.parse(vectorStr);
+
+
+
+  } catch (e) {
+
+
+
+    console.error("Failed to parse vector string:", e);
+
+
+
+    return [];
+
+
+
+  }
+
+
+
+}
+
+
+
+

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const parser = new  PDFParse({data:arrayBuffer,verbosity:VerbosityLevel.WARNINGS});
     const data = await parser.getText();
     await parser.destroy();
-    await trpc.resume.create({content:data.text,name:file.name})
+    await trpc.resume.create({content:data.text,name:(file.name).split('.pdf')[0]});
     return NextResponse.json({
       success:true,
       message:"resume uploaded successfully"

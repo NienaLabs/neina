@@ -31,6 +31,7 @@ export async function GET(req: Request) {
                     email: true,
                     image: true,
                     remaining_minutes: true,
+                    resume_credits: true,
                     emailVerified: true,
                 }
             }),
@@ -67,9 +68,9 @@ export async function GET(req: Request) {
                 }
             }),
 
-            // 5. Jobs (placeholder for now, fetching latest active jobs)
+            // 5. Jobs - Fetch more jobs to perform matching
             prisma.jobs.findMany({
-                take: 4,
+                take: 50, // Fetch pool of jobs to rank
                 orderBy: { created_at: 'desc' },
                 select: {
                     id: true,
@@ -78,6 +79,12 @@ export async function GET(req: Request) {
                     job_location: true,
                     job_is_remote: true,
                     created_at: true,
+                    employer_logo: true,
+                    job_skills: {
+                        select: {
+                            skill_text: true
+                        }
+                    }
                 }
             })
         ]);
@@ -85,6 +92,50 @@ export async function GET(req: Request) {
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
+
+        // --- Calculate Metrics & Matching ---
+
+        // 1. Get User Skills from latest resume
+        let userSkills = new Set<string>();
+        if (resumes.length > 0) {
+            const latestResumeId = resumes[0].id;
+            const resumeSkillsData = await prisma.resume_skills.findUnique({
+                where: { resume_id: latestResumeId }
+            });
+
+            if (resumeSkillsData?.skill_text) {
+                // Split by common delimiters and normalize
+                resumeSkillsData.skill_text
+                    .split(/[,;\n]+/)
+                    .map(s => s.trim().toLowerCase())
+                    .filter(s => s.length > 0)
+                    .forEach(s => userSkills.add(s));
+            }
+        }
+
+        // 2. Score Jobs
+        const scoredJobs = jobs.map(job => {
+            const jobSkills = job.job_skills?.skill_text || [];
+            let score = 0;
+
+            if (jobSkills.length > 0) {
+                const matchCount = jobSkills.reduce((count, skill) => {
+                    return userSkills.has(skill.toLowerCase().trim()) ? count + 1 : count;
+                }, 0);
+                score = Math.round((matchCount / jobSkills.length) * 100);
+            } else {
+                // Fallback if job has no skills listed: Random score for demo or 0
+                // Using a lower random range to prefer jobs with actual matches
+                score = Math.floor(Math.random() * 30);
+            }
+
+            return { ...job, matchScore: score };
+        });
+
+        // 3. Sort by Match Score and take top 4
+        const topJobs = scoredJobs
+            .sort((a, b) => b.matchScore - a.matchScore)
+            .slice(0, 4);
 
         // --- Calculate Metrics ---
 
@@ -132,6 +183,7 @@ export async function GET(req: Request) {
             email: user.email,
             image: user.image,
             credits: user.remaining_minutes,
+            resumeCredits: user.resume_credits,
 
             profileCompletion: profileScore,
             resumeStrength,
@@ -144,14 +196,14 @@ export async function GET(req: Request) {
 
             recentActivity: activity,
 
-            jobs: jobs.map(job => ({
+            jobs: topJobs.map(job => ({
                 id: job.id,
-                title: job.job_title,
-                company: job.employer_name,
-                location: job.job_location,
+                title: job.job_title || 'Untitled Position',
+                company: job.employer_name || 'Unknown Company',
+                location: job.job_location || 'Remote',
                 type: job.job_is_remote ? 'Remote' : 'On-site',
-                posted: job.created_at,
-                match: Math.floor(Math.random() * (95 - 70) + 70),
+                posted: job.created_at ? new Date(job.created_at).toISOString() : new Date().toISOString(),
+                match: job.matchScore,
                 isNew: true
             }))
         });

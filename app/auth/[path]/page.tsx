@@ -9,10 +9,10 @@ export function generateStaticParams() {
 
 export default async function AuthPage({ params }: { params: Promise<{ path: string }> }) {
     const { path } = await params
-    
+
     return (
         <main className="flex grow jigsaw-background min-h-screen flex-col items-center justify-center  p-4 md:p-6">
-            <AuthView path={path} className="bg-indigo-100 border-black/30 "/>
+            <AuthView path={path} className="bg-indigo-100 border-black/30 " />
         </main>
     )
 }

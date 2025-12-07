@@ -3,16 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  BarChart3,
   FileText,
-  Briefcase,
   Clock,
-  CheckCircle2,
   AlertCircle,
-  ArrowRight,
-  Plus,
   Video,
-  TrendingUp
+  Zap
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -20,8 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 
 // Types matching our API response
 interface DashboardData {
@@ -29,6 +22,7 @@ interface DashboardData {
   email: string | null;
   image: string | null;
   credits: number;
+  resumeCredits: number;
   profileCompletion: number;
   resumeStrength: number;
   jobMatchRate: number;
@@ -110,9 +104,8 @@ export default function DashboardPage() {
             <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Skeleton className="h-96 lg:col-span-2 rounded-xl" />
-          <Skeleton className="h-96 rounded-xl" />
+        <div className="grid grid-cols-1 gap-8 mt-8">
+          <Skeleton className="h-96 w-full rounded-xl" />
         </div>
       </div>
     );
@@ -148,7 +141,7 @@ export default function DashboardPage() {
               <Video className="h-4 w-4" />
               Practice Interview
             </Button>
-            <Button variant="outline" onClick={() => router.push('/resume-builder')} className="gap-2">
+            <Button variant="outline" onClick={() => router.push('/resume')} className="gap-2">
               <FileText className="h-4 w-4" />
               New Resume
             </Button>
@@ -158,11 +151,11 @@ export default function DashboardPage() {
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
-            title="Profile Score"
-            value={`${data.profileCompletion}%`}
-            icon={CheckCircle2}
-            description="Profile completeness"
-            progress={data.profileCompletion}
+            title="Resume AI Credits"
+            value={data.resumeCredits?.toString() || '0'}
+            icon={Zap}
+            description="Available for generation"
+            hideProgress
           />
           <MetricCard
             title="Resume Strength"
@@ -183,153 +176,49 @@ export default function DashboardPage() {
             value={data.credits.toString()}
             icon={Clock}
             description="Minutes available"
-            progress={(data.credits / 30) * 100} // Assuming 30 is a baseline
+            progress={(data.credits / 30) * 100}
             hideProgress
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Main Content Column */}
-          <div className="lg:col-span-2 space-y-8">
-
-            {/* Recent Activity */}
-            <Card className="border-none shadow-sm bg-card/50">
-              <CardHeader>
-                <CardTitle className="text-xl">Recent Activity</CardTitle>
-                <CardDescription>Your latest actions and progress</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {data.recentActivity.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No recent activity found. Start by creating a resume or practicing an interview!
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {data.recentActivity.map((activity, index) => (
-                      <div key={activity.id} className="flex gap-4 items-start group">
-                        <div className={`mt-1 p-2 rounded-full shrink-0 ${activity.type === 'interview' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' : 'bg-purple-100 text-purple-600 dark:bg-purple-900/30'
-                          }`}>
-                          {activity.type === 'interview' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <div className="flex justify-between items-center">
-                            <p className="font-medium text-sm">{activity.title}</p>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(activity.date).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 font-normal">
-                              {activity.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Job Recommendations */}
-            <Card className="border-none shadow-sm bg-card/50">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl">Recommended Jobs</CardTitle>
-                  <CardDescription>Based on your profile</CardDescription>
+        <div className="grid grid-cols-1 gap-8 mt-8">
+          <Card className="border-none shadow-sm bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-xl">Recent Activity</CardTitle>
+              <CardDescription>Your latest actions and progress</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data.recentActivity.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No recent activity found. Start by creating a resume or practicing an interview!
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs gap-1">
-                  View All <ArrowRight className="h-3 w-3" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  {data.jobs.map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center font-bold text-primary">
-                          {job.company.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-sm">{job.title}</h4>
-                          <p className="text-xs text-muted-foreground">{job.company} • {job.location}</p>
-                        </div>
+              ) : (
+                <div className="space-y-6">
+                  {data.recentActivity.map((activity, index) => (
+                    <div key={activity.id} className="flex gap-4 items-start group">
+                      <div className={`mt-1 p-2 rounded-full shrink-0 ${activity.type === 'interview' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' : 'bg-purple-100 text-purple-600 dark:bg-purple-900/30'
+                        }`}>
+                        {activity.type === 'interview' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                       </div>
-                      <div className="flex items-center gap-4">
-                        <Badge variant={job.match > 80 ? "default" : "secondary"}>
-                          {job.match}% Match
-                        </Badge>
-                        <Button size="icon" variant="ghost" className="h-8 w-8">
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex justify-between items-center">
+                          <p className="font-medium text-sm">{activity.title}</p>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(activity.date).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 font-normal">
+                            {activity.status}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-
-          </div>
-
-          {/* Sidebar Column */}
-          <div className="space-y-6">
-
-            {/* Profile Snapshot */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Your Profile</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center text-center pt-2">
-                <Avatar className="h-20 w-20 mb-4">
-                  <AvatarImage src={data.image || ''} />
-                  <AvatarFallback>{data.name?.charAt(0) || 'U'}</AvatarFallback>
-                </Avatar>
-                <h3 className="font-semibold text-lg">{data.name}</h3>
-                <p className="text-sm text-muted-foreground mb-6">{data.email}</p>
-
-                <div className="w-full space-y-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Profile Completion</span>
-                    <span className="font-medium">{data.profileCompletion}%</span>
-                  </div>
-                  <Progress value={data.profileCompletion} className="h-2" />
-
-                  <Separator />
-
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold">{data.credits}</p>
-                      <p className="text-xs text-muted-foreground">Credits</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold">{data.aiInsight.interviewCount}</p>
-                      <p className="text-xs text-muted-foreground">Interviews</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Tips */}
-            <Card className="bg-primary/5 border-primary/10">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Pro Tip
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Completing more practice interviews increases your readiness score and helps us tailor job recommendations better.
-                </p>
-                <Button variant="link" className="px-0 mt-2 text-primary">
-                  Start a session &rarr;
-                </Button>
-              </CardContent>
-            </Card>
-
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

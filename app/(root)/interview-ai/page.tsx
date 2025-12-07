@@ -489,7 +489,7 @@ const VideoInterview = () => {
 
       {/* Role Selection Dialog */}
       <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-3 pb-4">
             <DialogTitle className="text-2xl font-semibold">
               Tell us about the role you're interviewing for
@@ -498,7 +498,7 @@ const VideoInterview = () => {
               Provide details about the position to help our AI interviewer prepare relevant questions.
             </p>
           </DialogHeader>
-          <div className="space-y-6 py-4">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="role" className="text-base font-medium">
                 Role Position <span className="text-red-500">*</span>

@@ -17,7 +17,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar className="border-r-0 bg-linear-to-b from-transparent via-violet-200 to-transparent" {...props}>
       <SidebarHeader>
         
-        <Image src="/logo.png" width={100} height={50} alt="logo"/>
+        <Image src="/logo.png" width={100} height={30} alt="logo"/>
          
       </SidebarHeader>
       <SidebarContent>

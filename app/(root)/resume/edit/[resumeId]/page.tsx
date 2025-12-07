@@ -1,139 +1,234 @@
+
 import ResumeEditor from '@/components/resume/editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { editorButtons } from '@/constants/constant'
-import { X,Star, Clover, RefreshCcw, MoreHorizontal } from 'lucide-react'
+import { X, RefreshCcw, MoreHorizontal, Star } from 'lucide-react'
 import { trpc } from '@/trpc/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import Image from 'next/image'
+
+import { ResumeReportSidebar } from '@/components/resume/ResumeReportSidebar'
 
 interface Props {
-    params:Promise<{resumeId: string}>
+    params: Promise<{ resumeId: string }>
 }
 
+interface AnalysisData {
+    fixes: Record<string, any>;
+    [key: string]: unknown;
+}
 
+interface ScoreData {
+    overallScore?: number;
+    scores?: {
+        overallScore?: number;
+        experienceScore?: number;
+        skillsScore?: number;
+    };
+}
 
+const Page = async ({ params }: Props) => {
+    const { resumeId } = await params
 
-const Page = async ({params}:Props) => {
-    const {resumeId}= await params
+    const resume = await trpc.resume.getUnique({ resumeId })
 
-    
-    const resume = await trpc.resume.getUnique({resumeId})
-    
-    if(!resume) {return notFound}
-   
-    
-    const {analysisData,scoreData,extractedData,name} = resume
-    const role = 'role' in resume ? resume.role : 'General'
+    if (!resume) { return notFound() }
+
+    const { analysisData, scores, extractedData, name } = resume
+    const role = 'role' in resume && resume.role ? resume.role : 'General'
     const isTailored = 'primaryResumeId' in resume;
 
-    const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) : {fixes: {}}
-    const {fixes,...fixCount} = parsedAnalysisData
-    const score = scoreData ? (typeof scoreData === 'string' ? JSON.parse(scoreData) : scoreData) : null
+    const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) as AnalysisData : { fixes: {} }
+    const { fixes, ...fixCountRaw } = parsedAnalysisData
+    const fixCount = fixCountRaw as Record<string, number>
     
-    const overallScore = score?.overallScore ?? score?.scores?.overallScore ?? 0;
-    const roleMatchPercentage = score?.roleMatch?.matchPercentage;
+    const score = scores ? (typeof scores === 'string' ? JSON.parse(scores) : scores) as ScoreData : null
+    
+    // Extract scores for tailored resumes
+    const overallScore = score?.overallScore ?? 0;
+    const experienceScore = score?.experienceScore ?? 0;
+    const skillsScore = score?.skillsScore ?? 0;
 
-const gradients = [
-   "bg-gradient-to-br from-rose-300 to-rose-600",
-  "bg-gradient-to-br from-blue-300 to-blue-600",
-  "bg-gradient-to-br from-green-300 to-green-600", 
-  "bg-gradient-to-br from-amber-300 to-amber-600",
-]
+    // Calculate total issues for primary resumes
+    const totalIssues = Object.values(fixCount).reduce((acc, curr) => acc + (typeof curr === 'number' ? curr : 0), 0);
 
-  return (
-   <div className="p-5 flex min-h-screen flex-col flex-1 gap-5 bg-muted h-full w-full">
-        <div className="flex items-center justify-between w-full flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-             <Link href="/dashboard">
-               <Button variant="outline" size="icon">
-                 <X className="h-4 w-4"/>
-               </Button>
-             </Link>
-             <Badge variant="outline" className="flex items-center gap-1 pr-3">
-              <Star className="h-3 w-3"/> 
-              <span className="truncate max-w-[150px] sm:max-w-none">{name}</span> <span className="text-foreground border bg-muted-foreground p-1 rounded-full text-xs">{role}</span> 
-             </Badge>
-          </div>
-          <div className="flex items-center gap-1 sm:hidden"> {/* Mobile: Dropdown for editor buttons */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {editorButtons.map((button)=>(
-              <Button key={button.name} variant="outline" className="flex-row flex gap-1">
-                 <button.icon/>
-                 <span>{button.name}</span>    
-              </Button>
-              
-            ))}
-            </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+    // Determine Star Rating
+    let starRating = 0;
+    
+    if (isTailored) {
+        // Tailored: Based on Overall Score (0-100)
+        // 80-100: 5, 60-79: 4, 40-59: 3, 20-39: 2, 0-19: 1
+        const normalizedScore = overallScore * 100; // Assuming overallScore is 0-1
+        if (normalizedScore >= 80) starRating = 5;
+        else if (normalizedScore >= 60) starRating = 4;
+        else if (normalizedScore >= 40) starRating = 3;
+        else if (normalizedScore >= 20) starRating = 2;
+        else starRating = 1;
+    } else {
+        // Primary: Based on Issues
+        // 0-9: 5, 10-19: 4, 20-29: 3, 30-39: 2, 40+: 1
+        if (totalIssues < 10) starRating = 5;
+        else if (totalIssues < 20) starRating = 4;
+        else if (totalIssues < 30) starRating = 3;
+        else if (totalIssues < 40) starRating = 2;
+        else starRating = 1;
+    }
+
+    const gradients = [
+        "bg-gradient-to-br from-rose-400 to-rose-600",
+        "bg-gradient-to-br from-blue-400 to-blue-600",
+        "bg-gradient-to-br from-emerald-400 to-emerald-600",
+        "bg-gradient-to-br from-amber-400 to-amber-600",
+        "bg-gradient-to-br from-violet-400 to-violet-600",
+    ]
+
+    return (
+        <div className="p-4 md:p-6 flex min-h-screen flex-col flex-1 gap-6 bg-muted/40 h-full w-full font-sans ">
+            {/* Header Section */}
+            <div className="flex items-center justify-between w-full flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                    <Link href="/dashboard">
+                        <Button variant="ghost" size="icon" className="hover:bg-muted">
+                            <X className="h-5 w-5 text-muted-foreground" />
+                        </Button>
+                    </Link>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-lg font-semibold tracking-tight text-foreground truncate max-w-[200px] sm:max-w-md">{name}</h1>
+                            <Badge variant="secondary" className="text-xs font-normal px-2 py-0.5 h-6">
+                                {role}
+                            </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Last updated just now</span>
+                    </div>
+                </div>
+
+                {/* Mobile Actions */}
+                <div className="flex items-center gap-2 sm:hidden">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {editorButtons.map((button) => (
+                                <Button key={button.name} variant="ghost" className="w-full justify-start gap-2">
+                                    <button.icon className="h-4 w-4" />
+                                    <span>{button.name}</span>
+                                </Button>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="bg-background rounded-3xl border shadow-sm flex-1 flex flex-col overflow-hidden">
+                
+                {/* Stats / Grade Header */}
+                <div className="relative overflow-hidden border-b bg-linear-to-r from-background via-muted/30 to-background p-6 md:p-8">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40">
+                         <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+                         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl" />
+                    </div>
+
+                    <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8">
+                        
+                        {/* Star Rating Display */}
+                        <div className="flex items-center gap-6">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star 
+                                            key={star} 
+                                            className={`w-8 h-8 ${star <= starRating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                    {isTailored ? 'Overall Quality' : 'Resume Health'}
+                                </span>
+                            </div>
+                            
+                            <div className="h-12 w-px bg-border hidden md:block" />
+
+                            <div className="flex flex-col gap-1">
+                                <h2 className="text-2xl font-bold tracking-tight">
+                                    {isTailored ? 'Tailored Analysis' : 'Issue Detection'}
+                                </h2>
+                                <p className="text-sm text-muted-foreground max-w-[250px]">
+                                    {isTailored 
+                                        ? "Based on alignment with the job description." 
+                                        : `${totalIssues} issues found. Fix them to improve your rating.`}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Stats Grid */}
+                        <div className="flex-1 w-full md:w-auto">
+                            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-1 2xl:grid-cols-3 gap-4 lg:gap-1 ">
+                                {isTailored ? (
+                                    // Tailored Resume Stats
+                                    <>      
+                                        <div className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
+                                            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-purple-500 text-white shadow-sm">
+                                                <span className="font-bold text-sm">{(experienceScore * 100).toFixed(0)}</span>
+                                            </div>
+                                            <span className="text-xs font-medium text-muted-foreground text-center">Experience</span>
+                                        </div>
+                                        <div className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
+                                            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
+                                                <span className="font-bold text-sm">{(skillsScore * 100).toFixed(0)}</span>
+                                            </div>
+                                            <span className="text-xs font-medium text-muted-foreground text-center">Skills</span>
+                                        </div>
+                                        {overallScore !== undefined && (
+                                            <div className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
+                                                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                                                    <span className="font-bold text-sm">{(overallScore * 100).toFixed(0)}%</span>
+                                                </div>
+                                                <span className="text-xs font-medium text-muted-foreground text-center">Role Match</span>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    // Primary Resume Stats (Fix Counts)
+                                    Object.keys(fixCount).map((key, index) => (
+                                        <div key={key} className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
+                                            <div className={`mb-2 flex h-10 w-10 items-center justify-center rounded-full ${gradients[index % gradients.length]} text-white shadow-sm`}>
+                                                <span className="font-bold text-sm">{fixCount[key]}</span>
+                                            </div>
+                                            <span className="text-xs font-medium text-muted-foreground text-center capitalize">
+                                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                                            </span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col gap-3 min-w-[140px]">
+                            <Button className="w-full rounded-full shadow-md hover:shadow-lg transition-all" size="lg">
+                                <RefreshCcw className="mr-2 h-4 w-4" />
+                                Re-analyze
+                            </Button>
+                            <ResumeReportSidebar fixes={fixes} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Editor Area */}
+                <div className="flex-1 bg-muted/10">
+                    <ResumeEditor fixes={fixes} extractedData={extractedData} resumeId={resumeId} isTailored={isTailored} />
+                </div>
+            </div>
         </div>
-        <div className="bg-background rounded-3xl border flex-1">
-         <div className="border-b bg-linear-to-r from-transparent via-purple-200 to-transparent p-4 flex-col flex md:flex-row flex-wrap gap-4 items-center">
-         <div className="relative flex items-center justify-center w-40 h-40">
-  {/* Laurel */}
-           <Image
-           src="/laurel.svg"
-           width={160}
-           height={160}
-           alt="laurel"
-           className="absolute inset-0 w-full h-full object-contain"
-           />
-
-  {/* Shield / Score container */}
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-    <div className="w-24 h-24 bg-background border rounded-bl-full rounded-br-full
-     rounded-tl-lg rounded-tr-lg flex items-center
-      bg-radial-[at_25%_25%] from-white inset-shadow-white 
-      to-zinc-900 to-75% justify-center shadow-md inset-shadow-sm/40">
-      <h1 className="font-bold text-3xl">
-        {(overallScore * 100).toFixed(1)}
-      </h1>
-    </div>
-  </div>
-</div>
-
-          <div className="flex flex-col gap-2 items-center md:items-start">
-            {roleMatchPercentage && <h1>Role Match:{roleMatchPercentage}%</h1>}
-            <Badge>
-              {(roleMatchPercentage || 0) > 80 ? "Excellent" : (roleMatchPercentage || 0) > 60 ? "Good" : "Fair"}
-              <Clover/>
-            </Badge>
-            <Button variant="outline" className="rounded-full">
-               <h2 className="text-xs">view full report</h2>
-            </Button>
-          </div>
-          <div className="flex justify-center md:ml-auto  items-center flex-col gap-6">
-          <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:col-span-2">
-            {Object.keys(fixCount).map((key,index)=>(
-              <div key={index} className="flex flex-col items-center gap-1 justify-center">
-              <div   className={`size-10 rounded-full border-2 flex items-center justify-center ${gradients[index % gradients.length]} text-white shadow-md`}>
-               {fixCount[key]}  
-              </div>  
-              <h2 className="text-xs  text-center">{key.replace("Fixes","")+" fix(es)".toLowerCase()}</h2>            
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-center mt-auto">
-            <Button className="flex items-center gap-1">
-            <span>Re-analyze</span>
-            <RefreshCcw/>
-            </Button>
-          </div>
-          </div>
-        </div>
-        <ResumeEditor fixes={fixes} extractedData={extractedData} resumeId={resumeId} isTailored={isTailored}/>
-        </div>
-   </div>
-  )
+    )
 }
 
 export default Page

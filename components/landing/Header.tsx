@@ -25,10 +25,10 @@ const Header = () => {
   };
 
     return (
-<header className={cn("w-full fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-transparent", isScrolled && "bg-black backdrop-blur-md border-b border-white/10 shadow-lg")}>
+<header className={cn("w-full fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-transparent", isScrolled && "bg-black/80 backdrop-blur-md border-b border-white/10 shadow-lg")}>
                 <div className=" px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
                     {/* Logo */}
-                        <Image src="/logo.png" className="mr-auto" height={100} width={50} alt="logo" priority/>
+                        <Image src="/logo.png" className="mr-auto" height={50} width={100} alt="logo"/>
                     {/* Navigation */}
                     <nav className="hidden md:flex items-center justify-center flex-1 space-x-8">
                         {/* Products Dropdown */}

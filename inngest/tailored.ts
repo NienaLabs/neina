@@ -93,7 +93,7 @@ export const tailoredResumeCreated = inngest.createFunction(
           userId: event.data.userId,
           extractedData: result.state.data.parserAgent,
           analysisData: result.state.data.analyserAgent,
-          scores: {...scores }
+          scoreData: {...scores }
         }
       });
 
@@ -102,6 +102,91 @@ export const tailoredResumeCreated = inngest.createFunction(
         UPDATE "tailored_resume"
         SET "jobDescriptionEmbedding" = ${formattedVector}::vector
         WHERE "id" = ${tailoredResume.id}
+      `;
+    })
+
+    return result 
+  }
+);
+
+export const tailoredResumeUpdated = inngest.createFunction(
+  { id: "tailored-resume-updated-workflow" },
+  { event: "app/tailored-resume.updated" },
+  async ({step,event}) => {
+    const state = createState<AgentState>({
+      parserAgent:"",
+      analyserAgent:""
+    })
+    const resumeText =`
+    #Resume
+    ${event.data.content}
+    
+    #Targetted Role
+    ${event.data.role}
+    #Job Description
+    ${event.data.description}
+    `
+    const result = await network.run(resumeText,{state});
+
+    const { jobDescriptionEmbedding, scores } = await step.run("generate-embedding-and-score", async () => {
+      const { vectorStore } = await generateChunksAndEmbeddings(event.data.description);
+      const jobDescriptionEmbedding = vectorStore[0];
+
+      // Fetch skills embedding using raw SQL
+      // Note: event.data.primaryResumeId is required to fetch skills/experience from the primary resume
+      const skillsResult: { embedding: string }[] = await prisma.$queryRaw`
+        SELECT embedding FROM "resume_skills" WHERE "resume_id" = ${event.data.primaryResumeId}
+      `;
+      const skillsEmbedding = parseVectorString(skillsResult[0]?.embedding);
+      
+      // Fetch experience embedding using raw SQL
+      const experienceResult: { embedding: string }[] = await prisma.$queryRaw`
+        SELECT embedding FROM "resume_experience" WHERE "resume_id" = ${event.data.primaryResumeId}
+      `;
+      const experienceEmbedding = parseVectorString(experienceResult[0]?.embedding);
+
+      const skillsScore = skillsEmbedding.length > 0
+        ? cosineSimilarity(jobDescriptionEmbedding, skillsEmbedding)
+        : 0;
+     
+      const experienceScore = experienceEmbedding.length > 0
+        ? cosineSimilarity(jobDescriptionEmbedding, experienceEmbedding)
+        : 0;
+      
+      const overallScore = 0.7*skillsScore + 0.3*experienceScore ;
+
+      return {
+        jobDescriptionEmbedding,
+        scores: {
+          skillsScore,
+          experienceScore,
+          overallScore,
+        },
+      };
+    });
+
+    await step.run("update-tailored-resume", async () => {
+      await prisma.tailoredResume.update({
+        where: {
+            id: event.data.resumeId,
+            userId: event.data.userId
+        },
+        data: {
+          name: event.data.name,
+          content: event.data.content,
+          role: event.data.role,
+          jobDescription: event.data.description,
+          extractedData: result.state.data.parserAgent,
+          analysisData: result.state.data.analyserAgent,
+          scoreData: {...scores }
+        }
+      });
+
+      const formattedVector = `[${jobDescriptionEmbedding.join(',')}]`;
+      await prisma.$executeRaw`
+        UPDATE "tailored_resume"
+        SET "jobDescriptionEmbedding" = ${formattedVector}::vector
+        WHERE "id" = ${event.data.resumeId}
       `;
     })
 

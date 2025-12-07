@@ -3,13 +3,15 @@ import ResumeEditor from '@/components/resume/editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { editorButtons } from '@/constants/constant'
-import { X, RefreshCcw, MoreHorizontal, Star } from 'lucide-react'
+import { X, MoreHorizontal, Star } from 'lucide-react'
 import { trpc } from '@/trpc/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 import { ResumeReportSidebar } from '@/components/resume/ResumeReportSidebar'
+
+import { ReanalyzeButton } from '@/components/resume/ReanalyzeButton'
 
 interface Props {
     params: Promise<{ resumeId: string }>
@@ -36,7 +38,7 @@ const Page = async ({ params }: Props) => {
 
     if (!resume) { return notFound() }
 
-    const { analysisData, scores, extractedData, name } = resume
+    const { analysisData, scoreData, extractedData, name } = resume
     const role = 'role' in resume && resume.role ? resume.role : 'General'
     const isTailored = 'primaryResumeId' in resume;
 
@@ -44,7 +46,7 @@ const Page = async ({ params }: Props) => {
     const { fixes, ...fixCountRaw } = parsedAnalysisData
     const fixCount = fixCountRaw as Record<string, number>
     
-    const score = scores ? (typeof scores === 'string' ? JSON.parse(scores) : scores) as ScoreData : null
+    const score = scoreData ? (typeof scoreData === 'string' ? JSON.parse(scoreData) : scoreData) as ScoreData : null
     
     // Extract scores for tailored resumes
     const overallScore = score?.overallScore ?? 0;
@@ -76,13 +78,7 @@ const Page = async ({ params }: Props) => {
         else starRating = 1;
     }
 
-    const gradients = [
-        "bg-gradient-to-br from-rose-400 to-rose-600",
-        "bg-gradient-to-br from-blue-400 to-blue-600",
-        "bg-gradient-to-br from-emerald-400 to-emerald-600",
-        "bg-gradient-to-br from-amber-400 to-amber-600",
-        "bg-gradient-to-br from-violet-400 to-violet-600",
-    ]
+
 
     return (
         <div className="p-4 md:p-6 flex min-h-screen flex-col flex-1 gap-6 bg-muted/40 h-full w-full font-sans ">
@@ -171,18 +167,18 @@ const Page = async ({ params }: Props) => {
                         {/* Stats Grid */}
                         <div className="flex-1 w-full md:w-auto">
                             <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-1 2xl:grid-cols-3 gap-4 lg:gap-1 ">
-                                {isTailored ? (
+                                {isTailored && (
                                     // Tailored Resume Stats
                                     <>      
                                         <div className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
                                             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-purple-500 text-white shadow-sm">
-                                                <span className="font-bold text-sm">{(experienceScore * 100).toFixed(0)}</span>
+                                                <span className="font-bold text-sm">{(experienceScore * 100).toFixed(0)}%</span>
                                             </div>
                                             <span className="text-xs font-medium text-muted-foreground text-center">Experience</span>
                                         </div>
                                         <div className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
                                             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
-                                                <span className="font-bold text-sm">{(skillsScore * 100).toFixed(0)}</span>
+                                                <span className="font-bold text-sm">{(skillsScore * 100).toFixed(0)}%</span>
                                             </div>
                                             <span className="text-xs font-medium text-muted-foreground text-center">Skills</span>
                                         </div>
@@ -195,28 +191,13 @@ const Page = async ({ params }: Props) => {
                                             </div>
                                         )}
                                     </>
-                                ) : (
-                                    // Primary Resume Stats (Fix Counts)
-                                    Object.keys(fixCount).map((key, index) => (
-                                        <div key={key} className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
-                                            <div className={`mb-2 flex h-10 w-10 items-center justify-center rounded-full ${gradients[index % gradients.length]} text-white shadow-sm`}>
-                                                <span className="font-bold text-sm">{fixCount[key]}</span>
-                                            </div>
-                                            <span className="text-xs font-medium text-muted-foreground text-center capitalize">
-                                                {key.replace(/([A-Z])/g, ' $1').trim()}
-                                            </span>
-                                        </div>
-                                    ))
                                 )}
                             </div>
                         </div>
 
                         {/* Actions */}
                         <div className="flex flex-col gap-3 min-w-[140px]">
-                            <Button className="w-full rounded-full shadow-md hover:shadow-lg transition-all" size="lg">
-                                <RefreshCcw className="mr-2 h-4 w-4" />
-                                Re-analyze
-                            </Button>
+                            <ReanalyzeButton resumeId={resumeId} isTailored={isTailored} />
                             <ResumeReportSidebar fixes={fixes} />
                         </div>
                     </div>

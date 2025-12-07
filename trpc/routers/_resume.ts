@@ -1,4 +1,6 @@
 import {z} from "zod";
+import { jsonToMarkdown } from "@/lib/converter";
+import { ResumeExtraction } from "@/components/resume/editor/types";
 import { createTRPCRouter, protectedProcedure } from "../init";
 import { inngest } from "@/inngest/client";
 import prisma from "@/lib/prisma";
@@ -148,7 +150,7 @@ export const resumeRouter = createTRPCRouter({
         })
     )
     .query(
-       async({input,ctx})=>{
+        async({input,ctx})=>{
          try{
             const resume = await prisma.resume.findUnique({
                 where:{
@@ -201,6 +203,93 @@ export const resumeRouter = createTRPCRouter({
                     },
                     data: {
                         extractedData
+                    }
+                });
+            }
+        }
+    ),
+    reanalyze: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string(),
+            isTailored: z.boolean()
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+            const { resumeId, isTailored } = input;
+            
+            if (isTailored) {
+                const tailoredResume = await prisma.tailoredResume.findUnique({
+                    where: {
+                        id: resumeId,
+                        userId: ctx.session?.session.userId
+                    }
+                });
+
+                if (!tailoredResume) {
+                    throw new TRPCError({code: "NOT_FOUND", message: "Tailored resume not found"});
+                }
+
+                // Convert extractedData to markdown if available
+                let content = tailoredResume.content;
+                if (tailoredResume.extractedData) {
+                    try {
+                        const extractedData = (typeof tailoredResume.extractedData === 'string' 
+                            ? JSON.parse(tailoredResume.extractedData) 
+                            : tailoredResume.extractedData) as ResumeExtraction;
+                        content = jsonToMarkdown(extractedData);
+                    } catch (e) {
+                        console.error("Failed to convert extractedData to markdown", e);
+                    }
+                }
+
+                await inngest.send({
+                    name: "app/tailored-resume.updated",
+                    data: {
+                        resumeId: tailoredResume.id,
+                        userId: ctx.session?.session.userId,
+                        content: content,
+                        role: tailoredResume.role || "General",
+                        description: tailoredResume.jobDescription || "",
+                        name: tailoredResume.name,
+                        primaryResumeId: tailoredResume.primaryResumeId
+                    }
+                });
+            } else {
+                const resume = await prisma.resume.findUnique({
+                    where: {
+                        id: resumeId,
+                        userId: ctx.session?.session.userId
+                    }
+                });
+
+                if (!resume) {
+                    throw new TRPCError({code: "NOT_FOUND", message: "Resume not found"});
+                }
+
+                // Convert extractedData to markdown if available
+                let content = resume.content;
+                if (resume.extractedData) {
+                    try {
+                        const extractedData = (typeof resume.extractedData === 'string' 
+                            ? JSON.parse(resume.extractedData) 
+                            : resume.extractedData) as ResumeExtraction;
+                        content = jsonToMarkdown(extractedData);
+                    } catch (e) {
+                        console.error("Failed to convert extractedData to markdown", e);
+                    }
+                }
+
+                await inngest.send({
+                    name: "app/resume.updated",
+                    data: {
+                        resumeId: resume.id,
+                        userId: ctx.session?.session.userId,
+                        content: content,
+                        role: "General",
+                        description: "",
+                        name: resume.name
                     }
                 });
             }

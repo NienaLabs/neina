@@ -32,9 +32,10 @@ model User {
   subscription      subscription?    @relation(fields: [subscription_id], references: [id])
 
   // Admin features
-  isSuspended       Boolean          @default(false)
-  plan              String           @default("free")
+  isSuspended       Boolean            @default(false)
+  plan              String             @default("free")
   supportTickets    SupportTicket[]
+  announcementReads AnnouncementRead[]
 
   @@map("user")
 }
@@ -276,29 +277,43 @@ model SupportTicket {
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  TicketMessage[]
 
-  @@map("support_ticket")
   @@index([userId])
+  @@map("support_ticket")
 }
 
 model TicketMessage {
   id        String        @id @default(cuid())
   ticketId  String
-  sender    String        // "user" or "admin"
+  sender    String // "user" or "admin"
   message   String
   createdAt DateTime      @default(now())
   ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
-  @@map("ticket_message")
   @@index([ticketId])
+  @@map("ticket_message")
 }
 
 model Announcement {
-  id        String   @id @default(cuid())
+  id        String             @id @default(cuid())
   title     String
   content   String
-  type      String   @default("in-app") // "email", "in-app", "both"
-  sentAt    DateTime @default(now())
+  type      String             @default("in-app") // "email", "in-app", "both"
+  sentAt    DateTime           @default(now())
   createdBy String?
-  
+  reads     AnnouncementRead[]
+
   @@map("announcement")
+}
+
+model AnnouncementRead {
+  id             String       @id @default(cuid())
+  userId         String
+  announcementId String
+  readAt         DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, announcementId])
+  @@index([userId])
+  @@map("announcement_read")
 }

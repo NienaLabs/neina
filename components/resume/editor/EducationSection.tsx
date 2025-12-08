@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2, CircleArrowRight } from 'lucide-react';
 import { ResumeExtraction, Fixes } from './types';
 import { FixesDisplay } from './FixesDisplay';
+import { RemovableInput } from './RemovableInput';
 
 interface EducationSectionProps {
   education: NonNullable<ResumeExtraction['education']>;
@@ -15,6 +16,15 @@ interface EducationSectionProps {
     key: string,
     value: unknown
   ) => void;
+  handleCustomFieldChange: (
+    section: keyof ResumeExtraction,
+    index: number,
+    fieldIndex: number,
+    key: string,
+    value: string
+  ) => void;
+  addCustomField: (section: keyof ResumeExtraction, index: number) => void;
+  removeCustomField: (section: keyof ResumeExtraction, index: number, fieldIndex: number) => void;
   fixes: Fixes;
 }
 
@@ -24,6 +34,9 @@ interface EducationSectionProps {
  * @param handleArrayAdd - Function to add a new education entry.
  * @param handleArrayDelete - Function to delete an education entry.
  * @param handleNestedFieldChange - Function to handle changes to nested fields.
+ * @param handleCustomFieldChange - Function to handle changes to custom fields.
+ * @param addCustomField - Function to add a new custom field.
+ * @param removeCustomField - Function to remove a custom field.
  * @param fixes - The fixes object for displaying hints.
  * @returns A section component for education.
  */
@@ -32,6 +45,9 @@ export const EducationSection = ({
   handleArrayAdd,
   handleArrayDelete,
   handleNestedFieldChange,
+  handleCustomFieldChange,
+  addCustomField,
+  removeCustomField,
   fixes,
 }: EducationSectionProps) => {
   return (
@@ -56,6 +72,7 @@ export const EducationSection = ({
               grade: '',
               location: '',
               description: '',
+              customFields: [],
             })
           }
         >
@@ -66,36 +83,41 @@ export const EducationSection = ({
       <div className="flex flex-col gap-6">
         {education.map((edu, index) => (
           <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2"
-              onClick={() => handleArrayDelete('education', index)}
-            >
-              <Trash2 className="size-4 text-red-500" />
-            </Button>
+            <div className="flex justify-end mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                onClick={() => handleArrayDelete('education', index)}
+              >
+                <Trash2 className="size-4 mr-2" /> Delete Entry
+              </Button>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Input
+              <RemovableInput
                 placeholder="Institution"
                 value={edu.institution}
                 onChange={(e) =>
                   handleNestedFieldChange('education', index, 'institution', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('education', index, 'institution', '')}
               />
-              <Input
+              <RemovableInput
                 placeholder="Degree"
                 value={edu.degree}
                 onChange={(e) =>
                   handleNestedFieldChange('education', index, 'degree', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('education', index, 'degree', '')}
               />
-              <Input
+              <RemovableInput
                 placeholder="Field of Study"
                 value={edu.fieldOfStudy}
                 onChange={(e) =>
                   handleNestedFieldChange('education', index, 'fieldOfStudy', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('education', index, 'fieldOfStudy', '')}
               />
               <div className="flex items-center gap-2">
                 <Input
@@ -114,28 +136,63 @@ export const EducationSection = ({
                   }
                 />
               </div>
-              <Input
+              <RemovableInput
                 placeholder="Grade"
                 value={edu.grade}
                 onChange={(e) =>
                   handleNestedFieldChange('education', index, 'grade', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('education', index, 'grade', '')}
               />
-              <Input
+              <RemovableInput
                 placeholder="Location"
                 value={edu.location}
                 onChange={(e) =>
                   handleNestedFieldChange('education', index, 'location', e.target.value)
                 }
+                onRemove={() => handleNestedFieldChange('education', index, 'location', '')}
               />
-              <Textarea
-                placeholder="Description"
-                value={edu.description}
-                onChange={(e) =>
-                  handleNestedFieldChange('education', index, 'description', e.target.value)
-                }
-                className="col-span-2"
-              />
+              <div className="col-span-2">
+                <Textarea
+                  placeholder="Description"
+                  value={edu.description}
+                  onChange={(e) =>
+                    handleNestedFieldChange('education', index, 'description', e.target.value)
+                  }
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Custom Fields */}
+              {edu.customFields?.map((field, fieldIndex) => (
+                <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
+                  <Input
+                    placeholder="Field Name"
+                    value={field.key}
+                    onChange={(e) =>
+                      handleCustomFieldChange('education', index, fieldIndex, 'key', e.target.value)
+                    }
+                  />
+                  <RemovableInput
+                    placeholder="Field Value"
+                    value={field.value}
+                    onChange={(e) =>
+                      handleCustomFieldChange('education', index, fieldIndex, 'value', e.target.value)
+                    }
+                    onRemove={() => removeCustomField('education', index, fieldIndex)}
+                  />
+                </div>
+              ))}
+              
+              <div className="col-span-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCustomField('education', index)}
+                >
+                  <Plus className="size-4 mr-2" /> Add Custom Field
+                </Button>
+              </div>
             </div>
           </div>
         ))}

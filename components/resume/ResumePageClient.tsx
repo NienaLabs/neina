@@ -7,7 +7,7 @@ import { trpc } from '@/trpc/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Resume } from '@/lib/generated/prisma/client'
 import { Button } from '../ui/button'
-import { SquarePen } from 'lucide-react'
+import { SquarePen, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 // Define the types for the resume data
@@ -39,6 +39,7 @@ export type TailoredResumeScoreData = {
 export type TailoredResume = Resume & {
   scores: TailoredResumeScoreData | null;
   role: string;
+  scoreData: TailoredResumeScoreData | null;
 }
 
 export type ResumeWithTailored = Resume & {
@@ -105,7 +106,7 @@ const ResumePageClient = () => {
      
     if (isLoading) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
         <Skeleton className="h-12 w-1/2" />
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-96 w-full" />
@@ -115,7 +116,7 @@ const ResumePageClient = () => {
 
   if (isError) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-red-500">Error</h1>
         <p className="text-red-500">Failed to load resumes: {error.message}</p>
       </div>
@@ -124,7 +125,7 @@ const ResumePageClient = () => {
 
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-2">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-10 max-w-7xl mx-auto animate-in fade-in duration-500">
       <input
         ref={fileInputRef}
         type="file"
@@ -133,21 +134,33 @@ const ResumePageClient = () => {
         className="hidden"
         onChange={handleFileUpload}
       />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white animate-fade-in-down">
-            Resume AI
-          </h1>
-          <div className="flex flex-row items-center  justify-between mb-4">
-          <p className="text-gray-500 text-sm dark:text-gray-400 animate-fade-in-down animation-delay-200">
-            Manage and optimize your resumes with the power of AI.
-          </p>
-         <Button className="animate-fade-in-down animation-delay-40" onClick={() => fileInputRef.current?.click()} disabled={loading}>
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-border/40 pb-6">
+        <div>
+            <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                    Resume AI
+                </h1>
+            </div>
+            <p className="text-muted-foreground max-w-lg">
+                Manage your primary resumes and create tailored versions to perfectly match your dream jobs.
+            </p>
+        </div>
+        <Button 
+            size="lg"
+            className="shadow-lg hover:shadow-primary/25 transition-all"
+            onClick={() => fileInputRef.current?.click()} 
+            disabled={loading}
+        >
           <SquarePen className="mr-2 h-4 w-4" />
           {loading ? "Parsing..." : "Upload New Resume"}
-          </Button>        
-        </div>
+        </Button>        
+      </div>
 
-      <div className="space-y-8">
-        <div className="animate-fade-in-up">
+      <div className="space-y-12">
+        <div className="animate-in slide-in-from-bottom-4 duration-700 delay-100">
           <PrimaryResumeSection
             isLoading={isLoading}
             isError={isError}
@@ -156,11 +169,14 @@ const ResumePageClient = () => {
             onSelectResume={setSelectedResume}
           />
         </div>
-        <div className="animate-fade-in-up animation-delay-200">
-          <TailoredResumesSection
-            tailoredResumes={selectedResume?.tailoredResumes}
-          />
-        </div>
+        
+        {selectedResume && (
+             <div className="animate-in slide-in-from-bottom-4 duration-700 delay-200">
+                <TailoredResumesSection
+                    tailoredResumes={selectedResume?.tailoredResumes}
+                />
+            </div>
+        )}
       </div>
     </div>
   )

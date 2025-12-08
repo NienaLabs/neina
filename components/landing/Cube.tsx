@@ -60,7 +60,7 @@ const Cube = () => {
             className={faceCommon}
             style={{ transform: `rotateY(0deg) translateZ(${translateOffset})` }}
           >
-            <Image objectFit='cover' fill alt="side1" src="/side1.jpg"/>  
+            <Image objectFit='cover' fill alt="side1" src="/cube.jpg"/>  
                   </div>
 
           {/* Back Face */}
@@ -68,7 +68,7 @@ const Cube = () => {
             className={faceCommon}
             style={{ transform: `rotateY(180deg) translateZ(${translateOffset})` }}
           >
-            <Image objectFit='cover' fill alt="side1" src="/side2.jpg"/> 
+            <Image objectFit='cover' fill alt="side1" src="/cube.jpg"/> 
           </div>
 
           {/* Right Face */}
@@ -76,7 +76,7 @@ const Cube = () => {
             className={faceCommon}
             style={{ transform: `rotateY(90deg) translateZ(${translateOffset})` }}
           >
-             <Image objectFit='cover' fill alt="side1" src="/side3.jpg"/> 
+             <Image objectFit='cover' fill alt="side1" src="/cube.jpg"/> 
           </div>
 
           {/* Left Face */}
@@ -84,7 +84,7 @@ const Cube = () => {
             className={faceCommon}
             style={{ transform: `rotateY(-90deg) translateZ(${translateOffset})` }}
           >
-             <Image objectFit='cover' fill alt="side1" src="/side4.jpg"/> 
+             <Image objectFit='cover' fill alt="side1" src="/cube.jpg"/> 
           </div>
 
           {/* Top Face */}
@@ -92,7 +92,7 @@ const Cube = () => {
             className={faceCommon}
             style={{ transform: `rotateX(90deg) translateZ(${translateOffset})` }}
           >
-              <Image objectFit='cover' fill alt="side1" src="/side5.jpg"/> 
+              <Image objectFit='cover' fill alt="side1" src="/cube.jpg"/> 
           </div>
 
           {/* Bottom Face */}
@@ -100,7 +100,7 @@ const Cube = () => {
             className={faceCommon}
             style={{ transform: `rotateX(-90deg) translateZ(${translateOffset})` }}
           >
-             <Image objectFit='cover' fill alt="side1" src="/side6.jpg"/> 
+             <Image objectFit='cover' fill alt="side1" src="/cube.jpg"/> 
           </div>
 
         </div>

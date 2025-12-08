@@ -170,6 +170,91 @@ export const addSkill = (
 
 };
 
+export const removeSkill = (
+  type: keyof NonNullable<ResumeExtraction['skills']>,
+  index: number,
+  setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
+  setSave: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  setEditorState((prev) => {
+    const updatedSkills = { ...prev!.skills };
+    const arr = [...(updatedSkills[type] || [])];
+    arr.splice(index, 1);
+    updatedSkills[type] = arr;
+    return { ...prev, skills: updatedSkills };
+  });
+  setSave(true);
+};
+
+export const handleCustomFieldChange = (
+  section: keyof ResumeExtraction,
+  index: number,
+  fieldIndex: number,
+  key: string,
+  value: string,
+  setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
+  setSave: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  setEditorState((prev) => {
+    const updatedSection = [...(prev![section] as any[])];
+    const updatedItem = { ...updatedSection[index] };
+    const updatedCustomFields = [...(updatedItem.customFields || [])];
+    
+    if (key === 'key') {
+      updatedCustomFields[fieldIndex] = { ...updatedCustomFields[fieldIndex], key: value };
+    } else {
+      updatedCustomFields[fieldIndex] = { ...updatedCustomFields[fieldIndex], value: value };
+    }
+    
+    updatedItem.customFields = updatedCustomFields;
+    updatedSection[index] = updatedItem;
+    
+    return { ...prev, [section]: updatedSection };
+  });
+  setSave(true);
+};
+
+export const addCustomField = (
+  section: keyof ResumeExtraction,
+  index: number,
+  setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
+  setSave: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  setEditorState((prev) => {
+    const updatedSection = [...(prev![section] as any[])];
+    const updatedItem = { ...updatedSection[index] };
+    const updatedCustomFields = [...(updatedItem.customFields || []), { key: '', value: '' }];
+    
+    updatedItem.customFields = updatedCustomFields;
+    updatedSection[index] = updatedItem;
+    
+    return { ...prev, [section]: updatedSection };
+  });
+  setSave(true);
+};
+
+export const removeCustomField = (
+  section: keyof ResumeExtraction,
+  index: number,
+  fieldIndex: number,
+  setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
+  setSave: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  setEditorState((prev) => {
+    const updatedSection = [...(prev![section] as any[])];
+    const updatedItem = { ...updatedSection[index] };
+    const updatedCustomFields = [...(updatedItem.customFields || [])];
+    
+    updatedCustomFields.splice(fieldIndex, 1);
+    
+    updatedItem.customFields = updatedCustomFields;
+    updatedSection[index] = updatedItem;
+    
+    return { ...prev, [section]: updatedSection };
+  });
+  setSave(true);
+};
+
 
 
 export function cosineSimilarity(vecA: number[], vecB: number[]): number {

@@ -19,10 +19,15 @@ model User {
   remaining_minutes Int              @default(30)
   resume_credits    Int              @default(5)
   subscription_id   String?
+  role              String           @default("user")
+  resume_credits    Int              @default(5)
+  isSuspended       Boolean          @default(false)
+  plan              String           @default("free")
   accounts          Account[]
   interview         interview[]
   resumes           Resume[]
   sessions          Session[]
+  support_ticket    support_ticket[]
   tailoredResumes   TailoredResume[]
   subscription      subscription?    @relation(fields: [subscription_id], references: [id])
 
@@ -63,6 +68,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("account")
 }
 
@@ -98,21 +104,20 @@ model Resume {
 }
 
 model TailoredResume {
-  id                      String                 @id @default(cuid())
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
-  content                 String
-  role                    String?
-  jobDescription          String?
-  jobDescriptionEmbedding Unsupported("vector")?
-  name                    String
-  extractedData           Json?
-  analysisData            Json?
-  scores                  Json?
-  primaryResumeId         String
-  userId                  String
-  primaryResume           Resume                 @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
-  user                    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  content         String
+  role            String?
+  jobDescription  String?
+  name            String
+  extractedData   Json?
+  analysisData    Json?
+  primaryResumeId String
+  userId          String
+  scoreData       Json?
+  primaryResume   Resume   @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([primaryResumeId])
   @@index([userId])
@@ -224,6 +229,32 @@ model resume_skills {
   resume     Resume?                @relation(fields: [resume_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([embedding], map: "idx_resume_skills_vector")
+}
+
+model support_ticket {
+  id             String           @id
+  userId         String
+  subject        String
+  status         String           @default("open")
+  priority       String           @default("medium")
+  category       String           @default("general")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket_message ticket_message[]
+
+  @@index([userId])
+}
+
+model ticket_message {
+  id             String         @id
+  ticketId       String
+  sender         String
+  message        String
+  createdAt      DateTime       @default(now())
+  support_ticket support_ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
 }
 
 enum InterviewStatus {

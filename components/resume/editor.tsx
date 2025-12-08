@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import {  Plus } from 'lucide-react'
-import { Input } from '../ui/input'
+import { trpc } from '@/trpc/client'
+import { toast } from 'sonner'
 import { Button } from '../ui/button'
 import { ResumeExtraction,  Fixes } from './editor/types'
 import { AddressSection } from './editor/AddressSection'
@@ -16,6 +17,7 @@ import { AwardsSection } from './editor/AwardsSection'
 import { PublicationsSection } from './editor/PublicationsSection'
 import { CustomSections } from './editor/CustomSections'
 import { SaveChangesPopup } from './editor/SaveChangesPopup'
+import { RemovableInput } from './editor/RemovableInput'
 import {
   handleFieldChange as handleFieldChangeUtil,
   handleNestedFieldChange as handleNestedFieldChangeUtil,
@@ -26,10 +28,14 @@ import {
   addNewOtherLink as addNewOtherLinkUtil,
   handleSkillArrayChange as handleSkillArrayChangeUtil,
   addSkill as addSkillUtil,
+  removeSkill as removeSkillUtil,
+  handleCustomFieldChange as handleCustomFieldChangeUtil,
+  addCustomField as addCustomFieldUtil,
+  removeCustomField as removeCustomFieldUtil,
 } from '@/lib/utils'
 
 
-export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, extractedData: string | ResumeExtraction }) {
+export default function ResumeEditor({ fixes, extractedData, resumeId, isTailored }: { fixes: Fixes, extractedData: string | ResumeExtraction, resumeId: string, isTailored: boolean }) {
   const [save, setSave] = useState(false)
   const [editorState, setEditorState] = useState<ResumeExtraction | null>(() => {
     if (!extractedData) return null;
@@ -40,6 +46,26 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
       return null;
     }
   });
+
+  const saveDataMutation = trpc.resume.saveData.useMutation({
+    onSuccess: () => {
+      toast.success("Resume changes saved successfully");
+      setSave(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to save changes");
+    },
+  });
+
+  const handleSave = () => {
+    if (!editorState) return;
+    
+    saveDataMutation.mutate({
+      resumeId,
+      extractedData: editorState,
+      isTailored,
+    });
+  };
 
   if (!editorState) {
     return <div>Error loading editor. The resume data might be corrupted.</div>
@@ -89,6 +115,29 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
     addSkillUtil(type, setEditorState, setSave);
   };
 
+  const removeSkill = (type: keyof NonNullable<ResumeExtraction['skills']>, index: number) => {
+    removeSkillUtil(type, index, setEditorState, setSave);
+  };
+
+  // ---------- Custom Fields Handlers ----------
+  const handleCustomFieldChange = (
+    section: keyof ResumeExtraction,
+    index: number,
+    fieldIndex: number,
+    key: string,
+    value: string
+  ) => {
+    handleCustomFieldChangeUtil(section, index, fieldIndex, key, value, setEditorState, setSave);
+  };
+
+  const addCustomField = (section: keyof ResumeExtraction, index: number) => {
+    addCustomFieldUtil(section, index, setEditorState, setSave);
+  };
+
+  const removeCustomField = (section: keyof ResumeExtraction, index: number, fieldIndex: number) => {
+    removeCustomFieldUtil(section, index, fieldIndex, setEditorState, setSave);
+  };
+
   // ---------- Utility Renderer for simple array fields (kept here as it uses handleNestedFieldChange) ----------
   const renderStringArray = (
     section: keyof ResumeExtraction,
@@ -101,13 +150,18 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
     return (
       <div className="flex flex-col gap-2">
         {safeValues.map((v, i) => (
-          <Input
+          <RemovableInput
             key={i}
             value={v}
             placeholder={`${key} ${i + 1}`}
             onChange={(e) => {
               const updated = [...safeValues];
               updated[i] = e.target.value;
+              handleNestedFieldChange(section, index, key, updated);
+            }}
+            onRemove={() => {
+              const updated = [...safeValues];
+              updated.splice(i, 1);
               handleNestedFieldChange(section, index, key, updated);
             }}
           />
@@ -165,6 +219,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
             handleArrayAdd={handleArrayAdd}
             handleArrayDelete={handleArrayDelete}
             handleNestedFieldChange={handleNestedFieldChange}
+            handleCustomFieldChange={handleCustomFieldChange}
+            addCustomField={addCustomField}
+            removeCustomField={removeCustomField}
             fixes={fixes}
           />
         )}
@@ -176,6 +233,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
             handleArrayAdd={handleArrayAdd}
             handleArrayDelete={handleArrayDelete}
             handleNestedFieldChange={handleNestedFieldChange}
+            handleCustomFieldChange={handleCustomFieldChange}
+            addCustomField={addCustomField}
+            removeCustomField={removeCustomField}
             renderStringArray={renderStringArray}
             fixes={fixes}
           />
@@ -188,6 +248,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
             handleArrayAdd={handleArrayAdd}
             handleArrayDelete={handleArrayDelete}
             handleNestedFieldChange={handleNestedFieldChange}
+            handleCustomFieldChange={handleCustomFieldChange}
+            addCustomField={addCustomField}
+            removeCustomField={removeCustomField}
             renderStringArray={renderStringArray}
             fixes={fixes}
           />
@@ -199,6 +262,7 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
             skills={editorState.skills}
             handleSkillArrayChange={handleSkillArrayChange}
             addSkill={addSkill}
+            removeSkill={removeSkill}
             fixes={fixes}
           />
         )}
@@ -210,6 +274,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
             handleArrayAdd={handleArrayAdd}
             handleArrayDelete={handleArrayDelete}
             handleNestedFieldChange={handleNestedFieldChange}
+            handleCustomFieldChange={handleCustomFieldChange}
+            addCustomField={addCustomField}
+            removeCustomField={removeCustomField}
             fixes={fixes}
           />
         )}
@@ -221,6 +288,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
             handleArrayAdd={handleArrayAdd}
             handleArrayDelete={handleArrayDelete}
             handleNestedFieldChange={handleNestedFieldChange}
+            handleCustomFieldChange={handleCustomFieldChange}
+            addCustomField={addCustomField}
+            removeCustomField={removeCustomField}
             fixes={fixes}
           />
         )}
@@ -232,6 +302,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
             handleArrayAdd={handleArrayAdd}
             handleArrayDelete={handleArrayDelete}
             handleNestedFieldChange={handleNestedFieldChange}
+            handleCustomFieldChange={handleCustomFieldChange}
+            addCustomField={addCustomField}
+            removeCustomField={removeCustomField}
             fixes={fixes}
           />
         )}
@@ -251,8 +324,9 @@ export default function ResumeEditor({ fixes, extractedData }: { fixes: Fixes, e
 
       <SaveChangesPopup
         save={save}
-        onSave={() => { /* Implement save logic here */ setSave(false) }}
+        onSave={handleSave}
         onCancel={() => setSave(false)}
+        isLoading={saveDataMutation.isPending}
       />
     </>
   )

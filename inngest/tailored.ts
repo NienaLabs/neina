@@ -93,7 +93,7 @@ export const tailoredResumeCreated = inngest.createFunction(
           userId: event.data.userId,
           extractedData: result.state.data.parserAgent,
           analysisData: result.state.data.analyserAgent,
-          scoreData: {...scores }
+          scores: {...scores }
         }
       });
 
@@ -178,7 +178,7 @@ export const tailoredResumeUpdated = inngest.createFunction(
           jobDescription: event.data.description,
           extractedData: result.state.data.parserAgent,
           analysisData: result.state.data.analyserAgent,
-          scoreData: {...scores }
+          scores: {...scores }
         }
       });
 

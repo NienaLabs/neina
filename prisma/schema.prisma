@@ -8,33 +8,27 @@ datasource db {
 }
 
 model User {
-  id                String           @id
+  id                String              @id
   name              String
-  email             String           @unique
-  emailVerified     Boolean          @default(false)
-  role              String           @default("user")
+  email             String              @unique
+  emailVerified     Boolean             @default(false)
   image             String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @default(now()) @updatedAt
-  remaining_minutes Int              @default(30)
-  resume_credits    Int              @default(5)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now()) @updatedAt
+  remaining_minutes Int                 @default(30)
   subscription_id   String?
-  role              String           @default("user")
-  resume_credits    Int              @default(5)
-  isSuspended       Boolean          @default(false)
-  plan              String           @default("free")
+  role              String              @default("user")
+  resume_credits    Int                 @default(5)
+  isSuspended       Boolean             @default(false)
+  plan              String              @default("free")
   accounts          Account[]
+  announcement_read announcement_read[]
   interview         interview[]
   resumes           Resume[]
   sessions          Session[]
-  support_ticket    support_ticket[]
-  tailoredResumes   TailoredResume[]
-  subscription      subscription?    @relation(fields: [subscription_id], references: [id])
-
-  // Admin features
-  isSuspended       Boolean          @default(false)
-  plan              String           @default("free")
   supportTickets    SupportTicket[]
+  tailoredResumes   TailoredResume[]
+  subscription      subscription?       @relation(fields: [subscription_id], references: [id])
 
   @@map("user")
 }
@@ -104,20 +98,21 @@ model Resume {
 }
 
 model TailoredResume {
-  id              String   @id @default(cuid())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  content         String
-  role            String?
-  jobDescription  String?
-  name            String
-  extractedData   Json?
-  analysisData    Json?
-  primaryResumeId String
-  userId          String
-  scoreData       Json?
-  primaryResume   Resume   @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      String                 @id @default(cuid())
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  content                 String
+  role                    String?
+  jobDescription          String?
+  name                    String
+  extractedData           Json?
+  analysisData            Json?
+  primaryResumeId         String
+  userId                  String
+  jobDescriptionEmbedding Unsupported("vector")?
+  scores                  Json?
+  primaryResume           Resume                 @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
+  user                    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([primaryResumeId])
   @@index([userId])
@@ -231,30 +226,56 @@ model resume_skills {
   @@index([embedding], map: "idx_resume_skills_vector")
 }
 
-model support_ticket {
-  id             String           @id
-  userId         String
-  subject        String
-  status         String           @default("open")
-  priority       String           @default("medium")
-  category       String           @default("general")
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ticket_message ticket_message[]
+model SupportTicket {
+  id        String          @id @default(cuid())
+  userId    String
+  subject   String
+  status    String          @default("open")
+  priority  String          @default("medium")
+  category  String          @default("general")
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  TicketMessage[]
 
   @@index([userId])
+  @@map("support_ticket")
 }
 
-model ticket_message {
-  id             String         @id
-  ticketId       String
-  sender         String
-  message        String
-  createdAt      DateTime       @default(now())
-  support_ticket support_ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+model TicketMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  sender    String
+  message   String
+  createdAt DateTime      @default(now())
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
+  @@map("ticket_message")
+}
+
+model Announcement {
+  id                String              @id @default(cuid())
+  title             String
+  content           String
+  type              String              @default("in-app")
+  sentAt            DateTime            @default(now())
+  createdBy         String?
+  announcement_read announcement_read[]
+
+  @@map("announcement")
+}
+
+model announcement_read {
+  id             String       @id
+  userId         String
+  announcementId String
+  readAt         DateTime     @default(now())
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, announcementId])
+  @@index([userId])
 }
 
 enum InterviewStatus {
@@ -262,43 +283,4 @@ enum InterviewStatus {
   ACTIVE
   ENDED
   TIMEOUT
-}
-
-model SupportTicket {
-  id        String          @id @default(cuid())
-  userId    String
-  subject   String
-  status    String          @default("open") // open, closed, in_progress
-  priority  String          @default("medium") // low, medium, high
-  category  String          @default("general")
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages  TicketMessage[]
-
-  @@map("support_ticket")
-  @@index([userId])
-}
-
-model TicketMessage {
-  id        String        @id @default(cuid())
-  ticketId  String
-  sender    String        // "user" or "admin"
-  message   String
-  createdAt DateTime      @default(now())
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  @@map("ticket_message")
-  @@index([ticketId])
-}
-
-model Announcement {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  type      String   @default("in-app") // "email", "in-app", "both"
-  sentAt    DateTime @default(now())
-  createdBy String?
-  
-  @@map("announcement")
 }

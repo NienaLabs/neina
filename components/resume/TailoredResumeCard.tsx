@@ -21,14 +21,14 @@ interface TailoredResumeCardProps {
 }
 
 const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPrimary, onDelete }) => {
-  const scoreData = resume.scoreData;
+  const scoreData = resume.scores;
   const matchScore = scoreData ? Math.round(scoreData.overallScore * 100) : 0;
 
   return (
-    <Card className="group relative overflow-hidden border-border/50 bg-gradient-to-br from-background to-muted/20 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full">
+    <Card className="group relative overflow-hidden border-border/50 bg-linear-to-br from-background to-muted/20 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full">
       {/* Top Accent Line */}
       <div className={cn(
-        "absolute top-0 left-0 w-full h-1 bg-gradient-to-r",
+        "absolute top-0 left-0 w-full h-1 bg-linear-to-r",
         matchScore >= 80 ? "from-green-500 to-emerald-400" :
         matchScore >= 50 ? "from-blue-500 to-cyan-400" :
         "from-orange-500 to-red-400"

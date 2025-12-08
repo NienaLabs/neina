@@ -3,7 +3,7 @@ import ResumeEditor from '@/components/resume/editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { editorButtons } from '@/constants/constant'
-import { X, MoreHorizontal, Star } from 'lucide-react'
+import { X, MoreHorizontal, Star, DownloadIcon } from 'lucide-react'
 import { trpc } from '@/trpc/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -101,6 +101,16 @@ const Page = async ({ params }: Props) => {
                     </div>
                 </div>
 
+                {/* Desktop Actions */}
+                <div className="hidden sm:flex items-center gap-2">
+                    <Link href={`/resume/preview/${resumeId}`}>
+                        <Button variant="outline" size="sm" className="gap-2">
+                            <DownloadIcon className="h-4 w-4" />
+                            Export PDF
+                        </Button>
+                    </Link>
+                </div>
+
                 {/* Mobile Actions */}
                 <div className="flex items-center gap-2 sm:hidden">
                     <DropdownMenu>
@@ -111,10 +121,19 @@ const Page = async ({ params }: Props) => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             {editorButtons.map((button) => (
-                                <Button key={button.name} variant="ghost" className="w-full justify-start gap-2">
-                                    <button.icon className="h-4 w-4" />
-                                    <span>{button.name}</span>
-                                </Button>
+                                button.name === 'Export' ? (
+                                    <Link key={button.name} href={`/resume/preview/${resumeId}`} className="w-full">
+                                        <Button variant="ghost" className="w-full justify-start gap-2">
+                                            <button.icon className="h-4 w-4" />
+                                            <span>{button.name}</span>
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <Button key={button.name} variant="ghost" className="w-full justify-start gap-2">
+                                        <button.icon className="h-4 w-4" />
+                                        <span>{button.name}</span>
+                                    </Button>
+                                )
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>

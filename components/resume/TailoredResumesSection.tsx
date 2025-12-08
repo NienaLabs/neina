@@ -1,34 +1,10 @@
 'use client'
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-} from '@tanstack/react-table'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { MoreHorizontal, Edit, Star, Trash2 } from 'lucide-react'
-import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
+import { Card, CardContent } from '@/components/ui/card'
 import { trpc } from '@/trpc/client'
 import { TailoredResume } from './ResumePageClient'
 import { toast } from 'sonner'
+import TailoredResumeCard from './TailoredResumeCard'
+import { Sparkles, Search } from 'lucide-react'
 
 const TailoredResumesSection = ({
   tailoredResumes,
@@ -54,183 +30,39 @@ const TailoredResumesSection = ({
     },
   })
 
-  const columns: ColumnDef<TailoredResume>[] = [
-    {
-      accessorKey: 'name',
-      header: 'Tailored Version',
-      cell: ({ row }) => (
-        <Link
-          href={`/resume/edit/${row.original.id}`}
-          className="font-semibold text-gray-800 dark:text-white hover:text-blue-600 transition-colors"
-        >
-          {row.original.name}
-        </Link>
-      ),
-    },
-    {
-      accessorKey: 'role',
-      header: 'Target Role',
-      cell: ({ row }) => (
-        <span className="text-gray-600 dark:text-gray-300">
-          {row.original.role}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'scores',
-      header: 'Match Score',
-      cell: ({ row }) => {
-        const scoreData = row.original.scoreData;
-        const score = scoreData ? Math.floor(scoreData.overallScore * 100) : null;
-        return (
-          <div className="flex items-center gap-2 font-medium">
-            {score !== undefined && score !== null ? (
-              <>
-                <div
-                  className={cn(
-                    'h-2 w-2 rounded-full',
-                    score > 90
-                      ? 'bg-green-500'
-                      : score > 80
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                  )}
-                />
-                <span>{score}%</span>
-              </>
-            ) : (
-              <span className="text-gray-500">N/A</span>
-            )}
-          </div>
-        )
-      },
-    },
-    {
-      accessorKey: 'createdAt',
-      header: 'Date Created',
-      cell: ({ row }) => (
-        <span className="text-gray-600 dark:text-gray-300">
-          {format(new Date(row.original.createdAt), 'MMM dd, yyyy')}
-        </span>
-      ),
-    },
-    {
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className="text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setPrimaryMutation.mutate({ resumeId: row.original.id })}
-              >
-                <Star className="mr-2 h-4 w-4" />
-                Set as Primary
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-500"
-                onClick={() => deleteResumeMutation.mutate({ resumeId: row.original.id })}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
-    },
-  ]
-
-  const table = useReactTable({
-    data: tailoredResumes || [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-  })
-
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle>Tailored Resumes</CardTitle>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Versions of your resume tailored for specific job applications.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-lg border overflow-hidden">
-          <Table>
-            <TableHeader className="bg-gray-50 dark:bg-gray-800/50">
-              {table.getHeaderGroups().map(headerGroup => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <TableHead key={header.id} className="font-bold">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map(row => (
-                  <TableRow
-                    key={row.id}
-                    className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20"
-                  >
-                    {row.getVisibleCells().map(cell => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No tailored resumes found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+    <div className="space-y-6">
+       <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+          <h2 className="text-2xl font-bold tracking-tight">Tailored Resumes</h2>
+       </div>
+       
+      {!tailoredResumes || tailoredResumes.length === 0 ? (
+        <Card className="border-dashed border-2 bg-muted/20">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                <div className="p-4 rounded-full bg-muted text-muted-foreground">
+                    <Search className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-semibold">No Tailored Resumes Yet</h3>
+                <p className="text-muted-foreground max-w-md">
+                    Create a tailored resume from your primary resume to target specific job applications.
+                </p>
+            </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tailoredResumes.map((resume) => (
+                <div key={resume.id} className="h-full">
+                    <TailoredResumeCard 
+                        resume={resume} 
+                        onSetPrimary={(id) => setPrimaryMutation.mutate({ resumeId: id })}
+                        onDelete={(id) => deleteResumeMutation.mutate({ resumeId: id })}
+                    />
+                </div>
+            ))}
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   )
 }
 

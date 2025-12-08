@@ -80,7 +80,7 @@ const TailoredResumesSection = ({
       accessorKey: 'scores',
       header: 'Match Score',
       cell: ({ row }) => {
-        const scoreData = row.original.scores;
+        const scoreData = row.original.scoreData;
         const score = scoreData ? Math.floor(scoreData.overallScore * 100) : null;
         return (
           <div className="flex items-center gap-2 font-medium">

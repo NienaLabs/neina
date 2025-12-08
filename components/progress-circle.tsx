@@ -69,7 +69,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ value, size = 'md' 
 
   return (
     // Component size is now controlled by the 'size' prop via the sizeClass
-    <div className={cn("relative aspect-square", sizeClass)}>
+    <div className={cn("relative font-sans aspect-square", sizeClass)}>
       {/* 1. SVG for the Circular Progress Bar */}
       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
         {/* Define the Gradient */}
@@ -81,11 +81,10 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ value, size = 'md' 
             <stop offset="100%" style={{ stopColor: 'hsl(142 71% 45%)', stopOpacity: 1 }} /> {/* Green for high progress */}
           </linearGradient>
 
-          {/* Define a drop shadow filter for aesthetic effect */}
-          <filter id="progress-shadow" x="-50%" y="-50%" width="200%" height="200%">
-            {/* Flood color changed to match the high-end Green for a consistent look */}
+         {/* Define a drop shadow filter for aesthetic effect */}
+          {/*<filter id="progress-shadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="rgba(22, 163, 74, 0.5)" />
-          </filter>
+          </filter>*/}
         </defs>
 
         {/* Track (The background ring) */}
@@ -124,7 +123,6 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ value, size = 'md' 
             'font-extrabold transition-colors duration-500',
             textColor,
             textSize, // Dynamic text size
-            'drop-shadow-md'
           )}
         >
           {Math.round(displayedValue)}%

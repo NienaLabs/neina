@@ -85,7 +85,7 @@ const Page = async ({ params }: Props) => {
             {/* Header Section */}
             <div className="flex items-center justify-between w-full flex-wrap gap-4">
                 <div className="flex items-center gap-3">
-                    <Link href="/dashboard">
+                    <Link href="/resume">
                         <Button variant="ghost" size="icon" className="hover:bg-muted">
                             <X className="h-5 w-5 text-muted-foreground" />
                         </Button>

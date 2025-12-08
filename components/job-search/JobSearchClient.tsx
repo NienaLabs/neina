@@ -3,9 +3,7 @@
 import  { useMemo, useState } from "react";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import Image from 'next/image'
 import {
   Select,
   SelectContent,
@@ -13,31 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin, Briefcase, ExternalLink, Search, Globe } from "lucide-react";
+import { Briefcase, Search, SlidersHorizontal, Sparkles } from "lucide-react";
 import { parseISO, isValid } from "date-fns";
-
-interface Job {
-  id: string;
-  job_title: string | null;
-  employer_name: string | null;
-  employer_logo: string | null;
-  job_apply_link: string | null;
-  job_location: string | null;
-  job_is_remote: boolean | null;
-  job_description: string | null;
-  job_posted_at: string | null;
-  skill_similarity: number;
-  responsibility_similarity: number;
-  total_similarity: number;
-}
-
-const getMatchScoreColor = (score: number): "high" | "medium" | "low" => {
-  if (score >= 0.66) return "high";
-  if (score >= 0.33) return "medium";
-  return "low";
-};
-
-const formatScore = (score: number) => Math.round(score * 100);
+import JobCard, { Job } from "./JobCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function JobSearchClient() {
   const { data, isPending, isError } = trpc.jobs.getReccommendedJobs.useQuery();
@@ -100,73 +77,99 @@ export default function JobSearchClient() {
   // States
   if (isPending) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <Briefcase className="w-8 h-8 mx-auto mb-3 text-muted-foreground animate-pulse" />
-          <p className="text-muted-foreground">Loading job recommendations...</p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-[300px] rounded-xl border border-border/50 bg-muted/20 p-4 space-y-4">
+            <div className="flex gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                </div>
+            </div>
+            <Skeleton className="h-20 w-full" />
+            <div className="flex gap-2">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="empty-state py-12">
-        <h3 className="empty-state-title">Error Loading Jobs</h3>
-        <p className="empty-state-description">
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <div className="p-4 rounded-full bg-red-500/10 text-red-500">
+            <Briefcase className="w-8 h-8" />
+        </div>
+        <h3 className="text-xl font-semibold">Error Loading Jobs</h3>
+        <p className="text-muted-foreground max-w-md">
           We encountered an error while loading job recommendations. Please
-          refresh the page.
+          refresh the page to try again.
         </p>
+        <Button onClick={() => window.location.reload()}>Refresh Page</Button>
       </div>
     );
   }
 
   if (jobsArray.length === 0) {
     return (
-      <div className="empty-state py-12">
-        <h3 className="empty-state-title">No Jobs Found</h3>
-        <p className="empty-state-description">
-          Try uploading or updating your resume.
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <div className="p-4 rounded-full bg-primary/10 text-primary">
+            <Search className="w-8 h-8" />
+        </div>
+        <h3 className="text-xl font-semibold">No Jobs Found</h3>
+        <p className="text-muted-foreground max-w-md">
+          We couldn&apos;t find any jobs matching your profile. Try updating your resume with more skills or experience.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="jobs-container">
-      <div>
-        <div className="flex items-center gap-2 mb-6">
-          <Briefcase className="w-6 h-6 text-primary" />
-          <h2 className="text-headline-md">Recommended Jobs</h2>
+    <div className="space-y-8 animate-in fade-in font-sans duration-500">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/40 pb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Recommended Jobs
+            </h2>
+          </div>
+          <p className="text-muted-foreground">
+            Found <span className="font-semibold text-foreground">{filteredJobs.length}</span> matches based on your profile
+          </p>
         </div>
-        <p className="text-body-sm text-muted-foreground">
-          {filteredJobs.length} of {jobsArray.length} jobs match your profile
-        </p>
       </div>
 
-      {/* Filters */}
-      <div className="filter-container border-b border-border">
-        <div className="flex flex-col gap-4">
-          <div className="relative">
+      {/* Filters Bar */}
+      <div className="sticky top-4 z-10 bg-background/80 backdrop-blur-md border border-border/50 p-4 rounded-2xl shadow-sm">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search by job title, company, or location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-11 bg-background/50 border-border/50 focus:bg-background transition-all"
             />
           </div>
 
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* Remote Filter */}
+          <div className="flex gap-3 overflow-x-auto pb-1 lg:pb-0">
             <Select
               value={filterRemote}
               onValueChange={(value: "all" | "remote" | "onsite") =>
                 setFilterRemote(value)
               }
             >
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue />
+              <SelectTrigger className="w-[160px] h-11 border-border/50 bg-background/50">
+                <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-muted-foreground" />
+                    <SelectValue />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
@@ -175,13 +178,15 @@ export default function JobSearchClient() {
               </SelectContent>
             </Select>
 
-            {/* Sort Filter */}
             <Select
               value={sortBy}
               onValueChange={(value: string) => setSortBy(value)}
             >
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue />
+              <SelectTrigger className="w-[160px] h-11 border-border/50 bg-background/50">
+                <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+                    <SelectValue />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="match">Best Match</SelectItem>
@@ -192,102 +197,30 @@ export default function JobSearchClient() {
         </div>
       </div>
 
-      {/* Jobs List */}
-      <div className="jobs-grid mt-6">
-        {filteredJobs.map((job) => {
-          const matchColor = getMatchScoreColor(job.total_similarity);
-          const matchPercent = formatScore(job.total_similarity);
-
-          const postedDate =
-            job.job_posted_at 
-              ? job.job_posted_at
-              : "Unknown date";
-
-          return (
-            <Card key={job.id} className="job-card group">
-              <div className="job-card-header">
-                <div className="flex-1 min-w-0">
-                  <div className="job-card-title">
-                    {job.employer_logo&&<Image width={50} className="rounded-full border" alt="logo" height={50} src={job.employer_logo}/>}
-                    {job.job_title || "Untitled Role"}
-                  </div>
-                  <p className="job-card-company">
-                    {job.employer_name || "Unknown Company"}
-                  </p>
-
-                  {/* Meta */}
-                  <div className="job-card-meta">
-                    {job.job_location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {job.job_location}
-                      </span>
-                    )}
-                    {job.job_is_remote && (
-                      <span className="flex items-center gap-1">
-                        <Globe className="w-3 h-3" />
-                        Remote
-                      </span>
-                    )}
-                    <span>{postedDate}</span>
-                  </div>
-                </div>
-
-                <div
-                  className={`match-score-badge match-score-${matchColor} shrink-0`}
-                >
-                  {matchPercent}%
-                </div>
-              </div>
-
-              <div className="my-4 py-3 border-t border-b border-border/50">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-label">Skills Match</span>
-                    <p className="text-base font-semibold mt-1">
-                      {formatScore(job.skill_similarity)}%
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-label">Responsibilities Match</span>
-                    <p className="text-base font-semibold mt-1">
-                      {formatScore(job.responsibility_similarity)}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {job.job_description && (
-                <p className="text-body-sm line-clamp-3 mb-4 text-muted-foreground">
-                  {job.job_description}
-                </p>
-              )}
-
-              <Button
-                variant="default"
-                size="sm"
-                className="w-full"
-                disabled={!job.job_apply_link}
-                onClick={() =>
-                  job.job_apply_link &&
-                  window.open(job.job_apply_link, "_blank", "noopener,noreferrer")
-                }
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View & Apply
-              </Button>
-            </Card>
-          );
-        })}
+      {/* Jobs Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredJobs.map((job) => (
+            <div key={job.id} className="h-full">
+                <JobCard job={job} />
+            </div>
+        ))}
       </div>
 
       {filteredJobs.length === 0 && (
-        <div className="empty-state py-12">
-          <h3 className="empty-state-title">No Results Found</h3>
-          <p className="empty-state-description">
-            Try adjusting your search filters.
+        <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+           <div className="p-4 rounded-full bg-muted text-muted-foreground">
+                <Search className="w-8 h-8" />
+            </div>
+          <h3 className="text-xl font-semibold">No Results Found</h3>
+          <p className="text-muted-foreground">
+            Try adjusting your search filters to see more results.
           </p>
+          <Button variant="outline" onClick={() => {
+            setSearchTerm("");
+            setFilterRemote("all");
+          }}>
+            Clear Filters
+          </Button>
         </div>
       )}
     </div>

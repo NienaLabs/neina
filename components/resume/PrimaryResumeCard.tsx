@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Resume } from '@/lib/generated/prisma/client'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, Edit, Trash2, PlusCircle,CircleStar } from 'lucide-react'
+import { MoreHorizontal, Edit, Trash2, PlusCircle, CircleStar, Star } from 'lucide-react'
 import { format } from 'date-fns'
 import { trpc } from '@/trpc/client'
 import {useRouter} from 'next/navigation'
@@ -118,21 +118,45 @@ const PrimaryResumeCard = ({
             {format(new Date(resume.createdAt), 'MMM dd, yyyy')}
           </span>
 
-          {overallScore !== null ? (
-            <Badge
-              className={cn(
-                'font-bold',
-                overallScore >= 8
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-indigo-100 text-indigo-800'
-              )}
-            >
-              Score: {overallScore.toFixed(1)}/10
-              <CircleStar/>
-            </Badge>
-          ) : (
-            <Badge className="bg-gray-100 text-gray-800">No Score</Badge>
-          )}
+          {/* Star Rating based on Issues */}
+          {(() => {
+            const analysisData = resume.analysisData;
+            
+            interface AnalysisData {
+                fixes: Record<string, unknown>;
+                [key: string]: unknown;
+            }
+
+            const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) as AnalysisData : { fixes: {} };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { fixes, ...fixCountRaw } = parsedAnalysisData;
+            const fixCount = fixCountRaw as Record<string, number>;
+            
+            // Calculate total issues
+            const totalIssues = Object.values(fixCount).reduce((acc, curr) => acc + (typeof curr === 'number' ? curr : 0), 0);
+
+            // Determine Star Rating based on issues
+            let starRating = 0;
+            if (totalIssues < 10) starRating = 5;
+            else if (totalIssues < 20) starRating = 4;
+            else if (totalIssues < 30) starRating = 3;
+            else if (totalIssues < 40) starRating = 2;
+            else starRating = 1;
+
+            return (
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={cn(
+                      "h-4 w-4",
+                      star <= starRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                    )}
+                  />
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </CardContent>
     </Card>

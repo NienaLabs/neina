@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 import { AuthProvider } from "@/providers/AuthUIProvider";
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'next-themes'
 
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Job AI",
@@ -32,7 +32,7 @@ export default function RootLayout({
 
         <html lang="en" suppressHydrationWarning>
           <body
-            className={`font-syne antialiased`}
+            className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
           >
             <ThemeProvider
               attribute="class"

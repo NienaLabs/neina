@@ -41,9 +41,22 @@ export function SupportDashboard() {
         },
     });
 
+    const closeTicketMutation = trpc.admin.closeTicket.useMutation({
+        onSuccess: () => {
+            // Refresh ticket details
+        },
+    });
+
     const handleReply = () => {
         if (!selectedTicketId || !replyMessage.trim()) return;
         replyMutation.mutate({ ticketId: selectedTicketId, message: replyMessage });
+    };
+
+    const handleCloseTicket = () => {
+        if (!selectedTicketId) return;
+        if (confirm("Are you sure you want to close this ticket?")) {
+            closeTicketMutation.mutate({ ticketId: selectedTicketId });
+        }
     };
 
     return (
@@ -106,8 +119,17 @@ export function SupportDashboard() {
                 {selectedTicketId && ticketDetails ? (
                     <Card className="h-full flex flex-col">
                         <CardHeader>
-                            <CardTitle className="text-lg">{ticketDetails.subject}</CardTitle>
-                            <CardDescription>From: {ticketDetails.user.name} ({ticketDetails.user.email})</CardDescription>
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <CardTitle className="text-lg">{ticketDetails.subject}</CardTitle>
+                                    <CardDescription>From: {ticketDetails.user.name} ({ticketDetails.user.email})</CardDescription>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Badge variant={ticketDetails.status === 'closed' ? 'secondary' : 'default'}>
+                                        {ticketDetails.status}
+                                    </Badge>
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
                             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
@@ -122,18 +144,33 @@ export function SupportDashboard() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="pt-4 border-t">
-                                <Textarea
-                                    placeholder="Type your reply..."
-                                    value={replyMessage}
-                                    onChange={(e) => setReplyMessage(e.target.value)}
-                                    className="mb-2"
-                                />
-                                <Button onClick={handleReply} disabled={replyMutation.isPending} className="w-full">
-                                    {replyMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Send Reply
-                                </Button>
-                            </div>
+                            {ticketDetails.status !== 'closed' && (
+                                <div className="pt-4 border-t space-y-2">
+                                    <Textarea
+                                        placeholder="Type your reply..."
+                                        value={replyMessage}
+                                        onChange={(e) => setReplyMessage(e.target.value)}
+                                    />
+                                    <div className="flex gap-2">
+                                        <Button onClick={handleReply} disabled={replyMutation.isPending} className="flex-1">
+                                            {replyMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Send Reply
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleCloseTicket}
+                                            disabled={closeTicketMutation.isPending}
+                                        >
+                                            Close Ticket
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                            {ticketDetails.status === 'closed' && (
+                                <div className="pt-4 border-t text-center text-sm text-muted-foreground">
+                                    This ticket is closed
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 ) : (

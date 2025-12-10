@@ -8,29 +8,29 @@ datasource db {
 }
 
 model User {
-  id                String           @id
-  name              String
-  email             String           @unique
-  emailVerified     Boolean          @default(false)
-  role              String           @default("user")
-  image             String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @default(now()) @updatedAt
-  remaining_minutes Int              @default(30)
-  resume_credits    Int              @default(5)
-  subscription_id   String?
-  accounts          Account[]
-  interview         interview[]
-  resumes           Resume[]
-  sessions          Session[]
-  tailoredResumes   TailoredResume[]
-  subscription      subscription?    @relation(fields: [subscription_id], references: [id])
-
-  // Admin features
-  isSuspended       Boolean            @default(false)
-  plan              String             @default("free")
-  supportTickets    SupportTicket[]
-  announcementReads AnnouncementRead[]
+  id                   String                @id
+  name                 String
+  email                String                @unique
+  emailVerified        Boolean               @default(false)
+  image                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @default(now()) @updatedAt
+  remaining_minutes    Int                   @default(30)
+  subscription_id      String?
+  role                 String                @default("user")
+  resume_credits       Int                   @default(5)
+  isSuspended          Boolean               @default(false)
+  plan                 String                @default("free")
+  accounts             Account[]
+  announcement_read    announcement_read[]
+  interview            interview[]
+  resumes              Resume[]
+  sessions             Session[]
+  supportTickets       SupportTicket[]
+  tailoredResumes      TailoredResume[]
+  recruiterApplication RecruiterApplication?
+  recruiterJobs        RecruiterJob[]
+  subscription         subscription?         @relation(fields: [subscription_id], references: [id])
 
   @@map("user")
 }
@@ -206,6 +206,7 @@ model jobs {
   updated_at           DateTime?             @default(now()) @db.Timestamptz(6)
   job_responsibilities job_responsibilities?
   job_skills           job_skills?
+  recruiterJob         RecruiterJob?
 }
 
 model resume_experience {
@@ -264,17 +265,20 @@ model TicketMessage {
 }
 
 model Announcement {
-  id        String             @id @default(cuid())
-  title     String
-  content   String
-  type      String             @default("in-app") // "email", "in-app", "both"
-  sentAt    DateTime           @default(now())
-  createdBy String?
-  reads     AnnouncementRead[]
+  id                String              @id @default(cuid())
+  title             String
+  content           String
+  type              String              @default("in-app")
+  targetUserIds     String[]            @default([])
+  targetRoles       String[]            @default([])
+  sentAt            DateTime            @default(now())
+  createdBy         String?
+  announcement_read announcement_read[]
+
   @@map("announcement")
 }
 
-model AnnouncementRead {
+model announcement_read {
   id             String       @id @default(cuid())
   userId         String
   announcementId String
@@ -284,5 +288,108 @@ model AnnouncementRead {
 
   @@unique([userId, announcementId])
   @@index([userId])
-  @@map("announcement_read")
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  TIMEOUT
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RecruiterJobStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum CandidateStatus {
+  NEW
+  REVIEWING
+  SHORTLISTED
+  INTERVIEWED
+  OFFERED
+  REJECTED
+  HIRED
+}
+
+model RecruiterApplication {
+  id              String            @id @default(cuid())
+  userId          String            @unique
+  companyName     String
+  companyWebsite  String?
+  companyLogo     String?
+  position        String
+  phoneNumber     String
+  email           String
+  linkedInProfile String?
+  message         String
+  status          ApplicationStatus @default(PENDING)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+  @@map("recruiter_application")
+}
+
+model RecruiterJob {
+  id               String              @id @default(cuid())
+  recruiterId      String
+  jobId            String              @unique
+  status           RecruiterJobStatus  @default(ACTIVE)
+  postedAt         DateTime            @default(now())
+  closedAt         DateTime?
+  viewCount        Int                 @default(0)
+  applicationCount Int                 @default(0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  recruiter        User                @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  job              jobs                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidates       CandidatePipeline[]
+  jobViews         JobView[]
+
+  @@index([recruiterId])
+  @@index([status])
+  @@map("recruiter_job")
+}
+
+model CandidatePipeline {
+  id             String          @id @default(cuid())
+  recruiterJobId String
+  candidateName  String
+  candidateEmail String
+  status         CandidateStatus @default(NEW)
+  notes          String?
+  appliedAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  recruiterJob   RecruiterJob    @relation(fields: [recruiterJobId], references: [id], onDelete: Cascade)
+
+  @@index([recruiterJobId])
+  @@index([status])
+  @@map("candidate_pipeline")
+}
+
+model JobView {
+  id             String       @id @default(cuid())
+  recruiterJobId String
+  userId         String?
+  viewedAt       DateTime     @default(now())
+  ipAddress      String?
+  userAgent      String?
+  recruiterJob   RecruiterJob @relation(fields: [recruiterJobId], references: [id], onDelete: Cascade)
+
+  @@index([recruiterJobId])
+  @@index([viewedAt])
+  @@map("job_view")
 }

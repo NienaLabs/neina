@@ -20,6 +20,12 @@ export const auth = betterAuth({
         defaultValue: "user",
         input: false, // Don't allow user to set their own role during sign up
       },
+      isSuspended: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   socialProviders: {

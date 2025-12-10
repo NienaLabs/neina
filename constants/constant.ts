@@ -17,24 +17,29 @@ export const data = {
       title: "Dashboard",
       url: "/dashboard",
       icon: Home,
-      
+
     },
     {
       title: "Job Search",
       url: "/job-search",
       icon: Search,
-      
+
     },
     {
       title: "Resume AI",
       url: "/resume",
       icon: Sparkles,
     },
-      
+
     {
       title: "Interview AI",
       url: "/interview-ai",
       icon: Inbox
+    },
+    {
+      title: "Recruiter",
+      url: "/recruiters/apply",
+      icon: Blocks
     },
     {
       title: "Settings",
@@ -42,27 +47,27 @@ export const data = {
       icon: Settings2,
     },
     {
-      title: "Help",
-      url: "#",
-      icon: Blocks,
+      title: "Support",
+      url: "/support",
+      icon: MessageCircleQuestion,
     },
   ],
   navSecondary: [
-    
+
     {
       title: "Help",
       url: "#",
       icon: MessageCircleQuestion,
     },
   ],
-  }
+}
 
-  export const resumeTags =[
-   "critical",
-   "urgent"
-  ]
+export const resumeTags = [
+  "critical",
+  "urgent"
+]
 
-  export const extractionData:ResumeExtraction={
+export const extractionData: ResumeExtraction = {
   "address": {
     "email": "example@email.com",
     "location": "Accra, Ghana",
@@ -70,7 +75,7 @@ export const data = {
     "linkedInProfile": "https://linkedin.com/in/username",
     "githubProfile": "https://github.com/username",
     "portfolio": "https://portfolio.com",
-    "otherLinks": ["https://medium.com/@username","http://fuck you"]
+    "otherLinks": ["https://medium.com/@username", "http://fuck you"]
   },
   "profile": "I am Adusei Williams, a self-motivated AI and software development student.",
   "objective": "To obtain a software engineering role to grow my technical expertise.",
@@ -119,7 +124,7 @@ export const data = {
       "name": "AWS Cloud Practitioner",
       "issuer": "Amazon Web Services",
       "year": "2024",
-      "description":"A professional AWS cloud practitioner"
+      "description": "A professional AWS cloud practitioner"
     }
   ],
   "awards": [
@@ -161,10 +166,10 @@ export const data = {
   ]
 }
 
-export const analysisData:ResumeAnalysis={
+export const analysisData: ResumeAnalysis = {
   "criticalFixes": 2,
   "urgentFixes": 1,
-  "low":2,
+  "low": 2,
   "totalFixes": 5,
   "fixes": {
     "profile": [
@@ -179,7 +184,7 @@ export const analysisData:ResumeAnalysis={
         "issue": "Missing employment dates.",
         "suggestion": "Add start and end dates for each position.",
         "severity": "critical"
-      },{
+      }, {
         "issue": "Missing employment dates.",
         "suggestion": "Add start and end dates for each position.",
         "severity": "critical"
@@ -207,7 +212,7 @@ export const analysisData:ResumeAnalysis={
           "severity": "low"
         }
       ],
-       "volunteering": [
+      "volunteering": [
         {
           "issue": "Patent description too long.",
           "suggestion": "Summarize it in one or two lines.",
@@ -218,7 +223,7 @@ export const analysisData:ResumeAnalysis={
   }
 }
 
-export const scoreData:ResumeScore ={
+export const scoreData: ResumeScore = {
   "scores": {
     "profile": 8.5,
     "education": 9.0,
@@ -254,12 +259,12 @@ export const scoreData:ResumeScore ={
 
 export const editorButtons = [
   {
-    name:"Export",
+    name: "Export",
     icon: DownloadIcon,
-   
+
   },
   {
-    name:"Delete",
+    name: "Delete",
     icon: Trash2
   }
 ]

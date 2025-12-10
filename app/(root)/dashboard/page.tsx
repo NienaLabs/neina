@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FileText,
   Clock,
   AlertCircle,
   Video,
-  Zap
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,6 +16,16 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { trpc } from "@/trpc/client";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Types matching our API response
 interface DashboardData {
@@ -54,6 +65,39 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const [showApplicationSuccess, setShowApplicationSuccess] = useState(false);
+  const { mutate: applyForRecruiter } = trpc.recruiter.applyForRecruiter.useMutation();
+
+  useEffect(() => {
+    const pendingApp = localStorage.getItem("pending_recruiter_application");
+    if (pendingApp) {
+      try {
+        const values = JSON.parse(pendingApp);
+        applyForRecruiter(values, {
+          onSuccess: () => {
+            localStorage.removeItem("pending_recruiter_application");
+            setShowApplicationSuccess(true);
+            toast.success("Application submitted successfully!");
+          },
+          onError: (err) => {
+            // Silently fail or show error? Better show error but maybe check if duplicate
+            console.error("Failed to submit saved application", err);
+            localStorage.removeItem("pending_recruiter_application"); // Clear it so it doesn't loop
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        localStorage.removeItem("pending_recruiter_application");
+      }
+    }
+
+    if (searchParams.get("recruiter_application_sent") === "true") {
+      setShowApplicationSuccess(true);
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams, applyForRecruiter]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +105,7 @@ export default function DashboardPage() {
         const res = await fetch('/api/user/dashboard');
         if (!res.ok) {
           if (res.status === 401) {
-            router.push('/auth/signin');
+            router.push('/auth/sign-in');
             return;
           }
           throw new Error('Failed to fetch dashboard data');

@@ -1,5 +1,4 @@
 'use client'
-
 import { Hero } from '../components/landing/Hero'
 import Features from '../components/landing/Features'
 import { TestimonialDemo as Testimonials } from '../components/landing/Testimonials'
@@ -10,6 +9,8 @@ import Header from '../components/landing/Header'
 import InterviewAI from '../components/landing/InterviewAI'
 import ResumeAI from '../components/landing/ResumeAI'
 import JobSearchFeature from '../components/landing/JobSearchFeature'
+import { useSession } from '@/auth-client';
+import { useRouter } from 'next/navigation';
 import { ReactLenis } from 'lenis/react'
 import gsap from 'gsap'
 import { useEffect, useRef } from 'react'
@@ -21,7 +22,14 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function LandingPage() {
   const lenisRef = useRef()
-  
+  const { data: session } = useSession();
+  const router = useRouter();
+  useEffect(() => {
+    if (session) {
+      router.push('/dashboard');
+    }
+  }, [session, router]);
+
   useEffect(() => {
     function update(time) {
       lenisRef.current?.lenis?.raf(time * 1000)

@@ -8,27 +8,29 @@ datasource db {
 }
 
 model User {
-  id                String              @id
+  id                String           @id
   name              String
-  email             String              @unique
-  emailVerified     Boolean             @default(false)
+  email             String           @unique
+  emailVerified     Boolean          @default(false)
+  role              String           @default("user")
   image             String?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @default(now()) @updatedAt
-  remaining_minutes Int                 @default(30)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @default(now()) @updatedAt
+  remaining_minutes Int              @default(30)
+  resume_credits    Int              @default(5)
   subscription_id   String?
-  role              String              @default("user")
-  resume_credits    Int                 @default(5)
-  isSuspended       Boolean             @default(false)
-  plan              String              @default("free")
   accounts          Account[]
-  announcement_read announcement_read[]
   interview         interview[]
   resumes           Resume[]
   sessions          Session[]
-  supportTickets    SupportTicket[]
   tailoredResumes   TailoredResume[]
-  subscription      subscription?       @relation(fields: [subscription_id], references: [id])
+  subscription      subscription?    @relation(fields: [subscription_id], references: [id])
+
+  // Admin features
+  isSuspended       Boolean            @default(false)
+  plan              String             @default("free")
+  supportTickets    SupportTicket[]
+  announcementReads AnnouncementRead[]
 
   @@map("user")
 }
@@ -104,13 +106,13 @@ model TailoredResume {
   content                 String
   role                    String?
   jobDescription          String?
+  jobDescriptionEmbedding Unsupported("vector")?
   name                    String
   extractedData           Json?
   analysisData            Json?
+  scores                  Json?
   primaryResumeId         String
   userId                  String
-  jobDescriptionEmbedding Unsupported("vector")?
-  scores                  Json?
   primaryResume           Resume                 @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
   user                    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -226,12 +228,19 @@ model resume_skills {
   @@index([embedding], map: "idx_resume_skills_vector")
 }
 
+enum InterviewStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  TIMEOUT
+}
+
 model SupportTicket {
   id        String          @id @default(cuid())
   userId    String
   subject   String
-  status    String          @default("open")
-  priority  String          @default("medium")
+  status    String          @default("open") // open, closed, in_progress
+  priority  String          @default("medium") // low, medium, high
   category  String          @default("general")
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
@@ -245,7 +254,7 @@ model SupportTicket {
 model TicketMessage {
   id        String        @id @default(cuid())
   ticketId  String
-  sender    String
+  sender    String // "user" or "admin"
   message   String
   createdAt DateTime      @default(now())
   ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
@@ -255,32 +264,25 @@ model TicketMessage {
 }
 
 model Announcement {
-  id                String              @id @default(cuid())
-  title             String
-  content           String
-  type              String              @default("in-app")
-  sentAt            DateTime            @default(now())
-  createdBy         String?
-  announcement_read announcement_read[]
-
+  id        String             @id @default(cuid())
+  title     String
+  content   String
+  type      String             @default("in-app") // "email", "in-app", "both"
+  sentAt    DateTime           @default(now())
+  createdBy String?
+  reads     AnnouncementRead[]
   @@map("announcement")
 }
 
-model announcement_read {
-  id             String       @id
+model AnnouncementRead {
+  id             String       @id @default(cuid())
   userId         String
   announcementId String
   readAt         DateTime     @default(now())
-  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
 
   @@unique([userId, announcementId])
   @@index([userId])
-}
-
-enum InterviewStatus {
-  SCHEDULED
-  ACTIVE
-  ENDED
-  TIMEOUT
+  @@map("announcement_read")
 }

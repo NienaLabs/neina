@@ -1,4 +1,3 @@
-import React from 'react'
 import FeatureSection from './FeatureSection'
 
 const InterviewAI = () => {

@@ -93,13 +93,13 @@ const Header = () => {
 
                     {/* Auth Buttons */}
                     <div className="flex items-center ml-auto gap-4">
-                        <Link href="/auth/sign-in" className="hidden md:inline-block text-sm font-medium text-white/80 hover:text-white transition-colors">
+                        <Link href="/auth/sign-in" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
                             Sign In
                         </Link>
                         
                         <Link 
                             href="/auth/sign-up" 
-                            className="px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 inset-shadow-sm/70  transition-opacity"
+                            className="hidden md:inline-block px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 inset-shadow-sm/70  transition-opacity"
                         >
                             Get Started
                         </Link>

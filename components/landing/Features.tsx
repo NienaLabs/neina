@@ -22,12 +22,47 @@ const Features = () => {
 
         {/* Main Content: Cube + Features Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Cube */}
-          <div className="flex justify-center items-center">
-            <div className="relative">
-              {/* Glow effect behind cube */}
-              <div className="absolute inset-0 bg-linear-to-r from-indigo-400/40 to-purple-400/40 blur-3xl rounded-full" />
-              <Cube />
+          {/* Left: Video Demo */}
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+            <div className="relative bg-white rounded-2xl p-2 border border-indigo-100 shadow-xl">
+               {/* Creative CTA */}
+               <div className="absolute -top-12 -right-8 md:-right-12 z-20 hidden md:block animate-bounce duration-[2000ms]">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-yellow-400 blur-sm rounded-full opacity-50"></div>
+                  <div className="relative bg-white border-2 border-yellow-400 px-4 py-2 rounded-full shadow-lg transform rotate-6">
+                    <p className="font-bold text-sm text-indigo-900 whitespace-nowrap flex items-center gap-1">
+                      ✨ See it in action!
+                    </p>
+                  </div>
+                  {/* Arrow pointing down-left */}
+                  <svg className="absolute top-full left-0 w-8 h-8 text-yellow-500 transform -scale-x-100 rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Video Container */}
+              <div className="aspect-video rounded-xl overflow-hidden bg-gray-900 relative">
+                <iframe 
+                  className="w-full h-full absolute inset-0"
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=ad5Xz8e_lC7sZ9l_" 
+                  title="JobAI Demo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  referrerPolicy="strict-origin-when-cross-origin" 
+                  allowFullScreen
+                ></iframe>
+              </div>
+              
+              <div className="mt-4 flex items-center justify-between px-2">
+                 <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                    <p className="text-sm font-medium text-gray-600">Live Preview</p>
+                 </div>
+                 <p className="text-xs text-indigo-500 font-semibold cursor-pointer hover:underline">
+                    Watch full walkthrough →
+                 </p>
+              </div>
             </div>
           </div>
 

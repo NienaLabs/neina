@@ -5,6 +5,7 @@ import { TRPCProvider } from "@/trpc/client";
 import { AuthProvider } from "@/providers/AuthUIProvider";
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'next-themes'
+import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,9 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               {/*<Header/>*/}
-              {children}
+              <SuspensionGuard>
+                {children}
+              </SuspensionGuard>
               <Toaster />
             </ThemeProvider>
           </body>

@@ -20,15 +20,36 @@ export const notificationsRouter = createTRPCRouter({
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id;
 
-            // Fetch announcements with read status
+            // Get user role
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { role: true },
+            });
+            const userRole = user?.role || 'user';
+
+            // Fetch announcements with read status and targeting logic
             const announcements = await prisma.announcement.findMany({
                 where: {
                     type: { in: ['in-app', 'both'] },
+                    AND: [
+                        {
+                            OR: [
+                                { targetUserIds: { has: userId } },
+                                { targetUserIds: { equals: [] } },
+                            ]
+                        },
+                        {
+                            OR: [
+                                { targetRoles: { has: userRole } },
+                                { targetRoles: { equals: [] } },
+                            ]
+                        }
+                    ]
                 },
                 orderBy: { sentAt: 'desc' },
                 take: input.limit,
                 include: {
-                    reads: {
+                    announcement_read: {
                         where: { userId },
                         select: { readAt: true },
                     },
@@ -41,8 +62,8 @@ export const notificationsRouter = createTRPCRouter({
                 title: announcement.title,
                 content: announcement.content,
                 sentAt: announcement.sentAt,
-                isRead: announcement.reads.length > 0,
-                readAt: announcement.reads[0]?.readAt || null,
+                isRead: announcement.announcement_read.length > 0,
+                readAt: announcement.announcement_read[0]?.readAt || null,
             }));
         }),
 
@@ -52,10 +73,10 @@ export const notificationsRouter = createTRPCRouter({
     getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id;
 
-        // Get user creation date to only count announcements sent after they joined
+        // Get user creation date and role
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { createdAt: true },
+            select: { createdAt: true, role: true },
         });
 
         if (!user) return 0;
@@ -64,13 +85,28 @@ export const notificationsRouter = createTRPCRouter({
         // 1. Are in-app or both
         // 2. Were sent after user creation
         // 3. Haven't been read by this user
+        // 4. Match targeting criteria
         const unreadCount = await prisma.announcement.count({
             where: {
                 type: { in: ['in-app', 'both'] },
                 sentAt: { gte: user.createdAt },
-                reads: {
+                announcement_read: {
                     none: { userId },
                 },
+                AND: [
+                    {
+                        OR: [
+                            { targetUserIds: { has: userId } },
+                            { targetUserIds: { equals: [] } },
+                        ]
+                    },
+                    {
+                        OR: [
+                            { targetRoles: { has: user.role } },
+                            { targetRoles: { equals: [] } },
+                        ]
+                    }
+                ]
             },
         });
 
@@ -86,7 +122,7 @@ export const notificationsRouter = createTRPCRouter({
             const userId = ctx.session.user.id;
 
             // Use upsert to handle duplicate attempts gracefully
-            await prisma.announcementRead.upsert({
+            await prisma.announcement_read.upsert({
                 where: {
                     userId_announcementId: {
                         userId,
@@ -122,7 +158,7 @@ export const notificationsRouter = createTRPCRouter({
 
         // Create read records for all announcements
         // Use createMany with skipDuplicates to avoid conflicts
-        await prisma.announcementRead.createMany({
+        await prisma.announcement_read.createMany({
             data: announcements.map(a => ({
                 userId,
                 announcementId: a.id,

@@ -145,9 +145,7 @@ export function AnnouncementManager() {
                                         <SelectItem value="both">Both (In-App + Email)</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <p className="text-xs text-muted-foreground">
-                                    Email requires RESEND_API_KEY in .env file
-                                </p>
+
                             </div>
                         </div>
                         <div className="flex justify-end gap-2">

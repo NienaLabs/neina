@@ -1,0 +1,573 @@
+/**
+ * Recruiter router for handling recruiter-specific operations
+ * Provides endpoints for application, job posting, candidate pipeline, and analytics
+ */
+import { z } from 'zod';
+import { createTRPCRouter, protectedProcedure } from '../init';
+import { TRPCError } from '@trpc/server';
+import prisma from '@/lib/prisma';
+
+export const recruiterRouter = createTRPCRouter({
+    // --- Recruiter Application ---
+
+    /**
+     * Submit application to become a recruiter
+     * Creates a RecruiterApplication record for admin review
+     */
+    applyForRecruiter: protectedProcedure
+        .input(
+            z.object({
+                companyName: z.string().min(1, 'Company name is required'),
+                companyWebsite: z.string().url('Invalid website URL').optional(),
+                position: z.string().min(1, 'Position is required'),
+                phoneNumber: z.string().min(1, 'Phone number is required'),
+                linkedInProfile: z.string().url('Invalid LinkedIn URL').optional(),
+                message: z.string().min(10, 'Please provide a message (minimum 10 characters)'),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Check if user already has an application
+            const existingApplication = await prisma.recruiterApplication.findUnique({
+                where: { userId },
+            });
+
+            if (existingApplication) {
+                if (existingApplication.status === "PENDING") {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: 'You have already submitted an application',
+                    });
+                }
+
+                if (existingApplication.status === "APPROVED") {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: 'You are already a recruiter',
+                    });
+                }
+
+                // If REJECTED, allow re-application via update
+                const application = await prisma.recruiterApplication.update({
+                    where: { userId },
+                    data: {
+                        ...input,
+                        status: "PENDING",
+                        rejectionReason: null,
+                        reviewedBy: null,
+                        reviewedAt: null,
+                        updatedAt: new Date(),
+                    },
+                });
+
+                return { success: true, application };
+            }
+
+            // Get user email for new application
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { email: true },
+            });
+
+            if (!user) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+            }
+
+            // Create application
+            const application = await prisma.recruiterApplication.create({
+                data: {
+                    userId,
+                    email: user.email,
+                    ...input,
+                },
+            });
+
+            return { success: true, application };
+        }),
+
+    /**
+     * Get current user's recruiter application status
+     */
+    getMyApplication: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id;
+
+        const application = await prisma.recruiterApplication.findUnique({
+            where: { userId },
+        });
+
+        return application;
+    }),
+
+    // --- Job Posting (requires recruiter role) ---
+
+    /**
+     * Create a new job posting
+     * Requires user to have recruiter role
+     */
+    createJob: protectedProcedure
+        .input(
+            z.object({
+                job_title: z.string().min(1, 'Job title is required'),
+                employer_name: z.string().min(1, 'Employer name is required'),
+                job_location: z.string().optional(),
+                job_description: z.string().optional(),
+                job_apply_link: z.string().url('Invalid application link').min(1, 'Application link is required'),
+                job_is_remote: z.boolean().optional(),
+                qualifications: z.array(z.string()).optional(),
+                responsibilities: z.array(z.string()).optional(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Check if user has recruiter role
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { role: true },
+            });
+
+            if (user?.role !== 'recruiter') {
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message: 'Only verified recruiters can post jobs',
+                });
+            }
+
+            // Create job in jobs table
+            const job = await prisma.jobs.create({
+                data: {
+                    ...input,
+                    qualifications: input.qualifications || [],
+                    responsibilities: input.responsibilities || [],
+                    job_publisher: 'recruiter',
+                },
+            });
+
+            // Create RecruiterJob link
+            const recruiterJob = await prisma.recruiterJob.create({
+                data: {
+                    recruiterId: userId,
+                    jobId: job.id,
+                },
+            });
+
+            return { success: true, job, recruiterJob };
+        }),
+
+    /**
+     * Get all jobs posted by current recruiter
+     */
+    getMyJobs: protectedProcedure
+        .input(
+            z.object({
+                status: z.enum(['ACTIVE', 'PAUSED', 'CLOSED']).optional(),
+            })
+        )
+        .query(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Check recruiter role
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { role: true },
+            });
+
+            if (user?.role !== 'recruiter') {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            const where: any = { recruiterId: userId };
+            if (input.status) {
+                where.status = input.status;
+            }
+
+            const recruiterJobs = await prisma.recruiterJob.findMany({
+                where,
+                include: {
+                    job: true,
+                    _count: {
+                        select: {
+                            candidates: true,
+                            jobViews: true,
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            });
+
+            return recruiterJobs;
+        }),
+
+    /**
+     * Update job posting
+     */
+    updateJob: protectedProcedure
+        .input(
+            z.object({
+                recruiterJobId: z.string(),
+                job_title: z.string().optional(),
+                employer_name: z.string().optional(),
+                job_location: z.string().optional(),
+                job_description: z.string().optional(),
+                job_apply_link: z.string().url().optional(),
+                job_is_remote: z.boolean().optional(),
+                qualifications: z.array(z.string()).optional(),
+                responsibilities: z.array(z.string()).optional(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+            const { recruiterJobId, ...jobData } = input;
+
+            // Verify ownership
+            const recruiterJob = await prisma.recruiterJob.findUnique({
+                where: { id: recruiterJobId },
+                select: { recruiterId: true, jobId: true },
+            });
+
+            if (!recruiterJob || recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Update job
+            const updatedJob = await prisma.jobs.update({
+                where: { id: recruiterJob.jobId },
+                data: jobData,
+            });
+
+            return { success: true, job: updatedJob };
+        }),
+
+    /**
+     * Delete/close job posting
+     */
+    deleteJob: protectedProcedure
+        .input(z.object({ recruiterJobId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Verify ownership
+            const recruiterJob = await prisma.recruiterJob.findUnique({
+                where: { id: input.recruiterJobId },
+                select: { recruiterId: true, jobId: true },
+            });
+
+            if (!recruiterJob || recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Mark as closed
+            await prisma.recruiterJob.update({
+                where: { id: input.recruiterJobId },
+                data: {
+                    status: 'CLOSED',
+                    closedAt: new Date(),
+                },
+            });
+
+            // Optionally delete the job from jobs table
+            await prisma.jobs.delete({
+                where: { id: recruiterJob.jobId },
+            });
+
+            return { success: true };
+        }),
+
+    /**
+     * Toggle job status (pause/resume)
+     */
+    toggleJobStatus: protectedProcedure
+        .input(
+            z.object({
+                recruiterJobId: z.string(),
+                status: z.enum(['ACTIVE', 'PAUSED']),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Verify ownership
+            const recruiterJob = await prisma.recruiterJob.findUnique({
+                where: { id: input.recruiterJobId },
+                select: { recruiterId: true },
+            });
+
+            if (!recruiterJob || recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Update status
+            const updated = await prisma.recruiterJob.update({
+                where: { id: input.recruiterJobId },
+                data: { status: input.status },
+            });
+
+            return { success: true, recruiterJob: updated };
+        }),
+
+    // --- Candidate Pipeline ---
+
+    /**
+     * Add candidate to job pipeline
+     */
+    addCandidate: protectedProcedure
+        .input(
+            z.object({
+                recruiterJobId: z.string(),
+                candidateName: z.string().min(1, 'Candidate name is required'),
+                candidateEmail: z.string().email('Invalid email'),
+                notes: z.string().optional(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Verify ownership
+            const recruiterJob = await prisma.recruiterJob.findUnique({
+                where: { id: input.recruiterJobId },
+                select: { recruiterId: true },
+            });
+
+            if (!recruiterJob || recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Create candidate
+            const candidate = await prisma.candidatePipeline.create({
+                data: input,
+            });
+
+            // Increment application count
+            await prisma.recruiterJob.update({
+                where: { id: input.recruiterJobId },
+                data: { applicationCount: { increment: 1 } },
+            });
+
+            return { success: true, candidate };
+        }),
+
+    /**
+     * Get candidates for a specific job
+     */
+    getCandidates: protectedProcedure
+        .input(
+            z.object({
+                recruiterJobId: z.string(),
+                status: z.enum(['NEW', 'REVIEWING', 'SHORTLISTED', 'INTERVIEWED', 'OFFERED', 'REJECTED', 'HIRED']).optional(),
+            })
+        )
+        .query(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Verify ownership
+            const recruiterJob = await prisma.recruiterJob.findUnique({
+                where: { id: input.recruiterJobId },
+                select: { recruiterId: true },
+            });
+
+            if (!recruiterJob || recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            const where: any = { recruiterJobId: input.recruiterJobId };
+            if (input.status) {
+                where.status = input.status;
+            }
+
+            const candidates = await prisma.candidatePipeline.findMany({
+                where,
+                orderBy: { appliedAt: 'desc' },
+            });
+
+            return candidates;
+        }),
+
+    /**
+     * Update candidate status
+     */
+    updateCandidateStatus: protectedProcedure
+        .input(
+            z.object({
+                candidateId: z.string(),
+                status: z.enum(['NEW', 'REVIEWING', 'SHORTLISTED', 'INTERVIEWED', 'OFFERED', 'REJECTED', 'HIRED']),
+                notes: z.string().optional(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Get candidate and verify ownership
+            const candidate = await prisma.candidatePipeline.findUnique({
+                where: { id: input.candidateId },
+                include: {
+                    recruiterJob: {
+                        select: { recruiterId: true },
+                    },
+                },
+            });
+
+            if (!candidate || candidate.recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Update candidate
+            const updated = await prisma.candidatePipeline.update({
+                where: { id: input.candidateId },
+                data: {
+                    status: input.status,
+                    notes: input.notes ?? candidate.notes,
+                },
+            });
+
+            return { success: true, candidate: updated };
+        }),
+
+    /**
+     * Add notes to candidate
+     */
+    addCandidateNote: protectedProcedure
+        .input(
+            z.object({
+                candidateId: z.string(),
+                notes: z.string(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Get candidate and verify ownership
+            const candidate = await prisma.candidatePipeline.findUnique({
+                where: { id: input.candidateId },
+                include: {
+                    recruiterJob: {
+                        select: { recruiterId: true },
+                    },
+                },
+            });
+
+            if (!candidate || candidate.recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Update notes
+            const updated = await prisma.candidatePipeline.update({
+                where: { id: input.candidateId },
+                data: { notes: input.notes },
+            });
+
+            return { success: true, candidate: updated };
+        }),
+
+    // --- Analytics ---
+
+    /**
+     * Get analytics for a specific job
+     */
+    getJobAnalytics: protectedProcedure
+        .input(z.object({ recruiterJobId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Verify ownership
+            const recruiterJob = await prisma.recruiterJob.findUnique({
+                where: { id: input.recruiterJobId },
+                include: {
+                    _count: {
+                        select: {
+                            candidates: true,
+                            jobViews: true,
+                        },
+                    },
+                },
+            });
+
+            if (!recruiterJob || recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Get candidate funnel stats
+            const candidatesByStatus = await prisma.candidatePipeline.groupBy({
+                by: ['status'],
+                where: { recruiterJobId: input.recruiterJobId },
+                _count: true,
+            });
+
+            // Get views over time (last 30 days)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const viewsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
+                SELECT DATE("viewedAt") as date, COUNT(*)::int as count
+                FROM "job_view"
+                WHERE "recruiterJobId" = ${input.recruiterJobId}
+                AND "viewedAt" >= ${thirtyDaysAgo}
+                GROUP BY DATE("viewedAt")
+                ORDER BY date ASC
+            `;
+
+            return {
+                totalViews: recruiterJob._count.jobViews,
+                totalApplications: recruiterJob._count.candidates,
+                candidateFunnel: candidatesByStatus.map(stat => ({
+                    status: stat.status,
+                    count: stat._count,
+                })),
+                viewsOverTime: viewsByDay.map(row => ({
+                    date: row.date.toISOString().split('T')[0],
+                    count: Number(row.count),
+                })),
+            };
+        }),
+
+    /**
+     * Get overall analytics for recruiter
+     */
+    getOverallAnalytics: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id;
+
+        // Check recruiter role
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true },
+        });
+
+        if (user?.role !== 'recruiter') {
+            throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+
+        // Get job counts by status
+        const jobsByStatus = await prisma.recruiterJob.groupBy({
+            by: ['status'],
+            where: { recruiterId: userId },
+            _count: true,
+        });
+
+        // Get total candidates
+        const totalCandidates = await prisma.candidatePipeline.count({
+            where: {
+                recruiterJob: {
+                    recruiterId: userId,
+                },
+            },
+        });
+
+        // Get total views
+        const totalViews = await prisma.jobView.count({
+            where: {
+                recruiterJob: {
+                    recruiterId: userId,
+                },
+            },
+        });
+
+        return {
+            jobsByStatus: jobsByStatus.map(stat => ({
+                status: stat.status,
+                count: stat._count,
+            })),
+            totalCandidates,
+            totalViews,
+        };
+    }),
+});

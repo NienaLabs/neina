@@ -63,10 +63,19 @@ export const adminRouter = createTRPCRouter({
             const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
             if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
 
-            return await prisma.user.update({
+            const updatedUser = await prisma.user.update({
                 where: { id: input.userId },
                 data: { isSuspended: input.isSuspended }
             });
+
+            if (input.isSuspended) {
+                // Revoke all sessions directly from DB
+                await prisma.session.deleteMany({
+                    where: { userId: input.userId }
+                });
+            }
+
+            return updatedUser;
         }),
 
     updateUserPlan: protectedProcedure
@@ -135,6 +144,33 @@ export const adminRouter = createTRPCRouter({
                     message: input.message,
                     sender: 'admin',
                 }
+            });
+        }),
+
+    updateTicketStatus: protectedProcedure
+        .input(z.object({
+            ticketId: z.string(),
+            status: z.enum(['open', 'in_progress', 'closed'])
+        }))
+        .mutation(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            return await prisma.supportTicket.update({
+                where: { id: input.ticketId },
+                data: { status: input.status }
+            });
+        }),
+
+    closeTicket: protectedProcedure
+        .input(z.object({ ticketId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            return await prisma.supportTicket.update({
+                where: { id: input.ticketId },
+                data: { status: 'closed' }
             });
         }),
 
@@ -577,5 +613,118 @@ export const adminRouter = createTRPCRouter({
                     message: 'Failed to fetch Sentry stats'
                 });
             }
+        }),
+
+    // --- Recruiter Management ---
+    getRecruiterApplications: protectedProcedure
+        .input(
+            z.object({
+                status: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+                limit: z.number().default(20),
+            })
+        )
+        .query(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') {
+                throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Admin access required' });
+            }
+
+            return await prisma.recruiterApplication.findMany({
+                where: input.status ? { status: input.status } : undefined,
+                take: input.limit,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            email: true,
+                            image: true,
+                        },
+                    },
+                },
+            });
+        }),
+
+    approveRecruiterApplication: protectedProcedure
+        .input(z.object({ applicationId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            const application = await prisma.recruiterApplication.findUnique({
+                where: { id: input.applicationId },
+            });
+
+            if (!application) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'Application not found' });
+            }
+
+            // Update application status
+            await prisma.recruiterApplication.update({
+                where: { id: input.applicationId },
+                data: {
+                    status: 'APPROVED',
+                    reviewedBy: user.id,
+                    reviewedAt: new Date(),
+                },
+            });
+
+            // Update user role to recruiter
+            await prisma.user.update({
+                where: { id: application.userId },
+                data: { role: 'recruiter' },
+            });
+
+            // Send notification
+            await prisma.announcement.create({
+                data: {
+                    title: 'Recruiter Application Approved',
+                    content: 'Congratulations! Your application to become a recruiter has been approved. You can now post jobs and manage candidates 🎉.',
+                    type: 'in-app',
+                    targetUserIds: [application.userId],
+                    createdBy: user.id,
+                },
+            });
+
+            return { success: true };
+        }),
+
+    rejectRecruiterApplication: protectedProcedure
+        .input(z.object({ applicationId: z.string(), reason: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            const application = await prisma.recruiterApplication.findUnique({
+                where: { id: input.applicationId },
+            });
+
+            if (!application) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'Application not found' });
+            }
+
+            // Update application status
+            await prisma.recruiterApplication.update({
+                where: { id: input.applicationId },
+                data: {
+                    status: 'REJECTED',
+                    reviewedBy: user.id,
+                    reviewedAt: new Date(),
+                    rejectionReason: input.reason,
+                },
+            });
+
+            // Send notification
+            await prisma.announcement.create({
+                data: {
+                    title: 'Recruiter Application Update',
+                    content: `Your recruiter application has been rejected. Reason: ${input.reason}`,
+                    type: 'in-app',
+                    targetUserIds: [application.userId],
+                    createdBy: user.id,
+                },
+            });
+
+            return { success: true };
         }),
 });

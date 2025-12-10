@@ -2,13 +2,13 @@ import { auth } from '@/lib/auth';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { cache } from 'react';
 import superjson from 'superjson';
-import {headers} from 'next/headers'
+import { headers } from 'next/headers'
 
 export const createTRPCContext = cache(async () => {
   /**
    * @see: https://trpc.io/docs/server/context
    */
-  const session = await auth.api.getSession({headers:await headers()});
+  const session = await auth.api.getSession({ headers: await headers() });
   return { session };
 });
 
@@ -32,6 +32,14 @@ const isAuthed = t.middleware(({ next, ctx }) => {
       message: 'Not authenticated',
     });
   }
+
+  if (ctx.session.user.isSuspended) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Your account has been suspended. Please contact support.',
+    });
+  }
+
   return next({
     ctx: {
       ...ctx,

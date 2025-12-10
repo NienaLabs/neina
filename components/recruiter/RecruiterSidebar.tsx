@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Briefcase, Settings, MessageSquare, BarChart3, Megaphone, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+    LayoutDashboard,
+    Briefcase,
+    PlusCircle,
+    BarChart3,
+    Settings,
+    ChevronLeft,
+    ChevronRight,
+    Users
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,94 +19,66 @@ import { Button } from "@/components/ui/button";
 const sidebarLinks = [
     {
         label: "Dashboard",
-        href: "/admin",
+        href: "/recruiters/dashboard",
         icon: LayoutDashboard,
     },
     {
-        label: "Users",
-        href: "/admin/users",
-        icon: Users,
-    },
-    {
-        label: "Jobs",
-        href: "/admin/jobs",
+        label: "My Jobs",
+        href: "/recruiters/jobs",
         icon: Briefcase,
     },
     {
-        label: "Analytics",
-        href: "/admin/analytics",
-        icon: BarChart3,
+        label: "Post a Job",
+        href: "/recruiters/jobs/new",
+        icon: PlusCircle,
     },
-    {
-        label: "Support",
-        href: "/admin/support",
-        icon: MessageSquare,
-    },
-    {
-        label: "Announcements",
-        href: "/admin/announcements",
-        icon: Megaphone,
-    },
-    {
-        label: "Errors",
-        href: "/admin/errors",
-        icon: AlertCircle,
-    },
-    {
-        label: "Recruiters",
-        href: "/admin/recruiters",
-        icon: Briefcase,
-    },
-    {
-        label: "Settings",
-        href: "/admin/settings",
-        icon: Settings,
-    },
+    // {
+    //     label: "Analytics",
+    //     href: "/recruiters/analytics",
+    //     icon: BarChart3,
+    // },
 ];
 
-export function Sidebar() {
+export function RecruiterSidebar() {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
         <aside
             className={cn(
-                "fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden bg-slate-900 duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0",
-                isCollapsed ? "w-20" : "w-72"
+                "fixed left-0 top-0 z-40 flex h-screen flex-col overflow-y-hidden bg-slate-900 duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0",
+                isCollapsed ? "w-20" : "w-64"
             )}
         >
             {/* SIDEBAR HEADER */}
             <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
                 {!isCollapsed && (
-                    <Link href="/admin" className="flex items-center space-x-2">
-                        <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                            <Users className="h-5 w-5 text-white" />
+                    <Link href="/recruiters/dashboard" className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <Briefcase className="h-5 w-5 text-green-500" />
                         </div>
-                        <span className="text-2xl font-bold text-white">Job AI Admin</span>
+                        <span className="text-xl font-bold text-white">Recruiter</span>
                     </Link>
                 )}
                 {isCollapsed && (
-                    <Link href="/admin" className="flex items-center justify-center w-full">
-                        <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                            <Users className="h-5 w-5 text-white" />
+                    <Link href="/recruiters/dashboard" className="flex items-center justify-center w-full">
+                        <div className="h-8 w-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <Briefcase className="h-5 w-5 text-green-500" />
                         </div>
                     </Link>
                 )}
             </div>
-            {/* SIDEBAR HEADER */}
 
             <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-                {/* Sidebar Menu */}
                 <nav className="mt-5 px-4 py-4 lg:mt-9 lg:px-6">
-                    {/* Menu Group */}
                     <div>
                         {!isCollapsed && (
-                            <h3 className="mb-4 ml-4 text-sm font-semibold text-slate-400">MENU</h3>
+                            <h3 className="mb-4 ml-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</h3>
                         )}
 
                         <ul className="mb-6 flex flex-col gap-1.5">
                             {sidebarLinks.map((link) => {
-                                const isActive = pathname === link.href || (link.href !== "/admin" && pathname.startsWith(link.href));
+                                const isActive = pathname === link.href || (link.href !== "/recruiters/dashboard" && pathname.startsWith(link.href));
                                 const Icon = link.icon;
 
                                 return (

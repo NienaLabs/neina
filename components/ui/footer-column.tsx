@@ -1,3 +1,4 @@
+"use client"
 import {
   Dribbble,
   Facebook,
@@ -10,6 +11,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image'
+import { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const data = {
   facebookLink: 'https://facebook.com/mvpblocks',
@@ -35,14 +42,14 @@ const data = {
     livechat: '/live-chat',
   },
   contact: {
-    email: 'hello@mvpblocks.com',
-    phone: '+91 8637373116',
-    address: 'Kolkata, West Bengal, India',
+    email: 'hello@nienalabs.com',
+    phone: '+233556732796',
+    address: 'Accra,Ghana',
   },
   company: {
-    name: 'JobAI',
+    name: 'niena',
     description:
-      'Building beautiful and functional web experiences with modern technologies. We help startups and businesses create their digital presence.',
+      'We are a team of developers driven by one belief:the world can be changed and we intend to change it.Every product we build has one purpose:to push humanity forward.We chase problems others avoid.Our mission is relentless and simple:create something that matters,shapes the future and leaves the world different from how we found it.',
     logo: '/logo.webp',
   },
 };
@@ -100,24 +107,38 @@ const contactInfo = [
 ];
 
 export default function Footer4Col() {
-  return (
-    <footer id="footer" className="bg-secondary dark:bg-secondary/20 mt-16 w-full place-self-end rounded-t-xl">
-      <div className="mx-auto max-w-screen-xl px-4 pt-16 pb-6 sm:px-6 lg:px-8 lg:pt-24">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div>
-            <div className="text-primary flex justify-center gap-2 sm:justify-start">
-              <Image
-                src={data.company.logo || '/placeholder.svg'}
-                alt="logo"
-                className="h-8 w-8 rounded-full"
-                width={32}
-                height={32}
-              />
-              <span className="text-2xl font-semibold">
-                {data.company.name}
-              </span>
-            </div>
+    const footerRef = useRef<HTMLElement>(null)
 
+    useGSAP(() => {
+        // Animate all top-level grid columns
+        const columns = footerRef.current?.querySelectorAll(".footer-col")
+        
+        gsap.from(columns || [], {
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "power2.out",
+            scrollTrigger: {
+                trigger: footerRef.current,
+                start: "top 90%"
+            }
+        })
+        
+    }, { scope: footerRef })
+
+  return (
+    <footer ref={footerRef} id="footer" className="bg-secondary dark:bg-secondary/20 mt-16 w-full place-self-end rounded-t-xl overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 pt-16 pb-6 sm:px-6 lg:px-8 lg:pt-24">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="footer-col">
+            
+              <Image
+                src={'/company_logo.png'}
+                alt="logo"
+                width={100}
+                height={20}
+              />
             <p className="text-foreground/50 mt-6 max-w-md text-center leading-relaxed sm:max-w-xs sm:text-left">
               {data.company.description}
             </p>
@@ -138,7 +159,7 @@ export default function Footer4Col() {
           </div>
 
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:col-span-2">
-            <div className="text-center sm:text-left">
+            <div className="footer-col text-center sm:text-left">
               <p className="text-lg font-medium">About Us</p>
               <ul className="mt-8 space-y-4 text-sm">
                 {aboutLinks.map(({ text, href }) => (
@@ -154,7 +175,7 @@ export default function Footer4Col() {
               </ul>
             </div>
 
-            <div className="text-center sm:text-left">
+            <div className="footer-col text-center sm:text-left">
               <p className="text-lg font-medium">Our Services</p>
               <ul className="mt-8 space-y-4 text-sm">
                 {serviceLinks.map(({ text, href }) => (
@@ -170,7 +191,7 @@ export default function Footer4Col() {
               </ul>
             </div>
 
-            <div className="text-center sm:text-left">
+            <div className="footer-col text-center sm:text-left">
               <p className="text-lg font-medium">Helpful Links</p>
               <ul className="mt-8 space-y-4 text-sm">
                 {helpfulLinks.map(({ text, href, hasIndicator }) => (
@@ -198,7 +219,7 @@ export default function Footer4Col() {
               </ul>
             </div>
 
-            <div className="text-center sm:text-left">
+            <div className="footer-col text-center sm:text-left">
               <p className="text-lg font-medium">Contact Us</p>
               <ul className="mt-8 space-y-4 text-sm">
                 {contactInfo.map(({ icon: Icon, text, isAddress, href, ariaLabel, target, rel }) => (

@@ -1,135 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 
 export default function FAQWithSpiral() {
-  const spiralRef = useRef<HTMLDivElement | null>(null);
-
-
-  // Spiral configuration
-  const [cfg, setCfg] = useState({
-    points: 700,
-    dotRadius: 1.8,
-    duration: 3.0,
-    color: "#ffffff",
-    gradient: "none" as
-      | "none"
-      | "rainbow"
-      | "sunset"
-      | "ocean"
-      | "fire"
-      | "neon"
-      | "pastel"
-      | "grayscale",
-    pulseEffect: true,
-    opacityMin: 0.25,
-    opacityMax: 0.9,
-    sizeMin: 0.5,
-    sizeMax: 1.4,
-    background: "#000000",
-  });
-
-  // Gradient presets
-  const gradients: Record<string, string[]> = useMemo(
-    () => ({
-      none: [],
-      rainbow: ["#ff0000", "#ff9900", "#ffff00", "#00ff00", "#0099ff", "#6633ff"],
-      sunset: ["#ff0000", "#ff9900", "#ffcc00"],
-      ocean: ["#0066ff", "#00ccff", "#00ffcc"],
-      fire: ["#ff0000", "#ff6600", "#ffcc00"],
-      neon: ["#ff00ff", "#00ffff", "#ffff00"],
-      pastel: ["#ffcccc", "#ccffcc", "#ccccff"],
-      grayscale: ["#ffffff", "#999999", "#333333"],
-    }),
-    []
-  );
-
-
-
-  // Generate spiral SVG and mount
-  useEffect(() => {
-    if (!spiralRef.current) return;
-
-    const SIZE = 560; // larger presence
-    const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-    const N = cfg.points;
-    const DOT = cfg.dotRadius;
-    const CENTER = SIZE / 2;
-    const PADDING = 4;
-    const MAX_R = CENTER - PADDING - DOT;
-
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("width", String(SIZE));
-    svg.setAttribute("height", String(SIZE));
-    svg.setAttribute("viewBox", `0 0 ${SIZE} ${SIZE}`);
-
-    // Gradient
-    if (cfg.gradient !== "none") {
-      const defs = document.createElementNS(svgNS, "defs");
-      const g = document.createElementNS(svgNS, "linearGradient");
-      g.setAttribute("id", "spiralGradient");
-      g.setAttribute("gradientUnits", "userSpaceOnUse");
-      g.setAttribute("x1", "0%");
-      g.setAttribute("y1", "0%");
-      g.setAttribute("x2", "100%");
-      g.setAttribute("y2", "100%");
-      gradients[cfg.gradient].forEach((color, idx, arr) => {
-        const stop = document.createElementNS(svgNS, "stop");
-        stop.setAttribute("offset", `${(idx * 100) / (arr.length - 1)}%`);
-        stop.setAttribute("stop-color", color);
-        g.appendChild(stop);
-      });
-      defs.appendChild(g);
-      svg.appendChild(defs);
-    }
-
-    for (let i = 0; i < N; i++) {
-      const idx = i + 0.5;
-      const frac = idx / N;
-      const r = Math.sqrt(frac) * MAX_R;
-      const theta = idx * GOLDEN_ANGLE;
-      const x = CENTER + r * Math.cos(theta);
-      const y = CENTER + r * Math.sin(theta);
-
-      const c = document.createElementNS(svgNS, "circle");
-      c.setAttribute("cx", x.toFixed(3));
-      c.setAttribute("cy", y.toFixed(3));
-      c.setAttribute("r", String(DOT));
-      c.setAttribute("fill", cfg.gradient === "none" ? cfg.color : "url(#spiralGradient)");
-      c.setAttribute("opacity", "0.6");
-
-      if (cfg.pulseEffect) {
-        const animR = document.createElementNS(svgNS, "animate");
-        animR.setAttribute("attributeName", "r");
-        animR.setAttribute("values", `${DOT * cfg.sizeMin};${DOT * cfg.sizeMax};${DOT * cfg.sizeMin}`);
-        animR.setAttribute("dur", `${cfg.duration}s`);
-        animR.setAttribute("begin", `${(frac * cfg.duration).toFixed(3)}s`);
-        animR.setAttribute("repeatCount", "indefinite");
-        animR.setAttribute("calcMode", "spline");
-        animR.setAttribute("keySplines", "0.4 0 0.6 1;0.4 0 0.6 1");
-        c.appendChild(animR);
-
-        const animO = document.createElementNS(svgNS, "animate");
-        animO.setAttribute("attributeName", "opacity");
-        animO.setAttribute("values", `${cfg.opacityMin};${cfg.opacityMax};${cfg.opacityMin}`);
-        animO.setAttribute("dur", `${cfg.duration}s`);
-        animO.setAttribute("begin", `${(frac * cfg.duration).toFixed(3)}s`);
-        animO.setAttribute("repeatCount", "indefinite");
-        animO.setAttribute("calcMode", "spline");
-        animO.setAttribute("keySplines", "0.4 0 0.6 1;0.4 0 0.6 1");
-        c.appendChild(animO);
-      }
-
-      svg.appendChild(c);
-    }
-
-    spiralRef.current.innerHTML = "";
-    spiralRef.current.appendChild(svg);
-  }, [cfg, gradients]);
-
-  
-
   // FAQ content (edit freely)
   const faqs = [
     {
@@ -158,21 +31,10 @@ export default function FAQWithSpiral() {
     },
   ];
 
-
-
   return (
     <div
-      className="relative min-h-screen w-full overflow-hidden text-white"
-      style={{ backgroundColor: cfg.background }}
+      className="relative min-h-screen w-full overflow-hidden text-white bg-black"
     >
-      {/* Background Spiral */}
-      <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-30 [mask-image:radial-gradient(circle_at_center,rgba(255,255,255,1),rgba(255,255,255,0.1)_60%,transparent_75%)]"
-        style={{ mixBlendMode: "screen" }}
-      >
-        <div ref={spiralRef} />
-      </div>
-
       {/* Layout */}
       <div className="relative mx-auto max-w-5xl px-6 py-16">
         {/* Header */}
@@ -183,7 +45,6 @@ export default function FAQWithSpiral() {
               Frequently Asked Questions
             </p>
           </div>
-
         </header>
 
         {/* Content */}

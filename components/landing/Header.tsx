@@ -99,49 +99,15 @@ const Header = () => {
                     </div>
 
 
-
-                    <Link
-                        href="#testimonials"
-                        onClick={(e) => scrollToSection(e, 'testimonials')}
-                        className="nav-link"
-                    >
-                        Testimonials
-                    </Link>
-                    <Link
-                        href="/pricing"
-                        className="nav-link"
-                    >
-                        Pricing
-                    </Link>
-                    <Link
-                        href="#footer"
-                        onClick={(e) => scrollToSection(e, 'footer')}
-                        className="nav-link"
-                    >
-                        About Us
-                    </Link>
-
-                </nav>
-
-                {/* Auth Buttons */}
-                <div className="flex items-center ml-auto gap-4">
-                    {!session ? (
-                        <>
-                            <Link href="/auth/sign-in" className="hidden md:inline-block text-sm font-medium text-white/80 hover:text-white transition-colors">
-                                Sign In
-                            </Link>
-
-                            <Link
-                                href="/auth/sign-up"
-                                className="px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 inset-shadow-sm/70  transition-opacity"
-                            >
-                                Get Started
-                            </Link>
-                        </>
-                    ) : (
-                        <Link
-                            href="/dashboard"
-                            className="px-4 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-all border border-white/10"
+                    {/* Auth Buttons */}
+                    <div className="flex items-center ml-auto gap-4">
+                        <Link href="/auth/sign-in" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                            Sign In
+                        </Link>
+                        
+                        <Link 
+                            href="/auth/sign-up" 
+                            className="hidden md:inline-block px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 inset-shadow-sm/70  transition-opacity"
                         >
                             Dashboard
                         </Link>

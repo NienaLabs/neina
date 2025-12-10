@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Star,ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import TextMask from '@/components/text-mask'
 
 interface FeatureSectionProps {
   featureName: string
@@ -32,10 +33,10 @@ const FeatureSection = ({
   reversed = false,
 }: FeatureSectionProps) => {
   return (
-    <section className="py-16 md:py-24 px-4 md:px-6  bg-radial-[at_50%_75%]   from-indigo-200 to-transparent to-90%">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-16 md:py-24 px-4 md:px-6 relative z-10">
+      <div className="max-w-6xl">
         {/* Title with Badge */}
-        <div className="mb-12">
+        <div className="mb-12 bg-indigo-100 border p-2 rounded-lg w-fit">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             {featureName}
           </h2>
@@ -72,11 +73,12 @@ const FeatureSection = ({
           {/* Features & CTA */}
           <div className="flex flex-col">
             {/* Bullets */}
-            <ul className="space-y-4 mb-8">
+            <TextMask animateOnScroll>
+            <ul className="space-y-4 bg-white p-2 border rounded-lg mb-8">
               {bullets.map((bullet, index) => (
                 <li
                   key={index}
-                  className="flex items-start gap-3"
+                  className="flex  items-start gap-3"
                 >
                   <div className="shrink-0 w-6 h-6 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center mt-1">
                     <span className="text-white text-sm font-bold">✓</span>
@@ -87,6 +89,7 @@ const FeatureSection = ({
                 </li>
               ))}
             </ul>
+            </TextMask>
 
             {/* CTA Button */}
             <Button

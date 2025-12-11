@@ -59,6 +59,7 @@ const FeatureSection = ({
                   src={media.src}
                   alt={media.alt || featureName}
                   fill
+                  unoptimized={featureName==="Job Search"}
                 />
             ) : (
               <video

@@ -6,6 +6,7 @@ import { Star,ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import TextMask from '@/components/text-mask'
+import { cn } from '@/lib/utils'
 
 interface FeatureSectionProps {
   featureName: string
@@ -52,7 +53,7 @@ const FeatureSection = ({
         {/* Content Grid */}
         <div className={`grid grid-cols-1 md:grid-cols-2  gap-8 md:gap-12 items-center ${reversed ? 'md:flex md:flex-row-reverse justify-around' : ''}`}>
           {/* Media */}
-          <div className=" relative h-[400] w-[300] place-self-center flex items-center">
+          <div className={" relative h-[400] w-[300] place-self-center flex items-center"}>
             {media.type === 'image' ? (
                 <Image
                   src={media.src}

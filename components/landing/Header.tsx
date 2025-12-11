@@ -7,23 +7,12 @@ import { cn } from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { useScroll } from "@/hooks/use-scroll"
 import Image from 'next/image'
-import { useSession, signOut } from '@/auth-client'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LayoutDashboard, LogOut, Building2 } from 'lucide-react'
 
 const Header = () => {
     const router = useRouter()
     const [isProductsOpen, setIsProductsOpen] = useState(false)
     const isScrolled = useScroll()
-    const { data: session } = useSession()
+    
 
     const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
         e.preventDefault();
@@ -35,17 +24,7 @@ const Header = () => {
         }
     };
 
-    const handleSignOut = async () => {
-        await signOut({
-            fetchOptions: {
-                onSuccess: () => {
-                    router.push("/auth/sign-in");
-                    router.refresh();
-                },
-            },
-        });
-    };
-
+   
     return (
         <header className={cn("w-full fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-transparent", isScrolled && "bg-black/80 backdrop-blur-md border-b border-white/10 shadow-lg")}>
             <div className=" px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
@@ -97,22 +76,41 @@ const Header = () => {
                             </Link>
                         </div>
                     </div>
-
+                    <Link 
+                          href="#testimonials" 
+                          onClick={(e) => scrollToSection(e, 'testimonials')}
+                          className="nav-link"
+                        >
+                          Testimonials
+                        </Link>
+                        <Link 
+                          href="/Pricing" 
+                          className="nav-link"
+                        >
+                          Pricing
+                        </Link>
+                       <Link 
+                          href="#footer" 
+                          onClick={(e) => scrollToSection(e, 'footer')}
+                          className="nav-link"
+                        >
+                          About Us
+                        </Link>
+                    </nav>
 
                     {/* Auth Buttons */}
-                    <div className="flex items-center ml-auto gap-4">
-                        <Link href="/auth/sign-in" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                     <div className="flex items-center ml-auto gap-4">
+                        <Link href="/auth/sign-in" className=" text-sm font-medium text-white/80 hover:text-white transition-colors">
                             Sign In
                         </Link>
                         
                         <Link 
                             href="/auth/sign-up" 
-                            className="hidden md:inline-block px-4 py-2 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 inset-shadow-sm/70  transition-opacity"
+                            className="px-4 py-2 rounded-full hidden md:inline-block bg-linear-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 inset-shadow-sm/70  transition-opacity"
                         >
-                            Dashboard
+                            Get Started
                         </Link>
-                    )}
-                </div>
+                    </div>
             </div>
         </header>
     )

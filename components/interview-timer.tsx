@@ -20,7 +20,9 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
   const [remainingSeconds, setRemainingSeconds] = useState<number>(30);
   const [shouldEnd, setShouldEnd] = useState(false);
   const [warningLevel, setWarningLevel] = useState<'low' | 'critical' | null>(null);
-  const [lastWarningSent, setLastWarningSent] = useState<number>(0);
+  const [warnedLow, setWarnedLow] = useState(false);
+  const [warnedCritical, setWarnedCritical] = useState(false);
+
   const [hasEnded, setHasEnded] = useState(false);
 
   // Helper function to inject time context via WebRTC
@@ -28,15 +30,15 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
     // Check if we have all required conditions to send a message
     if (!interviewId || !dailyCall || !dailyCall.joined()) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Skipping AI warning - call not ready:', { 
-          hasInterviewId: !!interviewId, 
+        console.log('Skipping AI warning - call not ready:', {
+          hasInterviewId: !!interviewId,
           hasDailyCall: !!dailyCall,
           isJoined: dailyCall?.joined()
         });
       }
       return;
     }
-    
+
     let contextMessage = '';
     if (timeRemaining <= 30) {
       contextMessage = "[SYSTEM: 30 seconds remaining - please announce this to the user and wrap up the conversation]";
@@ -55,12 +57,12 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
           message_type: "conversation",
           event_type: "conversation.respond",
           conversation_id: interviewId,
-          properties: { 
+          properties: {
             text: contextMessage,
             inject_context: true
           }
         }, '*');
-        
+
         if (process.env.NODE_ENV === 'development') {
           console.log(`AI warning sent for ${timeRemaining}s remaining`);
         }
@@ -81,61 +83,56 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
 
     let isMounted = true;
     let checkTimeout: NodeJS.Timeout | null = null;
-    
+
     const checkTime = async () => {
       // FIXED: Added hasEnded check to prevent processing after end
       if (!isMounted || !interviewId || hasEnded) return;
-      
+
       try {
         const response = await fetch(`/api/interviews/time?interview_id=${interviewId}`, {
           cache: 'no-store' // Prevent caching of the time check
         });
-        
+
         if (!isMounted) return;
-        
+
         if (response.ok) {
           const data = await response.json();
-          
+
           setRemainingSeconds(data.remaining_seconds);
           setShouldEnd(data.should_end);
-          
+
           // Handle time expiration - only trigger once
           if (data.should_end && !hasEnded) {
             console.log('Interview should end - calling onTimeExpired');
             setHasEnded(true);
-            
+
             if (onTimeExpired) {
               onTimeExpired();
             }
-            
+
             return; // Exit early to stop further processing
           }
-          
+
           // Process warnings if we have a valid call object and time remaining
           // FIXED: Only process warnings if not ended
           if (dailyCall && data.remaining_seconds > 0 && !data.should_end) {
             const currentSeconds = data.remaining_seconds;
-            
-            // Throttle warning checks to once per second at most
-            const now = Date.now();
-            const timeSinceLastWarning = now - lastWarningSent;
-            
-            if (timeSinceLastWarning >= 1000) { // Only send if it's been at least 1 second
-              // Critical warning (last 10 seconds)
-              if (currentSeconds <= 10 && lastWarningSent > 10) {
-                if (onWarning) onWarning('critical');
-                await sendAIWarning(currentSeconds);
-                if (isMounted) setLastWarningSent(now);
-              } 
-              // Low warning (11-30 seconds)
-              else if (currentSeconds <= 30 && lastWarningSent > 30) {
-                if (onWarning) onWarning('low');
-                await sendAIWarning(currentSeconds);
-                if (isMounted) setLastWarningSent(now);
-              }
+
+            // Critical warning (last 10 seconds)
+            if (currentSeconds <= 10 && !warnedCritical) {
+              if (onWarning) onWarning('critical');
+              await sendAIWarning(currentSeconds);
+              if (isMounted) setWarnedCritical(true);
             }
+            // Low warning (11-30 seconds)
+            else if (currentSeconds <= 30 && currentSeconds > 10 && !warnedLow) {
+              if (onWarning) onWarning('low');
+              await sendAIWarning(currentSeconds);
+              if (isMounted) setWarnedLow(true);
+            }
+
           }
-          
+
           // Update warning level for UI
           if (data.warning_level && data.warning_level !== warningLevel) {
             setWarningLevel(data.warning_level);
@@ -150,10 +147,10 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
     checkTimeout = setTimeout(() => {
       checkTime();
     }, 100);
-    
+
     // Set up interval for polling
     const interval = setInterval(checkTime, 1000);
-    
+
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -161,7 +158,8 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
         clearTimeout(checkTimeout);
       }
     };
-  }, [interviewId, onTimeExpired, onWarning, warningLevel, dailyCall, lastWarningSent, hasEnded]); // FIXED: Added hasEnded to dependencies
+  }, [interviewId, onTimeExpired, onWarning, warningLevel, dailyCall, hasEnded, warnedLow, warnedCritical]);
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -181,7 +179,7 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
       <span className={`font-medium ${getTimerColor()}`}>
         {formatTime(remainingSeconds)} remaining
       </span>
-      
+
       {warningLevel === 'critical' && (
         <Alert className="ml-4 py-2">
           <AlertCircle className="h-4 w-4" />
@@ -190,7 +188,7 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
           </AlertDescription>
         </Alert>
       )}
-      
+
       {warningLevel === 'low' && (
         <Alert className="ml-4 py-2 border-yellow-200 bg-yellow-50">
           <AlertCircle className="h-4 w-4 text-yellow-600" />

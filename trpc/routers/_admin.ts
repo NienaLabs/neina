@@ -79,7 +79,7 @@ export const adminRouter = createTRPCRouter({
         }),
 
     updateUserPlan: protectedProcedure
-        .input(z.object({ userId: z.string(), plan: z.string() }))
+        .input(z.object({ userId: z.string(), plan: z.enum(['FREE', 'SILVER', 'GOLD', 'DIAMOND']) }))
         .mutation(async ({ ctx, input }) => {
             const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
             if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
@@ -138,13 +138,41 @@ export const adminRouter = createTRPCRouter({
             const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
             if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
 
-            return await prisma.ticketMessage.create({
+            // 1. Create the message
+            const message = await prisma.ticketMessage.create({
                 data: {
                     ticketId: input.ticketId,
                     message: input.message,
                     sender: 'admin',
                 }
             });
+
+            // 2. Auto-close the ticket and fetch details
+            const ticket = await prisma.supportTicket.update({
+                where: { id: input.ticketId },
+                data: { status: 'closed' },
+                include: { user: { select: { email: true } } }
+            });
+
+            // 3. Send email notification (fire and forget)
+            if (ticket?.user?.email) {
+                const { sendSupportReplyEmail } = await import('@/lib/email');
+                // We don't await this so the UI response isn't delayed
+                sendSupportReplyEmail(
+                    ticket.user.email,
+                    ticket.subject,
+                    input.message,
+                    ticket.id
+                ).then(result => {
+                    if (result.success) {
+                        console.log(`✅ Support reply email sent to ${ticket.user.email}`);
+                    } else {
+                        console.error('❌ Failed to send support reply email:', result.error);
+                    }
+                });
+            }
+
+            return message;
         }),
 
     updateTicketStatus: protectedProcedure

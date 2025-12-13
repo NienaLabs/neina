@@ -40,7 +40,7 @@ const Header = () => {
                         onMouseEnter={() => setIsProductsOpen(true)}
                         onMouseLeave={() => setIsProductsOpen(false)}
                     >
-                        <button className="flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white transition-colors">
+                        <button className={cn("flex items-center gap-1 text-sm font-medium text-black  transition-colors",isScrolled && "text-white")}>
                             Products
                             <ChevronDown className={cn("w-4 h-4 transition-transform", isProductsOpen && "rotate-180")} />
                         </button>
@@ -79,20 +79,20 @@ const Header = () => {
                     <Link 
                           href="#testimonials" 
                           onClick={(e) => scrollToSection(e, 'testimonials')}
-                          className="nav-link"
+                          className={cn("nav-link text-black",isScrolled && "text-white")}
                         >
                           Testimonials
                         </Link>
                         <Link 
                           href="/pricing" 
-                          className="nav-link"
+                          className={cn("nav-link text-black ",isScrolled && "text-white")}
                         >
                           Pricing
                         </Link>
                        <Link 
                           href="#footer" 
                           onClick={(e) => scrollToSection(e, 'footer')}
-                          className="nav-link"
+                          className={cn("nav-link text-black",isScrolled && "text-white")}
                         >
                           About Us
                         </Link>
@@ -100,7 +100,7 @@ const Header = () => {
 
                     {/* Auth Buttons */}
                      <div className="flex items-center ml-auto gap-4">
-                        <Link href="/auth/sign-in" className=" text-sm font-medium text-white/80 hover:text-white transition-colors">
+                        <Link href="/auth/sign-in" className={cn(" text-sm font-medium text-black hover:text-gray-200 transition-colors",isScrolled && "text-white")}>
                             Sign In
                         </Link>
                         

@@ -48,8 +48,12 @@ const Page = async ({ params }: Props) => {
     const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) as AnalysisData : { fixes: {} }
     const { fixes, ...fixCountRaw } = parsedAnalysisData
     const fixCount = fixCountRaw as Record<string, number>
-    
-    const score = scores ? (typeof scores === 'string' ? JSON.parse(scores) : scores) as ScoreData : null
+    const score = scores 
+   ? (typeof scores === 'string' 
+       ? (() => { try { return JSON.parse(scores) } catch { return null } })() 
+       : scores) as ScoreData | null 
+    : null
+
     
     // Extract scores for tailored resumes
     const overallScore = score?.overallScore ?? 0;

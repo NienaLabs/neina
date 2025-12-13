@@ -136,7 +136,7 @@ export default function PricingPage() {
       setLoadingKey(key);
        initiateTransaction.mutate({
           email: user.email,
-          amount: price * 100, // to cents
+          amount: Math.round(price * 100), // to cents
           type: "MINUTE_PURCHASE",
           minutes: minutes,
           callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`,

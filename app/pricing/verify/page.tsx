@@ -36,8 +36,9 @@ export default function VerifyPaymentPage() {
   }, [reference]);
 
   const from = searchParams.get("from");
-  const returnUrl = from || "/pricing"; // Default to pricing if not specified
-
+  // Validate that returnUrl is an internal path to prevent open redirects
+  const allowedPaths = ["/dashboard", "/pricing"];
+  const returnUrl = from && allowedPaths.includes(from) ? from : "/pricing";
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full p-8 bg-card border rounded-2xl shadow-lg text-center space-y-6">

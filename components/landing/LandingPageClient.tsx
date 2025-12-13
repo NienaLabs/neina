@@ -1,6 +1,6 @@
 'use client'
-import { Hero } from './Hero'
 import Features from './Features'
+import FeatureCards from './FeatureCards'
 import { TestimonialDemo as Testimonials } from './Testimonials'
 import HowItWorks from './HowItWorks'
 import FAQ from './FAQ'
@@ -14,6 +14,8 @@ import gsap from 'gsap'
 import { useEffect, useRef} from 'react'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
 import {useGSAP} from '@gsap/react'
+import {HeroSection} from './Hero'
+import HowWeHelp from './HowWeHelp'
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,7 +67,9 @@ export default function LandingPage() {
 
       <div className="flex overflow-hidden min-h-screen flex-col bg-white dark:bg-gray-900">
         <Header/>
-        <Hero/>
+        <HeroSection/>
+        <HowWeHelp/>
+        <FeatureCards />
         <Features />
         <div id="features-container" className="relative h-full  w-full overflow-hidden">
         <div className="svg-path w-full h-full">

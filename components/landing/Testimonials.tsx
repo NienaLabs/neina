@@ -1,6 +1,12 @@
 import { Testimonial } from "@/components/ui/testimonial-card"
 import { Star } from "lucide-react"
 import Image from 'next/image'
+import { useRef } from 'react'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const testimonials = [
   {
@@ -54,8 +60,47 @@ const testimonials = [
 ]
 
 export function TestimonialDemo() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const row1Ref = useRef<HTMLDivElement>(null)
+  const row2Ref = useRef<HTMLDivElement>(null)
+
+  useGSAP(() => {
+    // Row 1 Animation (from Left)
+    gsap.from(row1Ref.current, {
+      x: -100,
+      opacity: 0,
+       duration: 1,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: row1Ref.current,
+        start: "top 80%",
+        scrub:1,
+        end: "bottom 20%",
+        toggleActions: "play none none reverse"
+      }
+    })
+
+    // Row 2 Animation (from Right)
+    gsap.from(row2Ref.current, {
+      x: 100,
+      opacity: 0,
+      duration: 1,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: row2Ref.current,
+        start: "top 80%",
+        scrub:1,
+        end: "bottom 20%",
+        toggleActions: "play none none reverse"
+      }
+    })
+  }, { scope: containerRef })
+
+  const firstRow = testimonials.slice(0, 3)
+  const secondRow = testimonials.slice(3, 6)
+
   return (
-    <section className="relative py-16 sm:py-24 lg:py-28">
+    <section ref={containerRef} className="relative py-16 sm:py-24 lg:py-28 overflow-hidden">
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 to-background" />
         <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)]" />
@@ -71,8 +116,24 @@ export function TestimonialDemo() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((testimonial) => (
+        {/* First Row */}
+        <div ref={row1Ref} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+          {firstRow.map((testimonial) => (
+            <div 
+              key={testimonial.name}
+              className="h-full transition-transform duration-300 hover:scale-[1.02]"
+            >
+              <Testimonial 
+                {...testimonial} 
+                className="h-full transition-all duration-300 hover:shadow-lg hover:border-primary/20"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Second Row */}
+        <div ref={row2Ref} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {secondRow.map((testimonial) => (
             <div 
               key={testimonial.name}
               className="h-full transition-transform duration-300 hover:scale-[1.02]"

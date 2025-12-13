@@ -51,7 +51,7 @@ const FeatureSection = ({
         </div>
 
         {/* Content Grid */}
-        <div className={`grid grid-cols-1 md:grid-cols-2  gap-8 md:gap-12 items-center ${reversed ? 'md:flex md:flex-row-reverse justify-around' : ''}`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2  gap-0 md:gap-12 items-center ${reversed ? 'md:flex md:flex-row-reverse justify-around' : ''}`}>
           {/* Media */}
           <div className={" relative h-[400] w-[300] place-self-center flex items-center"}>
             {media.type === 'image' ? (
@@ -75,7 +75,6 @@ const FeatureSection = ({
           {/* Features & CTA */}
           <div className="flex flex-col">
             {/* Bullets */}
-            <TextMask animateOnScroll>
             <ul className="space-y-4 bg-white p-2 border rounded-lg mb-8">
               {bullets.map((bullet, index) => (
                 <li
@@ -85,13 +84,16 @@ const FeatureSection = ({
                   <div className="shrink-0 w-6 h-6 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center mt-1">
                     <span className="text-white text-sm font-bold">✓</span>
                   </div>
-                  <span className="text-base leading-relaxed flex-1 min-w-0">
-                    {bullet}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <TextMask animateOnScroll delay={index * 0.1}>
+                      <p className="text-base leading-relaxed">
+                        {bullet}
+                      </p>
+                    </TextMask>
+                  </div>
                 </li>
               ))}
             </ul>
-            </TextMask>
 
             {/* CTA Button */}
             <Button

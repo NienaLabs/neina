@@ -19,6 +19,7 @@ export default function TextMask({children,animateOnScroll=true,delay=0,blockCol
      // Get direct children to split
      const elements = Array.from(containerRef.current.children);
 
+    document.fonts.ready.then(() => {
      elements.forEach((element)=>{
         const split = new SplitText(element,{
             type:"lines",
@@ -53,7 +54,7 @@ export default function TextMask({children,animateOnScroll=true,delay=0,blockCol
      gsap.set(lines,{opacity:0})
      gsap.set(blocks,{scaleX:0,transformOrigin:"left center"})
      
-    const createAnimation = (block: HTMLElement, line: HTMLElement, index: number)=>{
+     const createAnimation = (block: HTMLElement, line: HTMLElement, index: number)=>{
         // Corrected stagger logic: index * stagger
         const tl = gsap.timeline({delay: delay + (index * stagger)})
         
@@ -94,6 +95,7 @@ export default function TextMask({children,animateOnScroll=true,delay=0,blockCol
             createAnimation(block, lines[index], index)
         })
     }
+  });
 
       // Cleanup function
       return () => {
@@ -113,7 +115,7 @@ export default function TextMask({children,animateOnScroll=true,delay=0,blockCol
     })
 
     return(
-    <div ref={containerRef} className="text-mask-container">
+    <div ref={containerRef} className="text-mask-container w-full">
         {children}
     </div>
 )

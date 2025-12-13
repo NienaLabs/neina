@@ -3,6 +3,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ResumeExtraction } from '@/components/resume/editor/types';
 import React from 'react';
+import { jsonrepair } from 'jsonrepair';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -402,3 +403,16 @@ export function parseVectorString(vectorStr: string | null | undefined): number[
 
 
 
+export function validJson(jsonString: string) {
+  try {
+    return JSON.parse(jsonString);
+  } catch {
+    try {
+      const repaired = jsonrepair(jsonString);
+      return JSON.parse(repaired);
+    } catch (repairError) {
+      console.error("Failed to repair JSON:", repairError);
+      return null;
+    }
+  }
+}

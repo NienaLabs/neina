@@ -1,15 +1,19 @@
-import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt } from "@/constants/prompts";
+import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt } from "@/constants/prompts";
 import { createAgent, openai } from "@inngest/agent-kit";
-import { lastAssistantTextMessageContent } from "@/lib/utils";
+import { lastAssistantTextMessageContent, validJson } from "@/lib/utils";
 
 
 
 function extractJson(str: string): string {
+  let jsonStr = str;
   const match = str.match(/```json\n([\s\S]*?)\n```/);
   if (match && match[1]) {
-    return match[1];
+    jsonStr = match[1];
   }
-  return str;
+  
+  // Attempt to parse/repair
+  const parsed = validJson(jsonStr);
+  return parsed ? JSON.stringify(parsed) : "{}";
 }
 
 export const parserAgent = createAgent({
@@ -105,3 +109,22 @@ export const experienceExtractorAgent = createAgent({
     },
   },
 });
+
+export const jobExtractorAgent = createAgent({
+  name: "job-extractor-agent",
+  system: jobExtractionPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.jobExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+

@@ -1,6 +1,5 @@
 "use client";
 
-import { RecruiterApplication } from "@prisma/client";
 import { format } from "date-fns";
 import {
     Table,

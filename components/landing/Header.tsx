@@ -84,7 +84,7 @@ const Header = () => {
                           Testimonials
                         </Link>
                         <Link 
-                          href="/Pricing" 
+                          href="/pricing" 
                           className="nav-link"
                         >
                           Pricing

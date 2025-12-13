@@ -22,7 +22,7 @@ interface TailoredResumeCardProps {
 
 const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPrimary, onDelete }) => {
   const scoreData = resume.scores;
-  const matchScore = scoreData ? Math.round(scoreData.overallScore * 100) : 0;
+  const matchScore = scoreData ? Math.round(scoreData.finalScore * 100) : 0;
 
   return (
     <Card className="group relative overflow-hidden border-border/50 bg-linear-to-br from-background to-muted/20 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full">
@@ -58,6 +58,24 @@ const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPr
              <span className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-wider">Match</span>
           </div>
         </div>
+
+        {/* Score Breakdown */}
+        {scoreData && (
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col items-center p-2 bg-muted/30 rounded-md border border-border/30">
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">Content</span>
+              <span className="text-sm font-bold text-foreground">{Math.round(scoreData.overallScore * 100)}%</span>
+            </div>
+            <div className="flex flex-col items-center p-2 bg-muted/30 rounded-md border border-border/30">
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">Skills</span>
+              <span className="text-sm font-bold text-foreground">{Math.round(scoreData.skillsScore * 100)}%</span>
+            </div>
+            <div className="flex flex-col items-center p-2 bg-muted/30 rounded-md border border-border/30">
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">Exp</span>
+              <span className="text-sm font-bold text-foreground">{Math.round(scoreData.experienceScore * 100)}%</span>
+            </div>
+          </div>
+        )}
 
         {/* Meta Info */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-4 border-t border-border/50">

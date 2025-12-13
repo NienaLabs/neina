@@ -2,8 +2,10 @@
 import { inngest } from './client'
 import prisma from '../lib/prisma'
 import { fetchJobs } from '../lib/jsearchClient'
-import generateChunksAndEmbeddings from '../lib/embeddings'
+import generateChunksAndEmbeddings, { generateEmbedding } from '../lib/embeddings'
 import { v4 as uuidv4 } from 'uuid';
+import { jobExtractorAgent } from './agents';
+import { createState } from '@inngest/agent-kit';
 
 
 type CategoryRow = {
@@ -163,49 +165,56 @@ async function safeInsertSkillRows(jobId: string, skills: string[], vectors: (nu
   }
 }
 /**********************
- * Helper: normalizeTextCandidates
- * Given a job item, extracts responsibilities and skills arrays (strings)
+ * Helper: extractJobDataWithLLM
+ * Combines all job sections and uses LLM to extract skills and responsibilities
  **********************/
-function extractBulletsFromJob(it: any): { respBullets: string[]; skillBullets: string[] } {
-  const respCandidates =
-    it.job_highlights?.Responsibilities ??
-    it.responsibilities ??
-    it.highlights?.responsibilities ??
-    null
+async function extractJobDataWithLLM(it: any): Promise<{ respBullets: string[]; skillBullets: string[] }> {
+  // Combine all job sections into one context
+  const jobTitle = it.job_title ?? it.position ?? it.title ?? '';
+  const jobDescription = it.job_description ?? it.description ?? '';
+  const qualifications = Array.isArray(it.job_highlights?.Qualifications)
+    ? it.job_highlights.Qualifications.join('\n')
+    : Array.isArray(it.qualifications)
+    ? it.qualifications.join('\n')
+    : '';
+  const responsibilities = Array.isArray(it.job_highlights?.Responsibilities)
+    ? it.job_highlights.Responsibilities.join('\n')
+    : Array.isArray(it.responsibilities)
+    ? it.responsibilities.join('\n')
+    : '';
 
-  const skillCandidates =
-    it.job_highlights?.Qualifications ??
-    it.qualifications ??
-    it.highlights?.qualifications ??
-    null
+  const combinedText = `
+# Job Title
+${jobTitle}
 
-  const respBullets = Array.isArray(respCandidates)
-    ? respCandidates.map((r: any) => String(r).trim()).filter(Boolean)
-    : typeof respCandidates === 'string'
-    ? respCandidates
-        .split(/\r?\n|•|\u2022/)
-        .map((s: string) => String(s).trim())
-        .filter(Boolean)
-    : []
+# Job Description
+${jobDescription}
 
-  const jobDescription = it.job_description ?? it.description ?? null
-  if (jobDescription) {
-    const descText = String(jobDescription).trim()
-    if (descText && !respBullets.includes(descText)) {
-      respBullets.push(descText)
-    }
+# Qualifications
+${qualifications}
+
+# Responsibilities
+${responsibilities}
+  `.trim();
+
+  // Use LLM to extract structured data
+  try {
+    const extractionState = createState<{ jobExtractorAgent: string }>({
+      jobExtractorAgent: ''
+    });
+    
+    const result = await jobExtractorAgent.run(combinedText, { state: extractionState });
+    const extracted = JSON.parse(result.state.data.jobExtractorAgent || '{}');
+    
+    return {
+      respBullets: extracted.responsibilities || [],
+      skillBullets: extracted.skills || []
+    };
+  } catch (err) {
+    console.error('[extractJobDataWithLLM] Error:', err);
+    // Fallback to empty arrays
+    return { respBullets: [], skillBullets: [] };
   }
-
-  const skillBullets = Array.isArray(skillCandidates)
-    ? skillCandidates.map((s: any) => String(s).trim()).filter(Boolean)
-    : typeof skillCandidates === 'string'
-    ? skillCandidates
-        .split(/\r?\n|,|;|•|\u2022/)
-        .map((s: string) => String(s).trim())
-        .filter(Boolean)
-    : []
-
-  return { respBullets, skillBullets }
 }
 
 /**********************
@@ -257,7 +266,7 @@ export const jsearchIngestCategory = inngest.createFunction(
 
         for (let idx = 0; idx < jobItems.length; idx++) {
           const it = jobItems[idx]
-          const { respBullets, skillBullets } = extractBulletsFromJob(it)
+          const { respBullets, skillBullets } = await extractJobDataWithLLM(it)
 
           // Prepare job object for storing (keeps original mapping)
           const jobForStore = {
@@ -274,6 +283,17 @@ export const jsearchIngestCategory = inngest.createFunction(
             responsibilities: it.job_highlights?.Responsibilities ?? it.responsibilities ?? [],
           }
 
+          // Generate full job embedding
+          const fullJobText = `${it.job_title ?? ''} ${it.job_description ?? ''} ${skillBullets.join(' ')} ${respBullets.join(' ')}`.trim();
+          let fullJobEmbedding: number[] | null = null;
+          try {
+            fullJobEmbedding = await step.run?.(`embed-full-job-${page}-${idx}`, async () => {
+              return await generateEmbedding(fullJobText);
+            });
+          } catch (err: any) {
+            await stepLog(step, 'embed-full-job-error', String(err), { page, idx, title: jobForStore.job_title });
+          }
+
           // Save job row first
           let savedJob: any
           try {
@@ -284,6 +304,22 @@ export const jsearchIngestCategory = inngest.createFunction(
             await stepLog(step, 'save-job-error', String(err), { page, idx, title: jobForStore.job_title })
             // skip to next job
             continue
+          }
+
+          // Store full job embedding
+          if (fullJobEmbedding) {
+            try {
+              await step.run?.(`store-job-embedding-${page}-${idx}`, async () => {
+                const formattedVector = `[${fullJobEmbedding.join(',')}]`;
+                await prisma.$executeRaw`
+                  UPDATE "jobs"
+                  SET "embedding" = ${formattedVector}::vector
+                  WHERE "id" = ${savedJob.id}
+                `;
+              });
+            } catch (err: any) {
+              await stepLog(step, 'store-job-embedding-error', String(err), { page, idx, jobId: savedJob.id });
+            }
           }
 
           // Compute embeddings (per-job). Use deterministic step name so retries are trackable.

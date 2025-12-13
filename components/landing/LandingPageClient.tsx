@@ -68,8 +68,8 @@ export default function LandingPage() {
         <Hero/>
         <Features />
         <div id="features-container" className="relative h-full  w-full overflow-hidden">
-        <div className="svg-path  max-[780px]:scale-150 max-[780px]:h-[150%]">
-      <svg id="feature-svg" className="max-[780px]:scale-150 max-[780px]:h-[150%]"  width="525" height="1238" viewBox="0 0 525 1238" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <div className="svg-path w-full h-full">
+      <svg id="feature-svg" className="w-full h-full" preserveAspectRatio="xMidYMid slice" width="525" height="1238" viewBox="0 0 525 1238" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g filter="url(#filter0_di_15_2)">
 <path id="stroke-path" d="M258.593 1179.01C243.967 1151.74 231.806 1104.87 234.648 1030.01C240.127 885.687 381.93 809.129 415.648 1005.01C256.345 1120.34 -32.7743 876.492 79.6483 699.008C192.071 521.524 546.877 479.167 455.648 634.008C364.42 788.849 287.675 613.294 249.648 481.008C211.621 348.721 339.648 276.008 363.648 364.008C387.648 452.008 14.6483 395.008 71.6483 270.008C128.648 145.008 280.166 96.294 357.648 50.0077" stroke="#4C14BD" stroke-width="100" stroke-linecap="round" shape-rendering="crispEdges"/>
 </g>

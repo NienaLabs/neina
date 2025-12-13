@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+/// <reference types="jest" />
 import {
   lastAssistantTextMessageContent,
   handleFieldChange,

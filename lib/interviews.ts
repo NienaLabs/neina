@@ -32,7 +32,7 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
   // Get user with remaining minutes
   const user = await prisma.user.findUnique({
     where: { id: data.user_id },
-    select: { remaining_minutes: true }
+    select: { interview_minutes: true }
   });
 
   if (!user) {
@@ -40,10 +40,10 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
   }
 
   // Check if user has sufficient time (at least 30 seconds)
-  // remaining_minutes is stored in MINUTES. Require at least 0.5 minutes (30 seconds).
-  if (user.remaining_minutes < 0.5) {
+  // interview_minutes is stored in MINUTES. Require at least 0.5 minutes (30 seconds).
+  if (user.interview_minutes < 0.5) {
     return {
-      interview: { id: null, start_time: new Date(), remaining_seconds: Math.max(0, Math.floor(user.remaining_minutes * 60)) },
+      interview: { id: null, start_time: new Date(), remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60)) },
       has_sufficient_time: false,
       warning: `No credits left. Please purchase more minutes to continue.`
     };
@@ -84,7 +84,7 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
       id: interview.id,
       start_time: interview.start_time,
       // convert minutes -> seconds for API response
-      remaining_seconds: Math.max(0, Math.floor(user.remaining_minutes * 60))
+      remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60))
     },
     has_sufficient_time: true
   };
@@ -99,7 +99,7 @@ export async function endInterview(interviewId: string, userId: string): Promise
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { remaining_minutes: true }
+      select: { interview_minutes: true }
     })
   ]);
 
@@ -132,26 +132,26 @@ export async function endInterview(interviewId: string, userId: string): Promise
     }
   });
 
-  // Atomic update: decrement remaining_minutes but never below 0
+  // Atomic update: decrement interview_minutes but never below 0
   const usedMinutes = Math.ceil(durationSeconds / 60);
 
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
-      remaining_minutes: {
+      interview_minutes: {
         decrement: usedMinutes
       }
     },
-    select: { remaining_minutes: true }
+    select: { interview_minutes: true }
   });
 
-  // Ensure remaining_minutes never goes below 0
-  if (updatedUser.remaining_minutes < 0) {
+  // Ensure interview_minutes never goes below 0
+  if (updatedUser.interview_minutes < 0) {
     await prisma.user.update({
       where: { id: userId },
-      data: { remaining_minutes: 0 }
+      data: { interview_minutes: 0 }
     });
-    updatedUser.remaining_minutes = 0;
+    updatedUser.interview_minutes = 0;
   }
 
   return {
@@ -161,7 +161,7 @@ export async function endInterview(interviewId: string, userId: string): Promise
       end_time: updatedInterview.end_time!,
       status: updatedInterview.status
     },
-    remaining_seconds: Math.max(0, updatedUser.remaining_minutes * 60)
+    remaining_seconds: Math.max(0, updatedUser.interview_minutes * 60)
   };
 }
 
@@ -201,20 +201,20 @@ export async function forceEndInterview(interviewId: string, userId: string): Pr
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
-      remaining_minutes: {
+      interview_minutes: {
         decrement: usedMinutes
       }
     },
-    select: { remaining_minutes: true }
+    select: { interview_minutes: true }
   });
 
-  // Ensure remaining_minutes never goes below 0
-  if (updatedUser.remaining_minutes < 0) {
+  // Ensure interview_minutes never goes below 0
+  if (updatedUser.interview_minutes < 0) {
     await prisma.user.update({
       where: { id: userId },
-      data: { remaining_minutes: 0 }
+      data: { interview_minutes: 0 }
     });
-    updatedUser.remaining_minutes = 0;
+    updatedUser.interview_minutes = 0;
   }
 
   return {
@@ -224,7 +224,7 @@ export async function forceEndInterview(interviewId: string, userId: string): Pr
       end_time: updatedInterview.end_time!,
       status: updatedInterview.status
     },
-    remaining_seconds: Math.max(0, updatedUser.remaining_minutes * 60)
+    remaining_seconds: Math.max(0, updatedUser.interview_minutes * 60)
   };
 }
 
@@ -238,7 +238,7 @@ export async function getRemainingTime(interviewId: string): Promise<{
     where: { id: interviewId },
     include: {
       user: {
-        select: { remaining_minutes: true }
+        select: { interview_minutes: true }
       }
     }
   });
@@ -250,12 +250,12 @@ export async function getRemainingTime(interviewId: string): Promise<{
   const elapsedSeconds = Math.floor((new Date().getTime() - interview.start_time.getTime()) / 1000);
 
   // If user has no minutes left, don't calculate negative time
-  if (interview.user.remaining_minutes <= 0) {
+  if (interview.user.interview_minutes <= 0) {
     return { remaining_seconds: 0, should_end: true };
   }
 
-  // remaining_minutes is in minutes; convert to seconds for countdown
-  const remainingSeconds = Math.floor(interview.user.remaining_minutes * 60) - elapsedSeconds;
+  // interview_minutes is in minutes; convert to seconds for countdown
+  const remainingSeconds = Math.floor(interview.user.interview_minutes * 60) - elapsedSeconds;
 
   let warning_level: 'low' | 'critical' | undefined;
   if (remainingSeconds <= 10 && remainingSeconds > 0) {

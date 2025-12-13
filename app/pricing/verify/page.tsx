@@ -35,6 +35,9 @@ export default function VerifyPaymentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reference]);
 
+  const from = searchParams.get("from");
+  const returnUrl = from || "/pricing"; // Default to pricing if not specified
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full p-8 bg-card border rounded-2xl shadow-lg text-center space-y-6">
@@ -54,8 +57,8 @@ export default function VerifyPaymentPage() {
              </div>
             <h2 className="text-2xl font-bold text-green-600">Payment Successful!</h2>
             <p className="text-muted-foreground">Your account has been updated with your new plan/credits.</p>
-            <Button className="w-full" onClick={() => router.push("/pricing")}>
-              Return to Pricing
+            <Button className="w-full" onClick={() => router.push(returnUrl)}>
+              Return to {from === "/dashboard" ? "Dashboard" : "Pricing"}
             </Button>
           </>
         )}
@@ -67,8 +70,8 @@ export default function VerifyPaymentPage() {
             </div>
             <h2 className="text-2xl font-bold text-red-600">Verification Failed</h2>
             <p className="text-muted-foreground">{message}</p>
-            <Button variant="outline" className="w-full" onClick={() => router.push("/pricing")}>
-              Return to Pricing
+            <Button variant="outline" className="w-full" onClick={() => router.push(returnUrl)}>
+              Return to {from === "/dashboard" ? "Dashboard" : "Pricing"}
             </Button>
           </>
         )}

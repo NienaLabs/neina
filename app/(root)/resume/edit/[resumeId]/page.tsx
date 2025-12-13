@@ -38,15 +38,18 @@ const Page = async ({ params }: Props) => {
 
     if (!resume) { return notFound() }
 
-    const { analysisData, scoreData, extractedData, name } = resume
+    const { analysisData, extractedData, name } = resume
     const role = 'role' in resume && resume.role ? resume.role : 'General'
     const isTailored = 'primaryResumeId' in resume;
+
+    // Safely access scores only if it exists (TailoredResume)
+    const scores = 'scores' in resume ? resume.scores : null;
 
     const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) as AnalysisData : { fixes: {} }
     const { fixes, ...fixCountRaw } = parsedAnalysisData
     const fixCount = fixCountRaw as Record<string, number>
     
-    const score = scoreData ? (typeof scoreData === 'string' ? JSON.parse(scoreData) : scoreData) as ScoreData : null
+    const score = scores ? (typeof scores === 'string' ? JSON.parse(scores) : scores) as ScoreData : null
     
     // Extract scores for tailored resumes
     const overallScore = score?.overallScore ?? 0;

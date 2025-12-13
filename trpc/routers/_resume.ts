@@ -17,6 +17,23 @@ export const resumeRouter = createTRPCRouter({
     .mutation(
         async({input,ctx})=>{
             try{
+         const user = await prisma.user.findUnique({
+            where: { id: ctx.session?.session.userId },
+            select: { resume_credits: true }
+         });
+
+         if (!user || user.resume_credits <= 0) {
+            throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Insufficient credits. Please upgrade your plan or purchase credits."
+            });
+         }
+
+         await prisma.user.update({
+             where: { id: ctx.session?.session.userId },
+             data: { resume_credits: { decrement: 1 } }
+         });
+
          await inngest.send({
            name:"app/primary-resume.created", 
            data:{
@@ -60,6 +77,18 @@ export const resumeRouter = createTRPCRouter({
     )
     .mutation(
         async({input,ctx})=>{
+            const user = await prisma.user.findUnique({
+                where: { id: ctx.session?.session.userId },
+                select: { resume_credits: true }
+            });
+
+            if (!user || user.resume_credits <= 0) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Insufficient credits. Please upgrade your plan or purchase credits."
+                });
+            }
+
             const primaryResume = await prisma.resume.findUnique({
                 where:{
                     id:input.primaryResumeId,
@@ -69,6 +98,12 @@ export const resumeRouter = createTRPCRouter({
             if(!primaryResume){
                 throw new TRPCError({code:"NOT_FOUND",message:"Primary resume not found"})
             }
+
+            await prisma.user.update({
+                where: { id: ctx.session?.session.userId },
+                data: { resume_credits: { decrement: 1 } }
+            });
+
          await inngest.send({
            name:"app/tailored-resume.created", 
            data:{
@@ -147,7 +182,7 @@ export const resumeRouter = createTRPCRouter({
 
                     await tx.resume.create({
                         data: {
-                            userId: ctx.session?.session.userId!,
+                            userId: ctx.session?.session.userId,
                             name: `${tailored.name} (Promoted)`,
                             content: tailored.content,
                             isPrimary: true,
@@ -246,6 +281,18 @@ export const resumeRouter = createTRPCRouter({
     .mutation(
         async({input, ctx}) => {
             const { resumeId, isTailored } = input;
+
+            const user = await prisma.user.findUnique({
+                where: { id: ctx.session?.session.userId },
+                select: { resume_credits: true }
+            });
+
+            if (!user || user.resume_credits <= 0) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Insufficient credits. Please upgrade your plan or purchase credits."
+                });
+            }
             
             if (isTailored) {
                 const tailoredResume = await prisma.tailoredResume.findUnique({
@@ -271,6 +318,11 @@ export const resumeRouter = createTRPCRouter({
                         console.error("Failed to convert extractedData to markdown", e);
                     }
                 }
+
+                await prisma.user.update({
+                    where: { id: ctx.session?.session.userId },
+                    data: { resume_credits: { decrement: 1 } }
+                });
 
                 await inngest.send({
                     name: "app/tailored-resume.updated",
@@ -308,6 +360,11 @@ export const resumeRouter = createTRPCRouter({
                         console.error("Failed to convert extractedData to markdown", e);
                     }
                 }
+
+                await prisma.user.update({
+                    where: { id: ctx.session?.session.userId },
+                    data: { resume_credits: { decrement: 1 } }
+                });
 
                 await inngest.send({
                     name: "app/resume.updated",

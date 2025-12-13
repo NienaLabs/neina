@@ -177,7 +177,7 @@ export default function DashboardPage() {
               {getGreeting()}, {data.name?.split(' ')[0] || 'there'}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Here's what's happening with your job search today.
+              Here&apos;s what&apos;s happening with your job search today.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

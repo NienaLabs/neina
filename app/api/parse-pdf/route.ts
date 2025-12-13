@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     },{status:201});
   } catch (error) {
     return NextResponse.json(
-      { message: "An error occurred while processing the PDF",success:false },
+      { message: `An error occurred while processing the PDF: ${error}`,success:false },
       { status: 500 }
     );
   }

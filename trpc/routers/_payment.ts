@@ -17,7 +17,7 @@ const PLANS = {
   },
   SILVER: {
     name: "Silver",
-    price: 79900, // in kobo (NGN 799)
+    price: 2900, // in cents ($29.00)
     features: ["30 job matches/week", "10 Resume AI credits/month"],
     credits: 10,
     minutes: 0,
@@ -25,7 +25,7 @@ const PLANS = {
   },
   GOLD: {
     name: "Gold",
-    price: 189900, // NGN 1899
+    price: 4900, // in cents ($49.00)
     features: ["60 job matches/week", "20 Resume AI credits/month", "15 interview mins/month"],
     credits: 20,
     minutes: 15,
@@ -33,7 +33,7 @@ const PLANS = {
   },
   DIAMOND: {
     name: "Diamond",
-    price: 349900, // NGN 3499
+    price: 9900, // in cents ($99.00)
     features: ["Unlimited matches", "30 Resume AI credits/month", "60 interview mins/month"],
     credits: 30,
     minutes: 60,
@@ -52,7 +52,7 @@ export const paymentRouter = createTRPCRouter({
     .input(
       z.object({
         amount: z.number(), // In kobo
-        email: z.string().email(),
+        email: z.email(),
         type: z.enum(["SUBSCRIPTION", "CREDIT_PURCHASE", "MINUTE_PURCHASE"]),
         plan: z.enum(["FREE", "SILVER", "GOLD", "DIAMOND"]).optional(),
         credits: z.number().optional(),
@@ -108,7 +108,7 @@ export const paymentRouter = createTRPCRouter({
 
   verifyTransaction: protectedProcedure
     .input(z.object({ reference: z.string() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const transaction = await prisma.transaction.findUnique({
         where: { reference: input.reference },
       });
@@ -163,5 +163,19 @@ export const paymentRouter = createTRPCRouter({
         });
         throw new TRPCError({ code: "BAD_REQUEST", message: "Payment failed verification" });
       }
+    }),
+  cancelSubscription: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      // Downgrade user to FREE plan
+      await prisma.user.update({
+        where: { id: ctx.session.user.id },
+        data: {
+          plan: "FREE",
+          planExpiresAt: null, // Clear expiration or should we let it expire? 
+          // If cancelling means "I don't want this anymore", usually for one-time sub it means effectively nothing unless we refund.
+          // But user asked for "ability to cancel". I'll reset to FREE.
+        },
+      });
+      return { success: true };
     }),
 });

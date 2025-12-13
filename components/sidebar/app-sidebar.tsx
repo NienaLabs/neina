@@ -11,10 +11,11 @@ import {
 import { data } from "@/constants/constant"
 import SideBarFooter from "./sidebar-footer"
 import Image from 'next/image'
+import SidebarUsage from "./sidebar-usage"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className="border-r-0 bg-linear-to-b from-transparent via-violet-200 to-transparent" {...props}>
+    <Sidebar className="border-r-0 bg-linear-to-b from-sidebar via-indigo-200 to-sidebar" {...props}>
       <SidebarHeader>
         
         <Image src="/logo.png" width={100} height={30} alt="logo"/>
@@ -22,7 +23,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <SideBarFooter/>
+        <div className="mt-auto">
+             <SidebarUsage />
+             <SideBarFooter/>
+        </div>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

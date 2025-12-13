@@ -28,7 +28,7 @@ const PLANS = [
   {
     key: "SILVER",
     name: "Silver / Basic",
-    price: "₦799/mo",
+    price: "$29/mo",
     description: "Affordable for early job seekers.",
     features: [
       { text: "30 job matches per week", included: true },
@@ -36,12 +36,12 @@ const PLANS = [
       { text: "No Interview AI access", included: false },
     ],
     highlight: false,
-    priceVal: 79900,
+    priceVal: 2900,
   },
   {
     key: "GOLD",
     name: "Gold / Pro",
-    price: "₦1,899/mo",
+    price: "$49/mo",
     description: "Best for active job seekers.",
     features: [
       { text: "60 job matches per week", included: true },
@@ -49,27 +49,31 @@ const PLANS = [
       { text: "15 minutes of Interview AI per month", included: true },
     ],
     highlight: true,
-    priceVal: 189900,
+    priceVal: 4900,
   },
   {
     key: "DIAMOND",
     name: "Diamond / Elite",
-    price: "₦3,499/mo",
+    price: "$99/mo",
     description: "For serious job hunters who want maximum advantage.",
     features: [
-      { text: "Unlimited matches", included: true }, // Assumed unlimited based on "Diamond" usually being top
+      { text: "Unlimited matches", included: true },
       { text: "30 Resume AI credits per month", included: true },
       { text: "60 Interview AI minutes per month", included: true },
       { text: "4 Interview AI sessions (15m each)", included: true },
     ],
     highlight: false,
-    priceVal: 349900,
+    priceVal: 9900,
   },
 ];
 
 export default function PricingPage() {
   const router = useRouter();
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  
+  // Fetch user data
+  const { data: user, refetch } = trpc.user.getMe.useQuery(); 
+
   const initiateTransaction = trpc.payment.initiateTransaction.useMutation({
     onSuccess: (data) => {
       // Redirect to Paystack
@@ -81,66 +85,21 @@ export default function PricingPage() {
     },
   });
 
-  const handleSubscribe = (plan: typeof PLANS[0]) => {
-    if (plan.key === "FREE") {
-      toast.info("You are already on the Free plan!");
-      return;
-    }
-    setLoadingKey(plan.key);
-    initiateTransaction.mutate({
-      email: "user@example.com", // TODO: Get actual user email from session
-      amount: plan.priceVal,
-      type: "SUBSCRIPTION",
-      plan: plan.key as any,
-      callbackUrl: `${window.location.origin}/pricing/verification`, // We need to create this page
-    });
-  };
+  const cancelSubscription = trpc.payment.cancelSubscription.useMutation({
+    onSuccess: () => {
+      toast.success("Subscription cancelled. You are now on the Free plan.");
+      setLoadingKey(null);
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to cancel subscription");
+      setLoadingKey(null);
+    },
+  });
 
-  const handleBuyCredits = (credits: number, price: number) => {
-    const key = `credits-${credits}`;
-    setLoadingKey(key);
-    initiateTransaction.mutate({
-      email: "user@example.com", // TODO: Get actual user email
-      amount: price * 100, // Convert to kobo
-      type: "CREDIT_PURCHASE",
-      credits: credits,
-      callbackUrl: `${window.location.origin}/pricing/verification`,
-    });
-  };
-
-   const handleBuyMinutes = (minutes: number, price: number) => {
-    const key = `minutes-${minutes}`;
-    setLoadingKey(key);
-    initiateTransaction.mutate({
-      email: "user@example.com", // TODO: Get actual user email
-      amount: price * 100, // Convert to kobo
-      type: "MINUTE_PURCHASE",
-      minutes: minutes,
-      callbackUrl: `${window.location.origin}/pricing/verification`,
-    });
-  };
-
-  // We need to fetch the user to get their email, or we can assume the backend gets it from ctx if passed empty?
-  // Our backend explicitly requires email in input Zod schema.
-  // So we MUST get the user email.
-  // Let's use trpc.user.me or similar if available, or session.
-  // Adding a stub for user fetching:
-  const { data: user } = trpc.user.getMe.useQuery(); 
-  // Assuming getMe exists or similar. If not, we might need to adjust.
-  // I will check if trpc.user.getMe exists or similar. I'll invoke the tool first to check.
-  // For now I'll use a placeholder and fix it if needed.
-
-  const safeHandleSubscribe = (plan: typeof PLANS[0]) => {
-     if(!user?.email) {
-         toast.error("Please log in to subscribe");
-         return;
-     }
-     handleSubscribe(plan); // Logic above needs to use user.email
-  }
-   // Updating handleSubscribe to use user.email... simpler to just do logic here
    const onSubscribe = (plan: typeof PLANS[0]) => {
       if (!user) return toast.error("Please login");
-      if (plan.key === "FREE") return toast.info("You are on Free plan");
+      if (plan.key === user.plan) return; // Already on plan
       
       setLoadingKey(plan.key);
       initiateTransaction.mutate({
@@ -148,20 +107,26 @@ export default function PricingPage() {
           amount: plan.priceVal,
           type: "SUBSCRIPTION",
           plan: plan.key as any,
-          callbackUrl: `${window.location.origin}/pricing/verify`, 
+          callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`, 
       });
    }
    
+   const onCancelPlan = () => {
+      if (!confirm("Are you sure you want to cancel your current plan? You will lose remaining benefits immediately.")) return;
+      setLoadingKey("cancel");
+      cancelSubscription.mutate();
+   }
+
    const onBuyCredits = (credits: number, price: number) => {
       if (!user) return toast.error("Please login");
       const key = `credits-${credits}`;
       setLoadingKey(key);
        initiateTransaction.mutate({
           email: user.email,
-          amount: price * 100, // to kobo
+          amount: price * 100, // to cents
           type: "CREDIT_PURCHASE",
           credits: credits,
-          callbackUrl: `${window.location.origin}/pricing/verify`,
+          callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`,
       });
    }
 
@@ -171,10 +136,10 @@ export default function PricingPage() {
       setLoadingKey(key);
        initiateTransaction.mutate({
           email: user.email,
-          amount: price * 100, // to kobo
+          amount: price * 100, // to cents
           type: "MINUTE_PURCHASE",
           minutes: minutes,
-          callbackUrl: `${window.location.origin}/pricing/verify`,
+          callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`,
       });
    }
 
@@ -184,7 +149,7 @@ export default function PricingPage() {
         
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r font-sans from-primary to-primary/60">
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-clip-text text-transparent bg-linear-to-r font-sans from-primary to-primary/60">
             Pricing that Scales with Your Career
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -194,17 +159,25 @@ export default function PricingPage() {
 
         {/* Subscription Plans */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {PLANS.map((plan) => (
+          {PLANS.map((plan) => {
+             const isCurrentPlan = user?.plan === plan.key;
+             return (
             <Card 
               key={plan.key} 
               className={cn(
                 "relative flex flex-col transition-all duration-200 hover:shadow-xl",
-                plan.highlight ? "border-primary shadow-lg scale-105 z-10" : "border-border"
+                plan.highlight ? "border-primary shadow-lg scale-105 z-10" : "border-border",
+                isCurrentPlan ? "border-indigo-500 ring-2 ring-offset-2" : ""
               )}
             >
               {plan.highlight && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
                   Most Popular
+                </div>
+              )}
+              {isCurrentPlan && (
+                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  Current Plan
                 </div>
               )}
               <CardHeader>
@@ -231,18 +204,31 @@ export default function PricingPage() {
                   ))}
                 </ul>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col gap-2">
                  <Button 
                     className="w-full" 
-                    variant={plan.highlight ? "default" : "outline"}
+                    variant={isCurrentPlan ? "outline" : (plan.highlight ? "default" : "outline")}
                     onClick={() => onSubscribe(plan)}
-                    disabled={loadingKey !== null}
+                    disabled={loadingKey !== null || isCurrentPlan || (plan.key === "FREE" && user?.plan !== "FREE")} // Disable Free if checking downgrade logic separately, or let them switch?
+                    // Actually, if user is on Paid and clicks Free, that's effectively "Cancel".
+                    // But our logic for FREE button checks "Current Plan".
                  >
-                    {loadingKey === plan.key ? <Loader2 className="animate-spin h-4 w-4" /> : (plan.key === "FREE" ? "Current Plan" : "Upgrade")}
+                    {loadingKey === plan.key ? <Loader2 className="animate-spin h-4 w-4" /> : (isCurrentPlan ? "Current Plan" : (plan.key === "FREE" ? "Sign Up Free" : "Upgrade"))}
                  </Button>
+                 
+                 {isCurrentPlan && plan.key !== "FREE" && (
+                     <Button 
+                        className="w-full"
+                        variant="ghost"
+                        onClick={onCancelPlan}
+                        disabled={loadingKey !== null}
+                     >
+                        {loadingKey === "cancel" ? <Loader2 className="animate-spin h-4 w-4" /> : "Cancel Plan"}
+                     </Button>
+                 )}
               </CardFooter>
             </Card>
-          ))}
+          )})}
         </div>
 
         {/* Separator */}
@@ -272,7 +258,6 @@ export default function PricingPage() {
                     <div className="font-semibold">1 Minute</div>
                     <div className="text-sm text-muted-foreground">$1.50 / min</div>
                   </div>
-                  {/* Min purchase usually higher, but prompt says $1.50 per min. Let's offer reasonable packs */}
                   <div className="text-right">
                     <div className="font-bold">$1.50</div>
                   </div>
@@ -327,7 +312,6 @@ export default function PricingPage() {
                 ))}
             </div>
           </div>
-
         </div>
       </div>
     </div>

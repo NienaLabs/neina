@@ -3,6 +3,7 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { cache } from 'react';
 import superjson from 'superjson';
 import { headers } from 'next/headers'
+import prisma from "@/lib/prisma";
 
 export const createTRPCContext = cache(async () => {
   /**
@@ -25,7 +26,9 @@ const t = initTRPC.context<Context>().create({
   transformer: superjson,
 });
 
-const isAuthed = t.middleware(({ next, ctx }) => {
+
+
+const isAuthed = t.middleware(async ({ next, ctx }) => {
   if (!ctx.session?.user) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
@@ -33,11 +36,40 @@ const isAuthed = t.middleware(({ next, ctx }) => {
     });
   }
 
-  if (ctx.session.user.isSuspended) {
+  const user = ctx.session.user as any; // Type assertion as better-auth types might not reflect custom schema immediately without augmentation
+
+  if (user.isSuspended) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Your account has been suspended. Please contact support.',
     });
+  }
+
+  // Check Subscription Expiration
+  if (user.plan !== "FREE" && user.planExpiresAt) {
+    const expiresAt = new Date(user.planExpiresAt);
+    if (expiresAt < new Date()) {
+      // Downgrade user
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          plan: "FREE",
+          planExpiresAt: null,
+          // Optional: Reset credits/minutes or keep them? Usually keep purchased ones, but monthly allowance?
+          // For simplicity, we just switch plan to FREE.
+        },
+      });
+      console.log(`User ${user.id} subscription expired. Downgraded to FREE.`);
+      
+      // Update session user object explicitly so downstream procedures see FREE
+      user.plan = "FREE";
+      user.planExpiresAt = null;
+
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "SUBSCRIPTION_EXPIRED",
+      });
+    }
   }
 
   return next({

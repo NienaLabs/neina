@@ -13,7 +13,7 @@ export async function createTavusConversation(role?: string, description?: strin
   }
 
   const requestBody: any = {
-    persona_id: PERSONA_ID, 
+    persona_id: PERSONA_ID,
     replica_id: REPLICA_ID,
   };
 
@@ -27,7 +27,7 @@ export async function createTavusConversation(role?: string, description?: strin
       context += `. The candidate has the following background/experience: ${description}`;
     }
     context += ". Please tailor your questions to assess their suitability for this specific role and experience level.";
-    
+
     requestBody.conversational_context = context;
   }
 
@@ -47,7 +47,7 @@ export async function createTavusConversation(role?: string, description?: strin
 
   const data = await res.json();
   console.log('Full Tavus API response:', data);
-  
+
   if (!data?.conversation_url) {
     throw new Error("Tavus API did not return conversation_url");
   }
@@ -56,7 +56,7 @@ export async function createTavusConversation(role?: string, description?: strin
     throw new Error("Tavus API did not return conversation_id");
   }
 
-  return { 
+  return {
     url: data.conversation_url,
     conversation_id: data.conversation_id
   };
@@ -71,8 +71,8 @@ export async function createTavusConversation(role?: string, description?: strin
 export async function endTavusConversation(conversation_id: string): Promise<{ success: boolean; alreadyEnded: boolean }> {
   const API_KEY = process.env.TAVUS_API_KEY;
 
-  console.log('endTavusConversation called with:', { 
-    conversation_id, 
+  console.log('endTavusConversation called with:', {
+    conversation_id,
     hasApiKey: !!API_KEY,
     conversationIdLength: conversation_id?.length,
     conversationIdType: typeof conversation_id
@@ -87,7 +87,7 @@ export async function endTavusConversation(conversation_id: string): Promise<{ s
   }
 
   console.log(`conversation_id format check: ${conversation_id} (length: ${conversation_id.length})`);
-  
+
   // Validate conversation_id format (should be a UUID-like string)
   if (conversation_id.length < 10) {
     console.error('conversation_id seems too short:', conversation_id);
@@ -107,7 +107,7 @@ export async function endTavusConversation(conversation_id: string): Promise<{ s
       },
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeout);
 
     console.log(`Tavus API response status: ${res.status} ${res.statusText}`);
@@ -176,7 +176,7 @@ export async function deleteTavusConversation(conversation_id: string): Promise<
       },
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeout);
 
     // 404 means already deleted - that's fine (idempotent)
@@ -199,3 +199,41 @@ export async function deleteTavusConversation(conversation_id: string): Promise<
     throw error;
   }
 }
+
+/**
+ * getTavusConversation
+ * Server-side only function to get conversation details including transcript and perception data.
+ */
+export async function getTavusConversation(conversation_id: string): Promise<any> {
+  const API_KEY = process.env.TAVUS_API_KEY;
+
+  if (!API_KEY) {
+    throw new Error("TAVUS_API_KEY is not configured");
+  }
+
+  if (!conversation_id) {
+    throw new Error("conversation_id is required");
+  }
+
+  // Validate conversation_id format
+  if (conversation_id.length < 10) {
+    throw new Error("Invalid conversation_id format");
+  }
+
+  const url = `https://tavusapi.com/v2/conversations/${conversation_id}?verbose=true`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "x-api-key": API_KEY,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to fetch Tavus conversation: ${res.status} - ${text}`);
+  }
+
+  return await res.json();
+}
+

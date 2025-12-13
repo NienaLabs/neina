@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useSession } from '@/auth-client';
 import { Conversation } from '@/components/cvi/components/conversation';
 import { CVIProvider } from '@/components/cvi/components/cvi-provider';
+import { toast } from 'sonner';
 import { useDaily } from '@daily-co/daily-react';
+
 import { InterviewTimer } from '@/components/interview-timer';
 import {
   Loader2,
@@ -56,7 +58,7 @@ const VideoInterview = () => {
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -93,29 +95,11 @@ const VideoInterview = () => {
     }
     setIsConnecting(true);
     setConversationState('connecting');
-    setError(null);
     setConnectionStartTime(Date.now());
+
     setHasTimedOut(false);
     try {
-      // Create Tavus conversation first
-      const tavusResponse = await fetch('/api/tavus/conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ role, description }),
-      });
-
-      const tavusData: TavusConversationResponse = await tavusResponse.json();
-
-      if (!tavusResponse.ok) {
-        throw new Error(tavusData.error || 'Failed to create conversation');
-      }
-
-      setConversationUrl(tavusData.url || null);
-      setConversationId(tavusData.conversation_id || null);
-
-      // Now create interview with conversation_id
+      // Create interview and Tavus conversation in one go
       const response = await fetch('/api/interviews/start', {
         method: 'POST',
         headers: {
@@ -124,7 +108,6 @@ const VideoInterview = () => {
         body: JSON.stringify({
           role,
           description,
-          conversation_id: tavusData.conversation_id,
         }),
       });
 
@@ -132,34 +115,28 @@ const VideoInterview = () => {
 
       if (!response.ok) {
         if (response.status === 400) {
-          setError(startData.error);
+          toast.error(startData.error);
           setRemainingSeconds(startData.remaining_seconds || 0);
           return;
         }
+
         throw new Error(startData.error || 'Failed to start interview');
       }
 
+      setConversationUrl(startData.conversation_url);
+      setConversationId(startData.conversation_id);
       setInterviewId(startData.interview_id);
       setRemainingSeconds(startData.remaining_seconds);
       setConversationState('active');
       setIsVideoOn(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start video conversation');
+      toast.error(err instanceof Error ? err.message : 'Failed to start video conversation');
       setConversationState('idle');
-
-      // Cleanup orphaned Tavus conversation if it was created
-      if (tavusData?.conversation_id) {
-        try {
-          await fetch(`/api/tavus/conversation/${tavusData.conversation_id}`, {
-            method: 'DELETE'
-          });
-        } catch (cleanupErr) {
-          console.error('Failed to cleanup Tavus conversation:', cleanupErr);
-        }
-      }
     } finally {
+
       setIsConnecting(false);
     }
+
   };
 
   // Retry connection
@@ -260,22 +237,12 @@ const VideoInterview = () => {
       return;
     }
 
-    console.log('Time expired: Ending interview in 10 seconds...');
+    console.log('Time expired, ending interview immediately...');
 
-    // Set all the states immediately
-    setShowTimeWarning('Your interview time has expired! The session will end in 10 seconds...');
-    setConversationState('ending');
-    setIsEnding(true);
-    setHasTimedOut(true);
-
+    // 1. First try to leave the call to stop any ongoing streams
     try {
-      // Show the warning for 10 seconds
-      await new Promise(resolve => setTimeout(resolve, 10000));
-
-      console.log('10 seconds elapsed, ending interview now...');
-
-      // 1. First try to leave the call to stop any ongoing streams
       try {
+
         // FIXED: Check meetingState before leaving
         if (dailyCall && dailyCall.meetingState() === 'joined-meeting') {
           console.log('Leaving Daily call...');
@@ -469,22 +436,7 @@ const VideoInterview = () => {
           </div>
         )}
 
-        {/* Error Overlay */}
-        {error && (
-          <div className="absolute top-4 right-4 max-w-md">
-            <Card className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
-              <CardContent className="pt-6">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-red-800 dark:text-red-200">Connection Error</p>
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+
       </div>
 
       {/* Role Selection Dialog */}

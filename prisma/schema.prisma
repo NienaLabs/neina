@@ -174,8 +174,14 @@ model interview {
   status           InterviewStatus @default(SCHEDULED)
   role             String?
   description      String?
+
   conversation_id  String?
-  user             User            @relation(fields: [user_id], references: [id])
+  transcript       Json?
+  perceptionData   Json?
+  analysisScore    Float?
+  analysisFeedback String?
+  analyzedAt       DateTime?
+  user             User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id, status])
   @@index([conversation_id])
@@ -280,6 +286,7 @@ enum InterviewStatus {
   ACTIVE
   ENDED
   TIMEOUT
+  ANALYZED
 }
 
 model SupportTicket {

@@ -49,9 +49,12 @@ export async function GET(req: Request) {
                 }
             }),
 
-            // 3. Interview stats (count)
+            // 3. Interview stats (count) - Include both ENDED and ANALYZED
             prisma.interview.count({
-                where: { user_id: userId, status: 'ENDED' }
+                where: {
+                    user_id: userId,
+                    status: { in: ['ENDED', 'ANALYZED'] }
+                }
             }),
 
             // 4. Recent interviews
@@ -165,7 +168,7 @@ export async function GET(req: Request) {
                 type: 'interview',
                 title: `Interview for ${i.role || 'Unknown Role'}`,
                 date: i.start_time,
-                status: i.status === 'ENDED' ? 'completed' : i.status === 'ACTIVE' ? 'in-progress' : 'pending',
+                status: i.status, // Return actual status: ENDED, ANALYZED, ACTIVE, etc.
                 id: i.id
             })),
             ...resumes.slice(0, 3).map(r => ({

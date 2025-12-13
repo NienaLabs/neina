@@ -71,7 +71,8 @@ const MainVideo = React.memo(({ onLeave }: { onLeave: () => void }) => {
       if (!replicaId) {
         setShowTimeout(true);
       }
-    }, 10000);
+    }, 30000); // Increased to 30s to allow for cold starts
+
 
     return () => clearTimeout(timer);
   }, [replicaId]);
@@ -83,13 +84,15 @@ const MainVideo = React.memo(({ onLeave }: { onLeave: () => void }) => {
   if (!replicaId) {
     return (
       <div className={styles.waitingContainer}>
-        <p>{showTimeout ? "Interviewer is taking longer than expected. The interview link may have expired." : "Connecting..."}</p>
+        <p>{showTimeout ? "AI Interviewer is taking a moment to join..." : "Connecting..."}</p>
+
         {showTimeout && (
           <button
             onClick={handleLeave}
             className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-white"
           >
-            Get New Link
+            Retrying...
+
           </button>
         )}
       </div>
@@ -199,8 +202,8 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
           </div>
         )}
 
-        {/* Show meeting error if present */}
-        {(meetingState === 'error' || meetingState === 'left-meeting') && (
+        {/* Show meeting error if present - but NOT just because we left */}
+        {(meetingState === 'error') && (
           <div className={styles.errorContainer}>
             <p>Meeting has ended. The interview link may have expired.</p>
             <button

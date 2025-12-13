@@ -5,14 +5,19 @@ export interface InterviewData {
   role?: string;
   description?: string;
   conversation_id?: string;
+  conversation_url?: string;
 }
+
 
 export interface InterviewStartResult {
   interview: {
     id: string | null;
     start_time: Date;
     remaining_seconds: number;
+    conversation_url?: string | null;
+    conversation_id?: string;
   };
+
   has_sufficient_time: boolean;
   warning?: string;
 }
@@ -43,7 +48,13 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
   // interview_minutes is stored in MINUTES. Require at least 0.5 minutes (30 seconds).
   if (user.interview_minutes < 0.5) {
     return {
-      interview: { id: null, start_time: new Date(), remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60)) },
+      interview: {
+        id: null,
+        start_time: new Date(),
+        remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60)),
+        conversation_url: null
+      },
+
       has_sufficient_time: false,
       warning: `No credits left. Please purchase more minutes to continue.`
     };
@@ -84,8 +95,11 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
       id: interview.id,
       start_time: interview.start_time,
       // convert minutes -> seconds for API response
-      remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60))
+      remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60)),
+      conversation_url: data.conversation_url,
+      conversation_id: interview.conversation_id || undefined
     },
+
     has_sufficient_time: true
   };
 }

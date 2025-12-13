@@ -255,6 +255,40 @@ export default function DashboardPage() {
                           <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 font-normal">
                             {activity.status}
                           </Badge>
+                          {activity.type === 'interview' && activity.status === 'ANALYZED' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 text-xs"
+                              onClick={() => router.push(`/interviews/${activity.id}/result`)}
+                            >
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              View Report
+                            </Button>
+                          )}
+                          {activity.type === 'interview' && activity.status === 'ENDED' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 text-xs"
+                              onClick={async () => {
+                                toast.loading('Generating analysis...', { id: activity.id });
+                                try {
+                                  const res = await fetch(`/api/interviews/${activity.id}/analyze`, {
+                                    method: 'POST'
+                                  });
+                                  if (!res.ok) throw new Error('Failed to generate analysis');
+                                  toast.success('Analysis complete!', { id: activity.id });
+                                  router.push(`/interviews/${activity.id}/result`);
+                                } catch (error) {
+                                  toast.error('Failed to generate analysis', { id: activity.id });
+                                }
+                              }}
+                            >
+                              <Zap className="h-3 w-3 mr-1" />
+                              Generate Report
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

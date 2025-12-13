@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { startInterview } from "@/lib/interviews";
 import { auth } from "@/lib/auth";
+import { createTavusConversation } from "@/lib/tavus";
+
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     console.log('Request body:', body);
-    const { role, description, conversation_id } = body;
+    const { role, description } = body;
+
 
     if (!role || typeof role !== 'string') {
       console.log('Validation failed: role missing or invalid', { role, type: typeof role });
@@ -20,10 +23,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Description must be a string if provided" }, { status: 400 });
     }
 
-    if (!conversation_id || typeof conversation_id !== 'string') {
-      console.log('Validation failed: conversation_id missing or invalid', { conversation_id, type: typeof conversation_id });
-      return NextResponse.json({ error: "Conversation ID is required" }, { status: 400 });
-    }
+    // conversation_id is no longer required from client as we create it here
+
 
     // Get authenticated session
     const session = await auth.api.getSession({
@@ -99,12 +100,24 @@ export async function POST(request: Request) {
         },
         has_sufficient_time: true as const,
       }
-      : await startInterview({
-        user_id: userId,
-        role,
-        description,
-        conversation_id, // Use the conversation_id from frontend
-      });
+      : await (async () => {
+        // Create Tavus conversation ONLY after credit checks pass
+        console.log('Creating Tavus conversation for user:', userId);
+        const tavusResult = await createTavusConversation(role, description || `Interview for ${role}`);
+
+        if (!tavusResult?.url || !tavusResult?.conversation_id) {
+          throw new Error('Failed to create Tavus conversation');
+        }
+
+        return startInterview({
+          user_id: userId,
+          role,
+          description,
+          conversation_id: tavusResult.conversation_id,
+          conversation_url: tavusResult.url
+        });
+      })();
+
 
     console.log('Interview creation result:', {
       success: !!result,
@@ -124,8 +137,9 @@ export async function POST(request: Request) {
       interview_id: result.interview.id,
       start_time: result.interview.start_time,
       remaining_seconds: result.interview.remaining_seconds,
-      conversation_url: conversation_id ? null : undefined, // Frontend already has the URL
-      conversation_id: conversation_id
+      conversation_url: result.interview.conversation_url,
+      conversation_id: result.interview.conversation_id
+
     });
 
   } catch (err: any) {

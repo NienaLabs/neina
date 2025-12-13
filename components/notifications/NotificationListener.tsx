@@ -14,9 +14,9 @@ export function NotificationListener() {
     const lastCountRef = useRef<number | null>(null);
     const isInitializedRef = useRef(false);
 
-    // Poll for unread count every 30 seconds
+    // Poll for unread count every 60 seconds
     const { data: unreadCount } = trpc.notifications.getUnreadCount.useQuery(undefined, {
-        refetchInterval: 30000, // 30 seconds
+        refetchInterval: 60000, // 60 seconds
     });
 
     useEffect(() => {
@@ -48,7 +48,7 @@ export function NotificationListener() {
                         label: "View",
                         onClick: () => {
                             // The user can click the notification bell to view
-                            document.querySelector('[data-notification-bell]')?.dispatchEvent(new Event('click'));
+                            document.querySelector('[data-notification-bell]')?.dispatchEvent(new Event('/notifications'));
                         },
                     },
                 }

@@ -89,16 +89,18 @@ export const resumeRouter = createTRPCRouter({
             const resumes = await prisma.resume.findMany({
                 where:{
                     userId:ctx.session?.session.userId,
-                    isPrimary:true
+                    // Fetch all resumes
                 },
                 include:{
                     tailoredResumes:true
+                },
+                orderBy: {
+                    isPrimary: 'desc'
                 }
             })
             return resumes}
-            catch(e){
-                console.log(e)
-                throw new TRPCError({code:"NOT_FOUND",message:`error: + ${e}`})
+            catch{
+                throw new TRPCError({code:"NOT_FOUND",message:`error: + ${"unknown error"}`})
             }
         }
     ),
@@ -116,12 +118,14 @@ export const resumeRouter = createTRPCRouter({
     setPrimary: protectedProcedure
     .input(
         z.object({
-            resumeId:z.string()
+            resumeId:z.string(),
+            isTailored: z.boolean().optional().default(false)
         })
     )
     .mutation(
         async({input,ctx})=>{
             await prisma.$transaction(async(tx)=>{
+                // Unset current primary
                 await tx.resume.updateMany({
                     where:{
                         userId:ctx.session?.session.userId,
@@ -131,15 +135,39 @@ export const resumeRouter = createTRPCRouter({
                         isPrimary:false
                     }
                 })
-                await tx.resume.update({
-                    where:{
-                        id:input.resumeId,
-                        userId:ctx.session?.session.userId
-                    },
-                    data:{
-                        isPrimary:true
+
+                if (input.isTailored) {
+                    const tailored = await tx.tailoredResume.findUnique({
+                        where: { id: input.resumeId, userId: ctx.session?.session.userId }
+                    });
+                    
+                    if (!tailored) {
+                        throw new TRPCError({ code: "NOT_FOUND", message: "Tailored resume not found" });
                     }
-                })
+
+                    await tx.resume.create({
+                        data: {
+                            userId: ctx.session?.session.userId!,
+                            name: `${tailored.name} (Promoted)`,
+                            content: tailored.content,
+                            isPrimary: true,
+                            extractedData: tailored.extractedData || undefined,
+                            analysisData: tailored.analysisData || undefined,
+                            scoreData: tailored.scores || undefined,
+                        }
+                    });
+                } else {
+                    // Set existing primary resume
+                    await tx.resume.update({
+                        where:{
+                            id:input.resumeId,
+                            userId:ctx.session?.session.userId
+                        },
+                        data:{
+                            isPrimary:true
+                        }
+                    })
+                }
             })
         }
     ),

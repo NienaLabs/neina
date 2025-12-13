@@ -3,7 +3,7 @@ import { createNetwork, createState } from "@inngest/agent-kit";
 import { v4 as uuidv4 } from 'uuid';
 import prisma from "@/lib/prisma";
 import { parserAgent, analysisAgent, scoreAgent, skillsExtractorAgent, experienceExtractorAgent } from "./agents";
-import generateChunksAndEmbeddings from "@/lib/embeddings";
+import generateChunksAndEmbeddings, { generateEmbedding } from "@/lib/embeddings";
 
 interface AgentState {
   parserAgent:string;
@@ -197,6 +197,21 @@ export const resumeCreated = inngest.createFunction(
       }
     });
 
+    // Generate and save full resume embedding
+    await step.run("save-full-resume-embedding", async () => {
+      try {
+        const fullResumeEmbedding = await generateEmbedding(event.data.content);
+        const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
+        await prisma.$executeRaw`
+          UPDATE "resume"
+          SET "embedding" = ${formattedVector}::vector
+          WHERE "id" = ${savedResumeId}
+        `;
+      } catch (err) {
+        console.error("[resumeCreated] Failed to generate/save full resume embedding:", err);
+      }
+    });
+
     return result // Final stage (scoreAgent) output
   }
 );
@@ -263,6 +278,21 @@ export const resumeUpdated = inngest.createFunction(
         await embedAndSaveSkillsExperience(event.data.resumeId, skills, certifications, experiences);
       } catch (err) {
         console.error("[resumeUpdated] Failed to parse extraction results:", err);
+      }
+    });
+
+    // Generate and save full resume embedding
+    await step.run("update-full-resume-embedding", async () => {
+      try {
+        const fullResumeEmbedding = await generateEmbedding(event.data.content);
+        const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
+        await prisma.$executeRaw`
+          UPDATE "resume"
+          SET "embedding" = ${formattedVector}::vector
+          WHERE "id" = ${event.data.resumeId}
+        `;
+      } catch (err) {
+        console.error("[resumeUpdated] Failed to generate/save full resume embedding:", err);
       }
     });
 

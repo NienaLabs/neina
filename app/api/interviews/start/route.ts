@@ -40,26 +40,26 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { remaining_minutes: true }
+      select: { interview_minutes: true }
     });
 
-    console.log('User credits check:', { userId, remaining_minutes: user?.remaining_minutes });
+    console.log('User credits check:', { userId, interview_minutes: user?.interview_minutes });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Check if user has sufficient time (at least 6 seconds)
-    if (user.remaining_minutes < 0.1) {
+    if (user.interview_minutes < 0.1) {
       console.log('Credit check failed:', {
-        remaining_minutes: user.remaining_minutes,
+        interview_minutes: user.interview_minutes,
         required: 0.1,
         user_id: userId,
         user_found: !!user
       });
       return NextResponse.json({
         error: `No credits left. Please purchase more minutes to continue.`,
-        remaining_seconds: Math.max(0, Math.floor(user.remaining_minutes * 60))
+        remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60))
       }, { status: 400 });
     }
 
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       where: { user_id: userId, status: 'ACTIVE' },
       include: {
         user: {
-          select: { remaining_minutes: true }
+          select: { interview_minutes: true }
         }
       }
     });
@@ -77,16 +77,16 @@ export async function POST(request: Request) {
     console.log('Existing interview check:', { existing: existing?.id, hasExisting: !!existing });
 
     // Double-check credits for existing interviews too
-    if (existing && existing.user.remaining_minutes < 0.1) {
+    if (existing && existing.user.interview_minutes < 0.1) {
       console.log('Credit check failed for existing interview:', {
-        remaining_minutes: existing.user.remaining_minutes,
+        interview_minutes: existing.user.interview_minutes,
         required: 0.1,
         user_id: userId,
         interview_id: existing.id
       });
       return NextResponse.json({
         error: `No credits left. Please purchase more minutes to continue.`,
-        remaining_seconds: Math.max(0, Math.floor(existing.user.remaining_minutes * 60))
+        remaining_seconds: Math.max(0, Math.floor(existing.user.interview_minutes * 60))
       }, { status: 400 });
     }
 
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         interview: {
           id: existing.id,
           start_time: existing.start_time,
-          remaining_seconds: Math.max(0, Math.floor(existing.user.remaining_minutes * 60)),
+          remaining_seconds: Math.max(0, Math.floor(existing.user.interview_minutes * 60)),
         },
         has_sufficient_time: true as const,
       }

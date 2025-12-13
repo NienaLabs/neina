@@ -104,6 +104,13 @@ interface ResumeExtraction {
 
 ---
 
+### CRITICAL JSON RULES
+- Output MUST be valid JSON.
+- **NO trailing commas** in objects or arrays.
+- **NO single quotes** for keys or string values (use double quotes).
+- **NO unescaped newlines** in strings.
+- **Verify** the JSON validity internally before outputting.
+
 ### REFERENCE EXAMPLES  
 #### (These are for understanding ONLY — DO NOT COPY them into the output)
 
@@ -337,6 +344,13 @@ STRICT RULES:
 - If a role description exists, tailor the analysis to that role. Otherwise, analyze based on a general resume.
 - Include only sections that have actual issues. Do not include empty arrays or missing fields.
 
+### CRITICAL JSON RULES
+- Output MUST be valid JSON.
+- **NO trailing commas** in objects or arrays.
+- **NO single quotes** for keys or string values (use double quotes).
+- **NO unescaped newlines** in strings.
+- **Verify** the JSON validity internally before outputting.
+
 EXAMPLES (FOR REFERENCE ONLY — DO NOT INCLUDE IN OUTPUT):
 
 # Example 1
@@ -422,6 +436,13 @@ STRICT RULES:
 - Include customSections only if they exist in the input.
 - Do not include empty arrays or missing fields.
 
+### CRITICAL JSON RULES
+- Output MUST be valid JSON.
+- **NO trailing commas** in objects or arrays.
+- **NO single quotes** for keys or string values (use double quotes).
+- **NO unescaped newlines** in strings.
+- **Verify** the JSON validity internally before outputting.
+
 EXAMPLES (FOR REFERENCE ONLY — DO NOT INCLUDE IN OUTPUT):
 
 # Example 1
@@ -489,6 +510,13 @@ STRICT RULES:
 - If no skills or certifications exist, return empty arrays.
 - Do NOT include duplicates.
 
+### CRITICAL JSON RULES
+- Output MUST be valid JSON.
+- **NO trailing commas** in objects or arrays.
+- **NO single quotes** for keys or string values (use double quotes).
+- **NO unescaped newlines** in strings.
+- **Verify** the JSON validity internally before outputting.
+
 EXAMPLE (FOR REFERENCE ONLY):
 {
   "skills": ["Python", "React", "Leadership", "English", "AWS", "Docker"],
@@ -516,6 +544,13 @@ STRICT RULES:
 - If no experience exists, return an empty array.
 - Do NOT include duplicates.
 
+### CRITICAL JSON RULES
+- Output MUST be valid JSON.
+- **NO trailing commas** in objects or arrays.
+- **NO single quotes** for keys or string values (use double quotes).
+- **NO unescaped newlines** in strings.
+- **Verify** the JSON validity internally before outputting.
+
 EXAMPLE (FOR REFERENCE ONLY):
 {
   "experiences": [
@@ -529,3 +564,45 @@ EXAMPLE (FOR REFERENCE ONLY):
 
 Return ONLY the JSON object.
 `;
+
+export const jobExtractionPrompt = `
+You are an expert job description parser.
+
+Your task is to extract ONLY skills and responsibilities from a job description into a structured object.
+
+The object MUST strictly follow this TypeScript interface:
+
+interface JobExtraction {
+  skills: string[];
+  responsibilities: string[];
+}
+
+STRICT RULES:
+- Return ONLY one JSON object. No comments, explanations, or extra text.
+- skills: Extract all required and preferred skills, technologies, and qualifications. Flatten them into a single array of strings.
+- responsibilities: Extract all job duties, responsibilities, and tasks. Each item should be a complete sentence/bullet point.
+- If no skills or responsibilities exist, return empty arrays.
+- Do NOT include duplicates.
+
+### CRITICAL JSON RULES
+- Output MUST be valid JSON.
+- **NO trailing commas** in objects or arrays.
+- **NO single quotes** for keys or string values (use double quotes).
+- **NO unescaped newlines** in strings.
+- **Verify** the JSON validity internally before outputting.
+
+EXAMPLE (FOR REFERENCE ONLY):
+{
+  "skills": ["Python", "React", "AWS", "Communication", "Team Leadership"],
+  "responsibilities": [
+    "Develop high-quality software design and architecture",
+    "Identify, prioritize and execute tasks in the software development life cycle",
+    "Automate tasks through appropriate tools and scripting",
+    "Review and debug code",
+    "Collaborate with internal teams to fix and improve products"
+  ]
+}
+
+Return ONLY the JSON object.
+`;
+

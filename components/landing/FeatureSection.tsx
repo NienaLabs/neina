@@ -85,7 +85,7 @@ const FeatureSection = ({
                   <div className="shrink-0 w-6 h-6 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center mt-1">
                     <span className="text-white text-sm font-bold">✓</span>
                   </div>
-                  <span className="text-base leading-relaxed">
+                  <span className="text-base leading-relaxed flex-1 min-w-0">
                     {bullet}
                   </span>
                 </li>

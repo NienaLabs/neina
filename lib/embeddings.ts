@@ -52,4 +52,27 @@ export default async function generateChunksAndEmbeddings(text: string) {
   }
 
   return { chunks, vectorStore };
+
 }
+
+export async function generateEmbedding(text: string) {
+  const response = await fetch(
+    "https://models.github.ai/inference/embeddings",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY??"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"}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        input: text,
+        model: "openai/text-embedding-3-small",
+        encoding_format: "float"
+      }),
+    }
+  );
+
+  const {data} = await response.json();
+  return data[0].embedding as number[];
+}
+

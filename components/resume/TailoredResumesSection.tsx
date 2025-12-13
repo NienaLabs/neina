@@ -55,8 +55,8 @@ const TailoredResumesSection = ({
                 <div key={resume.id} className="h-full">
                     <TailoredResumeCard 
                         resume={resume} 
-                        onSetPrimary={(id) => setPrimaryMutation.mutate({ resumeId: id })}
-                        onDelete={(id) => deleteResumeMutation.mutate({ resumeId: id })}
+                        onSetPrimary={(id) => setPrimaryMutation.mutate({ resumeId: id, isTailored: true })}
+                        onDelete={(id) => deleteResumeMutation.mutate({ resumeId: id, isTailored: true })}
                     />
                 </div>
             ))}

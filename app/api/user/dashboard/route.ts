@@ -30,7 +30,7 @@ export async function GET(req: Request) {
                     name: true,
                     email: true,
                     image: true,
-                    remaining_minutes: true,
+                    interview_minutes: true,
                     resume_credits: true,
                     emailVerified: true,
                 }
@@ -182,7 +182,7 @@ export async function GET(req: Request) {
             name: user.name,
             email: user.email,
             image: user.image,
-            credits: user.remaining_minutes,
+            credits: user.interview_minutes,
             resumeCredits: user.resume_credits,
 
             profileCompletion: profileScore,

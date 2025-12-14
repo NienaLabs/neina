@@ -149,7 +149,7 @@ export default function PricingPage() {
         
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-clip-text text-transparent bg-linear-to-r font-sans from-primary to-primary/60">
+          <h1 className="text-4xl  tracking-tight sm:text-5xl bg-clip-text text-transparent bg-linear-to-r font-geist from-primary to-primary/60">
             Pricing that Scales with Your Career
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

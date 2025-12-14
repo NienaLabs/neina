@@ -15,56 +15,37 @@ model User {
   image                String?
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @default(now()) @updatedAt
-  role                 String                @default("user")
-  resume_credits       Int                   @default(3) // Free plan starts with 3
-  interview_minutes    Int                   @default(0)
   isSuspended          Boolean               @default(false)
-  plan                 Plan                  @default(FREE)
+  resume_credits       Int                   @default(3)
+  role                 String                @default("user")
+  interview_minutes    Int                   @default(0)
   planExpiresAt        DateTime?
+  plan                 Plan                  @default(FREE)
   accounts             Account[]
   announcement_read    announcement_read[]
   interview            interview[]
+  recruiterApplication RecruiterApplication?
+  recruiterJobs        RecruiterJob[]
   resumes              Resume[]
   sessions             Session[]
   supportTickets       SupportTicket[]
   tailoredResumes      TailoredResume[]
-  recruiterApplication RecruiterApplication?
-  recruiterJobs        RecruiterJob[]
   transactions         Transaction[]
 
   @@map("user")
-}
-
-enum Plan {
-  FREE
-  SILVER
-  GOLD
-  DIAMOND
-}
-
-enum TransactionType {
-  SUBSCRIPTION
-  CREDIT_PURCHASE
-  MINUTE_PURCHASE
-}
-
-enum TransactionStatus {
-  PENDING
-  SUCCESS
-  FAILED
 }
 
 model Transaction {
   id        String            @id @default(cuid())
   reference String            @unique
   userId    String
-  amount    Int // In cents/kobo
+  amount    Int
   currency  String            @default("NGN")
   status    TransactionStatus @default(PENDING)
   type      TransactionType
-  plan      Plan? // If subscription
-  credits   Int? // If credit purchase
-  minutes   Int? // If minutes purchase
+  plan      Plan?
+  credits   Int?
+  minutes   Int?
   metadata  Json?
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
@@ -130,14 +111,13 @@ model Resume {
   analysisData      Json?
   scoreData         Json?
   userId            String
+  embedding         Unsupported("vector")?
   user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   resume_experience resume_experience?
   resume_skills     resume_skills?
   tailoredResumes   TailoredResume[]
-  embedding         Unsupported("vector")?
 
   @@index([userId])
-  // @@index([embedding])
   @@map("resume")
 }
 
@@ -148,15 +128,15 @@ model TailoredResume {
   content                      String
   role                         String?
   jobDescription               String?
-  jobDescriptionEmbedding      Unsupported("vector")?
-  jobSkillsEmbedding           Unsupported("vector")?
-  jobResponsibilitiesEmbedding Unsupported("vector")?
   name                         String
   extractedData                Json?
   analysisData                 Json?
-  scores                       Json?
   primaryResumeId              String
   userId                       String
+  jobDescriptionEmbedding      Unsupported("vector")?
+  scores                       Json?
+  jobResponsibilitiesEmbedding Unsupported("vector")?
+  jobSkillsEmbedding           Unsupported("vector")?
   primaryResume                Resume                 @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
   user                         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -174,14 +154,13 @@ model interview {
   status           InterviewStatus @default(SCHEDULED)
   role             String?
   description      String?
-
   conversation_id  String?
-  transcript       Json?
-  perceptionData   Json?
-  analysisScore    Float?
   analysisFeedback String?
+  analysisScore    Float?
   analyzedAt       DateTime?
-  user             User      @relation(fields: [user_id], references: [id])
+  perceptionData   Json?
+  transcript       Json?
+  user             User            @relation(fields: [user_id], references: [id])
 
   @@index([user_id, status])
   @@index([conversation_id])
@@ -223,8 +202,6 @@ model job_responsibilities {
   bullet_text String[]
   embedding   Unsupported("vector")?
   jobs        jobs?                  @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  // @@index([embedding], map: "idx_job_bullets_vector")
 }
 
 model job_skills {
@@ -234,8 +211,6 @@ model job_skills {
   embedding   Unsupported("vector")?
   is_required Boolean?               @default(true)
   jobs        jobs?                  @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  // @@index([embedding], map: "idx_job_skills_vector")
 }
 
 model jobs {
@@ -253,12 +228,10 @@ model jobs {
   responsibilities     String[]
   created_at           DateTime?              @default(now()) @db.Timestamptz(6)
   updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  embedding            Unsupported("vector")?
   job_responsibilities job_responsibilities?
   job_skills           job_skills?
   recruiterJob         RecruiterJob?
-  embedding            Unsupported("vector")?
-
-  // @@index([embedding])
 }
 
 model resume_experience {
@@ -267,8 +240,6 @@ model resume_experience {
   bullet_text String
   embedding   Unsupported("vector")?
   resume      Resume?                @relation(fields: [resume_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  // @@index([embedding], map: "idx_resume_bullets_vector")
 }
 
 model resume_skills {
@@ -277,24 +248,14 @@ model resume_skills {
   skill_text String
   embedding  Unsupported("vector")?
   resume     Resume?                @relation(fields: [resume_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  // @@index([embedding], map: "idx_resume_skills_vector")
-}
-
-enum InterviewStatus {
-  SCHEDULED
-  ACTIVE
-  ENDED
-  TIMEOUT
-  ANALYZED
 }
 
 model SupportTicket {
   id        String          @id @default(cuid())
   userId    String
   subject   String
-  status    String          @default("open") // open, closed, in_progress
-  priority  String          @default("medium") // low, medium, high
+  status    String          @default("open")
+  priority  String          @default("medium")
   category  String          @default("general")
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
@@ -308,7 +269,7 @@ model SupportTicket {
 model TicketMessage {
   id        String        @id @default(cuid())
   ticketId  String
-  sender    String // "user" or "admin"
+  sender    String
   message   String
   createdAt DateTime      @default(now())
   ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
@@ -322,10 +283,10 @@ model Announcement {
   title             String
   content           String
   type              String              @default("in-app")
-  targetUserIds     String[]            @default([])
-  targetRoles       String[]            @default([])
   sentAt            DateTime            @default(now())
   createdBy         String?
+  targetRoles       String[]            @default([])
+  targetUserIds     String[]            @default([])
   announcement_read announcement_read[]
 
   @@map("announcement")
@@ -336,33 +297,11 @@ model announcement_read {
   userId         String
   announcementId String
   readAt         DateTime     @default(now())
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, announcementId])
   @@index([userId])
-}
-
-enum ApplicationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum RecruiterJobStatus {
-  ACTIVE
-  PAUSED
-  CLOSED
-}
-
-enum CandidateStatus {
-  NEW
-  REVIEWING
-  SHORTLISTED
-  INTERVIEWED
-  OFFERED
-  REJECTED
-  HIRED
 }
 
 model RecruiterApplication {
@@ -400,10 +339,10 @@ model RecruiterJob {
   applicationCount Int                 @default(0)
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
-  recruiter        User                @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
-  job              jobs                @relation(fields: [jobId], references: [id], onDelete: Cascade)
   candidates       CandidatePipeline[]
   jobViews         JobView[]
+  job              jobs                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  recruiter        User                @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
 
   @@index([recruiterId])
   @@index([status])
@@ -438,4 +377,53 @@ model JobView {
   @@index([recruiterJobId])
   @@index([viewedAt])
   @@map("job_view")
+}
+
+enum Plan {
+  FREE
+  SILVER
+  GOLD
+  DIAMOND
+}
+
+enum TransactionType {
+  SUBSCRIPTION
+  CREDIT_PURCHASE
+  MINUTE_PURCHASE
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+  TIMEOUT
+  ANALYZED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RecruiterJobStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum CandidateStatus {
+  NEW
+  REVIEWING
+  SHORTLISTED
+  INTERVIEWED
+  OFFERED
+  REJECTED
+  HIRED
 }

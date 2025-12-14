@@ -1,5 +1,5 @@
 'use client'
-import Features from './Features'
+import Demo from './Demo'
 import FeatureCards from './FeatureCards'
 import { TestimonialDemo as Testimonials } from './Testimonials'
 import HowItWorks from './HowItWorks'
@@ -69,8 +69,8 @@ export default function LandingPage() {
         <Header/>
         <HeroSection/>
         <HowWeHelp/>
-        <FeatureCards />
-        <Features />
+        <FeatureCards/>
+        <Demo/>
         <div id="features-container" className="relative h-full  w-full overflow-hidden">
         <div className="svg-path w-full h-full">
       <svg id="feature-svg" className="w-full h-full" preserveAspectRatio="xMidYMid slice" width="525" height="1238" viewBox="0 0 525 1238" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -4,7 +4,6 @@ import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 import { AuthProvider } from "@/providers/AuthUIProvider";
 import { Toaster } from 'sonner'
-import { ThemeProvider } from 'next-themes'
 import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
 
 const geistSans = Geist({
@@ -34,19 +33,12 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
           <body
             className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
-          >
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem
-              disableTransitionOnChange
-            >
+          >    
               {/*<Header/>*/}
               <SuspensionGuard>
                 {children}
               </SuspensionGuard>
               <Toaster />
-            </ThemeProvider>
           </body>
         </html>
       </AuthProvider>

@@ -20,6 +20,8 @@ export default function TextMask({children,animateOnScroll=true,delay=0,blockCol
      const elements = Array.from(containerRef.current.children);
 
     document.fonts.ready.then(() => {
+     if (!containerRef.current) return; // Propagate safety check to async callback
+     
      elements.forEach((element)=>{
         const split = new SplitText(element,{
             type:"lines",
@@ -100,6 +102,7 @@ export default function TextMask({children,animateOnScroll=true,delay=0,blockCol
       // Cleanup function
       return () => {
         splitContext.current.forEach((split) => split.revert());
+        splitContext.current = []; // Clear the array to prevent memory leaks
         // Manually remove wrappers if SplitText revert doesn't handle custom DOM manipulation completely
         // SplitText revert restores the original text, but we moved things around.
         // Actually SplitText.revert() puts the text back into the original element.

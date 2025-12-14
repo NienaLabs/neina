@@ -1,7 +1,7 @@
 "use client"
 import {Button} from '@/components/ui/button'
 
-const Features = () => {
+const Demo = () => {
   return (
     <section id="features" className="py-20 md:py-32 px-4 md:px-6 relative overflow-hidden bg-white">
       {/* Background gradient effect */}
@@ -21,7 +21,7 @@ const Features = () => {
         {/* Main Content: Cube + Features Grid */}
         <div className="grid grid-cols-1 items-center">
           {/* Left: Video Demo */}
-          <div className="relative group">
+          <div className="relative group w-full md:w-[50vw] max-w-6xl mx-auto ">
             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative bg-white rounded-2xl p-2 border border-indigo-100 shadow-xl">
                {/* Creative CTA */}
@@ -44,8 +44,8 @@ const Features = () => {
               <div className="aspect-video rounded-xl overflow-hidden bg-gray-900 relative">
                 <iframe 
                   className="w-full h-full absolute inset-0"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=ad5Xz8e_lC7sZ9l_" 
-                  title="JobAI Demo"
+                  src="https://www.youtube.com/embed/ZK-rNEhJIDs" 
+                  title="Neina Demo"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                   referrerPolicy="strict-origin-when-cross-origin" 
                   allowFullScreen
@@ -80,4 +80,4 @@ const Features = () => {
   )
 }
 
-export default Features
+export default Demo

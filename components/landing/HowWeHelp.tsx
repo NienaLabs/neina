@@ -20,10 +20,6 @@ useGSAP(()=>{
             gsap.set(headers[2],{x:`${100- self.progress*100}%`})
         }
     })
-    
-    // Cache headers for the second ScrollTrigger to avoid re-querying on every frame
-    const headers = document.querySelectorAll(".services-header")
-    
     ScrollTrigger.create({
         trigger:'.services',
         start:'top top',
@@ -32,6 +28,8 @@ useGSAP(()=>{
         pin:true,
         pinSpacing:false,
         onUpdate:(self)=>{
+            const headers = document.querySelectorAll(".services-header")
+
             if(self.progress <= 0.5){
                 const yProgress = self.progress/0.5;
                 gsap.set(headers[0],{y:`${yProgress * 100}%`})

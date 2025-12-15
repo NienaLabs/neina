@@ -144,155 +144,202 @@ export default function PricingPage() {
    }
 
   return (
-    <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-violet-50/20 dark:from-slate-950 dark:via-indigo-950/20 dark:to-violet-950/10 py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Subtle background gradients */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-400/10 dark:bg-indigo-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-400/10 dark:bg-violet-500/10 rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto relative z-10 space-y-20">
         
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl  tracking-tight sm:text-5xl bg-clip-text text-transparent bg-linear-to-r font-geist from-primary to-primary/60">
-            Pricing that Scales with Your Career
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">
+            Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your job search intensity. Upgrade, downgrade, or cancel anytime.
+          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            Choose the perfect plan for your job search journey. Upgrade, downgrade, or cancel anytime.
           </p>
         </div>
 
         {/* Subscription Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {PLANS.map((plan) => {
              const isCurrentPlan = user?.plan === plan.key;
              return (
-            <Card 
+            <div 
               key={plan.key} 
               className={cn(
-                "relative flex flex-col transition-all duration-200 hover:shadow-xl",
-                plan.highlight ? "border-primary shadow-lg scale-105 z-10" : "border-border",
-                isCurrentPlan ? "border-indigo-500 ring-2 ring-offset-2" : ""
+                "group relative",
+                plan.highlight && "md:scale-105 md:-translate-y-2"
               )}
             >
-              {plan.highlight && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                  Most Popular
-                </div>
-              )}
-              {isCurrentPlan && (
-                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                  Current Plan
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  {plan.price !== "Free" && <span className="text-muted-foreground text-sm">/month</span>}
-                </div>
-                <CardDescription className="mt-4">{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <ul className="space-y-3">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      {feature.included ? (
-                        <Check className="h-5 w-5 text-green-500 shrink-0" />
-                      ) : (
-                        <X className="h-5 w-5 text-muted-foreground/40 shrink-0" />
-                      )}
-                      <span className={cn("text-sm", !feature.included && "text-muted-foreground/60")}>
-                        {feature.text}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter className="flex flex-col gap-2">
-                 <Button 
-                    className="w-full" 
-                    variant={isCurrentPlan ? "outline" : (plan.highlight ? "default" : "outline")}
-                    onClick={() => onSubscribe(plan)}
-                    disabled={loadingKey !== null || isCurrentPlan || (plan.key === "FREE" && user?.plan !== "FREE")} // Disable Free if checking downgrade logic separately, or let them switch?
-                    // Actually, if user is on Paid and clicks Free, that's effectively "Cancel".
-                    // But our logic for FREE button checks "Current Plan".
-                 >
-                    {loadingKey === plan.key ? <Loader2 className="animate-spin h-4 w-4" /> : (isCurrentPlan ? "Current Plan" : (plan.key === "FREE" ? "Sign Up Free" : "Upgrade"))}
-                 </Button>
-                 
-                 {isCurrentPlan && plan.key !== "FREE" && (
+              {/* Glass card */}
+              <div className={cn(
+                "relative h-full backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 border rounded-3xl shadow-xl transition-all duration-300",
+                plan.highlight 
+                  ? "border-indigo-200 dark:border-indigo-800/50 shadow-indigo-100/50 dark:shadow-indigo-900/20" 
+                  : "border-slate-200/60 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600",
+                "hover:shadow-2xl",
+                isCurrentPlan && "ring-2 ring-indigo-500/50 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-950"
+              )}>
+                {/* Badge */}
+                {plan.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-semibold shadow-lg">
+                    Most Popular
+                  </div>
+                )}
+                {isCurrentPlan && !plan.highlight && (
+                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-semibold shadow-lg">
+                    Current Plan
+                  </div>
+                )}
+                
+                <div className="p-8 space-y-8">
+                  {/* Header */}
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{plan.name}</h3>
+                    <div>
+                      <span className="text-5xl font-bold text-slate-900 dark:text-white">{plan.price}</span>
+                      {plan.price !== "Free" && <span className="text-slate-600 dark:text-slate-400 text-lg">/mo</span>}
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{plan.description}</p>
+                  </div>
+                  
+                  {/* Features */}
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <div className={cn(
+                          "shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5",
+                          feature.included 
+                            ? "bg-emerald-500/10 dark:bg-emerald-500/20" 
+                            : "bg-slate-200/50 dark:bg-slate-700/50"
+                        )}>
+                          {feature.included ? (
+                            <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" strokeWidth={3} />
+                          ) : (
+                            <X className="h-3 w-3 text-slate-400 dark:text-slate-600" strokeWidth={2} />
+                          )}
+                        </div>
+                        <span className={cn(
+                          "text-sm",
+                          feature.included 
+                            ? "text-slate-700 dark:text-slate-300" 
+                            : "text-slate-500 dark:text-slate-500 line-through"
+                        )}>
+                          {feature.text}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  {/* CTA Buttons */}
+                  <div className="space-y-3 pt-4">
                      <Button 
-                        className="w-full"
-                        variant="ghost"
-                        onClick={onCancelPlan}
-                        disabled={loadingKey !== null}
+                        className={cn(
+                          "w-full font-medium transition-all duration-200",
+                          isCurrentPlan 
+                            ? "bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white" 
+                            : plan.highlight
+                              ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg hover:shadow-xl"
+                              : "bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900"
+                        )}
+                        onClick={() => onSubscribe(plan)}
+                        disabled={loadingKey !== null || isCurrentPlan || (plan.key === "FREE" && user?.plan !== "FREE")}
                      >
-                        {loadingKey === "cancel" ? <Loader2 className="animate-spin h-4 w-4" /> : "Cancel Plan"}
+                        {loadingKey === plan.key ? (
+                          <Loader2 className="animate-spin h-4 w-4" />
+                        ) : isCurrentPlan ? (
+                          "Current Plan"
+                        ) : plan.key === "FREE" ? (
+                          "Get Started"
+                        ) : (
+                          "Upgrade"
+                        )}
                      </Button>
-                 )}
-              </CardFooter>
-            </Card>
+                     
+                     {isCurrentPlan && plan.key !== "FREE" && (
+                         <Button 
+                            variant="ghost"
+                            className="w-full text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20"
+                            onClick={onCancelPlan}
+                            disabled={loadingKey !== null}
+                         >
+                            {loadingKey === "cancel" ? <Loader2 className="animate-spin h-4 w-4" /> : "Cancel Plan"}
+                         </Button>
+                     )}
+                  </div>
+                </div>
+              </div>
+            </div>
           )})}
         </div>
 
         {/* Separator */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-muted" />
+            <div className="w-full border-t border-slate-300 dark:border-slate-700" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-background px-4 text-xl font-semibold text-muted-foreground">Or Pay As You Go</span>
+            <span className="bg-gradient-to-br from-slate-50 via-indigo-50/30 to-violet-50/20 dark:from-slate-950 dark:via-indigo-950/20 dark:to-violet-950/10 px-6 text-xl font-semibold text-slate-600 dark:text-slate-400">
+              Or Buy Credits
+            </span>
           </div>
         </div>
 
         {/* One-Time Purchases */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           
           {/* Interview AI */}
-          <div className="space-y-8 p-8 border rounded-2xl bg-card hover:bg-accent/5 transition-colors">
-            <div className="text-center space-y-2">
-              <span className="text-4xl">🎤</span>
-              <h3 className="text-2xl font-bold">Interview AI Minutes</h3>
-              <p className="text-muted-foreground">Practice makes perfect. Top up your interview minutes.</p>
+          <div className="backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all">
+            <div className="text-center space-y-3 mb-8">
+              <div className="text-5xl">🎤</div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Interview AI Minutes</h3>
+              <p className="text-slate-600 dark:text-slate-400">Practice makes perfect</p>
             </div>
             
-            <div className="grid grid-cols-1 gap-4">
-               <div className="flex items-center justify-between p-4 border rounded-lg bg-background">
+            <div className="space-y-4">
+               <div className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50">
                   <div>
-                    <div className="font-semibold">1 Minute</div>
-                    <div className="text-sm text-muted-foreground">$1.50 / min</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">1 Minute</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">$1.50 / min</div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold">$1.50</div>
-                  </div>
+                  <div className="font-bold text-slate-900 dark:text-white">$1.50</div>
                </div>
                
-               <Card className="border-primary/20 bg-primary/5">
-                 <CardContent className="p-4 flex items-center justify-between">
+               <div className="border-2 border-violet-200 dark:border-violet-800/50 rounded-2xl bg-violet-50/50 dark:bg-violet-950/20 p-5 space-y-4">
+                  <div className="flex items-start justify-between">
                     <div>
-                        <div className="font-bold text-lg">15 Minute Session</div>
-                        <div className="text-sm text-muted-foreground">Ideal for full mock interview</div>
+                        <div className="font-bold text-lg text-slate-900 dark:text-white">15 Minutes</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">Full mock interview</div>
                     </div>
                     <div className="text-right">
-                         <div className="font-bold text-xl">$13.99</div>
-                         <div className="text-xs text-green-600 font-medium">Save 38%</div>
+                         <div className="font-bold text-2xl text-slate-900 dark:text-white">$13.99</div>
+                         <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Save 38%</div>
                     </div>
-                 </CardContent>
-                 <CardFooter className="p-4 pt-0">
-                    <Button className="w-full" onClick={() => onBuyMinutes(15, 13.99)} disabled={loadingKey !== null}>
-                        {loadingKey === "minutes-15" && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
-                        Buy Session
-                    </Button>
-                 </CardFooter>
-               </Card>
+                  </div>
+                  
+                  <Button 
+                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-medium shadow-lg" 
+                    onClick={() => onBuyMinutes(15, 13.99)} 
+                    disabled={loadingKey !== null}
+                  >
+                    {loadingKey === "minutes-15" && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                    Buy Session
+                  </Button>
+               </div>
             </div>
           </div>
 
           {/* Resume AI */}
-           <div className="space-y-8 p-8 border rounded-2xl bg-card hover:bg-accent/5 transition-colors">
-            <div className="text-center space-y-2">
-              <span className="text-4xl">📝</span>
-              <h3 className="text-2xl font-bold">Resume AI Credits</h3>
-              <p className="text-muted-foreground">Tailor more resumes to specific job descriptions.</p>
+          <div className="backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all">
+            <div className="text-center space-y-3 mb-8">
+              <div className="text-5xl">📝</div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Resume AI Credits</h3>
+              <p className="text-slate-600 dark:text-slate-400">Tailor unlimited resumes</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
                 {[
                   { credits: 10, price: 5 },
                   { credits: 20, price: 10 },
@@ -301,13 +348,13 @@ export default function PricingPage() {
                 ].map((pack) => (
                    <Button 
                       key={pack.credits} 
-                      variant="outline" 
-                      className="h-auto py-4 flex flex-col gap-2 hover:border-primary hover:bg-primary/5"
+                      variant="outline"
+                      className="h-auto py-5 flex flex-col gap-2 border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
                       onClick={() => onBuyCredits(pack.credits, pack.price)}
                       disabled={loadingKey !== null}
                     >
-                      <span className="font-bold text-xl">{pack.credits} Credits</span>
-                      <span className="text-muted-foreground">${pack.price}</span>
+                      <span className="font-bold text-xl text-slate-900 dark:text-white">{pack.credits}</span>
+                      <span className="text-slate-600 dark:text-slate-400 text-sm">${pack.price}</span>
                    </Button>
                 ))}
             </div>

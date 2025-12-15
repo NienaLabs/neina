@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FileText,
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
 import {
@@ -60,11 +61,11 @@ interface DashboardData {
   }[];
 }
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Component that handles search params logic
+ * Must be wrapped in Suspense boundary
+ */
+function SearchParamsHandler() {
   const searchParams = useSearchParams();
   const [showApplicationSuccess, setShowApplicationSuccess] = useState(false);
   const { mutate: applyForRecruiter } = trpc.recruiter.applyForRecruiter.useMutation();
@@ -81,9 +82,8 @@ export default function DashboardPage() {
             toast.success("Application submitted successfully!");
           },
           onError: (err) => {
-            // Silently fail or show error? Better show error but maybe check if duplicate
             console.error("Failed to submit saved application", err);
-            localStorage.removeItem("pending_recruiter_application"); // Clear it so it doesn't loop
+            localStorage.removeItem("pending_recruiter_application");
           }
         });
       } catch (e) {
@@ -98,6 +98,15 @@ export default function DashboardPage() {
       window.history.replaceState({}, '', newUrl);
     }
   }, [searchParams, applyForRecruiter]);
+
+  return null;
+}
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,6 +177,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background p-8">
+      {/* Search params handler wrapped in Suspense */}
+      <Suspense fallback={<Spinner />}>
+        <SearchParamsHandler />
+      </Suspense>
+
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Header Section */}

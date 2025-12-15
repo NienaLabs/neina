@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trpc } from "@/trpc/client";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-export default function VerifyPaymentPage() {
+/**
+ * Component that handles payment verification with search params
+ * Must be wrapped in Suspense boundary
+ */
+function PaymentVerifier() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
@@ -39,6 +44,7 @@ export default function VerifyPaymentPage() {
   // Validate that returnUrl is an internal path to prevent open redirects
   const allowedPaths = ["/dashboard", "/pricing"];
   const returnUrl = from && allowedPaths.includes(from) ? from : "/pricing";
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full p-8 bg-card border rounded-2xl shadow-lg text-center space-y-6">
@@ -79,5 +85,17 @@ export default function VerifyPaymentPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function VerifyPaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Spinner className="h-8 w-8" />
+      </div>
+    }>
+      <PaymentVerifier />
+    </Suspense>
   );
 }

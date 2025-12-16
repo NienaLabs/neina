@@ -550,6 +550,7 @@ export const adminRouter = createTRPCRouter({
                 title: z.string(),
                 content: z.string(),
                 type: z.enum(['in-app', 'email', 'both']).default('in-app'),
+                targetUserIds: z.array(z.string()).default([]),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -559,7 +560,10 @@ export const adminRouter = createTRPCRouter({
             // Create announcement in database
             const announcement = await prisma.announcement.create({
                 data: {
-                    ...input,
+                    title: input.title,
+                    content: input.content,
+                    type: input.type,
+                    targetUserIds: input.targetUserIds,
                     createdBy: user.id,
                 },
             });
@@ -567,25 +571,35 @@ export const adminRouter = createTRPCRouter({
             // Send email if type is 'email' or 'both'
             if (input.type === 'email' || input.type === 'both') {
                 try {
-                    // Get all user emails
+                    // Get user emails based on targeting
+                    const where: any = {};
+
+                    // If targetUserIds is present and not empty, filter by IDs
+                    if (input.targetUserIds && input.targetUserIds.length > 0) {
+                        where.id = { in: input.targetUserIds };
+                    }
+
+                    // If targetRoles is supported in the future, add it here
+
                     const users = await prisma.user.findMany({
+                        where,
                         select: { email: true },
                     });
 
-                    let emails = users.map(u => u.email).filter(Boolean);
-                    emails = emails.filter(email => email === 'charlessmith35518@gmail.com');
+                    const emails = users.map(u => u.email).filter(Boolean);
 
                     if (emails.length > 0) {
                         const { sendAnnouncementEmail } = await import('@/lib/email');
+                        // Batch send or send efficiently - for now simple loop or bulk send if provider supports
+                        // Resend supports array of 'to' addresses
                         await sendAnnouncementEmail(input.title, input.content, emails);
-                        console.log(`✅ Email sent to ${emails.length} users:`, emails);
+                        console.log(`✅ Email sent to ${emails.length} users`);
                     } else {
                         console.log('⚠️ No users found to send email to');
                     }
                 } catch (emailError) {
                     console.error('❌ Failed to send announcement emails:', emailError);
                     // Don't fail the entire operation if email fails
-                    // The announcement is still saved in the database
                 }
             }
 

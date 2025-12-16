@@ -25,12 +25,14 @@ export async function sendAnnouncementEmail(
   }
 
   try {
-    // Send email to all recipients
-    const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL,
-      to: recipients,
-      subject: title,
-      html: `
+    // Send individual emails to each recipient to ensure "To" field is correct
+    // and privacy is maintained (no exposed recipient list)
+    const emailPromises = recipients.map((recipient) =>
+      resend.emails.send({
+        from: `Niena Labs <${process.env.RESEND_FROM_EMAIL}>`,
+        to: recipient,
+        subject: title,
+        html: `
         <div style="background-color: #f6f9fc; padding: 40px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
           <div style="max-width: 600px; margin: 0 auto;">
             <!-- Logo -->
@@ -67,13 +69,18 @@ export async function sendAnnouncementEmail(
           </div>
         </div>
       `,
-    });
+      })
+    );
 
-    if (error) {
-      throw new Error(`Resend error: ${error.message}`);
+    const results = await Promise.all(emailPromises);
+
+    // Check for errors in results if needed, but for now we return success if the batch process completes
+    const failedCount = results.filter((r) => r.error).length;
+    if (failedCount > 0) {
+      console.warn(`⚠️ ${failedCount} emails failed to send out of ${recipients.length}`);
     }
 
-    return { success: true, data };
+    return { success: true, count: recipients.length - failedCount };
   } catch (error) {
     console.error('Failed to send announcement email:', error);
     throw error;

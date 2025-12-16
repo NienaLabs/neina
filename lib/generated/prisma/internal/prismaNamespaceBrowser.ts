@@ -367,7 +367,8 @@ export const Announcement_readScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   announcementId: 'announcementId',
-  readAt: 'readAt'
+  readAt: 'readAt',
+  isDeleted: 'isDeleted'
 } as const
 
 export type Announcement_readScalarFieldEnum = (typeof Announcement_readScalarFieldEnum)[keyof typeof Announcement_readScalarFieldEnum]

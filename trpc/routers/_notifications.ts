@@ -51,18 +51,24 @@ export const notificationsRouter = createTRPCRouter({
                 include: {
                     announcement_read: {
                         where: { userId },
-                        select: { readAt: true },
+                        select: { readAt: true, isDeleted: true },
                     },
                 },
             });
 
+            // Filter out deleted announcements
+            const activeAnnouncements = announcements.filter(a => {
+                const readRecord = a.announcement_read[0];
+                return !readRecord?.isDeleted;
+            });
+
             // Transform to include isRead flag
-            return announcements.map(announcement => ({
+            return activeAnnouncements.map(announcement => ({
                 id: announcement.id,
                 title: announcement.title,
                 content: announcement.content,
                 sentAt: announcement.sentAt,
-                isRead: announcement.announcement_read.length > 0,
+                isRead: announcement.announcement_read.length > 0 && !!announcement.announcement_read[0].readAt,
                 readAt: announcement.announcement_read[0]?.readAt || null,
             }));
         }),
@@ -136,6 +142,35 @@ export const notificationsRouter = createTRPCRouter({
                 update: {
                     // Update readAt to current time if already exists
                     readAt: new Date(),
+                },
+            });
+
+            return { success: true };
+        }),
+
+    /**
+     * Delete a notification (mark as deleted)
+     */
+    delete: protectedProcedure
+        .input(z.object({ announcementId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            await prisma.announcement_read.upsert({
+                where: {
+                    userId_announcementId: {
+                        userId,
+                        announcementId: input.announcementId,
+                    },
+                },
+                create: {
+                    userId,
+                    announcementId: input.announcementId,
+                    isDeleted: true,
+                    readAt: new Date(), // If they delete it, it's considered read
+                },
+                update: {
+                    isDeleted: true,
                 },
             });
 

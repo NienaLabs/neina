@@ -95,7 +95,7 @@ export function RecruiterApplicationForm() {
                                     name="companyName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Company Name *</FormLabel>
+                                            <FormLabel>Company Name <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Acme Inc." {...field} />
                                             </FormControl>
@@ -135,7 +135,7 @@ export function RecruiterApplicationForm() {
                                     name="position"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Job Title *</FormLabel>
+                                            <FormLabel>Job Title <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Senior Recruiter" {...field} />
                                             </FormControl>
@@ -149,7 +149,7 @@ export function RecruiterApplicationForm() {
                                     name="phoneNumber"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Phone Number *</FormLabel>
+                                            <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <div className="relative">
                                                     <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -184,7 +184,7 @@ export function RecruiterApplicationForm() {
                                 name="message"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Message *</FormLabel>
+                                        <FormLabel>Message <span className="text-red-500">*</span></FormLabel>
                                         <FormControl>
                                             <Textarea
                                                 placeholder="Please tell us a bit about your recruiting needs..."

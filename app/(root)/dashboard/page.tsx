@@ -193,7 +193,7 @@ export default function DashboardPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight inline-flex items-center gap-2">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent inline-flex items-center gap-2">
               {getGreeting()}, {data.name?.split(' ')[0] || 'there'}
               <FeatureGuide 
                  description="This is your personal command center. Track your resume strength, interview readiness, and recent job search activity here."

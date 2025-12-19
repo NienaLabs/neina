@@ -79,6 +79,8 @@ const serviceLinks = [
 const helpfulLinks = [
   { text: 'FAQs', href: data.help.faqs },
   { text: 'Support', href: data.help.support },
+  { text: 'Terms of Service', href: '/terms' },
+  { text: 'Privacy Policy', href: '/privacy' },
   { text: 'Live Chat', href: data.help.livechat, hasIndicator: true },
 ];
 

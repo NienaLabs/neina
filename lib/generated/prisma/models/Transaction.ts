@@ -46,8 +46,6 @@ export type TransactionMinAggregateOutputType = {
   currency: string | null
   status: $Enums.TransactionStatus | null
   type: $Enums.TransactionType | null
-  provider: $Enums.TransactionProvider | null
-  polarCheckoutId: string | null
   plan: $Enums.Plan | null
   credits: number | null
   minutes: number | null
@@ -63,8 +61,6 @@ export type TransactionMaxAggregateOutputType = {
   currency: string | null
   status: $Enums.TransactionStatus | null
   type: $Enums.TransactionType | null
-  provider: $Enums.TransactionProvider | null
-  polarCheckoutId: string | null
   plan: $Enums.Plan | null
   credits: number | null
   minutes: number | null
@@ -80,8 +76,6 @@ export type TransactionCountAggregateOutputType = {
   currency: number
   status: number
   type: number
-  provider: number
-  polarCheckoutId: number
   plan: number
   credits: number
   minutes: number
@@ -112,8 +106,6 @@ export type TransactionMinAggregateInputType = {
   currency?: true
   status?: true
   type?: true
-  provider?: true
-  polarCheckoutId?: true
   plan?: true
   credits?: true
   minutes?: true
@@ -129,8 +121,6 @@ export type TransactionMaxAggregateInputType = {
   currency?: true
   status?: true
   type?: true
-  provider?: true
-  polarCheckoutId?: true
   plan?: true
   credits?: true
   minutes?: true
@@ -146,8 +136,6 @@ export type TransactionCountAggregateInputType = {
   currency?: true
   status?: true
   type?: true
-  provider?: true
-  polarCheckoutId?: true
   plan?: true
   credits?: true
   minutes?: true
@@ -251,8 +239,6 @@ export type TransactionGroupByOutputType = {
   currency: string
   status: $Enums.TransactionStatus
   type: $Enums.TransactionType
-  provider: $Enums.TransactionProvider
-  polarCheckoutId: string | null
   plan: $Enums.Plan | null
   credits: number | null
   minutes: number | null
@@ -292,8 +278,6 @@ export type TransactionWhereInput = {
   currency?: Prisma.StringFilter<"Transaction"> | string
   status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFilter<"Transaction"> | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   plan?: Prisma.EnumPlanNullableFilter<"Transaction"> | $Enums.Plan | null
   credits?: Prisma.IntNullableFilter<"Transaction"> | number | null
   minutes?: Prisma.IntNullableFilter<"Transaction"> | number | null
@@ -311,8 +295,6 @@ export type TransactionOrderByWithRelationInput = {
   currency?: Prisma.SortOrder
   status?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrderInput | Prisma.SortOrder
   credits?: Prisma.SortOrderInput | Prisma.SortOrder
   minutes?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -333,8 +315,6 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   currency?: Prisma.StringFilter<"Transaction"> | string
   status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFilter<"Transaction"> | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   plan?: Prisma.EnumPlanNullableFilter<"Transaction"> | $Enums.Plan | null
   credits?: Prisma.IntNullableFilter<"Transaction"> | number | null
   minutes?: Prisma.IntNullableFilter<"Transaction"> | number | null
@@ -352,8 +332,6 @@ export type TransactionOrderByWithAggregationInput = {
   currency?: Prisma.SortOrder
   status?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrderInput | Prisma.SortOrder
   credits?: Prisma.SortOrderInput | Prisma.SortOrder
   minutes?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -378,8 +356,6 @@ export type TransactionScalarWhereWithAggregatesInput = {
   currency?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   status?: Prisma.EnumTransactionStatusWithAggregatesFilter<"Transaction"> | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeWithAggregatesFilter<"Transaction"> | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderWithAggregatesFilter<"Transaction"> | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   plan?: Prisma.EnumPlanNullableWithAggregatesFilter<"Transaction"> | $Enums.Plan | null
   credits?: Prisma.IntNullableWithAggregatesFilter<"Transaction"> | number | null
   minutes?: Prisma.IntNullableWithAggregatesFilter<"Transaction"> | number | null
@@ -395,8 +371,6 @@ export type TransactionCreateInput = {
   currency?: string
   status?: $Enums.TransactionStatus
   type: $Enums.TransactionType
-  provider?: $Enums.TransactionProvider
-  polarCheckoutId?: string | null
   plan?: $Enums.Plan | null
   credits?: number | null
   minutes?: number | null
@@ -414,8 +388,6 @@ export type TransactionUncheckedCreateInput = {
   currency?: string
   status?: $Enums.TransactionStatus
   type: $Enums.TransactionType
-  provider?: $Enums.TransactionProvider
-  polarCheckoutId?: string | null
   plan?: $Enums.Plan | null
   credits?: number | null
   minutes?: number | null
@@ -431,8 +403,6 @@ export type TransactionUpdateInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.NullableEnumPlanFieldUpdateOperationsInput | $Enums.Plan | null
   credits?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   minutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -450,8 +420,6 @@ export type TransactionUncheckedUpdateInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.NullableEnumPlanFieldUpdateOperationsInput | $Enums.Plan | null
   credits?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   minutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -468,8 +436,6 @@ export type TransactionCreateManyInput = {
   currency?: string
   status?: $Enums.TransactionStatus
   type: $Enums.TransactionType
-  provider?: $Enums.TransactionProvider
-  polarCheckoutId?: string | null
   plan?: $Enums.Plan | null
   credits?: number | null
   minutes?: number | null
@@ -485,8 +451,6 @@ export type TransactionUpdateManyMutationInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.NullableEnumPlanFieldUpdateOperationsInput | $Enums.Plan | null
   credits?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   minutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -503,8 +467,6 @@ export type TransactionUncheckedUpdateManyInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.NullableEnumPlanFieldUpdateOperationsInput | $Enums.Plan | null
   credits?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   minutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -531,8 +493,6 @@ export type TransactionCountOrderByAggregateInput = {
   currency?: Prisma.SortOrder
   status?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   credits?: Prisma.SortOrder
   minutes?: Prisma.SortOrder
@@ -555,8 +515,6 @@ export type TransactionMaxOrderByAggregateInput = {
   currency?: Prisma.SortOrder
   status?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   credits?: Prisma.SortOrder
   minutes?: Prisma.SortOrder
@@ -572,8 +530,6 @@ export type TransactionMinOrderByAggregateInput = {
   currency?: Prisma.SortOrder
   status?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   credits?: Prisma.SortOrder
   minutes?: Prisma.SortOrder
@@ -637,10 +593,6 @@ export type EnumTransactionTypeFieldUpdateOperationsInput = {
   set?: $Enums.TransactionType
 }
 
-export type EnumTransactionProviderFieldUpdateOperationsInput = {
-  set?: $Enums.TransactionProvider
-}
-
 export type NullableEnumPlanFieldUpdateOperationsInput = {
   set?: $Enums.Plan | null
 }
@@ -660,8 +612,6 @@ export type TransactionCreateWithoutUserInput = {
   currency?: string
   status?: $Enums.TransactionStatus
   type: $Enums.TransactionType
-  provider?: $Enums.TransactionProvider
-  polarCheckoutId?: string | null
   plan?: $Enums.Plan | null
   credits?: number | null
   minutes?: number | null
@@ -677,8 +627,6 @@ export type TransactionUncheckedCreateWithoutUserInput = {
   currency?: string
   status?: $Enums.TransactionStatus
   type: $Enums.TransactionType
-  provider?: $Enums.TransactionProvider
-  polarCheckoutId?: string | null
   plan?: $Enums.Plan | null
   credits?: number | null
   minutes?: number | null
@@ -724,8 +672,6 @@ export type TransactionScalarWhereInput = {
   currency?: Prisma.StringFilter<"Transaction"> | string
   status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFilter<"Transaction"> | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   plan?: Prisma.EnumPlanNullableFilter<"Transaction"> | $Enums.Plan | null
   credits?: Prisma.IntNullableFilter<"Transaction"> | number | null
   minutes?: Prisma.IntNullableFilter<"Transaction"> | number | null
@@ -741,8 +687,6 @@ export type TransactionCreateManyUserInput = {
   currency?: string
   status?: $Enums.TransactionStatus
   type: $Enums.TransactionType
-  provider?: $Enums.TransactionProvider
-  polarCheckoutId?: string | null
   plan?: $Enums.Plan | null
   credits?: number | null
   minutes?: number | null
@@ -758,8 +702,6 @@ export type TransactionUpdateWithoutUserInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.NullableEnumPlanFieldUpdateOperationsInput | $Enums.Plan | null
   credits?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   minutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -775,8 +717,6 @@ export type TransactionUncheckedUpdateWithoutUserInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.NullableEnumPlanFieldUpdateOperationsInput | $Enums.Plan | null
   credits?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   minutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -792,8 +732,6 @@ export type TransactionUncheckedUpdateManyWithoutUserInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.NullableEnumPlanFieldUpdateOperationsInput | $Enums.Plan | null
   credits?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   minutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -812,8 +750,6 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   currency?: boolean
   status?: boolean
   type?: boolean
-  provider?: boolean
-  polarCheckoutId?: boolean
   plan?: boolean
   credits?: boolean
   minutes?: boolean
@@ -831,8 +767,6 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   currency?: boolean
   status?: boolean
   type?: boolean
-  provider?: boolean
-  polarCheckoutId?: boolean
   plan?: boolean
   credits?: boolean
   minutes?: boolean
@@ -850,8 +784,6 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   currency?: boolean
   status?: boolean
   type?: boolean
-  provider?: boolean
-  polarCheckoutId?: boolean
   plan?: boolean
   credits?: boolean
   minutes?: boolean
@@ -869,8 +801,6 @@ export type TransactionSelectScalar = {
   currency?: boolean
   status?: boolean
   type?: boolean
-  provider?: boolean
-  polarCheckoutId?: boolean
   plan?: boolean
   credits?: boolean
   minutes?: boolean
@@ -879,7 +809,7 @@ export type TransactionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "reference" | "userId" | "amount" | "currency" | "status" | "type" | "provider" | "polarCheckoutId" | "plan" | "credits" | "minutes" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "reference" | "userId" | "amount" | "currency" | "status" | "type" | "plan" | "credits" | "minutes" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -903,8 +833,6 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     currency: string
     status: $Enums.TransactionStatus
     type: $Enums.TransactionType
-    provider: $Enums.TransactionProvider
-    polarCheckoutId: string | null
     plan: $Enums.Plan | null
     credits: number | null
     minutes: number | null
@@ -1342,8 +1270,6 @@ export interface TransactionFieldRefs {
   readonly currency: Prisma.FieldRef<"Transaction", 'String'>
   readonly status: Prisma.FieldRef<"Transaction", 'TransactionStatus'>
   readonly type: Prisma.FieldRef<"Transaction", 'TransactionType'>
-  readonly provider: Prisma.FieldRef<"Transaction", 'TransactionProvider'>
-  readonly polarCheckoutId: Prisma.FieldRef<"Transaction", 'String'>
   readonly plan: Prisma.FieldRef<"Transaction", 'Plan'>
   readonly credits: Prisma.FieldRef<"Transaction", 'Int'>
   readonly minutes: Prisma.FieldRef<"Transaction", 'Int'>

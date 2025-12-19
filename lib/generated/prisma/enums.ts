@@ -57,14 +57,6 @@ export const ApplicationStatus = {
 export type ApplicationStatus = (typeof ApplicationStatus)[keyof typeof ApplicationStatus]
 
 
-export const TransactionProvider = {
-  PAYSTACK: 'PAYSTACK',
-  POLAR: 'POLAR'
-} as const
-
-export type TransactionProvider = (typeof TransactionProvider)[keyof typeof TransactionProvider]
-
-
 export const RecruiterJobStatus = {
   ACTIVE: 'ACTIVE',
   PAUSED: 'PAUSED',

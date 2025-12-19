@@ -206,13 +206,6 @@ export type EnumTransactionTypeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumTransactionTypeFilter<$PrismaModel> | $Enums.TransactionType
 }
 
-export type EnumTransactionProviderFilter<$PrismaModel = never> = {
-  equals?: $Enums.TransactionProvider | Prisma.EnumTransactionProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumTransactionProviderFilter<$PrismaModel> | $Enums.TransactionProvider
-}
-
 export type EnumPlanNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.Plan | Prisma.EnumPlanFieldRefInput<$PrismaModel> | null
   in?: $Enums.Plan[] | Prisma.ListEnumPlanFieldRefInput<$PrismaModel> | null
@@ -273,16 +266,6 @@ export type EnumTransactionTypeWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTransactionTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTransactionTypeFilter<$PrismaModel>
-}
-
-export type EnumTransactionProviderWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.TransactionProvider | Prisma.EnumTransactionProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumTransactionProviderWithAggregatesFilter<$PrismaModel> | $Enums.TransactionProvider
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumTransactionProviderFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumTransactionProviderFilter<$PrismaModel>
 }
 
 export type EnumPlanNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -651,13 +634,6 @@ export type NestedEnumTransactionTypeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumTransactionTypeFilter<$PrismaModel> | $Enums.TransactionType
 }
 
-export type NestedEnumTransactionProviderFilter<$PrismaModel = never> = {
-  equals?: $Enums.TransactionProvider | Prisma.EnumTransactionProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumTransactionProviderFilter<$PrismaModel> | $Enums.TransactionProvider
-}
-
 export type NestedEnumPlanNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.Plan | Prisma.EnumPlanFieldRefInput<$PrismaModel> | null
   in?: $Enums.Plan[] | Prisma.ListEnumPlanFieldRefInput<$PrismaModel> | null
@@ -683,16 +659,6 @@ export type NestedEnumTransactionTypeWithAggregatesFilter<$PrismaModel = never> 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTransactionTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTransactionTypeFilter<$PrismaModel>
-}
-
-export type NestedEnumTransactionProviderWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.TransactionProvider | Prisma.EnumTransactionProviderFieldRefInput<$PrismaModel>
-  in?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  notIn?: $Enums.TransactionProvider[] | Prisma.ListEnumTransactionProviderFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumTransactionProviderWithAggregatesFilter<$PrismaModel> | $Enums.TransactionProvider
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumTransactionProviderFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumTransactionProviderFilter<$PrismaModel>
 }
 
 export type NestedEnumPlanNullableWithAggregatesFilter<$PrismaModel = never> = {

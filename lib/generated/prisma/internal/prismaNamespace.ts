@@ -2255,10 +2255,7 @@ export const UserScalarFieldEnum = {
   role: 'role',
   interview_minutes: 'interview_minutes',
   planExpiresAt: 'planExpiresAt',
-  plan: 'plan',
-  polarCustomerId: 'polarCustomerId',
-  polarSubscriptionId: 'polarSubscriptionId',
-  preferredProvider: 'preferredProvider'
+  plan: 'plan'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -2272,8 +2269,6 @@ export const TransactionScalarFieldEnum = {
   currency: 'currency',
   status: 'status',
   type: 'type',
-  provider: 'provider',
-  polarCheckoutId: 'polarCheckoutId',
   plan: 'plan',
   credits: 'credits',
   minutes: 'minutes',
@@ -2521,8 +2516,8 @@ export const Announcement_readScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   announcementId: 'announcementId',
-  isDeleted: 'isDeleted',
-  readAt: 'readAt'
+  readAt: 'readAt',
+  isDeleted: 'isDeleted'
 } as const
 
 export type Announcement_readScalarFieldEnum = (typeof Announcement_readScalarFieldEnum)[keyof typeof Announcement_readScalarFieldEnum]
@@ -2727,20 +2722,6 @@ export type EnumTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'TransactionType[]'
  */
 export type ListEnumTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionType[]'>
-    
-
-
-/**
- * Reference to a field of type 'TransactionProvider'
- */
-export type EnumTransactionProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionProvider'>
-    
-
-
-/**
- * Reference to a field of type 'TransactionProvider[]'
- */
-export type ListEnumTransactionProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionProvider[]'>
     
 
 

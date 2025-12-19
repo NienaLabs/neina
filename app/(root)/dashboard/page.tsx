@@ -27,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FeatureGuide } from '@/components/FeatureGuide';
 
 // Types matching our API response
 interface DashboardData {
@@ -134,6 +135,7 @@ export default function DashboardPage() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
+    if (hour < 5) return 'Good evening';
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
@@ -176,7 +178,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-8 relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-400/10 dark:bg-violet-900/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-400/10 dark:bg-indigo-900/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+
       {/* Search params handler wrapped in Suspense */}
       <Suspense fallback={<Spinner />}>
         <SearchParamsHandler />
@@ -187,8 +193,12 @@ export default function DashboardPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight inline-flex items-center gap-2">
               {getGreeting()}, {data.name?.split(' ')[0] || 'there'}
+              <FeatureGuide 
+                 description="This is your personal command center. Track your resume strength, interview readiness, and recent job search activity here."
+                 side="right"
+              />
             </h1>
             <p className="text-muted-foreground mt-1">
               Here&apos;s what&apos;s happening with your job search today.
@@ -207,42 +217,60 @@ export default function DashboardPage() {
         </div>
 
         {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             title="Resume AI Credits"
             value={data.resumeCredits?.toString() || '0'}
             icon={Zap}
-            description="Available for generation"
+            description="Available to use"
             hideProgress
+            gradient="from-violet-500/10 to-indigo-500/10"
+            iconColor="text-violet-600 dark:text-violet-400"
+            delay={0}
           />
           <MetricCard
             title="Resume Strength"
             value={`${data.resumeStrength}/100`}
             icon={FileText}
-            description="Based on latest analysis"
+            description="Latest analysis score"
             progress={data.resumeStrength}
+             gradient="from-fuchsia-500/10 to-pink-500/10"
+             iconColor="text-fuchsia-600 dark:text-fuchsia-400"
+             delay={100}
           />
           <MetricCard
             title="Interview Readiness"
             value={`${data.aiInsight.readiness}%`}
             icon={Video}
-            description={`${data.aiInsight.interviewCount} sessions completed`}
+            description={`${data.aiInsight.interviewCount} sessions done`}
             progress={data.aiInsight.readiness}
+            gradient="from-blue-500/10 to-cyan-500/10"
+            iconColor="text-blue-600 dark:text-blue-400"
+             delay={200}
           />
           <MetricCard
-            title="Interview AI Credits Remaining"
+            title="Interview AI Credits"
             value={data.credits.toString()}
             icon={Clock}
-            description="Minutes available"
+            description="Minutes remaining"
             progress={(data.credits / 30) * 100}
             hideProgress
+            gradient="from-amber-500/10 to-orange-500/10"
+            iconColor="text-amber-600 dark:text-amber-400"
+             delay={300}
           />
         </div>
 
         <div className="grid grid-cols-1 gap-8 mt-8">
-          <Card className="border-none shadow-sm bg-card/50">
-            <CardHeader>
-              <CardTitle className="text-xl">Recent Activity</CardTitle>
+          <Card className="border-none shadow-lg bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl relative overflow-hidden group">
+             <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="relative">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <span className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400">
+                   <Clock className="w-5 h-5"/>
+                </span>
+                Recent Activity
+              </CardTitle>
               <CardDescription>Your latest actions and progress</CardDescription>
             </CardHeader>
             <CardContent>
@@ -323,7 +351,10 @@ function MetricCard({
   icon: Icon,
   description,
   progress,
-  hideProgress
+  hideProgress,
+  gradient = "from-slate-50 to-slate-100",
+  iconColor = "text-muted-foreground",
+  delay = 0
 }: {
   title: string;
   value: string;
@@ -331,22 +362,39 @@ function MetricCard({
   description: string;
   progress?: number;
   hideProgress?: boolean;
+  gradient?: string;
+  iconColor?: string;
+  delay?: number;
 }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
+    <Card className={`border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br ${gradient} dark:from-slate-900 dark:to-slate-800/50 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4`}>
+       {/* Decorative shimmer */}
+       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+       
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <div className={`p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 shadow-sm ${iconColor}`}>
+           <Icon className="h-4 w-4" />
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">
+      <CardContent className="relative z-10">
+        <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300">
+            {value}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 font-medium">
           {description}
         </p>
         {!hideProgress && progress !== undefined && (
-          <Progress value={progress} className="h-1 mt-3" />
+          <div className="mt-3">
+             <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-slate-900 dark:bg-white transition-all duration-1000 ease-out" 
+                  style={{ width: `${progress}%` }}
+                />
+             </div>
+          </div>
         )}
       </CardContent>
     </Card>

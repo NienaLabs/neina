@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { FeatureGuide } from '@/components/FeatureGuide';
 
 type TavusConversationResponse = {
   conversation_id?: string;
@@ -331,7 +332,13 @@ const VideoInterview = () => {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="max-w-full mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Video Interview</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Video Interview</h1>
+              <FeatureGuide 
+                 title="AI Interview"
+                 description="Real-time video interview practice with an AI avatar. Your performance will be analyzed for content, tone, and pacing."
+              />
+            </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Connect with our AI interviewer for a face-to-face conversation
             </p>

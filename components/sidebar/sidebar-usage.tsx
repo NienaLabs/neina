@@ -75,47 +75,38 @@ export default function SidebarUsage() {
 
   return (
     <div className="px-2 py-4 space-y-4">
-      {isPaid && (
-        <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-           <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-primary" />
-              <span className="font-medium">
-                {timeLeftString}
-              </span>
-           </div>
-           {showRenew && (
-               <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-6 px-2 text-xs border-primary/50 hover:bg-primary/10 hover:text-primary"
-                onClick={handleRenew}
-                disabled={isRenewing}
-               >
-                 {isRenewing ? <Loader2 className="h-3 w-3 animate-spin"/> : "Renew"}
-               </Button>
-           )}
-        </div>
-      )}
-      
-      <div className="space-y-1">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <div className="flex items-center gap-2">
-            <Zap className="h-3 w-3" />
-            <span>Resume Credits</span>
-          </div>
-          <span className="font-bold text-foreground">{user.resume_credits}</span>
-        </div>
-        {/* Optional Progress Bar if we had a plan limit context */}
-      </div>
+      <div className="bg-muted/30 p-3 rounded-lg text-xs leading-relaxed text-muted-foreground border border-border/50 space-y-3">
+        <p>
+          You have <span className="font-bold text-amber-600 dark:text-amber-500">{user.resume_credits}</span> resume credits and {user.interview_minutes > 0 ? (
+            <>
+              <span className="font-bold text-indigo-600 dark:text-indigo-500">{user.interview_minutes}</span> interview minutes
+            </>
+          ) : (
+            <span className="font-semibold text-foreground">no</span>
+          )} interview minutes remaining.
+        </p>
 
-       <div className="space-y-1">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <div className="flex items-center gap-2">
-            <Clock className="h-3 w-3" />
-            <span>Interview Mins</span>
+        {isPaid && (
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+             <div className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
+                <CalendarDays className="h-3 w-3" />
+                <span className="font-medium text-[10px]">
+                  {timeLeftString}
+                </span>
+             </div>
+             {showRenew && (
+                 <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-5 px-2 text-[10px] hover:bg-violet-100 hover:text-violet-700 dark:hover:bg-violet-900/30"
+                  onClick={handleRenew}
+                  disabled={isRenewing}
+                 >
+                   {isRenewing ? <Loader2 className="h-2 w-2 animate-spin"/> : "Renew"}
+                 </Button>
+             )}
           </div>
-          <span className="font-bold text-foreground">{user.interview_minutes}</span>
-        </div>
+        )}
       </div>
     </div>
   );

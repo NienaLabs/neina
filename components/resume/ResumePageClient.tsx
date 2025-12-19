@@ -9,6 +9,7 @@ import { Resume } from '@/lib/generated/prisma/client'
 import { Button } from '../ui/button'
 import { SquarePen, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { FeatureGuide } from '@/components/FeatureGuide'
 
 // Define the types for the resume data
 export type PrimaryResumeScoreData = {
@@ -143,6 +144,11 @@ const ResumePageClient = () => {
                 <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                     Resume AI
                 </h1>
+                <FeatureGuide 
+                    title="Resume AI"
+                    description="Your central hub for managing resumes. Upload a base resume, then create tailored versions optimized for specific job applications."
+                    className="ml-2"
+                />
             </div>
             <p className="text-muted-foreground max-w-lg">
                 Manage your primary resumes and create tailored versions to perfectly match your dream jobs.

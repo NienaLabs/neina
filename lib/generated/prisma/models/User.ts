@@ -50,6 +50,9 @@ export type UserMinAggregateOutputType = {
   interview_minutes: number | null
   planExpiresAt: Date | null
   plan: $Enums.Plan | null
+  polarCustomerId: string | null
+  polarSubscriptionId: string | null
+  preferredProvider: string | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -66,6 +69,9 @@ export type UserMaxAggregateOutputType = {
   interview_minutes: number | null
   planExpiresAt: Date | null
   plan: $Enums.Plan | null
+  polarCustomerId: string | null
+  polarSubscriptionId: string | null
+  preferredProvider: string | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -82,6 +88,9 @@ export type UserCountAggregateOutputType = {
   interview_minutes: number
   planExpiresAt: number
   plan: number
+  polarCustomerId: number
+  polarSubscriptionId: number
+  preferredProvider: number
   _all: number
 }
 
@@ -110,6 +119,9 @@ export type UserMinAggregateInputType = {
   interview_minutes?: true
   planExpiresAt?: true
   plan?: true
+  polarCustomerId?: true
+  polarSubscriptionId?: true
+  preferredProvider?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -126,6 +138,9 @@ export type UserMaxAggregateInputType = {
   interview_minutes?: true
   planExpiresAt?: true
   plan?: true
+  polarCustomerId?: true
+  polarSubscriptionId?: true
+  preferredProvider?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -142,6 +157,9 @@ export type UserCountAggregateInputType = {
   interview_minutes?: true
   planExpiresAt?: true
   plan?: true
+  polarCustomerId?: true
+  polarSubscriptionId?: true
+  preferredProvider?: true
   _all?: true
 }
 
@@ -245,6 +263,9 @@ export type UserGroupByOutputType = {
   interview_minutes: number
   planExpiresAt: Date | null
   plan: $Enums.Plan
+  polarCustomerId: string | null
+  polarSubscriptionId: string | null
+  preferredProvider: string | null
   _count: UserCountAggregateOutputType | null
   _avg: UserAvgAggregateOutputType | null
   _sum: UserSumAggregateOutputType | null
@@ -284,6 +305,9 @@ export type UserWhereInput = {
   interview_minutes?: Prisma.IntFilter<"User"> | number
   planExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
+  polarCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
+  polarSubscriptionId?: Prisma.StringNullableFilter<"User"> | string | null
+  preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
   accounts?: Prisma.AccountListRelationFilter
   announcement_read?: Prisma.Announcement_readListRelationFilter
   interview?: Prisma.InterviewListRelationFilter
@@ -310,6 +334,9 @@ export type UserOrderByWithRelationInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
+  polarCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  polarSubscriptionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   announcement_read?: Prisma.announcement_readOrderByRelationAggregateInput
   interview?: Prisma.interviewOrderByRelationAggregateInput
@@ -339,6 +366,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   interview_minutes?: Prisma.IntFilter<"User"> | number
   planExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
+  polarCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
+  polarSubscriptionId?: Prisma.StringNullableFilter<"User"> | string | null
+  preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
   accounts?: Prisma.AccountListRelationFilter
   announcement_read?: Prisma.Announcement_readListRelationFilter
   interview?: Prisma.InterviewListRelationFilter
@@ -365,6 +395,9 @@ export type UserOrderByWithAggregationInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
+  polarCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  polarSubscriptionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -389,6 +422,9 @@ export type UserScalarWhereWithAggregatesInput = {
   interview_minutes?: Prisma.IntWithAggregatesFilter<"User"> | number
   planExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   plan?: Prisma.EnumPlanWithAggregatesFilter<"User"> | $Enums.Plan
+  polarCustomerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  polarSubscriptionId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  preferredProvider?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
 }
 
 export type UserCreateInput = {
@@ -405,6 +441,9 @@ export type UserCreateInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -431,6 +470,9 @@ export type UserUncheckedCreateInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -457,6 +499,9 @@ export type UserUpdateInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -483,6 +528,9 @@ export type UserUncheckedUpdateInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -509,6 +557,9 @@ export type UserCreateManyInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
 }
 
 export type UserUpdateManyMutationInput = {
@@ -525,6 +576,9 @@ export type UserUpdateManyMutationInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -541,6 +595,9 @@ export type UserUncheckedUpdateManyInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -557,6 +614,9 @@ export type UserCountOrderByAggregateInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrder
   plan?: Prisma.SortOrder
+  polarCustomerId?: Prisma.SortOrder
+  polarSubscriptionId?: Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrder
 }
 
 export type UserAvgOrderByAggregateInput = {
@@ -578,6 +638,9 @@ export type UserMaxOrderByAggregateInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrder
   plan?: Prisma.SortOrder
+  polarCustomerId?: Prisma.SortOrder
+  polarSubscriptionId?: Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -594,6 +657,9 @@ export type UserMinOrderByAggregateInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrder
   plan?: Prisma.SortOrder
+  polarCustomerId?: Prisma.SortOrder
+  polarSubscriptionId?: Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrder
 }
 
 export type UserSumOrderByAggregateInput = {
@@ -792,6 +858,9 @@ export type UserCreateWithoutTransactionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -817,6 +886,9 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -858,6 +930,9 @@ export type UserUpdateWithoutTransactionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -883,6 +958,9 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -908,6 +986,9 @@ export type UserCreateWithoutSessionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -933,6 +1014,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -974,6 +1058,9 @@ export type UserUpdateWithoutSessionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -999,6 +1086,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1024,6 +1114,9 @@ export type UserCreateWithoutAccountsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationCreateNestedOneWithoutUserInput
@@ -1049,6 +1142,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedCreateNestedOneWithoutUserInput
@@ -1090,6 +1186,9 @@ export type UserUpdateWithoutAccountsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUpdateOneWithoutUserNestedInput
@@ -1115,6 +1214,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedUpdateOneWithoutUserNestedInput
@@ -1140,6 +1242,9 @@ export type UserCreateWithoutResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1165,6 +1270,9 @@ export type UserUncheckedCreateWithoutResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1206,6 +1314,9 @@ export type UserUpdateWithoutResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1231,6 +1342,9 @@ export type UserUncheckedUpdateWithoutResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1256,6 +1370,9 @@ export type UserCreateWithoutTailoredResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1281,6 +1398,9 @@ export type UserUncheckedCreateWithoutTailoredResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1322,6 +1442,9 @@ export type UserUpdateWithoutTailoredResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1347,6 +1470,9 @@ export type UserUncheckedUpdateWithoutTailoredResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1372,6 +1498,9 @@ export type UserCreateWithoutInterviewInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationCreateNestedOneWithoutUserInput
@@ -1397,6 +1526,9 @@ export type UserUncheckedCreateWithoutInterviewInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedCreateNestedOneWithoutUserInput
@@ -1438,6 +1570,9 @@ export type UserUpdateWithoutInterviewInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUpdateOneWithoutUserNestedInput
@@ -1463,6 +1598,9 @@ export type UserUncheckedUpdateWithoutInterviewInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedUpdateOneWithoutUserNestedInput
@@ -1488,6 +1626,9 @@ export type UserCreateWithoutSupportTicketsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1513,6 +1654,9 @@ export type UserUncheckedCreateWithoutSupportTicketsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1554,6 +1698,9 @@ export type UserUpdateWithoutSupportTicketsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1579,6 +1726,9 @@ export type UserUncheckedUpdateWithoutSupportTicketsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1604,6 +1754,9 @@ export type UserCreateWithoutAnnouncement_readInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationCreateNestedOneWithoutUserInput
@@ -1629,6 +1782,9 @@ export type UserUncheckedCreateWithoutAnnouncement_readInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedCreateNestedOneWithoutUserInput
@@ -1670,6 +1826,9 @@ export type UserUpdateWithoutAnnouncement_readInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUpdateOneWithoutUserNestedInput
@@ -1695,6 +1854,9 @@ export type UserUncheckedUpdateWithoutAnnouncement_readInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedUpdateOneWithoutUserNestedInput
@@ -1720,6 +1882,9 @@ export type UserCreateWithoutRecruiterApplicationInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1745,6 +1910,9 @@ export type UserUncheckedCreateWithoutRecruiterApplicationInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1786,6 +1954,9 @@ export type UserUpdateWithoutRecruiterApplicationInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1811,6 +1982,9 @@ export type UserUncheckedUpdateWithoutRecruiterApplicationInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1836,6 +2010,9 @@ export type UserCreateWithoutRecruiterJobsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1861,6 +2038,9 @@ export type UserUncheckedCreateWithoutRecruiterJobsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  polarCustomerId?: string | null
+  polarSubscriptionId?: string | null
+  preferredProvider?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1902,6 +2082,9 @@ export type UserUpdateWithoutRecruiterJobsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1927,6 +2110,9 @@ export type UserUncheckedUpdateWithoutRecruiterJobsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -2055,6 +2241,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  polarCustomerId?: boolean
+  polarSubscriptionId?: boolean
+  preferredProvider?: boolean
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   announcement_read?: boolean | Prisma.User$announcement_readArgs<ExtArgs>
   interview?: boolean | Prisma.User$interviewArgs<ExtArgs>
@@ -2082,6 +2271,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  polarCustomerId?: boolean
+  polarSubscriptionId?: boolean
+  preferredProvider?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2098,6 +2290,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  polarCustomerId?: boolean
+  polarSubscriptionId?: boolean
+  preferredProvider?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -2114,9 +2309,12 @@ export type UserSelectScalar = {
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  polarCustomerId?: boolean
+  polarSubscriptionId?: boolean
+  preferredProvider?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan" | "polarCustomerId" | "polarSubscriptionId" | "preferredProvider", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   announcement_read?: boolean | Prisma.User$announcement_readArgs<ExtArgs>
@@ -2161,6 +2359,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     interview_minutes: number
     planExpiresAt: Date | null
     plan: $Enums.Plan
+    polarCustomerId: string | null
+    polarSubscriptionId: string | null
+    preferredProvider: string | null
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -2607,6 +2808,9 @@ export interface UserFieldRefs {
   readonly interview_minutes: Prisma.FieldRef<"User", 'Int'>
   readonly planExpiresAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly plan: Prisma.FieldRef<"User", 'Plan'>
+  readonly polarCustomerId: Prisma.FieldRef<"User", 'String'>
+  readonly polarSubscriptionId: Prisma.FieldRef<"User", 'String'>
+  readonly preferredProvider: Prisma.FieldRef<"User", 'String'>
 }
     
 

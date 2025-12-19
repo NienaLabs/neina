@@ -6,42 +6,7 @@ import { rateLimit } from "@/lib/rate-limit"; // Usage depends on how we impleme
 import { TRPCError } from "@trpc/server";
 
 // Plan Data
-const PLANS = {
-  FREE: {
-    name: "Free",
-    price: 0,
-    features: ["1 resume upload", "10 job matches/week", "3 Resume AI credits/month"],
-    credits: 3,
-    minutes: 0,
-    matches: 10,
-  },
-  SILVER: {
-    name: "Silver",
-    price: 2900, // in cents ($29.00)
-    features: ["30 job matches/week", "10 Resume AI credits/month"],
-    credits: 10,
-    minutes: 0,
-    matches: 30,
-  },
-  GOLD: {
-    name: "Gold",
-    price: 4900, // in cents ($49.00)
-    features: ["60 job matches/week", "20 Resume AI credits/month", "15 interview mins/month"],
-    credits: 20,
-    minutes: 15,
-    matches: 60,
-  },
-  DIAMOND: {
-    name: "Diamond",
-    price: 9900, // in cents ($99.00)
-    features: ["Unlimited matches", "30 Resume AI credits/month", "60 interview mins/month"],
-    credits: 30,
-    minutes: 60,
-    matches: 1000,
-  },
-};
-
-type PlanKey = keyof typeof PLANS;
+import { PLANS, PlanKey } from "@/lib/plans";
 
 export const paymentRouter = createTRPCRouter({
   getPlans: baseProcedure.query(() => {

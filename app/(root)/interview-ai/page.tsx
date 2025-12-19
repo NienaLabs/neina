@@ -327,10 +327,10 @@ const VideoInterview = () => {
   }, [session, isPending, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Header with camera toggle */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-        <div className="max-w-full mx-auto flex justify-between items-center">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 shrink-0">
+        <div className="max-w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Video Interview</h1>
@@ -353,7 +353,7 @@ const VideoInterview = () => {
               </div>
             )}
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 w-full md:w-auto justify-between md:justify-end">
             <Button variant="outline" size="sm" onClick={toggleFullscreen}>
               {isFullscreen ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
               {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
@@ -383,7 +383,7 @@ const VideoInterview = () => {
       </div>
 
       {/* Full Screen Video Area */}
-      <div className="relative" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="relative flex-1 bg-gray-900 overflow-hidden">
         {conversationUrl ? (
           <CVIProvider meetingUrl={conversationUrl}>
             <VideoCallComponent
@@ -448,7 +448,7 @@ const VideoInterview = () => {
 
       {/* Role Selection Dialog */}
       <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[95%] sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader className="space-y-3 pb-4">
             <DialogTitle className="text-2xl font-semibold">
               Tell us about the role you're interviewing for
@@ -478,11 +478,11 @@ const VideoInterview = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="description" className="text-base font-medium">
-                Job Description <span className="text-gray-400 font-normal">(Optional)</span>
+                Interview Context <span className="text-red-500">*</span>
               </Label>
               <textarea
                 id="description"
-                placeholder="Paste the full job description here, or add key requirements like '5 years experience with React and Node.js'..."
+                placeholder="Example job description..."
                 value={userDescription}
                 onChange={(e) => setUserDescription(e.target.value)}
                 className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
@@ -501,7 +501,7 @@ const VideoInterview = () => {
               </Button>
               <Button
                 onClick={handleRoleSubmit}
-                disabled={!userRole.trim() || isConnecting}
+                disabled={!userRole.trim() || !userDescription.trim() || isConnecting}
                 className="min-w-[140px]"
               >
                 {isConnecting ? (

@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/trpc/client";
 import { cn } from "@/lib/utils";
-import { CheckCheck } from "lucide-react";
+import { CheckCheck, Trash2 } from "lucide-react";
 import { NotificationDialog } from "./NotificationDialog";
 
 type Notification = {
@@ -34,7 +34,6 @@ export function NotificationList() {
 
     const markAsReadMutation = trpc.notifications.markAsRead.useMutation({
         onSuccess: () => {
-            // Invalidate queries to refresh the UI
             utils.notifications.getLatest.invalidate();
             utils.notifications.getUnreadCount.invalidate();
         },
@@ -47,18 +46,31 @@ export function NotificationList() {
         },
     });
 
+    const deleteNotificationMutation = trpc.notifications.delete.useMutation({
+        onSuccess: () => {
+            utils.notifications.getLatest.invalidate();
+            utils.notifications.getUnreadCount.invalidate();
+            if (dialogOpen) {
+                setDialogOpen(false);
+            }
+        },
+    });
+
     const handleNotificationClick = (notification: Notification) => {
-        // Mark as read if unread
         if (!notification.isRead) {
             markAsReadMutation.mutate({ announcementId: notification.id });
         }
-        // Open dialog to show full content
         setSelectedNotification(notification);
         setDialogOpen(true);
     };
 
     const handleMarkAllAsRead = () => {
         markAllAsReadMutation.mutate();
+    };
+
+    const handleDelete = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        deleteNotificationMutation.mutate({ announcementId: id });
     };
 
     if (isLoading) {
@@ -82,7 +94,6 @@ export function NotificationList() {
     return (
         <>
             <div className="flex flex-col">
-                {/* Header */}
                 <div className="flex items-center justify-between p-4 pb-2">
                     <h3 className="font-semibold text-sm">Notifications</h3>
                     {hasUnread && (
@@ -101,28 +112,31 @@ export function NotificationList() {
 
                 <Separator />
 
-                {/* Notifications List */}
                 <ScrollArea className="h-[400px]">
                     <div className="flex flex-col">
                         {notifications.map((notification, index) => (
                             <div key={notification.id}>
-                                <button
+                                <div
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => handleNotificationClick(notification)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            handleNotificationClick(notification);
+                                        }
+                                    }}
                                     className={cn(
-                                        "w-full text-left p-4 transition-colors hover:bg-muted/50",
+                                        "w-full text-left p-4 transition-colors hover:bg-muted/50 cursor-pointer block",
                                         !notification.isRead && "bg-muted/30"
                                     )}
-                                    disabled={markAsReadMutation.isPending}
                                 >
                                     <div className="flex items-start gap-3">
-                                        {/* Unread indicator */}
                                         <div className="mt-1.5">
                                             {!notification.isRead && (
                                                 <div className="h-2 w-2 rounded-full bg-blue-500" />
                                             )}
                                         </div>
 
-                                        {/* Content */}
                                         <div className="flex-1 space-y-1">
                                             <p className="text-sm font-medium leading-none">
                                                 {notification.title}
@@ -136,8 +150,21 @@ export function NotificationList() {
                                                 })}
                                             </p>
                                         </div>
+
+                                        <div className="flex flex-col justify-center pl-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 p-0 text-muted-foreground hover:text-red-500"
+                                                onClick={(e) => handleDelete(e, notification.id)}
+                                                disabled={deleteNotificationMutation.isPending}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Delete</span>
+                                            </Button>
+                                        </div>
                                     </div>
-                                </button>
+                                </div>
                                 {index < notifications.length - 1 && <Separator />}
                             </div>
                         ))}
@@ -145,7 +172,6 @@ export function NotificationList() {
                 </ScrollArea>
             </div>
 
-            {/* Notification Dialog */}
             <NotificationDialog
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}

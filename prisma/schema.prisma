@@ -299,6 +299,7 @@ model announcement_read {
   readAt         DateTime     @default(now())
   announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isDeleted      Boolean      @default(false)
 
   @@unique([userId, announcementId])
   @@index([userId])

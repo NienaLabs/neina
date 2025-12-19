@@ -30,6 +30,7 @@ export type Announcement_readMinAggregateOutputType = {
   announcementId: string | null
   isDeleted: boolean | null
   readAt: Date | null
+  isDeleted: boolean | null
 }
 
 export type Announcement_readMaxAggregateOutputType = {
@@ -38,6 +39,7 @@ export type Announcement_readMaxAggregateOutputType = {
   announcementId: string | null
   isDeleted: boolean | null
   readAt: Date | null
+  isDeleted: boolean | null
 }
 
 export type Announcement_readCountAggregateOutputType = {
@@ -46,6 +48,7 @@ export type Announcement_readCountAggregateOutputType = {
   announcementId: number
   isDeleted: number
   readAt: number
+  isDeleted: number
   _all: number
 }
 
@@ -56,6 +59,7 @@ export type Announcement_readMinAggregateInputType = {
   announcementId?: true
   isDeleted?: true
   readAt?: true
+  isDeleted?: true
 }
 
 export type Announcement_readMaxAggregateInputType = {
@@ -64,6 +68,7 @@ export type Announcement_readMaxAggregateInputType = {
   announcementId?: true
   isDeleted?: true
   readAt?: true
+  isDeleted?: true
 }
 
 export type Announcement_readCountAggregateInputType = {
@@ -72,6 +77,7 @@ export type Announcement_readCountAggregateInputType = {
   announcementId?: true
   isDeleted?: true
   readAt?: true
+  isDeleted?: true
   _all?: true
 }
 
@@ -153,6 +159,7 @@ export type Announcement_readGroupByOutputType = {
   announcementId: string
   isDeleted: boolean
   readAt: Date
+  isDeleted: boolean
   _count: Announcement_readCountAggregateOutputType | null
   _min: Announcement_readMinAggregateOutputType | null
   _max: Announcement_readMaxAggregateOutputType | null
@@ -182,6 +189,7 @@ export type announcement_readWhereInput = {
   announcementId?: Prisma.StringFilter<"announcement_read"> | string
   isDeleted?: Prisma.BoolFilter<"announcement_read"> | boolean
   readAt?: Prisma.DateTimeFilter<"announcement_read"> | Date | string
+  isDeleted?: Prisma.BoolFilter<"announcement_read"> | boolean
   announcement?: Prisma.XOR<Prisma.AnnouncementScalarRelationFilter, Prisma.AnnouncementWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -192,6 +200,7 @@ export type announcement_readOrderByWithRelationInput = {
   announcementId?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   readAt?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
   announcement?: Prisma.AnnouncementOrderByWithRelationInput
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -206,6 +215,7 @@ export type announcement_readWhereUniqueInput = Prisma.AtLeast<{
   announcementId?: Prisma.StringFilter<"announcement_read"> | string
   isDeleted?: Prisma.BoolFilter<"announcement_read"> | boolean
   readAt?: Prisma.DateTimeFilter<"announcement_read"> | Date | string
+  isDeleted?: Prisma.BoolFilter<"announcement_read"> | boolean
   announcement?: Prisma.XOR<Prisma.AnnouncementScalarRelationFilter, Prisma.AnnouncementWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "userId_announcementId">
@@ -216,6 +226,7 @@ export type announcement_readOrderByWithAggregationInput = {
   announcementId?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   readAt?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
   _count?: Prisma.announcement_readCountOrderByAggregateInput
   _max?: Prisma.announcement_readMaxOrderByAggregateInput
   _min?: Prisma.announcement_readMinOrderByAggregateInput
@@ -230,12 +241,14 @@ export type announcement_readScalarWhereWithAggregatesInput = {
   announcementId?: Prisma.StringWithAggregatesFilter<"announcement_read"> | string
   isDeleted?: Prisma.BoolWithAggregatesFilter<"announcement_read"> | boolean
   readAt?: Prisma.DateTimeWithAggregatesFilter<"announcement_read"> | Date | string
+  isDeleted?: Prisma.BoolWithAggregatesFilter<"announcement_read"> | boolean
 }
 
 export type announcement_readCreateInput = {
   id?: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
   announcement: Prisma.AnnouncementCreateNestedOneWithoutAnnouncement_readInput
   user: Prisma.UserCreateNestedOneWithoutAnnouncement_readInput
 }
@@ -246,12 +259,14 @@ export type announcement_readUncheckedCreateInput = {
   announcementId: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
 }
 
 export type announcement_readUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   announcement?: Prisma.AnnouncementUpdateOneRequiredWithoutAnnouncement_readNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutAnnouncement_readNestedInput
 }
@@ -262,6 +277,7 @@ export type announcement_readUncheckedUpdateInput = {
   announcementId?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type announcement_readCreateManyInput = {
@@ -270,12 +286,14 @@ export type announcement_readCreateManyInput = {
   announcementId: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
 }
 
 export type announcement_readUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type announcement_readUncheckedUpdateManyInput = {
@@ -284,6 +302,7 @@ export type announcement_readUncheckedUpdateManyInput = {
   announcementId?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type Announcement_readListRelationFilter = {
@@ -307,6 +326,7 @@ export type announcement_readCountOrderByAggregateInput = {
   announcementId?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   readAt?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
 }
 
 export type announcement_readMaxOrderByAggregateInput = {
@@ -315,6 +335,7 @@ export type announcement_readMaxOrderByAggregateInput = {
   announcementId?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   readAt?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
 }
 
 export type announcement_readMinOrderByAggregateInput = {
@@ -323,6 +344,7 @@ export type announcement_readMinOrderByAggregateInput = {
   announcementId?: Prisma.SortOrder
   isDeleted?: Prisma.SortOrder
   readAt?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
 }
 
 export type announcement_readCreateNestedManyWithoutUserInput = {
@@ -413,6 +435,7 @@ export type announcement_readCreateWithoutUserInput = {
   id?: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
   announcement: Prisma.AnnouncementCreateNestedOneWithoutAnnouncement_readInput
 }
 
@@ -421,6 +444,7 @@ export type announcement_readUncheckedCreateWithoutUserInput = {
   announcementId: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
 }
 
 export type announcement_readCreateOrConnectWithoutUserInput = {
@@ -458,12 +482,14 @@ export type announcement_readScalarWhereInput = {
   announcementId?: Prisma.StringFilter<"announcement_read"> | string
   isDeleted?: Prisma.BoolFilter<"announcement_read"> | boolean
   readAt?: Prisma.DateTimeFilter<"announcement_read"> | Date | string
+  isDeleted?: Prisma.BoolFilter<"announcement_read"> | boolean
 }
 
 export type announcement_readCreateWithoutAnnouncementInput = {
   id?: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
   user: Prisma.UserCreateNestedOneWithoutAnnouncement_readInput
 }
 
@@ -472,6 +498,7 @@ export type announcement_readUncheckedCreateWithoutAnnouncementInput = {
   userId: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
 }
 
 export type announcement_readCreateOrConnectWithoutAnnouncementInput = {
@@ -505,12 +532,14 @@ export type announcement_readCreateManyUserInput = {
   announcementId: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
 }
 
 export type announcement_readUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   announcement?: Prisma.AnnouncementUpdateOneRequiredWithoutAnnouncement_readNestedInput
 }
 
@@ -519,6 +548,7 @@ export type announcement_readUncheckedUpdateWithoutUserInput = {
   announcementId?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type announcement_readUncheckedUpdateManyWithoutUserInput = {
@@ -526,6 +556,7 @@ export type announcement_readUncheckedUpdateManyWithoutUserInput = {
   announcementId?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type announcement_readCreateManyAnnouncementInput = {
@@ -533,12 +564,14 @@ export type announcement_readCreateManyAnnouncementInput = {
   userId: string
   isDeleted?: boolean
   readAt?: Date | string
+  isDeleted?: boolean
 }
 
 export type announcement_readUpdateWithoutAnnouncementInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   user?: Prisma.UserUpdateOneRequiredWithoutAnnouncement_readNestedInput
 }
 
@@ -547,6 +580,7 @@ export type announcement_readUncheckedUpdateWithoutAnnouncementInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type announcement_readUncheckedUpdateManyWithoutAnnouncementInput = {
@@ -554,6 +588,7 @@ export type announcement_readUncheckedUpdateManyWithoutAnnouncementInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   readAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 
@@ -564,6 +599,7 @@ export type announcement_readSelect<ExtArgs extends runtime.Types.Extensions.Int
   announcementId?: boolean
   isDeleted?: boolean
   readAt?: boolean
+  isDeleted?: boolean
   announcement?: boolean | Prisma.AnnouncementDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["announcement_read"]>
@@ -574,6 +610,7 @@ export type announcement_readSelectCreateManyAndReturn<ExtArgs extends runtime.T
   announcementId?: boolean
   isDeleted?: boolean
   readAt?: boolean
+  isDeleted?: boolean
   announcement?: boolean | Prisma.AnnouncementDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["announcement_read"]>
@@ -584,6 +621,7 @@ export type announcement_readSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   announcementId?: boolean
   isDeleted?: boolean
   readAt?: boolean
+  isDeleted?: boolean
   announcement?: boolean | Prisma.AnnouncementDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["announcement_read"]>
@@ -594,6 +632,7 @@ export type announcement_readSelectScalar = {
   announcementId?: boolean
   isDeleted?: boolean
   readAt?: boolean
+  isDeleted?: boolean
 }
 
 export type announcement_readOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "announcementId" | "isDeleted" | "readAt", ExtArgs["result"]["announcement_read"]>
@@ -622,6 +661,7 @@ export type $announcement_readPayload<ExtArgs extends runtime.Types.Extensions.I
     announcementId: string
     isDeleted: boolean
     readAt: Date
+    isDeleted: boolean
   }, ExtArgs["result"]["announcement_read"]>
   composites: {}
 }
@@ -1052,6 +1092,7 @@ export interface announcement_readFieldRefs {
   readonly announcementId: Prisma.FieldRef<"announcement_read", 'String'>
   readonly isDeleted: Prisma.FieldRef<"announcement_read", 'Boolean'>
   readonly readAt: Prisma.FieldRef<"announcement_read", 'DateTime'>
+  readonly isDeleted: Prisma.FieldRef<"announcement_read", 'Boolean'>
 }
     
 

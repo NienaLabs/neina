@@ -47,8 +47,9 @@ export function NotificationListener() {
                     action: {
                         label: "View",
                         onClick: () => {
-                            // The user can click the notification bell to view
-                            document.querySelector('[data-notification-bell]')?.dispatchEvent(new Event('/notifications'));
+                            // Programmatically click the bell to open the popover
+                            const bell = document.querySelector('[data-notification-bell]') as HTMLElement;
+                            bell?.click();
                         },
                     },
                 }

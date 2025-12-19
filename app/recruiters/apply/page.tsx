@@ -99,7 +99,7 @@ export default function RecruiterApplyPage() {
     // For now, let's keep it simple. If rejected, contact support.
 
     return (
-        <div className="container py-10">
+        <div className="container mx-auto py-10 max-w-4xl flex justify-center">
             <RecruiterApplicationForm />
         </div>
     );

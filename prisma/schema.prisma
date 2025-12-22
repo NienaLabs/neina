@@ -116,6 +116,7 @@ model Resume {
   resume_experience resume_experience?
   resume_skills     resume_skills?
   tailoredResumes   TailoredResume[]
+  interviews        interview[]
 
   @@index([userId])
   @@map("resume")
@@ -160,6 +161,8 @@ model interview {
   analyzedAt       DateTime?
   perceptionData   Json?
   transcript       Json?
+  resume_id        String?
+  resume           Resume?         @relation(fields: [resume_id], references: [id])
   user             User            @relation(fields: [user_id], references: [id])
 
   @@index([user_id, status])
@@ -226,6 +229,7 @@ model jobs {
   job_is_remote        Boolean?
   qualifications       String[]
   responsibilities     String[]
+  jobCertifications    String[]
   created_at           DateTime?              @default(now()) @db.Timestamptz(6)
   updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
   embedding            Unsupported("vector")?
@@ -306,23 +310,24 @@ model announcement_read {
 }
 
 model RecruiterApplication {
-  id              String            @id @default(cuid())
-  userId          String            @unique
-  companyName     String
-  companyWebsite  String?
-  companyLogo     String?
-  position        String
-  phoneNumber     String
-  email           String
-  linkedInProfile String?
-  message         String
-  status          ApplicationStatus @default(PENDING)
-  reviewedBy      String?
-  reviewedAt      DateTime?
-  rejectionReason String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String            @id @default(cuid())
+  userId                String            @unique
+  companyName           String
+  companyWebsite        String?
+  companyLogo           String?
+  position              String
+  phoneNumber           String
+  email                 String
+  linkedInProfile       String?
+  message               String
+  status                ApplicationStatus @default(PENDING)
+  reviewedBy            String?
+  verificationDocuments String?
+  reviewedAt            DateTime?
+  rejectionReason       String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([userId])
@@ -330,20 +335,21 @@ model RecruiterApplication {
 }
 
 model RecruiterJob {
-  id               String              @id @default(cuid())
-  recruiterId      String
-  jobId            String              @unique
-  status           RecruiterJobStatus  @default(ACTIVE)
-  postedAt         DateTime            @default(now())
-  closedAt         DateTime?
-  viewCount        Int                 @default(0)
-  applicationCount Int                 @default(0)
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  candidates       CandidatePipeline[]
-  jobViews         JobView[]
-  job              jobs                @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  recruiter        User                @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  id                String              @id @default(cuid())
+  recruiterId       String
+  jobId             String              @unique
+  status            RecruiterJobStatus  @default(ACTIVE)
+  postedAt          DateTime            @default(now())
+  closedAt          DateTime?
+  viewCount         Int                 @default(0)
+  applicationCount  Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  candidates        CandidatePipeline[]
+  jobViews          JobView[]
+  jobCertifications String[]
+  job               jobs                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  recruiter         User                @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
 
   @@index([recruiterId])
   @@index([status])

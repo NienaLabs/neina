@@ -37,6 +37,7 @@ export type RecruiterApplicationMinAggregateOutputType = {
   message: string | null
   status: $Enums.ApplicationStatus | null
   reviewedBy: string | null
+  verificationDocuments: string | null
   reviewedAt: Date | null
   rejectionReason: string | null
   createdAt: Date | null
@@ -56,6 +57,7 @@ export type RecruiterApplicationMaxAggregateOutputType = {
   message: string | null
   status: $Enums.ApplicationStatus | null
   reviewedBy: string | null
+  verificationDocuments: string | null
   reviewedAt: Date | null
   rejectionReason: string | null
   createdAt: Date | null
@@ -75,6 +77,7 @@ export type RecruiterApplicationCountAggregateOutputType = {
   message: number
   status: number
   reviewedBy: number
+  verificationDocuments: number
   reviewedAt: number
   rejectionReason: number
   createdAt: number
@@ -96,6 +99,7 @@ export type RecruiterApplicationMinAggregateInputType = {
   message?: true
   status?: true
   reviewedBy?: true
+  verificationDocuments?: true
   reviewedAt?: true
   rejectionReason?: true
   createdAt?: true
@@ -115,6 +119,7 @@ export type RecruiterApplicationMaxAggregateInputType = {
   message?: true
   status?: true
   reviewedBy?: true
+  verificationDocuments?: true
   reviewedAt?: true
   rejectionReason?: true
   createdAt?: true
@@ -134,6 +139,7 @@ export type RecruiterApplicationCountAggregateInputType = {
   message?: true
   status?: true
   reviewedBy?: true
+  verificationDocuments?: true
   reviewedAt?: true
   rejectionReason?: true
   createdAt?: true
@@ -226,6 +232,7 @@ export type RecruiterApplicationGroupByOutputType = {
   message: string
   status: $Enums.ApplicationStatus
   reviewedBy: string | null
+  verificationDocuments: string | null
   reviewedAt: Date | null
   rejectionReason: string | null
   createdAt: Date
@@ -266,6 +273,7 @@ export type RecruiterApplicationWhereInput = {
   message?: Prisma.StringFilter<"RecruiterApplication"> | string
   status?: Prisma.EnumApplicationStatusFilter<"RecruiterApplication"> | $Enums.ApplicationStatus
   reviewedBy?: Prisma.StringNullableFilter<"RecruiterApplication"> | string | null
+  verificationDocuments?: Prisma.StringNullableFilter<"RecruiterApplication"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"RecruiterApplication"> | Date | string | null
   rejectionReason?: Prisma.StringNullableFilter<"RecruiterApplication"> | string | null
   createdAt?: Prisma.DateTimeFilter<"RecruiterApplication"> | Date | string
@@ -286,6 +294,7 @@ export type RecruiterApplicationOrderByWithRelationInput = {
   message?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  verificationDocuments?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -309,6 +318,7 @@ export type RecruiterApplicationWhereUniqueInput = Prisma.AtLeast<{
   message?: Prisma.StringFilter<"RecruiterApplication"> | string
   status?: Prisma.EnumApplicationStatusFilter<"RecruiterApplication"> | $Enums.ApplicationStatus
   reviewedBy?: Prisma.StringNullableFilter<"RecruiterApplication"> | string | null
+  verificationDocuments?: Prisma.StringNullableFilter<"RecruiterApplication"> | string | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"RecruiterApplication"> | Date | string | null
   rejectionReason?: Prisma.StringNullableFilter<"RecruiterApplication"> | string | null
   createdAt?: Prisma.DateTimeFilter<"RecruiterApplication"> | Date | string
@@ -329,6 +339,7 @@ export type RecruiterApplicationOrderByWithAggregationInput = {
   message?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  verificationDocuments?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -354,6 +365,7 @@ export type RecruiterApplicationScalarWhereWithAggregatesInput = {
   message?: Prisma.StringWithAggregatesFilter<"RecruiterApplication"> | string
   status?: Prisma.EnumApplicationStatusWithAggregatesFilter<"RecruiterApplication"> | $Enums.ApplicationStatus
   reviewedBy?: Prisma.StringNullableWithAggregatesFilter<"RecruiterApplication"> | string | null
+  verificationDocuments?: Prisma.StringNullableWithAggregatesFilter<"RecruiterApplication"> | string | null
   reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"RecruiterApplication"> | Date | string | null
   rejectionReason?: Prisma.StringNullableWithAggregatesFilter<"RecruiterApplication"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"RecruiterApplication"> | Date | string
@@ -372,6 +384,7 @@ export type RecruiterApplicationCreateInput = {
   message: string
   status?: $Enums.ApplicationStatus
   reviewedBy?: string | null
+  verificationDocuments?: string | null
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
   createdAt?: Date | string
@@ -392,6 +405,7 @@ export type RecruiterApplicationUncheckedCreateInput = {
   message: string
   status?: $Enums.ApplicationStatus
   reviewedBy?: string | null
+  verificationDocuments?: string | null
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
   createdAt?: Date | string
@@ -410,6 +424,7 @@ export type RecruiterApplicationUpdateInput = {
   message?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verificationDocuments?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -430,6 +445,7 @@ export type RecruiterApplicationUncheckedUpdateInput = {
   message?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verificationDocuments?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -449,6 +465,7 @@ export type RecruiterApplicationCreateManyInput = {
   message: string
   status?: $Enums.ApplicationStatus
   reviewedBy?: string | null
+  verificationDocuments?: string | null
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
   createdAt?: Date | string
@@ -467,6 +484,7 @@ export type RecruiterApplicationUpdateManyMutationInput = {
   message?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verificationDocuments?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -486,6 +504,7 @@ export type RecruiterApplicationUncheckedUpdateManyInput = {
   message?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verificationDocuments?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -510,6 +529,7 @@ export type RecruiterApplicationCountOrderByAggregateInput = {
   message?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrder
+  verificationDocuments?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -529,6 +549,7 @@ export type RecruiterApplicationMaxOrderByAggregateInput = {
   message?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrder
+  verificationDocuments?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -548,6 +569,7 @@ export type RecruiterApplicationMinOrderByAggregateInput = {
   message?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrder
+  verificationDocuments?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -602,6 +624,7 @@ export type RecruiterApplicationCreateWithoutUserInput = {
   message: string
   status?: $Enums.ApplicationStatus
   reviewedBy?: string | null
+  verificationDocuments?: string | null
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
   createdAt?: Date | string
@@ -620,6 +643,7 @@ export type RecruiterApplicationUncheckedCreateWithoutUserInput = {
   message: string
   status?: $Enums.ApplicationStatus
   reviewedBy?: string | null
+  verificationDocuments?: string | null
   reviewedAt?: Date | string | null
   rejectionReason?: string | null
   createdAt?: Date | string
@@ -654,6 +678,7 @@ export type RecruiterApplicationUpdateWithoutUserInput = {
   message?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verificationDocuments?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -672,6 +697,7 @@ export type RecruiterApplicationUncheckedUpdateWithoutUserInput = {
   message?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  verificationDocuments?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -693,6 +719,7 @@ export type RecruiterApplicationSelect<ExtArgs extends runtime.Types.Extensions.
   message?: boolean
   status?: boolean
   reviewedBy?: boolean
+  verificationDocuments?: boolean
   reviewedAt?: boolean
   rejectionReason?: boolean
   createdAt?: boolean
@@ -713,6 +740,7 @@ export type RecruiterApplicationSelectCreateManyAndReturn<ExtArgs extends runtim
   message?: boolean
   status?: boolean
   reviewedBy?: boolean
+  verificationDocuments?: boolean
   reviewedAt?: boolean
   rejectionReason?: boolean
   createdAt?: boolean
@@ -733,6 +761,7 @@ export type RecruiterApplicationSelectUpdateManyAndReturn<ExtArgs extends runtim
   message?: boolean
   status?: boolean
   reviewedBy?: boolean
+  verificationDocuments?: boolean
   reviewedAt?: boolean
   rejectionReason?: boolean
   createdAt?: boolean
@@ -753,13 +782,14 @@ export type RecruiterApplicationSelectScalar = {
   message?: boolean
   status?: boolean
   reviewedBy?: boolean
+  verificationDocuments?: boolean
   reviewedAt?: boolean
   rejectionReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type RecruiterApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "companyName" | "companyWebsite" | "companyLogo" | "position" | "phoneNumber" | "email" | "linkedInProfile" | "message" | "status" | "reviewedBy" | "reviewedAt" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["recruiterApplication"]>
+export type RecruiterApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "companyName" | "companyWebsite" | "companyLogo" | "position" | "phoneNumber" | "email" | "linkedInProfile" | "message" | "status" | "reviewedBy" | "verificationDocuments" | "reviewedAt" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["recruiterApplication"]>
 export type RecruiterApplicationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -788,6 +818,7 @@ export type $RecruiterApplicationPayload<ExtArgs extends runtime.Types.Extension
     message: string
     status: $Enums.ApplicationStatus
     reviewedBy: string | null
+    verificationDocuments: string | null
     reviewedAt: Date | null
     rejectionReason: string | null
     createdAt: Date
@@ -1228,6 +1259,7 @@ export interface RecruiterApplicationFieldRefs {
   readonly message: Prisma.FieldRef<"RecruiterApplication", 'String'>
   readonly status: Prisma.FieldRef<"RecruiterApplication", 'ApplicationStatus'>
   readonly reviewedBy: Prisma.FieldRef<"RecruiterApplication", 'String'>
+  readonly verificationDocuments: Prisma.FieldRef<"RecruiterApplication", 'String'>
   readonly reviewedAt: Prisma.FieldRef<"RecruiterApplication", 'DateTime'>
   readonly rejectionReason: Prisma.FieldRef<"RecruiterApplication", 'String'>
   readonly createdAt: Prisma.FieldRef<"RecruiterApplication", 'DateTime'>

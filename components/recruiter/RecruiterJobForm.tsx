@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
+import { ImageKitUpload } from "@/components/ui/ImageKitUpload";
 
 const jobSchema = z.object({
     job_title: z.string().min(1, 'Job title is required'),
@@ -31,6 +32,7 @@ const jobSchema = z.object({
     job_description: z.string(),
     job_apply_link: z.string().url('Invalid URL').min(1, 'Application link is required'),
     job_is_remote: z.boolean(),
+    job_certifications: z.array(z.string()),
     qualifications: z.array(z.string()),
     responsibilities: z.array(z.string()),
 });
@@ -71,6 +73,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
             employer_name: "",
             job_location: "",
             job_description: "",
+            job_certifications: [],
             job_apply_link: "",
             job_is_remote: false,
             qualifications: [],
@@ -85,6 +88,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                 employer_name: initialData.job.employer_name || "",
                 job_location: initialData.job.job_location || "",
                 job_description: initialData.job.job_description || "",
+                job_certifications: initialData.job.job_certifications || [],
                 job_apply_link: initialData.job.job_apply_link || "",
                 job_is_remote: initialData.job.job_is_remote || false,
                 qualifications: initialData.job.qualifications || [],
@@ -102,22 +106,20 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
     // But backend expects array. Transform in submit.
 
     function onSubmit(values: JobFormValues) {
-        // Transform qualifications/responsibilities? 
-        // If inputs are array, good.
-        // Let's implement array inputs properly below.
-
         if (isEditing && recruiterJobId) {
             updateMutation.mutate({
                 recruiterJobId,
                 ...values,
                 job_location: values.job_location || undefined,
                 job_description: values.job_description || undefined,
+                jobCertifications: values.job_certifications,
             });
         } else {
             createMutation.mutate({
                 ...values,
                 job_location: values.job_location || undefined,
                 job_description: values.job_description || undefined,
+                jobCertifications: values.job_certifications,
             });
         }
     }
@@ -140,7 +142,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
             const current = form.getValues(name) || [];
             const newArr = [...current];
             newArr[index] = val;
-            form.setValue(name, newArr);
+            form.setValue(name, newArr as any);
         };
 
         return (

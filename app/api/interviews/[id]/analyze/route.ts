@@ -79,18 +79,23 @@ export async function POST(
 
         console.log(`Extracted ${transcript.length} messages from transcript`);
 
-        // 3. Generate Score with AI
         console.log("Generating AI Score...");
-        // Tavus transcript structure check needed. Assuming it matches what our AI service expects.
-        // Our AI service expects { role: string, content: string }[]
-        // If Tavus returns differently, we might need a mapping step here.
-        // Based on docs, it's roughly compatible or we'll map it.
-        // Tavus transcript is usually: [{ message: "...", role: "user" | "replica" }]
+
+        let resumeContent = undefined;
+        if (interview.resume_id) {
+            const resume = await prisma.resume.findUnique({
+                where: { id: interview.resume_id }
+            });
+            if (resume) {
+                resumeContent = resume.content;
+            }
+        }
 
         const analysis = await generateInterviewScore(
             transcript,
             interview.role || "Job Applicant",
-            interview.description || undefined
+            interview.description || undefined,
+            resumeContent
         );
 
         // Format feedback markdown

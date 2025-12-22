@@ -6,6 +6,7 @@ export interface InterviewData {
   description?: string;
   conversation_id?: string;
   conversation_url?: string;
+  resume_id?: string;
 }
 
 
@@ -86,6 +87,7 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
       role: data.role,
       description: data.description,
       conversation_id: conversation_id,
+      resume_id: data.resume_id,
       status: 'ACTIVE'
     }
   });

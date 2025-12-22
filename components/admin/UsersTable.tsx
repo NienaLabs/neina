@@ -68,12 +68,26 @@ export function UsersTable() {
         }
     });
 
+    const updateRoleMutation = trpc.admin.updateUserRole.useMutation({
+        onSuccess: () => {
+            utils.admin.getUsers.invalidate();
+            toast.success("User role updated");
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        }
+    });
+
     const handleToggleSuspend = (userId: string, currentStatus: boolean) => {
         toggleSuspendMutation.mutate({ userId, isSuspended: !currentStatus });
     };
 
-    const handleUpdatePlan = (userId: string, plan: string) => {
+    const handleUpdatePlan = (userId: string, plan: "FREE" | "SILVER" | "GOLD" | "DIAMOND") => {
         updatePlanMutation.mutate({ userId, plan });
+    };
+
+    const handleUpdateRole = (userId: string, role: string) => {
+        updateRoleMutation.mutate({ userId, role });
     };
 
     if (isError) {
@@ -110,7 +124,8 @@ export function UsersTable() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>User</TableHead>
+                            <TableHead className="w-[300px]">User</TableHead>
+                            <TableHead>Role</TableHead>
                             <TableHead>Plan</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Joined</TableHead>
@@ -133,19 +148,24 @@ export function UsersTable() {
                         ) : (
                             data?.users.map((user) => (
                                 <TableRow key={user.id}>
-                                    <TableCell className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8">
+                                    <TableCell className="flex items-center gap-3 py-4">
+                                        <Avatar className="h-10 w-10">
                                             <AvatarImage src={user.image || undefined} />
                                             <AvatarFallback>
                                                 {user.name?.charAt(0).toUpperCase() || "U"}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col">
-                                            <span className="font-medium">{user.name}</span>
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className="font-medium text-base">{user.name}</span>
+                                            <span className="text-sm text-muted-foreground">
                                                 {user.email}
                                             </span>
                                         </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="capitalize">
+                                            {user.role}
+                                        </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className="capitalize">
@@ -182,14 +202,31 @@ export function UsersTable() {
                                                 <DropdownMenuSub>
                                                     <DropdownMenuSubTrigger>Change Plan</DropdownMenuSubTrigger>
                                                     <DropdownMenuSubContent>
-                                                        <DropdownMenuItem onClick={() => handleUpdatePlan(user.id, "free")}>
+                                                        <DropdownMenuItem onClick={() => handleUpdatePlan(user.id, "FREE")}>
                                                             Free
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleUpdatePlan(user.id, "pro")}>
-                                                            Pro
+                                                        <DropdownMenuItem onClick={() => handleUpdatePlan(user.id, "SILVER")}>
+                                                            Silver
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleUpdatePlan(user.id, "enterprise")}>
-                                                            Enterprise
+                                                        <DropdownMenuItem onClick={() => handleUpdatePlan(user.id, "GOLD")}>
+                                                            Gold
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleUpdatePlan(user.id, "DIAMOND")}>
+                                                            Diamond
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuSubContent>
+                                                </DropdownMenuSub>
+                                                <DropdownMenuSub>
+                                                    <DropdownMenuSubTrigger>Change Role</DropdownMenuSubTrigger>
+                                                    <DropdownMenuSubContent>
+                                                        <DropdownMenuItem onClick={() => handleUpdateRole(user.id, "user")}>
+                                                            User
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleUpdateRole(user.id, "recruiter")}>
+                                                            Recruiter
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleUpdateRole(user.id, "admin")}>
+                                                            Admin
                                                         </DropdownMenuItem>
                                                     </DropdownMenuSubContent>
                                                 </DropdownMenuSub>

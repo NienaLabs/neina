@@ -27,7 +27,9 @@ export default async function AdminLayout({
             {/* Content Area */}
             <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
                 {/* Header */}
-                <Header />
+                <div className="lg:pl-0 pl-16">
+                    <Header />
+                </div>
 
                 {/* Main Content */}
                 <main>

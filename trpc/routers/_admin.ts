@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
+import { sendRecruiterApprovalEmail, sendRecruiterRejectionEmail } from '@/lib/email';
 
 export const adminRouter = createTRPCRouter({
     // --- User Management ---
@@ -87,6 +88,17 @@ export const adminRouter = createTRPCRouter({
             return await prisma.user.update({
                 where: { id: input.userId },
                 data: { plan: input.plan }
+            });
+        }),
+    updateUserRole: protectedProcedure
+        .input(z.object({ userId: z.string(), role: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            return await prisma.user.update({
+                where: { id: input.userId },
+                data: { role: input.role }
             });
         }),
 
@@ -717,7 +729,7 @@ export const adminRouter = createTRPCRouter({
                 data: { role: 'recruiter' },
             });
 
-            // Send notification
+            // Send in-app notification
             await prisma.announcement.create({
                 data: {
                     title: 'Recruiter Application Approved',
@@ -727,6 +739,19 @@ export const adminRouter = createTRPCRouter({
                     createdBy: user.id,
                 },
             });
+
+            // Send email notification
+            const applicantUser = await prisma.user.findUnique({
+                where: { id: application.userId },
+                select: { email: true, name: true }
+            });
+
+            if (applicantUser?.email) {
+                await sendRecruiterApprovalEmail(
+                    applicantUser.email,
+                    applicantUser.name || 'there'
+                );
+            }
 
             return { success: true };
         }),
@@ -756,7 +781,7 @@ export const adminRouter = createTRPCRouter({
                 },
             });
 
-            // Send notification
+            // Send in-app notification
             await prisma.announcement.create({
                 data: {
                     title: 'Recruiter Application Update',
@@ -766,6 +791,20 @@ export const adminRouter = createTRPCRouter({
                     createdBy: user.id,
                 },
             });
+
+            // Send email notification
+            const applicantUser = await prisma.user.findUnique({
+                where: { id: application.userId },
+                select: { email: true, name: true }
+            });
+
+            if (applicantUser?.email) {
+                await sendRecruiterRejectionEmail(
+                    applicantUser.email,
+                    applicantUser.name || 'there',
+                    input.reason
+                );
+            }
 
             return { success: true };
         }),

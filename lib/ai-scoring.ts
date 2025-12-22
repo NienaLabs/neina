@@ -9,7 +9,8 @@ export interface AssessmentResult {
 export async function generateInterviewScore(
     transcript: { role: string; content: string }[],
     role: string,
-    description?: string
+    description?: string,
+    resumeContent?: string
 ): Promise<AssessmentResult> {
     const API_KEY = process.env.OPENAI_API_KEY || process.env.GITHUB_TOKEN;
 
@@ -25,6 +26,7 @@ export async function generateInterviewScore(
     const systemPrompt = `You are an expert Hiring Manager and Interview Coach with 20 years of experience. 
 You are evaluating a candidate for the role of: ${role}.
 ${description ? `Job Description context: ${description}` : ""}
+${resumeContent ? `Candidate's Resume content: ${resumeContent}` : ""}
 
 Your task is to analyze the following interview transcript and provide a quantitative and qualitative assessment.
 

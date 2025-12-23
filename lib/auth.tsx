@@ -143,8 +143,32 @@ export const auth = betterAuth({
     ],
   emailAndPassword: {
     enabled: true,
-  },
+    requireEmailVerification: true,
+    sendResetPassword:  async ({ user, url, token }, request) => {
+            const name = user.name || user.email.split("@")[0]
+            await resend.emails.send({
+                from: `Niena Labs <${process.env.RESEND_FROM_EMAIL}>`,
+                to: user.email,
+                subject: "Reset your password",
+                react: EmailTemplate({
+                    action: "Reset Password",
+                    content: (
+                        <>
+                        <p> Hello {name}</p>
+                            <p>Click the button below to reset your password.</p>
+                        </>
+                    ),
+                    heading: "Reset Password",
+                    siteName: "Niena",
+                    baseUrl: process.env.NEXT_PUBLIC_BASE_URL!,
+                    url
+                })
+        })
+      }},
   user: {
+    deleteUser: {
+      enabled: true,
+    },
     additionalFields: {
       role: {
         type: "string",
@@ -177,20 +201,20 @@ export const auth = betterAuth({
         sendVerificationEmail: async ({ user, url, token }, request) => {
             const name = user.name || user.email.split("@")[0]
             await resend.emails.send({
-                from: process.env.RESEND_FROM_EMAIL!,
+                from: `Niena Labs <${process.env.RESEND_FROM_EMAIL}>`,
                 to: user.email,
                 subject: "Verify your email address",
                 react: EmailTemplate({
                     action: "Verify Email",
                     content: (
-                        `<>
+                        <>
                             <p>
-                                Hello ${name}
+                                Hello {name}
                             </p>
                             <p>
                                 Click the button below to verify your email address.
                             </p>
-                        </>`
+                        </>
                     ),
                     heading: "Verify Email",
                     siteName: "Niena",
@@ -199,7 +223,7 @@ export const auth = betterAuth({
                 })
         },
       )},
+        sendOnSignUp: true,
         autoSignInAfterVerification: true,
-        sendOnSignUp: true
     }
 });

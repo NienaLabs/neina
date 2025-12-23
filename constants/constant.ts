@@ -43,7 +43,7 @@ export const data = {
     },
     {
       title: "Settings",
-      url: "/accounts/settings",
+      url: "/account/settings",
       icon: Settings2,
     },
     {

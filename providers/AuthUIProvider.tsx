@@ -18,12 +18,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             onSessionChange={() => {
                 // Clear router cache (protected routes)
                 router.refresh()
+                router.push("/dashboard")
             }}
             Link={Link}
             social={{
                 providers: ["google"]
             }}
-            redirectTo="/dashboard"
+            // redirectTo="/dashboard" // Removed to allow verification wait screen
+            emailOTP
+            emailVerification
+            deleteUser
         >
             {children}
         </AuthUIProvider>

@@ -12,6 +12,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { ResumeReportSidebar } from '@/components/resume/ResumeReportSidebar'
 
 import { ReanalyzeButton } from '@/components/resume/ReanalyzeButton'
+import { formatDistanceToNow } from 'date-fns'
+import { StarRatingDisplay } from '@/components/resume/StarRatingDisplay'
+import { FeatureGuide } from '@/components/FeatureGuide'
 
 interface Props {
     params: Promise<{ resumeId: string }>
@@ -46,7 +49,7 @@ const Page = async ({ params }: Props) => {
     const scores = 'scores' in resume ? resume.scores : null;
 
     const parsedAnalysisData = analysisData ? (typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData) as AnalysisData : { fixes: {} }
-    const { fixes, ...fixCountRaw } = parsedAnalysisData
+    const { fixes = {}, ...fixCountRaw } = parsedAnalysisData
     const fixCount = fixCountRaw as Record<string, number>
     const score = scores 
    ? (typeof scores === 'string' 
@@ -104,7 +107,9 @@ const Page = async ({ params }: Props) => {
                                 {role}
                             </Badge>
                         </div>
-                        <span className="text-xs text-muted-foreground">Last updated just now</span>
+                        <span className="text-xs text-muted-foreground">
+                            Last updated {formatDistanceToNow(new Date(resume.updatedAt), { addSuffix: true })}
+                        </span>
                     </div>
                 </div>
 
@@ -162,26 +167,24 @@ const Page = async ({ params }: Props) => {
                         
                         {/* Star Rating Display */}
                         <div className="flex items-center gap-6">
-                            <div className="flex flex-col items-center justify-center gap-2">
-                                <div className="flex gap-1">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <Star 
-                                            key={star} 
-                                            className={`w-8 h-8 ${star <= starRating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
-                                        />
-                                    ))}
-                                </div>
-                                <span className="text-sm font-medium text-muted-foreground">
-                                    {isTailored ? 'Overall Quality' : 'Resume Health'}
-                                </span>
-                            </div>
+                            <StarRatingDisplay 
+                                rating={starRating} 
+                                label={isTailored ? 'Overall Quality' : 'Resume Health'}
+                                score={!isTailored ? Math.max(0, 100 - (totalIssues * 2)) : undefined}
+                            />
                             
                             <div className="h-12 w-px bg-border hidden md:block" />
 
                             <div className="flex flex-col gap-1">
-                                <h2 className="text-2xl font-bold tracking-tight">
-                                    {isTailored ? 'Tailored Analysis' : 'Issue Detection'}
-                                </h2>
+                                <div className="flex items-center gap-2">
+                                     <h2 className="text-2xl font-bold tracking-tight">
+                                        {isTailored ? 'Tailored Analysis' : 'Issue Detection'}
+                                    </h2>
+                                    <FeatureGuide 
+                                        title={isTailored ? "Tailored Analysis" : "Issue Detection"}
+                                        description="Review and fix issues found in your resume. Use Auto-fix to instantly resolve common problems. After applying fixes, **Save** your changes and click **Re-analyze** to update your score."
+                                    />
+                                </div>
                                 <p className="text-sm text-muted-foreground max-w-[250px]">
                                     {isTailored 
                                         ? "Based on alignment with the job description." 

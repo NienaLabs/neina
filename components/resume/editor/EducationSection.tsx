@@ -26,6 +26,7 @@ interface EducationSectionProps {
   addCustomField: (section: keyof ResumeExtraction, index: number) => void;
   removeCustomField: (section: keyof ResumeExtraction, index: number, fieldIndex: number) => void;
   fixes: Fixes;
+  onUpdate: (data: ResumeExtraction['education']) => void;
 }
 
 /**
@@ -49,6 +50,7 @@ export const EducationSection = ({
   addCustomField,
   removeCustomField,
   fixes,
+  onUpdate,
 }: EducationSectionProps) => {
   return (
     <section>
@@ -56,7 +58,11 @@ export const EducationSection = ({
         <div className="flex flex-row gap-2 items-center">
           <h2 className="text-xl font-semibold mb-3">Education</h2>
           <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay fixes={fixes} section="education" />
+            <FixesDisplay
+              fixes={fixes}
+              section="education"
+              onApplyFix={(fix) => onUpdate(fix.autoFix)}
+            />
           </div>
         </div>
         <Button

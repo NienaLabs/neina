@@ -32,6 +32,7 @@ interface ExperienceSectionProps {
     values: string[] | undefined
   ) => JSX.Element;
   fixes: Fixes;
+  onUpdate: (data: ResumeExtraction['experience']) => void;
 }
 
 /**
@@ -57,6 +58,7 @@ export const ExperienceSection = ({
   removeCustomField,
   renderStringArray,
   fixes,
+  onUpdate,
 }: ExperienceSectionProps) => {
   return (
     <section>
@@ -64,7 +66,11 @@ export const ExperienceSection = ({
         <div className="flex flex-row gap-2 items-center">
           <h2 className="text-xl font-semibold mb-3">Experience</h2>
           <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay fixes={fixes} section="experience" />
+            <FixesDisplay 
+              fixes={fixes} 
+              section="experience" 
+              onApplyFix={(fix) => onUpdate(fix.autoFix)}
+            />
           </div>
         </div>
         <Button

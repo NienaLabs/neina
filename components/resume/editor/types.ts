@@ -98,6 +98,7 @@ export interface Fix {
   severity: 'critical' | 'urgent' | 'low';
   issue: string;
   suggestion: string;
+  autoFix?: any;
 }
 
 export interface Fixes {

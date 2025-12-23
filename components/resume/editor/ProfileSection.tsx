@@ -7,6 +7,7 @@ interface ProfileSectionProps {
   objective: ResumeExtraction['objective'];
   handleFieldChange: (section: keyof ResumeExtraction, value: unknown) => void;
   fixes: Fixes;
+  onFixApply?: (section: 'profile' | 'objective', value: any) => void;
 }
 
 /**
@@ -22,6 +23,7 @@ export const ProfileSection = ({
   objective,
   handleFieldChange,
   fixes,
+  onFixApply,
 }: ProfileSectionProps) => {
   return (
     <>
@@ -30,7 +32,14 @@ export const ProfileSection = ({
           <div className="flex flex-row gap-2 items-center">
             <h2 className="text-xl font-semibold mb-3">Profile</h2>
             <div className="p-1 mb-3 flex items-center justify-center">
-              <FixesDisplay fixes={fixes} section="profile" />
+              <FixesDisplay 
+                fixes={fixes} 
+                section="profile" 
+                onApplyFix={(fix) => {
+                  if (onFixApply) onFixApply('profile', fix.autoFix);
+                  else handleFieldChange('profile', fix.autoFix);
+                }}
+              />
             </div>
           </div>
           <Textarea
@@ -45,7 +54,14 @@ export const ProfileSection = ({
           <div className="flex flex-row gap-2 items-center">
             <h2 className="text-xl font-semibold mb-3">Objective</h2>
             <div className="p-1 mb-3 flex items-center justify-center">
-              <FixesDisplay fixes={fixes} section="objective" />
+              <FixesDisplay 
+                fixes={fixes} 
+                section="objective" 
+                onApplyFix={(fix) => {
+                  if (onFixApply) onFixApply('objective', fix.autoFix);
+                  else handleFieldChange('objective', fix.autoFix);
+                }}
+              />
             </div>
           </div>
           <Textarea

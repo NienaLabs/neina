@@ -5,6 +5,7 @@ import { TailoredResume } from './ResumePageClient'
 import { toast } from 'sonner'
 import TailoredResumeCard from './TailoredResumeCard'
 import { Sparkles, Search } from 'lucide-react'
+import { FeatureGuide } from '@/components/FeatureGuide'
 
 const TailoredResumesSection = ({
   tailoredResumes,
@@ -35,6 +36,10 @@ const TailoredResumesSection = ({
        <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary animate-pulse" />
           <h2 className="text-2xl font-bold tracking-tight">Tailored Resumes</h2>
+          <FeatureGuide 
+            title="Tailored Resumes"
+            description="These are resumes customized for specific job descriptions. Create them from your primary resume."
+          />
        </div>
        
       {!tailoredResumes || tailoredResumes.length === 0 ? (

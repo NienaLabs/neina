@@ -333,6 +333,7 @@ interface ResumeAnalysis {
       issue: string
       suggestion: string
       severity: 'critical' | 'urgent' | 'low'
+      autoFix?: any
     }[]
   >
 }
@@ -343,6 +344,10 @@ STRICT RULES:
 - Provide actionable suggestions that the user can directly apply.
 - If a role description exists, tailor the analysis to that role. Otherwise, analyze based on a general resume.
 - Include only sections that have actual issues. Do not include empty arrays or missing fields.
+- PROPOSE FIXES: For each issue, provide an "autoFix" value which acts as the COMPLETE REPLACEMENT for that entire section/field.
+  - Example: If the issue is in "profile", "autoFix" should be the corrected string for the profile.
+  - Example: If the issue is in "experience", "autoFix" should be the fully corrected array of experience objects (including unchanged ones).
+  - If a fix isn't possible or safe to automate, omit "autoFix" or set it to null.
 
 ### CRITICAL JSON RULES
 - Output MUST be valid JSON.

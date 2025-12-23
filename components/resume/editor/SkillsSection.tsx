@@ -10,6 +10,7 @@ interface SkillsSectionProps {
   addSkill: (type: keyof NonNullable<ResumeExtraction['skills']>) => void;
   removeSkill: (type: keyof NonNullable<ResumeExtraction['skills']>, index: number) => void;
   fixes: Fixes;
+  onUpdate: (data: ResumeExtraction['skills']) => void;
 }
 
 /**
@@ -27,13 +28,18 @@ export const SkillsSection = ({
   addSkill,
   removeSkill,
   fixes,
+  onUpdate,
 }: SkillsSectionProps) => {
   return (
     <section>
       <div className="flex flex-row gap-2 items-center">
         <h2 className="text-xl font-semibold mb-3">Skills</h2>
         <div className="p-1 mb-3 flex items-center justify-center">
-          <FixesDisplay fixes={fixes} section="skills" />
+          <FixesDisplay 
+            fixes={fixes} 
+            section="skills" 
+            onApplyFix={(fix) => onUpdate(fix.autoFix)}
+          />
         </div>
       </div>
       {Object.entries(skills).map(([type, skillList]) => (

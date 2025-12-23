@@ -26,6 +26,7 @@ interface CertificationsSectionProps {
   addCustomField: (section: keyof ResumeExtraction, index: number) => void;
   removeCustomField: (section: keyof ResumeExtraction, index: number, fieldIndex: number) => void;
   fixes: Fixes;
+  onUpdate: (data: ResumeExtraction['certifications']) => void;
 }
 
 /**
@@ -49,6 +50,7 @@ export const CertificationsSection = ({
   addCustomField,
   removeCustomField,
   fixes,
+  onUpdate,
 }: CertificationsSectionProps) => {
   return (
     <section>
@@ -56,7 +58,11 @@ export const CertificationsSection = ({
         <div className="flex flex-row gap-2 items-center">
           <h2 className="text-xl font-semibold mb-3">Certifications</h2>
           <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay fixes={fixes} section="certifications" />
+            <FixesDisplay
+              fixes={fixes}
+              section="certifications"
+              onApplyFix={(fix) => onUpdate(fix.autoFix)}
+            />
           </div>
         </div>
         <Button

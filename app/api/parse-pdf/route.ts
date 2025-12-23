@@ -1,3 +1,5 @@
+import 'pdf-parse/worker';
+import { CanvasFactory } from 'pdf-parse/worker';
 import { trpc } from "@/trpc/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
     //const buffer = Buffer.from(arrayBuffer);
 
     // Parse PDF
-    const parser = new  PDFParse({data:arrayBuffer,verbosity:VerbosityLevel.WARNINGS});
+    const parser = new  PDFParse({data:arrayBuffer,verbosity:VerbosityLevel.WARNINGS,CanvasFactory});
     const data = await parser.getText();
     await parser.destroy();
     await trpc.resume.create({content:data.text,name:(file.name).split('.pdf')[0]});
@@ -32,8 +34,9 @@ export async function POST(request: NextRequest) {
       message:"resume uploaded successfully"
     },{status:201});
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
-      { message: `An error occurred while processing the PDF, perhaps you might be out of credit`,success:false },
+      { message: `An error occurred while processing the PDF, perhaps you might be out of credit:${error}`,success:false },
       { status: 500 }
     );
   }

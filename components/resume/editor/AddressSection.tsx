@@ -10,6 +10,7 @@ interface AddressSectionProps {
   handleOtherLinksChange: (index: number, value: string) => void;
   addNewOtherLink: () => void;
   fixes: Fixes;
+  onUpdate: (data: ResumeExtraction['address']) => void;
 }
 
 /**
@@ -27,13 +28,18 @@ export const AddressSection = ({
   handleOtherLinksChange,
   addNewOtherLink,
   fixes,
+  onUpdate,
 }: AddressSectionProps) => {
   return (
     <section>
       <div className="flex flex-row gap-2 items-center">
-        <h2 className="text-xl font-semibold mb-3">Address</h2>
+        <h2 className="text-xl font-semibold mb-3">Personal Details</h2>
         <div className="p-1 mb-3 flex items-center justify-center">
-          <FixesDisplay fixes={fixes} section="address" />
+          <FixesDisplay 
+            fixes={fixes} 
+            section="address" 
+            onApplyFix={(fix) => onUpdate(fix.autoFix)}
+          />
         </div>
       </div>
       <div className="grid grid-cols-3 gap-3">

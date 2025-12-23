@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner'
 import {trpc} from '@/trpc/client'
 import { Skeleton } from '../ui/skeleton'
+import { FeatureGuide } from '@/components/FeatureGuide'
 
    
 const PrimaryResumeSection = ({
@@ -137,9 +138,15 @@ if (res.success) {
           onChange={handleFileUpload}
         />
   
-      <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-        Primary Resumes
-      </h2>
+      <div className="flex items-center gap-2 mb-4">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+          Primary Resumes
+        </h2>
+        <FeatureGuide 
+          title="Primary Resumes"
+          description="Manage your base resumes here. Upload new PDFs to get started."
+        />
+      </div>
     
       {resumes && resumes.length > 0 ? (
         <>

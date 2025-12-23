@@ -33,6 +33,7 @@ interface ProjectsSectionProps {
     values: string[] | undefined
   ) => JSX.Element;
   fixes: Fixes;
+  onUpdate: (data: ResumeExtraction['projects']) => void;
 }
 
 /**
@@ -58,6 +59,7 @@ export const ProjectsSection = ({
   removeCustomField,
   renderStringArray,
   fixes,
+  onUpdate,
 }: ProjectsSectionProps) => {
   return (
     <section>
@@ -65,7 +67,11 @@ export const ProjectsSection = ({
         <div className="flex flex-row gap-2 items-center">
           <h2 className="text-xl font-semibold mb-3">Projects</h2>
           <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay fixes={fixes} section="projects" />
+            <FixesDisplay 
+              fixes={fixes} 
+              section="projects" 
+              onApplyFix={(fix) => onUpdate(fix.autoFix)}
+            />
           </div>
         </div>
         <Button

@@ -15,6 +15,7 @@ import { Briefcase, Search, SlidersHorizontal, Sparkles } from "lucide-react";
 import { parseISO, isValid } from "date-fns";
 import JobCard, { Job } from "./JobCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FeatureGuide } from "@/components/FeatureGuide";
 
 export default function JobSearchClient() {
   const { data, isPending, isError } = trpc.jobs.getReccommendedJobs.useQuery();
@@ -138,6 +139,11 @@ export default function JobSearchClient() {
             <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Recommended Jobs
             </h2>
+            <FeatureGuide 
+                title="AI Matching"
+                description="Jobs are ranked based on a semantic analysis of your resume skills, experience, and the job requirements."
+                className="ml-2"
+            />
           </div>
           <p className="text-muted-foreground">
             Found <span className="font-semibold text-foreground">{filteredJobs.length}</span> matches based on your profile

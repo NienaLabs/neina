@@ -87,7 +87,8 @@ export const EducationSection = ({
       </div>
 
       <div className="flex flex-col gap-6">
-        {education.map((edu, index) => (
+        {/* Safeguard: ensure education is an array */}
+        {Array.isArray(education) && education.map((edu, index) => (
           <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
             <div className="flex justify-end mb-2">
               <Button
@@ -170,7 +171,7 @@ export const EducationSection = ({
               </div>
               
               {/* Custom Fields */}
-              {edu.customFields?.map((field, fieldIndex) => (
+              {Array.isArray(edu.customFields) && edu.customFields.map((field, fieldIndex) => (
                 <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
                   <Input
                     placeholder="Field Name"

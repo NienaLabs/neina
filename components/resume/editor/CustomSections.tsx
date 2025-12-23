@@ -82,7 +82,8 @@ export const CustomSections = ({
               </Button>
             </div>
 
-            {section.entries.map((entry, entryIndex) => (
+            {/* Safeguard: ensure entries is an array */}
+            {Array.isArray(section.entries) && section.entries.map((entry, entryIndex) => (
               <div key={entryIndex} className="border rounded p-3 mb-3 bg-white relative">
                 <Button
                   variant="ghost"

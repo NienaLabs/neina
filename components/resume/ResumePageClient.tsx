@@ -35,6 +35,7 @@ export type TailoredResumeScoreData = {
   overallScore: number;
   skillsScore: number;
   experienceScore: number;
+  finalScore: number; // Add finalScore
 };
 
 export type TailoredResume = Resume & {
@@ -46,10 +47,22 @@ export type TailoredResume = Resume & {
 export type ResumeWithTailored = Resume & {
   scores: PrimaryResumeScoreData | null
   tailoredResumes: TailoredResume[]
+  scoreData: PrimaryResumeScoreData | null // Include scoreData in type definition
 }
 
 const ResumePageClient = () => {
-  const { data: primaryResumes, isLoading, isError, error, refetch } = trpc.resume.getPrimaryResumes.useQuery()
+  const { data: primaryResumes, isLoading, isError, error, refetch } = trpc.resume.getPrimaryResumes.useQuery(undefined, {
+    refetchInterval: (data) => {
+        if (!data || !Array.isArray(data)) return false;
+        // Check if any primary resume or tailored resume is pending or processing
+        const hasPending = data.some(resume => 
+            resume?.status === 'PENDING' || 
+            resume?.status === 'PROCESSING' ||
+            (Array.isArray(resume?.tailoredResumes) && resume.tailoredResumes.some(tr => tr?.status === 'PENDING' || tr?.status === 'PROCESSING'))
+        );
+        return hasPending ? 2000 : false;
+    }
+  })
   const [selectedResume, setSelectedResume] = useState<ResumeWithTailored | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -57,7 +70,13 @@ const ResumePageClient = () => {
 
   useEffect(() => {
     if (primaryResumes && primaryResumes.length > 0) {
-      setSelectedResume(primaryResumes[0] as ResumeWithTailored)
+      // If selectedResume is not set, set it to the first one
+      // If it is set, find the updated version of it in the new data
+      setSelectedResume(prev => {
+          if (!prev) return primaryResumes[0] as ResumeWithTailored;
+          const updated = primaryResumes.find(r => r.id === prev.id);
+          return (updated || primaryResumes[0]) as ResumeWithTailored;
+      })
     }
   }, [primaryResumes])
 

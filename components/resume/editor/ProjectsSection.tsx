@@ -93,7 +93,8 @@ export const ProjectsSection = ({
       </div>
 
       <div className="flex flex-col gap-6">
-        {projects.map((proj, index) => (
+        {/* Safeguard: ensure projects is an array */}
+        {Array.isArray(projects) && projects.map((proj, index) => (
           <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
             <div className="flex justify-end mb-2">
               <Button
@@ -143,7 +144,7 @@ export const ProjectsSection = ({
               </div>
               
               {/* Custom Fields */}
-              {proj.customFields?.map((field, fieldIndex) => (
+              {Array.isArray(proj.customFields) && proj.customFields.map((field, fieldIndex) => (
                 <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
                   <Input
                     placeholder="Field Name"

@@ -34,6 +34,7 @@ export type TailoredResumeMinAggregateOutputType = {
   name: string | null
   primaryResumeId: string | null
   userId: string | null
+  status: $Enums.ResumeStatus | null
 }
 
 export type TailoredResumeMaxAggregateOutputType = {
@@ -46,6 +47,7 @@ export type TailoredResumeMaxAggregateOutputType = {
   name: string | null
   primaryResumeId: string | null
   userId: string | null
+  status: $Enums.ResumeStatus | null
 }
 
 export type TailoredResumeCountAggregateOutputType = {
@@ -61,6 +63,7 @@ export type TailoredResumeCountAggregateOutputType = {
   primaryResumeId: number
   userId: number
   scores: number
+  status: number
   _all: number
 }
 
@@ -75,6 +78,7 @@ export type TailoredResumeMinAggregateInputType = {
   name?: true
   primaryResumeId?: true
   userId?: true
+  status?: true
 }
 
 export type TailoredResumeMaxAggregateInputType = {
@@ -87,6 +91,7 @@ export type TailoredResumeMaxAggregateInputType = {
   name?: true
   primaryResumeId?: true
   userId?: true
+  status?: true
 }
 
 export type TailoredResumeCountAggregateInputType = {
@@ -102,6 +107,7 @@ export type TailoredResumeCountAggregateInputType = {
   primaryResumeId?: true
   userId?: true
   scores?: true
+  status?: true
   _all?: true
 }
 
@@ -190,6 +196,7 @@ export type TailoredResumeGroupByOutputType = {
   primaryResumeId: string
   userId: string
   scores: runtime.JsonValue | null
+  status: $Enums.ResumeStatus
   _count: TailoredResumeCountAggregateOutputType | null
   _min: TailoredResumeMinAggregateOutputType | null
   _max: TailoredResumeMaxAggregateOutputType | null
@@ -226,6 +233,7 @@ export type TailoredResumeWhereInput = {
   primaryResumeId?: Prisma.StringFilter<"TailoredResume"> | string
   userId?: Prisma.StringFilter<"TailoredResume"> | string
   scores?: Prisma.JsonNullableFilter<"TailoredResume">
+  status?: Prisma.EnumResumeStatusFilter<"TailoredResume"> | $Enums.ResumeStatus
   primaryResume?: Prisma.XOR<Prisma.ResumeScalarRelationFilter, Prisma.ResumeWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -243,6 +251,7 @@ export type TailoredResumeOrderByWithRelationInput = {
   primaryResumeId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   scores?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
   primaryResume?: Prisma.ResumeOrderByWithRelationInput
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -263,6 +272,7 @@ export type TailoredResumeWhereUniqueInput = Prisma.AtLeast<{
   primaryResumeId?: Prisma.StringFilter<"TailoredResume"> | string
   userId?: Prisma.StringFilter<"TailoredResume"> | string
   scores?: Prisma.JsonNullableFilter<"TailoredResume">
+  status?: Prisma.EnumResumeStatusFilter<"TailoredResume"> | $Enums.ResumeStatus
   primaryResume?: Prisma.XOR<Prisma.ResumeScalarRelationFilter, Prisma.ResumeWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id">
@@ -280,6 +290,7 @@ export type TailoredResumeOrderByWithAggregationInput = {
   primaryResumeId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   scores?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
   _count?: Prisma.TailoredResumeCountOrderByAggregateInput
   _max?: Prisma.TailoredResumeMaxOrderByAggregateInput
   _min?: Prisma.TailoredResumeMinOrderByAggregateInput
@@ -301,6 +312,7 @@ export type TailoredResumeScalarWhereWithAggregatesInput = {
   primaryResumeId?: Prisma.StringWithAggregatesFilter<"TailoredResume"> | string
   userId?: Prisma.StringWithAggregatesFilter<"TailoredResume"> | string
   scores?: Prisma.JsonNullableWithAggregatesFilter<"TailoredResume">
+  status?: Prisma.EnumResumeStatusWithAggregatesFilter<"TailoredResume"> | $Enums.ResumeStatus
 }
 
 export type TailoredResumeCreateInput = {
@@ -314,6 +326,7 @@ export type TailoredResumeCreateInput = {
   extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
   primaryResume: Prisma.ResumeCreateNestedOneWithoutTailoredResumesInput
   user: Prisma.UserCreateNestedOneWithoutTailoredResumesInput
 }
@@ -331,6 +344,7 @@ export type TailoredResumeUncheckedCreateInput = {
   primaryResumeId: string
   userId: string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
 }
 
 export type TailoredResumeUpdateInput = {
@@ -344,6 +358,7 @@ export type TailoredResumeUpdateInput = {
   extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   primaryResume?: Prisma.ResumeUpdateOneRequiredWithoutTailoredResumesNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutTailoredResumesNestedInput
 }
@@ -361,6 +376,7 @@ export type TailoredResumeUncheckedUpdateInput = {
   primaryResumeId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
 }
 
 export type TailoredResumeCreateManyInput = {
@@ -376,6 +392,7 @@ export type TailoredResumeCreateManyInput = {
   primaryResumeId: string
   userId: string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
 }
 
 export type TailoredResumeUpdateManyMutationInput = {
@@ -389,6 +406,7 @@ export type TailoredResumeUpdateManyMutationInput = {
   extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
 }
 
 export type TailoredResumeUncheckedUpdateManyInput = {
@@ -404,6 +422,7 @@ export type TailoredResumeUncheckedUpdateManyInput = {
   primaryResumeId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
 }
 
 export type TailoredResumeListRelationFilter = {
@@ -429,6 +448,7 @@ export type TailoredResumeCountOrderByAggregateInput = {
   primaryResumeId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   scores?: Prisma.SortOrder
+  status?: Prisma.SortOrder
 }
 
 export type TailoredResumeMaxOrderByAggregateInput = {
@@ -441,6 +461,7 @@ export type TailoredResumeMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   primaryResumeId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
 }
 
 export type TailoredResumeMinOrderByAggregateInput = {
@@ -453,6 +474,7 @@ export type TailoredResumeMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   primaryResumeId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  status?: Prisma.SortOrder
 }
 
 export type TailoredResumeCreateNestedManyWithoutUserInput = {
@@ -550,6 +572,7 @@ export type TailoredResumeCreateWithoutUserInput = {
   extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
   primaryResume: Prisma.ResumeCreateNestedOneWithoutTailoredResumesInput
 }
 
@@ -565,6 +588,7 @@ export type TailoredResumeUncheckedCreateWithoutUserInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   primaryResumeId: string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
 }
 
 export type TailoredResumeCreateOrConnectWithoutUserInput = {
@@ -609,6 +633,7 @@ export type TailoredResumeScalarWhereInput = {
   primaryResumeId?: Prisma.StringFilter<"TailoredResume"> | string
   userId?: Prisma.StringFilter<"TailoredResume"> | string
   scores?: Prisma.JsonNullableFilter<"TailoredResume">
+  status?: Prisma.EnumResumeStatusFilter<"TailoredResume"> | $Enums.ResumeStatus
 }
 
 export type TailoredResumeCreateWithoutPrimaryResumeInput = {
@@ -622,6 +647,7 @@ export type TailoredResumeCreateWithoutPrimaryResumeInput = {
   extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
   user: Prisma.UserCreateNestedOneWithoutTailoredResumesInput
 }
 
@@ -637,6 +663,7 @@ export type TailoredResumeUncheckedCreateWithoutPrimaryResumeInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   userId: string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
 }
 
 export type TailoredResumeCreateOrConnectWithoutPrimaryResumeInput = {
@@ -677,6 +704,7 @@ export type TailoredResumeCreateManyUserInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   primaryResumeId: string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
 }
 
 export type TailoredResumeUpdateWithoutUserInput = {
@@ -690,6 +718,7 @@ export type TailoredResumeUpdateWithoutUserInput = {
   extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   primaryResume?: Prisma.ResumeUpdateOneRequiredWithoutTailoredResumesNestedInput
 }
 
@@ -705,6 +734,7 @@ export type TailoredResumeUncheckedUpdateWithoutUserInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   primaryResumeId?: Prisma.StringFieldUpdateOperationsInput | string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
 }
 
 export type TailoredResumeUncheckedUpdateManyWithoutUserInput = {
@@ -719,6 +749,7 @@ export type TailoredResumeUncheckedUpdateManyWithoutUserInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   primaryResumeId?: Prisma.StringFieldUpdateOperationsInput | string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
 }
 
 export type TailoredResumeCreateManyPrimaryResumeInput = {
@@ -733,6 +764,7 @@ export type TailoredResumeCreateManyPrimaryResumeInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   userId: string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.ResumeStatus
 }
 
 export type TailoredResumeUpdateWithoutPrimaryResumeInput = {
@@ -746,6 +778,7 @@ export type TailoredResumeUpdateWithoutPrimaryResumeInput = {
   extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   user?: Prisma.UserUpdateOneRequiredWithoutTailoredResumesNestedInput
 }
 
@@ -761,6 +794,7 @@ export type TailoredResumeUncheckedUpdateWithoutPrimaryResumeInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
 }
 
 export type TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeInput = {
@@ -775,6 +809,7 @@ export type TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeInput = {
   analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   scores?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
 }
 
 
@@ -792,6 +827,7 @@ export type TailoredResumeSelect<ExtArgs extends runtime.Types.Extensions.Intern
   primaryResumeId?: boolean
   userId?: boolean
   scores?: boolean
+  status?: boolean
   primaryResume?: boolean | Prisma.ResumeDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["tailoredResume"]>
@@ -809,6 +845,7 @@ export type TailoredResumeSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   primaryResumeId?: boolean
   userId?: boolean
   scores?: boolean
+  status?: boolean
   primaryResume?: boolean | Prisma.ResumeDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["tailoredResume"]>
@@ -826,6 +863,7 @@ export type TailoredResumeSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   primaryResumeId?: boolean
   userId?: boolean
   scores?: boolean
+  status?: boolean
   primaryResume?: boolean | Prisma.ResumeDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["tailoredResume"]>
@@ -843,9 +881,10 @@ export type TailoredResumeSelectScalar = {
   primaryResumeId?: boolean
   userId?: boolean
   scores?: boolean
+  status?: boolean
 }
 
-export type TailoredResumeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "updatedAt" | "content" | "role" | "jobDescription" | "name" | "extractedData" | "analysisData" | "primaryResumeId" | "userId" | "scores", ExtArgs["result"]["tailoredResume"]>
+export type TailoredResumeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "updatedAt" | "content" | "role" | "jobDescription" | "name" | "extractedData" | "analysisData" | "primaryResumeId" | "userId" | "scores" | "status", ExtArgs["result"]["tailoredResume"]>
 export type TailoredResumeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   primaryResume?: boolean | Prisma.ResumeDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -878,6 +917,7 @@ export type $TailoredResumePayload<ExtArgs extends runtime.Types.Extensions.Inte
     primaryResumeId: string
     userId: string
     scores: runtime.JsonValue | null
+    status: $Enums.ResumeStatus
   }, ExtArgs["result"]["tailoredResume"]>
   composites: {}
 }
@@ -1315,6 +1355,7 @@ export interface TailoredResumeFieldRefs {
   readonly primaryResumeId: Prisma.FieldRef<"TailoredResume", 'String'>
   readonly userId: Prisma.FieldRef<"TailoredResume", 'String'>
   readonly scores: Prisma.FieldRef<"TailoredResume", 'Json'>
+  readonly status: Prisma.FieldRef<"TailoredResume", 'ResumeStatus'>
 }
     
 

@@ -19,8 +19,8 @@ export function ReanalyzeButton({ resumeId, isTailored }: ReanalyzeButtonProps) 
     const reanalyzeMutation = trpc.resume.reanalyze.useMutation({
         onSuccess: () => {
             toast.success("Analysis started. This may take a few moments.")
-            setIsAnalyzing(false)
-            // Refresh the page to show updates when they arrive (though it's async)
+            // Don't reset isAnalyzing - let the status wrapper handle it
+            // The wrapper will show a full-page overlay while processing
             router.refresh()
         },
         onError: (error) => {

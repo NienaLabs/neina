@@ -42,11 +42,15 @@ export const SkillsSection = ({
           />
         </div>
       </div>
-      {Object.entries(skills).map(([type, skillList]) => (
+      {Object.entries(skills).map(([type, skillList]) => {
+        // Safeguard: ensure skillList is an array
+        const safeSkillList = Array.isArray(skillList) ? skillList : [];
+        
+        return (
         <div key={type} className="mb-4">
           <p className="font-medium capitalize">{type} Skills</p>
           <div className="flex flex-col gap-2">
-            {skillList.map((skill, i) => (
+            {safeSkillList.map((skill, i) => (
               <RemovableInput
                 key={i}
                 value={skill}
@@ -65,7 +69,8 @@ export const SkillsSection = ({
             </Button>
           </div>
         </div>
-      ))}
+        );
+      })}
     </section>
   );
 };

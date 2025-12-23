@@ -33,12 +33,23 @@ export const resumeRouter = createTRPCRouter({
              where: { id: ctx.session?.session.userId },
              data: { resume_credits: { decrement: 1 } }
          });
+         
+         // Create the resume immediately with PENDING status
+         const resume = await prisma.resume.create({
+            data: {
+                userId: ctx.session?.session.userId,
+                name: input.name,
+                content: input.content,
+                status: "PENDING"
+            }
+         });
 
          await inngest.send({
            name:"app/primary-resume.created", 
            data:{
             ...input,
-            userId:ctx.session?.session.userId
+            userId:ctx.session?.session.userId,
+            resumeId: resume.id // Pass the ID
            }
         })}catch(e){
             throw new TRPCError({code:"INTERNAL_SERVER_ERROR",message:`An unexpected error occured why trying to access Resume AI: +${e}`})
@@ -57,6 +68,19 @@ export const resumeRouter = createTRPCRouter({
     )
     .mutation(
         async({input,ctx})=>{
+         // Update status to PENDING
+         await prisma.resume.update({
+             where: {
+                 id: input.resumeId,
+                 userId: ctx.session?.session.userId
+             },
+             data: {
+                 status: "PENDING",
+                 content: input.content, // Update content as well
+                 name: input.name
+             }
+         });
+
          await inngest.send({
            name:"app/resume.updated", 
            data:{
@@ -104,6 +128,19 @@ export const resumeRouter = createTRPCRouter({
                 data: { resume_credits: { decrement: 1 } }
             });
 
+            // Create tailored resume immediately with PENDING status
+            const tailoredResume = await prisma.tailoredResume.create({
+                data: {
+                    userId: ctx.session?.session.userId,
+                    primaryResumeId: input.primaryResumeId,
+                    name: input.name,
+                    role: input.role,
+                    jobDescription: input.description,
+                    content: primaryResume.content, // Start with primary content
+                    status: "PENDING"
+                }
+            });
+
          await inngest.send({
            name:"app/tailored-resume.created", 
            data:{
@@ -111,8 +148,9 @@ export const resumeRouter = createTRPCRouter({
             role:input.role,
             description:input.description,
             name:input.name,
-            resumeId:input.primaryResumeId,
-            userId:ctx.session?.session.userId
+            primaryResumeId:input.primaryResumeId,
+            userId:ctx.session?.session.userId,
+            resumeId: tailoredResume.id // Pass the new ID
            }
         })
         }
@@ -130,12 +168,17 @@ export const resumeRouter = createTRPCRouter({
                     tailoredResumes:true
                 },
                 orderBy: {
-                    isPrimary: 'desc'
+                    createdAt: 'desc' // Order by newest first
                 }
             })
             return resumes}
-            catch{
-                throw new TRPCError({code:"NOT_FOUND",message:`error: + ${"unknown error"}`})
+            catch(err){
+                console.error("Error fetching resumes:", err);
+                // Throw the actual error so we can debug it on the client
+                throw new TRPCError({
+                    code:"INTERNAL_SERVER_ERROR",
+                    message: err instanceof Error ? err.message : "Failed to fetch resumes"
+                })
             }
         }
     ),
@@ -145,6 +188,9 @@ export const resumeRouter = createTRPCRouter({
             const resumes = await prisma.tailoredResume.findMany({
                 where:{
                     userId:ctx.session?.session.userId,
+                },
+                orderBy: {
+                    createdAt: 'desc'
                 }
             })
             return resumes
@@ -189,6 +235,7 @@ export const resumeRouter = createTRPCRouter({
                             extractedData: tailored.extractedData || undefined,
                             analysisData: tailored.analysisData || undefined,
                             scoreData: tailored.scores || undefined,
+                            status: "COMPLETED" // Promoted one is already ready
                         }
                     });
                 } else {
@@ -324,6 +371,12 @@ export const resumeRouter = createTRPCRouter({
                     data: { resume_credits: { decrement: 1 } }
                 });
 
+                // Update status to PENDING
+                await prisma.tailoredResume.update({
+                    where: { id: resumeId },
+                    data: { status: "PENDING" }
+                });
+
                 await inngest.send({
                     name: "app/tailored-resume.updated",
                     data: {
@@ -364,6 +417,12 @@ export const resumeRouter = createTRPCRouter({
                 await prisma.user.update({
                     where: { id: ctx.session?.session.userId },
                     data: { resume_credits: { decrement: 1 } }
+                });
+
+                // Update status to PENDING
+                await prisma.resume.update({
+                    where: { id: resumeId },
+                    data: { status: "PENDING" }
                 });
 
                 await inngest.send({

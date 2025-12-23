@@ -7,7 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Star, Briefcase, Calendar } from "lucide-react";
+
+import { MoreHorizontal, Edit, Trash2, Star, Briefcase, Calendar, Loader2 } from "lucide-react";
 import CircularProgress from "@/components/progress-circle";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -23,9 +24,22 @@ interface TailoredResumeCardProps {
 const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPrimary, onDelete }) => {
   const scoreData = resume.scores;
   const matchScore = scoreData ? Math.round(scoreData.finalScore * 100) : 0;
+  
+  const isProcessing = resume.status === 'PENDING' || resume.status === 'PROCESSING';
 
   return (
-    <Card className="group relative overflow-hidden border-border/50 bg-linear-to-br from-background to-muted/20 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full">
+    <Card className={cn(
+        "group relative overflow-hidden border-border/50 bg-linear-to-br from-background to-muted/20 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full",
+        isProcessing && "pointer-events-none opacity-80"
+    )}>
+       {/* Processing Overlay */}
+       {isProcessing && (
+         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+           <Loader2 className="h-8 w-8 text-primary animate-spin" />
+           <p className="text-xs font-semibold text-primary mt-2 animate-pulse">Processing...</p>
+         </div>
+       )}
+
       {/* Top Accent Line */}
       <div className={cn(
         "absolute top-0 left-0 w-full h-1 bg-linear-to-r",

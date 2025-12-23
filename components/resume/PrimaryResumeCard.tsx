@@ -10,12 +10,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Resume } from '@/lib/generated/prisma/client'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, Edit, Trash2, PlusCircle, Star, FileText, Calendar } from 'lucide-react'
+import { MoreHorizontal, Edit, Trash2, PlusCircle, Star, FileText, Calendar, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { trpc } from '@/trpc/client'
-import {useRouter} from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-
+import Link from 'next/link'
 
 // ✅ Define your score type
 type ScoreData = {
@@ -66,16 +66,28 @@ const PrimaryResumeCard = ({
   })
   const router = useRouter()
 
+  const isProcessing = resume.status === 'PENDING' || resume.status === 'PROCESSING';
+
   return (
     <Card
       className={cn(
         'group relative overflow-hidden transition-all duration-300 border-border/50 bg-gradient-to-br from-background to-muted/20 h-full flex flex-col',
         isSelected
           ? 'ring-2 ring-primary shadow-lg scale-[1.02]'
-          : 'hover:shadow-xl hover:border-primary/20 hover:scale-[1.01]'
+          : 'hover:shadow-xl hover:border-primary/20 hover:scale-[1.01]',
+        isProcessing && "pointer-events-none opacity-80",
+        !isProcessing && "cursor-pointer"
       )}
-      onClick={onSelect}
+      onClick={isProcessing ? undefined : onSelect}
     >
+       {/* Processing Overlay */}
+       {isProcessing && (
+         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+           <Loader2 className="h-8 w-8 text-primary animate-spin" />
+           <p className="text-xs font-semibold text-primary mt-2 animate-pulse">Processing...</p>
+         </div>
+       )}
+
        {/* Top Accent Line */}
        <div className={cn(
         "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-purple-400",
@@ -90,9 +102,15 @@ const PrimaryResumeCard = ({
                     <FileText className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0">
-                    <h3 className="font-bold text-lg leading-tight truncate group-hover:text-primary transition-colors">
-                        {resume.name}
-                    </h3>
+                    <Link 
+                      href={`/resume/edit/${resume.id}`} 
+                      onClick={(e) => e.stopPropagation()}
+                      className="block"
+                    >
+                        <h3 className="font-bold text-lg leading-tight truncate group-hover:text-primary transition-colors hover:underline cursor-pointer">
+                            {resume.name}
+                        </h3>
+                    </Link>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Calendar className="w-3 h-3" />
                         {formatDistanceToNow(new Date(resume.createdAt), { addSuffix: true })}
@@ -102,7 +120,7 @@ const PrimaryResumeCard = ({
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 cursor-pointer">
                     <MoreHorizontal className="h-4 w-4" />
                 </Button>
                 </DropdownMenuTrigger>

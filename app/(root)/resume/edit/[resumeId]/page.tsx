@@ -15,6 +15,7 @@ import { ReanalyzeButton } from '@/components/resume/ReanalyzeButton'
 import { formatDistanceToNow } from 'date-fns'
 import { StarRatingDisplay } from '@/components/resume/StarRatingDisplay'
 import { FeatureGuide } from '@/components/FeatureGuide'
+import { ResumeStatusWrapper } from '@/components/resume/ResumeStatusWrapper'
 
 interface Props {
     params: Promise<{ resumeId: string }>
@@ -91,6 +92,7 @@ const Page = async ({ params }: Props) => {
 
 
     return (
+        <ResumeStatusWrapper resumeId={resumeId}>
         <div className="p-4 md:p-6 flex min-h-screen flex-col flex-1 gap-6 bg-muted/40 h-full w-full font-sans ">
             {/* Header Section */}
             <div className="flex items-center justify-between w-full flex-wrap gap-4">
@@ -238,6 +240,7 @@ const Page = async ({ params }: Props) => {
                 </div>
             </div>
         </div>
+        </ResumeStatusWrapper>
     )
 }
 

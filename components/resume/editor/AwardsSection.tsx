@@ -81,7 +81,8 @@ export const AwardsSection = ({
       </div>
 
       <div className="flex flex-col gap-6">
-        {awards.map((award, index) => (
+        {/* Safeguard: ensure awards is an array */}
+        {Array.isArray(awards) && awards.map((award, index) => (
           <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
             <div className="flex justify-end mb-2">
               <Button
@@ -121,7 +122,7 @@ export const AwardsSection = ({
               />
               
               {/* Custom Fields */}
-              {award.customFields?.map((field, fieldIndex) => (
+              {Array.isArray(award.customFields) && award.customFields.map((field, fieldIndex) => (
                 <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
                   <Input
                     placeholder="Field Name"

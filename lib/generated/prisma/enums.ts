@@ -77,3 +77,21 @@ export const CandidateStatus = {
 } as const
 
 export type CandidateStatus = (typeof CandidateStatus)[keyof typeof CandidateStatus]
+
+
+export const ResumeStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED'
+} as const
+
+export type ResumeStatus = (typeof ResumeStatus)[keyof typeof ResumeStatus]
+
+
+export const TransactionProvider = {
+  PAYSTACK: 'PAYSTACK',
+  POLAR: 'POLAR'
+} as const
+
+export type TransactionProvider = (typeof TransactionProvider)[keyof typeof TransactionProvider]

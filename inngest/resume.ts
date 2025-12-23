@@ -142,77 +142,92 @@ export const resumeCreated = inngest.createFunction(
   { id: "resume-AI-workflow" },
   { event: "app/primary-resume.created" },
   async ({step,event}) => {
-    const mainState = createState<AgentState>({
-      parserAgent:"",
-      analyserAgent:"",
-      scoreAgent:"",
-      skillsExtractorAgent:"",
-      experienceExtractorAgent:""
-    })
-    const resumeText =`
-    #Resume
-    ${event.data.content}
-    `
-    // Run through the network (parser → analysis → score)
-    const result = await network.run(resumeText,{state: mainState});
-    const savedResumeId=await step.run("save-resume",async()=>{
-    const saved = await prisma.resume.create({
-      data:{
-      name:event.data.name,
-      content:event.data.content,
-      isPrimary:true,
-      userId:event.data.userId,
-      extractedData:result.state.data.parserAgent,
-      analysisData:result.state.data.analyserAgent,
-      scoreData:result.state.data.scoreAgent}
-    })
-    return saved.id;
-    })
+    try {
+        const mainState = createState<AgentState>({
+          parserAgent:"",
+          analyserAgent:"",
+          scoreAgent:"",
+          skillsExtractorAgent:"",
+          experienceExtractorAgent:""
+        })
+        const resumeText =`
+        #Resume
+        ${event.data.content}
+        `
+        // Run through the network (parser → analysis → score)
+        const result = await network.run(resumeText,{state: mainState});
+        const savedResumeId=await step.run("save-resume",async()=>{
+        // Update the existing resume with results and status
+        const saved = await prisma.resume.update({
+          where: {
+            id: event.data.resumeId,
+            userId: event.data.userId
+          },
+          data:{
+          content:event.data.content,
+          extractedData:result.state.data.parserAgent,
+          analysisData:result.state.data.analyserAgent,
+          scoreData:result.state.data.scoreAgent,
+          status: "COMPLETED"
+          }
+        })
+        return saved.id;
+        })
 
-    // Run extraction pipeline (skills & experience) after main workflow
-    const extractionState = createState<AgentState>({
-      parserAgent:"",
-      analyserAgent:"",
-      scoreAgent:"",
-      skillsExtractorAgent:"",
-      experienceExtractorAgent:""
-    })
-    
-    // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
-    const extractionResult = await extractionNetwork.run(resumeText, { state: extractionState });
-
-    // Parse and embed skills/experience
-    await step.run("embed-and-save-skills-experience", async () => {
-      try {
-        const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
-        const experienceData = JSON.parse(extractionResult.state.data.experienceExtractorAgent || '{}');
+        // Run extraction pipeline (skills & experience) after main workflow
+        const extractionState = createState<AgentState>({
+          parserAgent:"",
+          analyserAgent:"",
+          scoreAgent:"",
+          skillsExtractorAgent:"",
+          experienceExtractorAgent:""
+        })
         
-        const skills = skillsData.skills || [];
-        const certifications = skillsData.certifications || [];
-        const experiences = experienceData.experiences || [];
+        // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
+        const extractionResult = await extractionNetwork.run(resumeText, { state: extractionState });
 
-        await embedAndSaveSkillsExperience(savedResumeId, skills, certifications, experiences);
-      } catch (err) {
-        console.error("[resumeCreated] Failed to parse extraction results:", err);
-      }
-    });
+        // Parse and embed skills/experience
+        await step.run("embed-and-save-skills-experience", async () => {
+          try {
+            const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
+            const experienceData = JSON.parse(extractionResult.state.data.experienceExtractorAgent || '{}');
+            
+            const skills = skillsData.skills || [];
+            const certifications = skillsData.certifications || [];
+            const experiences = experienceData.experiences || [];
 
-    // Generate and save full resume embedding
-    await step.run("save-full-resume-embedding", async () => {
-      try {
-        const fullResumeEmbedding = await generateEmbedding(event.data.content);
-        const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
-        await prisma.$executeRaw`
-          UPDATE "resume"
-          SET "embedding" = ${formattedVector}::vector
-          WHERE "id" = ${savedResumeId}
-        `;
-      } catch (err) {
-        console.error("[resumeCreated] Failed to generate/save full resume embedding:", err);
-      }
-    });
+            await embedAndSaveSkillsExperience(savedResumeId, skills, certifications, experiences);
+          } catch (err) {
+            console.error("[resumeCreated] Failed to parse extraction results:", err);
+          }
+        });
 
-    return result // Final stage (scoreAgent) output
+        // Generate and save full resume embedding
+        await step.run("save-full-resume-embedding", async () => {
+          try {
+            const fullResumeEmbedding = await generateEmbedding(event.data.content);
+            const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
+            await prisma.$executeRaw`
+              UPDATE "resume"
+              SET "embedding" = ${formattedVector}::vector
+              WHERE "id" = ${savedResumeId}
+            `;
+          } catch (err) {
+            console.error("[resumeCreated] Failed to generate/save full resume embedding:", err);
+          }
+        });
+
+        return result // Final stage (scoreAgent) output
+    } catch (error) {
+        console.error("Error in resumeCreated workflow:", error);
+        // Delete the resume since creation failed
+        await step.run("delete-failed-resume", async () => {
+            await prisma.resume.delete({
+                where: { id: event.data.resumeId }
+            });
+        });
+        throw error; // Re-throw to ensure Inngest registers the failure
+    }
   }
 );
 
@@ -220,82 +235,96 @@ export const resumeUpdated = inngest.createFunction(
   { id: "resume-updated-workflow" },
   { event: "app/resume.updated" },
   async ({step,event}) => {
-    const mainState = createState<AgentState>({
-      parserAgent:"",
-      analyserAgent:"",
-      scoreAgent:"",
-      skillsExtractorAgent:"",
-      experienceExtractorAgent:""
-    })
-    const resumeText =`
-    #Resume
-    ${event.data.content}
-    
-    #Targetted Role
-    ${event.data.role}
-    #Job Description
-    ${event.data.description}
-    `
-    // Run through the network (parser → analysis → score)
-    const result = await network.run(resumeText,{state: mainState});
-    await step.run("update-resume",async()=>{
-    await prisma.resume.update({
-      where:{
-        id:event.data.resumeId,
-        userId:event.data.userId
-      },
-      data:{
-      name:event.data.name,
-      content:event.data.content,
-      extractedData:result.state.data.parserAgent,
-      analysisData:result.state.data.analyserAgent,
-      scoreData:result.state.data.scoreAgent}
-    })
-    })
-
-    // Run extraction pipeline (skills & experience) after main workflow
-    const extractionState = createState<AgentState>({
-      parserAgent:"",
-      analyserAgent:"",
-      scoreAgent:"",
-      skillsExtractorAgent:"",
-      experienceExtractorAgent:""
-    })
-    
-    // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
-    const extractionResult = await extractionNetwork.run(resumeText, { state: extractionState });
-
-    // Parse and embed skills/experience
-    await step.run("embed-and-save-skills-experience-update", async () => {
-      try {
-        const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
-        const experienceData = JSON.parse(extractionResult.state.data.experienceExtractorAgent || '{}');
+    try {
+        const mainState = createState<AgentState>({
+          parserAgent:"",
+          analyserAgent:"",
+          scoreAgent:"",
+          skillsExtractorAgent:"",
+          experienceExtractorAgent:""
+        })
+        const resumeText =`
+        #Resume
+        ${event.data.content}
         
-        const skills = skillsData.skills || [];
-        const certifications = skillsData.certifications || [];
-        const experiences = experienceData.experiences || [];
+        #Targetted Role
+        ${event.data.role}
+        #Job Description
+        ${event.data.description}
+        `
+        // Run through the network (parser → analysis → score)
+        const result = await network.run(resumeText,{state: mainState});
+        await step.run("update-resume",async()=>{
+        await prisma.resume.update({
+          where:{
+            id:event.data.resumeId,
+            userId:event.data.userId
+          },
+          data:{
+          name:event.data.name,
+          content:event.data.content,
+          extractedData:result.state.data.parserAgent,
+          analysisData:result.state.data.analyserAgent,
+          scoreData:result.state.data.scoreAgent,
+          status: "COMPLETED"
+          }
+        })
+        })
 
-        await embedAndSaveSkillsExperience(event.data.resumeId, skills, certifications, experiences);
-      } catch (err) {
-        console.error("[resumeUpdated] Failed to parse extraction results:", err);
-      }
-    });
+        // Run extraction pipeline (skills & experience) after main workflow
+        const extractionState = createState<AgentState>({
+          parserAgent:"",
+          analyserAgent:"",
+          scoreAgent:"",
+          skillsExtractorAgent:"",
+          experienceExtractorAgent:""
+        })
+        
+        // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
+        const extractionResult = await extractionNetwork.run(resumeText, { state: extractionState });
 
-    // Generate and save full resume embedding
-    await step.run("update-full-resume-embedding", async () => {
-      try {
-        const fullResumeEmbedding = await generateEmbedding(event.data.content);
-        const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
-        await prisma.$executeRaw`
-          UPDATE "resume"
-          SET "embedding" = ${formattedVector}::vector
-          WHERE "id" = ${event.data.resumeId}
-        `;
-      } catch (err) {
-        console.error("[resumeUpdated] Failed to generate/save full resume embedding:", err);
-      }
-    });
+        // Parse and embed skills/experience
+        await step.run("embed-and-save-skills-experience-update", async () => {
+          try {
+            const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
+            const experienceData = JSON.parse(extractionResult.state.data.experienceExtractorAgent || '{}');
+            
+            const skills = skillsData.skills || [];
+            const certifications = skillsData.certifications || [];
+            const experiences = experienceData.experiences || [];
 
-    return result // Final stage (scoreAgent) output
+            await embedAndSaveSkillsExperience(event.data.resumeId, skills, certifications, experiences);
+          } catch (err) {
+            console.error("[resumeUpdated] Failed to parse extraction results:", err);
+          }
+        });
+
+        // Generate and save full resume embedding
+        await step.run("update-full-resume-embedding", async () => {
+          try {
+            const fullResumeEmbedding = await generateEmbedding(event.data.content);
+            const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
+            await prisma.$executeRaw`
+              UPDATE "resume"
+              SET "embedding" = ${formattedVector}::vector
+              WHERE "id" = ${event.data.resumeId}
+            `;
+          } catch (err) {
+            console.error("[resumeUpdated] Failed to generate/save full resume embedding:", err);
+          }
+        });
+
+        return result // Final stage (scoreAgent) output
+    } catch (error) {
+        console.error("Error in resumeUpdated workflow:", error);
+        // Reset status to COMPLETED to preserve old analysis data
+        await step.run("reset-resume-status", async () => {
+            await prisma.resume.update({
+                where: { id: event.data.resumeId },
+                data: { status: "COMPLETED" }
+            });
+        });
+        throw error;
+    }
   }
 );

@@ -33,6 +33,7 @@ const CreateTailoredResumeDialog = ({
   const createTailoredResumeMutation = trpc.resume.createTailored.useMutation({
     onSuccess: () => {
       utils.resume.getTailoredResumes.invalidate()
+      utils.resume.getPrimaryResumes.invalidate()
       toast.success("Tailored Resume created successfully")
       onOpenChange(false)
     },

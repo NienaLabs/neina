@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
 
         if (user?.isSuspended) {
             return NextResponse.redirect(
-                new URL("/auth/sign-in?error=suspended", request.url)
+                new URL("/suspended", request.url)
             );
         }
     }
@@ -37,5 +37,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
     // Protected routes
-    matcher: ["/account/settings", "/dashboard","/interview-ai","/job-search","/onboarding","/resume", "/api/trpc", "/admin/:path*"]
+    matcher: ["/account/settings", "/dashboard", "/interview-ai", "/job-search", "/onboarding", "/resume", "/api/trpc", "/admin/:path*", "/recruiters/:path*"]
 }

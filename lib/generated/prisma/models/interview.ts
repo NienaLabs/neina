@@ -49,6 +49,7 @@ export type InterviewMinAggregateOutputType = {
   analysisFeedback: string | null
   analysisScore: number | null
   analyzedAt: Date | null
+  resume_id: string | null
 }
 
 export type InterviewMaxAggregateOutputType = {
@@ -64,6 +65,7 @@ export type InterviewMaxAggregateOutputType = {
   analysisFeedback: string | null
   analysisScore: number | null
   analyzedAt: Date | null
+  resume_id: string | null
 }
 
 export type InterviewCountAggregateOutputType = {
@@ -81,6 +83,7 @@ export type InterviewCountAggregateOutputType = {
   analyzedAt: number
   perceptionData: number
   transcript: number
+  resume_id: number
   _all: number
 }
 
@@ -108,6 +111,7 @@ export type InterviewMinAggregateInputType = {
   analysisFeedback?: true
   analysisScore?: true
   analyzedAt?: true
+  resume_id?: true
 }
 
 export type InterviewMaxAggregateInputType = {
@@ -123,6 +127,7 @@ export type InterviewMaxAggregateInputType = {
   analysisFeedback?: true
   analysisScore?: true
   analyzedAt?: true
+  resume_id?: true
 }
 
 export type InterviewCountAggregateInputType = {
@@ -140,6 +145,7 @@ export type InterviewCountAggregateInputType = {
   analyzedAt?: true
   perceptionData?: true
   transcript?: true
+  resume_id?: true
   _all?: true
 }
 
@@ -244,6 +250,7 @@ export type InterviewGroupByOutputType = {
   analyzedAt: Date | null
   perceptionData: runtime.JsonValue | null
   transcript: runtime.JsonValue | null
+  resume_id: string | null
   _count: InterviewCountAggregateOutputType | null
   _avg: InterviewAvgAggregateOutputType | null
   _sum: InterviewSumAggregateOutputType | null
@@ -284,6 +291,8 @@ export type interviewWhereInput = {
   analyzedAt?: Prisma.DateTimeNullableFilter<"interview"> | Date | string | null
   perceptionData?: Prisma.JsonNullableFilter<"interview">
   transcript?: Prisma.JsonNullableFilter<"interview">
+  resume_id?: Prisma.StringNullableFilter<"interview"> | string | null
+  resume?: Prisma.XOR<Prisma.ResumeNullableScalarRelationFilter, Prisma.ResumeWhereInput> | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -302,6 +311,8 @@ export type interviewOrderByWithRelationInput = {
   analyzedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   perceptionData?: Prisma.SortOrderInput | Prisma.SortOrder
   transcript?: Prisma.SortOrderInput | Prisma.SortOrder
+  resume_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  resume?: Prisma.ResumeOrderByWithRelationInput
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -323,6 +334,8 @@ export type interviewWhereUniqueInput = Prisma.AtLeast<{
   analyzedAt?: Prisma.DateTimeNullableFilter<"interview"> | Date | string | null
   perceptionData?: Prisma.JsonNullableFilter<"interview">
   transcript?: Prisma.JsonNullableFilter<"interview">
+  resume_id?: Prisma.StringNullableFilter<"interview"> | string | null
+  resume?: Prisma.XOR<Prisma.ResumeNullableScalarRelationFilter, Prisma.ResumeWhereInput> | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id">
 
@@ -341,6 +354,7 @@ export type interviewOrderByWithAggregationInput = {
   analyzedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   perceptionData?: Prisma.SortOrderInput | Prisma.SortOrder
   transcript?: Prisma.SortOrderInput | Prisma.SortOrder
+  resume_id?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.interviewCountOrderByAggregateInput
   _avg?: Prisma.interviewAvgOrderByAggregateInput
   _max?: Prisma.interviewMaxOrderByAggregateInput
@@ -366,6 +380,7 @@ export type interviewScalarWhereWithAggregatesInput = {
   analyzedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"interview"> | Date | string | null
   perceptionData?: Prisma.JsonNullableWithAggregatesFilter<"interview">
   transcript?: Prisma.JsonNullableWithAggregatesFilter<"interview">
+  resume_id?: Prisma.StringNullableWithAggregatesFilter<"interview"> | string | null
 }
 
 export type interviewCreateInput = {
@@ -382,6 +397,7 @@ export type interviewCreateInput = {
   analyzedAt?: Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume?: Prisma.ResumeCreateNestedOneWithoutInterviewsInput
   user: Prisma.UserCreateNestedOneWithoutInterviewInput
 }
 
@@ -400,6 +416,7 @@ export type interviewUncheckedCreateInput = {
   analyzedAt?: Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: string | null
 }
 
 export type interviewUpdateInput = {
@@ -416,6 +433,7 @@ export type interviewUpdateInput = {
   analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume?: Prisma.ResumeUpdateOneWithoutInterviewsNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutInterviewNestedInput
 }
 
@@ -434,6 +452,7 @@ export type interviewUncheckedUpdateInput = {
   analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type interviewCreateManyInput = {
@@ -451,6 +470,7 @@ export type interviewCreateManyInput = {
   analyzedAt?: Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: string | null
 }
 
 export type interviewUpdateManyMutationInput = {
@@ -484,6 +504,7 @@ export type interviewUncheckedUpdateManyInput = {
   analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type InterviewListRelationFilter = {
@@ -511,6 +532,7 @@ export type interviewCountOrderByAggregateInput = {
   analyzedAt?: Prisma.SortOrder
   perceptionData?: Prisma.SortOrder
   transcript?: Prisma.SortOrder
+  resume_id?: Prisma.SortOrder
 }
 
 export type interviewAvgOrderByAggregateInput = {
@@ -531,6 +553,7 @@ export type interviewMaxOrderByAggregateInput = {
   analysisFeedback?: Prisma.SortOrder
   analysisScore?: Prisma.SortOrder
   analyzedAt?: Prisma.SortOrder
+  resume_id?: Prisma.SortOrder
 }
 
 export type interviewMinOrderByAggregateInput = {
@@ -546,6 +569,7 @@ export type interviewMinOrderByAggregateInput = {
   analysisFeedback?: Prisma.SortOrder
   analysisScore?: Prisma.SortOrder
   analyzedAt?: Prisma.SortOrder
+  resume_id?: Prisma.SortOrder
 }
 
 export type interviewSumOrderByAggregateInput = {
@@ -595,6 +619,48 @@ export type interviewUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.interviewScalarWhereInput | Prisma.interviewScalarWhereInput[]
 }
 
+export type interviewCreateNestedManyWithoutResumeInput = {
+  create?: Prisma.XOR<Prisma.interviewCreateWithoutResumeInput, Prisma.interviewUncheckedCreateWithoutResumeInput> | Prisma.interviewCreateWithoutResumeInput[] | Prisma.interviewUncheckedCreateWithoutResumeInput[]
+  connectOrCreate?: Prisma.interviewCreateOrConnectWithoutResumeInput | Prisma.interviewCreateOrConnectWithoutResumeInput[]
+  createMany?: Prisma.interviewCreateManyResumeInputEnvelope
+  connect?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+}
+
+export type interviewUncheckedCreateNestedManyWithoutResumeInput = {
+  create?: Prisma.XOR<Prisma.interviewCreateWithoutResumeInput, Prisma.interviewUncheckedCreateWithoutResumeInput> | Prisma.interviewCreateWithoutResumeInput[] | Prisma.interviewUncheckedCreateWithoutResumeInput[]
+  connectOrCreate?: Prisma.interviewCreateOrConnectWithoutResumeInput | Prisma.interviewCreateOrConnectWithoutResumeInput[]
+  createMany?: Prisma.interviewCreateManyResumeInputEnvelope
+  connect?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+}
+
+export type interviewUpdateManyWithoutResumeNestedInput = {
+  create?: Prisma.XOR<Prisma.interviewCreateWithoutResumeInput, Prisma.interviewUncheckedCreateWithoutResumeInput> | Prisma.interviewCreateWithoutResumeInput[] | Prisma.interviewUncheckedCreateWithoutResumeInput[]
+  connectOrCreate?: Prisma.interviewCreateOrConnectWithoutResumeInput | Prisma.interviewCreateOrConnectWithoutResumeInput[]
+  upsert?: Prisma.interviewUpsertWithWhereUniqueWithoutResumeInput | Prisma.interviewUpsertWithWhereUniqueWithoutResumeInput[]
+  createMany?: Prisma.interviewCreateManyResumeInputEnvelope
+  set?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  disconnect?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  delete?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  connect?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  update?: Prisma.interviewUpdateWithWhereUniqueWithoutResumeInput | Prisma.interviewUpdateWithWhereUniqueWithoutResumeInput[]
+  updateMany?: Prisma.interviewUpdateManyWithWhereWithoutResumeInput | Prisma.interviewUpdateManyWithWhereWithoutResumeInput[]
+  deleteMany?: Prisma.interviewScalarWhereInput | Prisma.interviewScalarWhereInput[]
+}
+
+export type interviewUncheckedUpdateManyWithoutResumeNestedInput = {
+  create?: Prisma.XOR<Prisma.interviewCreateWithoutResumeInput, Prisma.interviewUncheckedCreateWithoutResumeInput> | Prisma.interviewCreateWithoutResumeInput[] | Prisma.interviewUncheckedCreateWithoutResumeInput[]
+  connectOrCreate?: Prisma.interviewCreateOrConnectWithoutResumeInput | Prisma.interviewCreateOrConnectWithoutResumeInput[]
+  upsert?: Prisma.interviewUpsertWithWhereUniqueWithoutResumeInput | Prisma.interviewUpsertWithWhereUniqueWithoutResumeInput[]
+  createMany?: Prisma.interviewCreateManyResumeInputEnvelope
+  set?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  disconnect?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  delete?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  connect?: Prisma.interviewWhereUniqueInput | Prisma.interviewWhereUniqueInput[]
+  update?: Prisma.interviewUpdateWithWhereUniqueWithoutResumeInput | Prisma.interviewUpdateWithWhereUniqueWithoutResumeInput[]
+  updateMany?: Prisma.interviewUpdateManyWithWhereWithoutResumeInput | Prisma.interviewUpdateManyWithWhereWithoutResumeInput[]
+  deleteMany?: Prisma.interviewScalarWhereInput | Prisma.interviewScalarWhereInput[]
+}
+
 export type EnumInterviewStatusFieldUpdateOperationsInput = {
   set?: $Enums.InterviewStatus
 }
@@ -621,6 +687,7 @@ export type interviewCreateWithoutUserInput = {
   analyzedAt?: Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume?: Prisma.ResumeCreateNestedOneWithoutInterviewsInput
 }
 
 export type interviewUncheckedCreateWithoutUserInput = {
@@ -637,6 +704,7 @@ export type interviewUncheckedCreateWithoutUserInput = {
   analyzedAt?: Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: string | null
 }
 
 export type interviewCreateOrConnectWithoutUserInput = {
@@ -683,6 +751,67 @@ export type interviewScalarWhereInput = {
   analyzedAt?: Prisma.DateTimeNullableFilter<"interview"> | Date | string | null
   perceptionData?: Prisma.JsonNullableFilter<"interview">
   transcript?: Prisma.JsonNullableFilter<"interview">
+  resume_id?: Prisma.StringNullableFilter<"interview"> | string | null
+}
+
+export type interviewCreateWithoutResumeInput = {
+  id?: string
+  start_time?: Date | string
+  end_time?: Date | string | null
+  duration_seconds?: number
+  status?: $Enums.InterviewStatus
+  role?: string | null
+  description?: string | null
+  conversation_id?: string | null
+  analysisFeedback?: string | null
+  analysisScore?: number | null
+  analyzedAt?: Date | string | null
+  perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  user: Prisma.UserCreateNestedOneWithoutInterviewInput
+}
+
+export type interviewUncheckedCreateWithoutResumeInput = {
+  id?: string
+  user_id: string
+  start_time?: Date | string
+  end_time?: Date | string | null
+  duration_seconds?: number
+  status?: $Enums.InterviewStatus
+  role?: string | null
+  description?: string | null
+  conversation_id?: string | null
+  analysisFeedback?: string | null
+  analysisScore?: number | null
+  analyzedAt?: Date | string | null
+  perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+}
+
+export type interviewCreateOrConnectWithoutResumeInput = {
+  where: Prisma.interviewWhereUniqueInput
+  create: Prisma.XOR<Prisma.interviewCreateWithoutResumeInput, Prisma.interviewUncheckedCreateWithoutResumeInput>
+}
+
+export type interviewCreateManyResumeInputEnvelope = {
+  data: Prisma.interviewCreateManyResumeInput | Prisma.interviewCreateManyResumeInput[]
+  skipDuplicates?: boolean
+}
+
+export type interviewUpsertWithWhereUniqueWithoutResumeInput = {
+  where: Prisma.interviewWhereUniqueInput
+  update: Prisma.XOR<Prisma.interviewUpdateWithoutResumeInput, Prisma.interviewUncheckedUpdateWithoutResumeInput>
+  create: Prisma.XOR<Prisma.interviewCreateWithoutResumeInput, Prisma.interviewUncheckedCreateWithoutResumeInput>
+}
+
+export type interviewUpdateWithWhereUniqueWithoutResumeInput = {
+  where: Prisma.interviewWhereUniqueInput
+  data: Prisma.XOR<Prisma.interviewUpdateWithoutResumeInput, Prisma.interviewUncheckedUpdateWithoutResumeInput>
+}
+
+export type interviewUpdateManyWithWhereWithoutResumeInput = {
+  where: Prisma.interviewScalarWhereInput
+  data: Prisma.XOR<Prisma.interviewUpdateManyMutationInput, Prisma.interviewUncheckedUpdateManyWithoutResumeInput>
 }
 
 export type interviewCreateManyUserInput = {
@@ -699,6 +828,7 @@ export type interviewCreateManyUserInput = {
   analyzedAt?: Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: string | null
 }
 
 export type interviewUpdateWithoutUserInput = {
@@ -715,6 +845,7 @@ export type interviewUpdateWithoutUserInput = {
   analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume?: Prisma.ResumeUpdateOneWithoutInterviewsNestedInput
 }
 
 export type interviewUncheckedUpdateWithoutUserInput = {
@@ -731,10 +862,80 @@ export type interviewUncheckedUpdateWithoutUserInput = {
   analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type interviewUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  start_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_time?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  duration_seconds?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  conversation_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  analysisFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  analysisScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type interviewCreateManyResumeInput = {
+  id?: string
+  user_id: string
+  start_time?: Date | string
+  end_time?: Date | string | null
+  duration_seconds?: number
+  status?: $Enums.InterviewStatus
+  role?: string | null
+  description?: string | null
+  conversation_id?: string | null
+  analysisFeedback?: string | null
+  analysisScore?: number | null
+  analyzedAt?: Date | string | null
+  perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+}
+
+export type interviewUpdateWithoutResumeInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  start_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_time?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  duration_seconds?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  conversation_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  analysisFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  analysisScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  user?: Prisma.UserUpdateOneRequiredWithoutInterviewNestedInput
+}
+
+export type interviewUncheckedUpdateWithoutResumeInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  user_id?: Prisma.StringFieldUpdateOperationsInput | string
+  start_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end_time?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  duration_seconds?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  conversation_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  analysisFeedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  analysisScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  analyzedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  perceptionData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+}
+
+export type interviewUncheckedUpdateManyWithoutResumeInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  user_id?: Prisma.StringFieldUpdateOperationsInput | string
   start_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end_time?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   duration_seconds?: Prisma.IntFieldUpdateOperationsInput | number
@@ -766,6 +967,8 @@ export type interviewSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   analyzedAt?: boolean
   perceptionData?: boolean
   transcript?: boolean
+  resume_id?: boolean
+  resume?: boolean | Prisma.interview$resumeArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["interview"]>
 
@@ -784,6 +987,8 @@ export type interviewSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   analyzedAt?: boolean
   perceptionData?: boolean
   transcript?: boolean
+  resume_id?: boolean
+  resume?: boolean | Prisma.interview$resumeArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["interview"]>
 
@@ -802,6 +1007,8 @@ export type interviewSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   analyzedAt?: boolean
   perceptionData?: boolean
   transcript?: boolean
+  resume_id?: boolean
+  resume?: boolean | Prisma.interview$resumeArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["interview"]>
 
@@ -820,22 +1027,27 @@ export type interviewSelectScalar = {
   analyzedAt?: boolean
   perceptionData?: boolean
   transcript?: boolean
+  resume_id?: boolean
 }
 
-export type interviewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "start_time" | "end_time" | "duration_seconds" | "status" | "role" | "description" | "conversation_id" | "analysisFeedback" | "analysisScore" | "analyzedAt" | "perceptionData" | "transcript", ExtArgs["result"]["interview"]>
+export type interviewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "start_time" | "end_time" | "duration_seconds" | "status" | "role" | "description" | "conversation_id" | "analysisFeedback" | "analysisScore" | "analyzedAt" | "perceptionData" | "transcript" | "resume_id", ExtArgs["result"]["interview"]>
 export type interviewInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  resume?: boolean | Prisma.interview$resumeArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type interviewIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  resume?: boolean | Prisma.interview$resumeArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type interviewIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  resume?: boolean | Prisma.interview$resumeArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 
 export type $interviewPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "interview"
   objects: {
+    resume: Prisma.$ResumePayload<ExtArgs> | null
     user: Prisma.$UserPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -853,6 +1065,7 @@ export type $interviewPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     analyzedAt: Date | null
     perceptionData: runtime.JsonValue | null
     transcript: runtime.JsonValue | null
+    resume_id: string | null
   }, ExtArgs["result"]["interview"]>
   composites: {}
 }
@@ -1247,6 +1460,7 @@ readonly fields: interviewFieldRefs;
  */
 export interface Prisma__interviewClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  resume<T extends Prisma.interview$resumeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.interview$resumeArgs<ExtArgs>>): Prisma.Prisma__ResumeClient<runtime.Types.Result.GetResult<Prisma.$ResumePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1291,6 +1505,7 @@ export interface interviewFieldRefs {
   readonly analyzedAt: Prisma.FieldRef<"interview", 'DateTime'>
   readonly perceptionData: Prisma.FieldRef<"interview", 'Json'>
   readonly transcript: Prisma.FieldRef<"interview", 'Json'>
+  readonly resume_id: Prisma.FieldRef<"interview", 'String'>
 }
     
 
@@ -1684,6 +1899,25 @@ export type interviewDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Limit how many interviews to delete.
    */
   limit?: number
+}
+
+/**
+ * interview.resume
+ */
+export type interview$resumeArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Resume
+   */
+  select?: Prisma.ResumeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Resume
+   */
+  omit?: Prisma.ResumeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ResumeInclude<ExtArgs> | null
+  where?: Prisma.ResumeWhereInput
 }
 
 /**

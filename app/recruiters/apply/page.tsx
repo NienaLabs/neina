@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/trpc/client";
 import { RecruiterApplicationForm } from "@/components/recruiter/RecruiterApplicationForm";
 import { Loader2, CheckCircle, Clock, XCircle, RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/auth-client";
 
 export default function RecruiterApplyPage() {
     const [isReapplying, setIsReapplying] = useState(false);
+    const router = useRouter();
     const { data: session } = useSession();
     const { data: application, isLoading } = trpc.recruiter.getMyApplication.useQuery(undefined, {
         enabled: !!session?.user
@@ -17,6 +19,12 @@ export default function RecruiterApplyPage() {
     const { data: user } = trpc.user.getMe.useQuery(undefined, {
         enabled: !!session?.user
     });
+
+    useEffect(() => {
+        if (user?.role === 'recruiter') {
+            router.push('/recruiters/dashboard');
+        }
+    }, [user, router]);
 
     if (isLoading) {
         return (
@@ -26,20 +34,11 @@ export default function RecruiterApplyPage() {
         );
     }
 
-    // If user is already a recruiter, redirect or show message
+    // If user is already a recruiter, show loading while redirecting
     if (user?.role === 'recruiter') {
         return (
-            <div className="container max-w-2xl mx-auto py-20 text-center space-y-6">
-                <div className="mx-auto h-24 w-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                    <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
-                </div>
-                <h1 className="text-3xl font-bold">You are a Verified Recruiter!</h1>
-                <p className="text-muted-foreground text-lg">
-                    Access your dashboard to start posting jobs and managing candidates.
-                </p>
-                <Button asChild size="lg">
-                    <Link href="/recruiters/dashboard">Go to Dashboard</Link>
-                </Button>
+            <div className="flex h-[50vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }

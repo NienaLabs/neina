@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     console.log('Request body:', body);
-    const { role, description } = body;
+    const { role, description, useResume } = body;
 
 
     if (!role || typeof role !== 'string') {
@@ -103,7 +103,21 @@ export async function POST(request: Request) {
       : await (async () => {
         // Create Tavus conversation ONLY after credit checks pass
         console.log('Creating Tavus conversation for user:', userId);
-        const tavusResult = await createTavusConversation(role, description || `Interview for ${role}`);
+
+        let resumeContent = "";
+        let resumeId = undefined;
+
+        if (useResume) {
+          const primaryResume = await prisma.resume.findFirst({
+            where: { userId, isPrimary: true }
+          });
+          if (primaryResume) {
+            resumeContent = primaryResume.content;
+            resumeId = primaryResume.id;
+          }
+        }
+
+        const tavusResult = await createTavusConversation(role, description || `Interview for ${role}`, resumeContent);
 
         if (!tavusResult?.url || !tavusResult?.conversation_id) {
           throw new Error('Failed to create Tavus conversation');
@@ -114,7 +128,8 @@ export async function POST(request: Request) {
           role,
           description,
           conversation_id: tavusResult.conversation_id,
-          conversation_url: tavusResult.url
+          conversation_url: tavusResult.url,
+          resume_id: resumeId
         });
       })();
 

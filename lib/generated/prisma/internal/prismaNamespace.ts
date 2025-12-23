@@ -2373,7 +2373,8 @@ export const InterviewScalarFieldEnum = {
   analysisScore: 'analysisScore',
   analyzedAt: 'analyzedAt',
   perceptionData: 'perceptionData',
-  transcript: 'transcript'
+  transcript: 'transcript',
+  resume_id: 'resume_id'
 } as const
 
 export type InterviewScalarFieldEnum = (typeof InterviewScalarFieldEnum)[keyof typeof InterviewScalarFieldEnum]
@@ -2448,6 +2449,7 @@ export const JobsScalarFieldEnum = {
   job_is_remote: 'job_is_remote',
   qualifications: 'qualifications',
   responsibilities: 'responsibilities',
+  jobCertifications: 'jobCertifications',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -2536,6 +2538,7 @@ export const RecruiterApplicationScalarFieldEnum = {
   message: 'message',
   status: 'status',
   reviewedBy: 'reviewedBy',
+  verificationDocuments: 'verificationDocuments',
   reviewedAt: 'reviewedAt',
   rejectionReason: 'rejectionReason',
   createdAt: 'createdAt',
@@ -2555,7 +2558,8 @@ export const RecruiterJobScalarFieldEnum = {
   viewCount: 'viewCount',
   applicationCount: 'applicationCount',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  jobCertifications: 'jobCertifications'
 } as const
 
 export type RecruiterJobScalarFieldEnum = (typeof RecruiterJobScalarFieldEnum)[keyof typeof RecruiterJobScalarFieldEnum]

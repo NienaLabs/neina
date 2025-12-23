@@ -1,19 +1,11 @@
-/**
- * Recruiter router for handling recruiter-specific operations
- * Provides endpoints for application, job posting, candidate pipeline, and analytics
- */
+
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
+import { sendRecruiterApplicationReceivedEmail } from '@/lib/email';
 
 export const recruiterRouter = createTRPCRouter({
-    // --- Recruiter Application ---
-
-    /**
-     * Submit application to become a recruiter
-     * Creates a RecruiterApplication record for admin review
-     */
     applyForRecruiter: protectedProcedure
         .input(
             z.object({
@@ -22,6 +14,7 @@ export const recruiterRouter = createTRPCRouter({
                 position: z.string().min(1, 'Position is required'),
                 phoneNumber: z.string().min(1, 'Phone number is required'),
                 linkedInProfile: z.string().url('Invalid LinkedIn URL').optional(),
+                verificationDocuments: z.string().min(1, 'Verification documents are required'),
                 message: z.string().min(10, 'Please provide a message (minimum 10 characters)'),
             })
         )
@@ -61,13 +54,35 @@ export const recruiterRouter = createTRPCRouter({
                     },
                 });
 
+                // Send email notification
+                // We need to fetch user for existing application update as we didn't fetch it before
+                const user = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { email: true, name: true },
+                });
+
+                if (user) {
+                    await sendRecruiterApplicationReceivedEmail(user.email, user.name || 'User');
+
+                    // Create in-app notification
+                    await prisma.announcement.create({
+                        data: {
+                            title: 'Application Received',
+                            content: 'We have received your recruiter application and will get back to you shortly.',
+                            type: 'in-app',
+                            targetUserIds: [userId],
+                            createdBy: 'system',
+                        },
+                    });
+                }
+
                 return { success: true, application };
             }
 
             // Get user email for new application
             const user = await prisma.user.findUnique({
                 where: { id: userId },
-                select: { email: true },
+                select: { email: true, name: true },
             });
 
             if (!user) {
@@ -80,6 +95,20 @@ export const recruiterRouter = createTRPCRouter({
                     userId,
                     email: user.email,
                     ...input,
+                },
+            });
+
+            // Send email notification
+            await sendRecruiterApplicationReceivedEmail(user.email, user.name || 'User');
+
+            // Create in-app notification
+            await prisma.announcement.create({
+                data: {
+                    title: 'Application Received',
+                    content: 'We have received your recruiter application and will get back to you shortly.',
+                    type: 'in-app',
+                    targetUserIds: [userId],
+                    createdBy: 'system',
                 },
             });
 
@@ -116,6 +145,7 @@ export const recruiterRouter = createTRPCRouter({
                 job_is_remote: z.boolean().optional(),
                 qualifications: z.array(z.string()).optional(),
                 responsibilities: z.array(z.string()).optional(),
+                jobCertifications: z.array(z.string()).optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -134,10 +164,12 @@ export const recruiterRouter = createTRPCRouter({
                 });
             }
 
+            const { jobCertifications, ...jobData } = input;
+
             // Create job in jobs table
             const job = await prisma.jobs.create({
                 data: {
-                    ...input,
+                    ...jobData,
                     qualifications: input.qualifications || [],
                     responsibilities: input.responsibilities || [],
                     job_publisher: 'recruiter',
@@ -149,6 +181,7 @@ export const recruiterRouter = createTRPCRouter({
                 data: {
                     recruiterId: userId,
                     jobId: job.id,
+                    jobCertifications: jobCertifications || [],
                 },
             });
 
@@ -214,11 +247,12 @@ export const recruiterRouter = createTRPCRouter({
                 job_is_remote: z.boolean().optional(),
                 qualifications: z.array(z.string()).optional(),
                 responsibilities: z.array(z.string()).optional(),
+                jobCertifications: z.array(z.string()).optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id;
-            const { recruiterJobId, ...jobData } = input;
+            const { recruiterJobId, jobCertifications, ...jobData } = input;
 
             // Verify ownership
             const recruiterJob = await prisma.recruiterJob.findUnique({
@@ -235,6 +269,14 @@ export const recruiterRouter = createTRPCRouter({
                 where: { id: recruiterJob.jobId },
                 data: jobData,
             });
+
+            // Update recruiter job (certifications)
+            if (jobCertifications) {
+                await prisma.recruiterJob.update({
+                    where: { id: recruiterJobId },
+                    data: { jobCertifications },
+                });
+            }
 
             return { success: true, job: updatedJob };
         }),

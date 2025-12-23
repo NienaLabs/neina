@@ -9,8 +9,8 @@ interface StatsCardProps {
 
 export function StatsCard({ title, total, icon }: StatsCardProps) {
     return (
-        <div className="rounded-sm border border-stroke bg-white py-6 px-7.5 shadow-default dark:border-strokedark dark:bg-boxdark h-full">
-            <div className="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-slate-100 dark:bg-meta-4">
+        <div className="rounded-sm border border-stroke bg-white py-6 px-6 shadow-default dark:border-strokedark dark:bg-boxdark h-full">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-meta-4">
                 {icon}
             </div>
 

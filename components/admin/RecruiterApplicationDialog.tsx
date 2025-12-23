@@ -26,8 +26,11 @@ import {
     Eye,
     Globe,
     MessageSquare,
-    Briefcase
+    Briefcase,
+    FileText,
+    ExternalLink
 } from "lucide-react";
+import { ImageKitProvider } from "@imagekit/next";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
@@ -144,8 +147,6 @@ export function RecruiterApplicationDialog({ application, onUpdate }: RecruiterA
                             <Building2 className="h-4 w-4" /> Company Information
                         </h3>
                         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg space-y-3">
-
-
                             <div className="grid grid-cols-[20px_1fr] gap-2 text-sm">
                                 <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
                                 <span className="font-medium">{application.companyName}</span>
@@ -159,6 +160,54 @@ export function RecruiterApplicationDialog({ application, onUpdate }: RecruiterA
                                     <span className="text-muted-foreground italic">Not provided</span>
                                 )}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Verification Documents */}
+                    <div className="md:col-span-2 space-y-2">
+                        <h3 className="font-semibold flex items-center gap-2 text-primary">
+                            <FileText className="h-4 w-4" /> Verification Documents
+                        </h3>
+                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg">
+                            {application.verificationDocuments ? (
+                                <ImageKitProvider urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                            <FileText className="h-4 w-4" />
+                                            <span className="truncate max-w-md">{application.verificationDocuments.split('/').pop()}</span>
+                                            <a
+                                                href={application.verificationDocuments}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="ml-auto flex items-center gap-1 text-primary hover:underline"
+                                            >
+                                                Open Original <ExternalLink className="h-3 w-3" />
+                                            </a>
+                                        </div>
+
+                                        {/* Image Preview */}
+                                        <div className="relative rounded-md overflow-hidden border bg-background/50 flex justify-center p-2">
+                                            {application.verificationDocuments.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i) ? (
+                                                <img
+                                                    src={application.verificationDocuments}
+                                                    width={600}
+                                                    height={400}
+                                                    alt="Verification Document"
+                                                    className="max-h-[300px] w-auto object-contain rounded-md"
+                                                    loading="lazy"
+                                                />
+                                            ) : (
+                                                <div className="h-32 flex flex-col items-center justify-center text-muted-foreground gap-2 w-full">
+                                                    <FileText className="h-10 w-10 opacity-50" />
+                                                    <span>Preview not available for this file type</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </ImageKitProvider>
+                            ) : (
+                                <span className="text-muted-foreground italic text-sm">No verification documents provided</span>
+                            )}
                         </div>
                     </div>
 

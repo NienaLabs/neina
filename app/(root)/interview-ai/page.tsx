@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from '@/auth-client';
 import { Conversation } from '@/components/cvi/components/conversation';
 import { CVIProvider } from '@/components/cvi/components/cvi-provider';
+import { trpc } from '@/trpc/client';
 import { toast } from 'sonner';
 import { useDaily } from '@daily-co/daily-react';
 
@@ -72,6 +73,11 @@ const VideoInterview = () => {
   const [interviewId, setInterviewId] = useState<string | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(30);
   const [showTimeWarning, setShowTimeWarning] = useState<string>('');
+  const [useResume, setUseResume] = useState(false);
+
+  // Fetch resumes to check if any exist
+  const { data: resumes } = trpc.resume.getPrimaryResumes.useQuery();
+  const hasResume = resumes && resumes.length > 0;
 
   // ADDED: Ref to track if we're currently ending to prevent duplicate calls
   const isEndingRef = useRef(false);
@@ -109,6 +115,7 @@ const VideoInterview = () => {
         body: JSON.stringify({
           role,
           description,
+          useResume: hasResume ? useResume : false,
         }),
       });
 
@@ -403,8 +410,8 @@ const VideoInterview = () => {
             />
           </CVIProvider>
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-900">
-            <div className="text-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="text-center w-full px-4">
               {isConnecting ? (
                 <>
                   <Loader2 className="h-16 w-16 mx-auto mb-4 text-blue-500 animate-spin" />
@@ -491,6 +498,22 @@ const VideoInterview = () => {
                 💡 Adding a job description helps the AI ask more relevant questions
               </p>
             </div>
+
+            <div className="flex items-center justify-between space-x-2 py-2 border-t border-b">
+              <div className="flex flex-col space-y-0.5">
+                <Label htmlFor="use-resume" className="text-base font-medium">Use My Resume</Label>
+                <p className="text-xs text-muted-foreground">
+                  Give AI access to your primary resume for better context
+                </p>
+              </div>
+              <Switch
+                id="use-resume"
+                checked={useResume}
+                onCheckedChange={setUseResume}
+                disabled={!hasResume}
+              />
+            </div>
+
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button
                 variant="outline"

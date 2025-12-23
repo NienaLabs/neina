@@ -20,7 +20,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/auth-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Briefcase, Phone, Linkedin, Globe, Upload } from "lucide-react";
+import { Building2, Briefcase, Phone, Linkedin, Globe, Upload, FileCheck } from "lucide-react";
+import { ImageKitUpload } from "@/components/ui/ImageKitUpload";
 
 const formSchema = z.object({
     companyName: z.string().min(1, 'Company name is required'),
@@ -28,6 +29,7 @@ const formSchema = z.object({
     position: z.string().min(1, 'Position is required'),
     phoneNumber: z.string().min(1, 'Phone number is required'),
     linkedInProfile: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
+    verificationDocuments: z.string().min(1, 'Verification documents are required'),
     message: z.string().min(10, 'Please provide a message (minimum 10 characters)'),
 });
 
@@ -53,6 +55,7 @@ export function RecruiterApplicationForm() {
             position: "",
             phoneNumber: "",
             linkedInProfile: "",
+            verificationDocuments: "",
             message: "",
         },
     });
@@ -174,6 +177,29 @@ export function RecruiterApplicationForm() {
                                                 <Input className="pl-9" placeholder="https://linkedin.com/in/..." {...field} />
                                             </div>
                                         </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="verificationDocuments"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Company Verification Documents <span className="text-red-500">*</span></FormLabel>
+                                        <FormControl>
+                                            <ImageKitUpload
+                                                value={field.value}
+                                                onSuccess={(url) => field.onChange(url)}
+                                                onClear={() => field.onChange("")}
+                                                buttonText="Upload Business Certificate / ID"
+                                                folder="/recruiter-verifications"
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Upload documents showing you are a legit company (e.g., Certificate of Incorporation).
+                                        </FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )}

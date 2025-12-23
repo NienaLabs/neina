@@ -1,9 +1,10 @@
 "use client"
 
 import { type LucideIcon } from "lucide-react"
-import {usePathname} from 'next/navigation'
-import {useState,useEffect} from 'react'
+import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from "@/auth-client"
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -21,7 +22,8 @@ export function NavMain({
   }[]
 }) {
   const pathname = usePathname()
-  const [clientPathname,setClientPathname] = useState('')
+  const [clientPathname, setClientPathname] = useState('')
+  const { data: session } = useSession()
 
   useEffect(() => {
     setClientPathname(pathname)
@@ -29,16 +31,24 @@ export function NavMain({
 
   return (
     <SidebarMenu>
-      {items.map((item) => (
-        <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild isActive={clientPathname===item.url}>
-            <Link href={item.url} className="ml-2">
-              <item.icon />
-              <span>{item.title}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {items.map((item) => {
+        // If user is recruiter and clicking Recruiter link, go to dashboard
+        let url = item.url
+        if (item.title === "Recruiter" && session?.user?.role === "recruiter") {
+          url = "/recruiters/dashboard" // Redirect to recruiter dashboard
+        }
+
+        return (
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton asChild isActive={clientPathname === url}>
+              <Link href={url} className="ml-2">
+                <item.icon />
+                <span>{item.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )
+      })}
     </SidebarMenu>
   )
 }

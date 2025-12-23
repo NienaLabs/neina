@@ -67,6 +67,7 @@ export type JobsCountAggregateOutputType = {
   job_is_remote: number
   qualifications: number
   responsibilities: number
+  jobCertifications: number
   created_at: number
   updated_at: number
   _all: number
@@ -116,6 +117,7 @@ export type JobsCountAggregateInputType = {
   job_is_remote?: true
   qualifications?: true
   responsibilities?: true
+  jobCertifications?: true
   created_at?: true
   updated_at?: true
   _all?: true
@@ -206,6 +208,7 @@ export type JobsGroupByOutputType = {
   job_is_remote: boolean | null
   qualifications: string[]
   responsibilities: string[]
+  jobCertifications: string[]
   created_at: Date | null
   updated_at: Date | null
   _count: JobsCountAggregateOutputType | null
@@ -244,6 +247,7 @@ export type jobsWhereInput = {
   job_is_remote?: Prisma.BoolNullableFilter<"jobs"> | boolean | null
   qualifications?: Prisma.StringNullableListFilter<"jobs">
   responsibilities?: Prisma.StringNullableListFilter<"jobs">
+  jobCertifications?: Prisma.StringNullableListFilter<"jobs">
   created_at?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   updated_at?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   job_responsibilities?: Prisma.XOR<Prisma.Job_responsibilitiesNullableScalarRelationFilter, Prisma.job_responsibilitiesWhereInput> | null
@@ -264,6 +268,7 @@ export type jobsOrderByWithRelationInput = {
   job_is_remote?: Prisma.SortOrderInput | Prisma.SortOrder
   qualifications?: Prisma.SortOrder
   responsibilities?: Prisma.SortOrder
+  jobCertifications?: Prisma.SortOrder
   created_at?: Prisma.SortOrderInput | Prisma.SortOrder
   updated_at?: Prisma.SortOrderInput | Prisma.SortOrder
   job_responsibilities?: Prisma.job_responsibilitiesOrderByWithRelationInput
@@ -287,6 +292,7 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   job_is_remote?: Prisma.BoolNullableFilter<"jobs"> | boolean | null
   qualifications?: Prisma.StringNullableListFilter<"jobs">
   responsibilities?: Prisma.StringNullableListFilter<"jobs">
+  jobCertifications?: Prisma.StringNullableListFilter<"jobs">
   created_at?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   updated_at?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   job_responsibilities?: Prisma.XOR<Prisma.Job_responsibilitiesNullableScalarRelationFilter, Prisma.job_responsibilitiesWhereInput> | null
@@ -307,6 +313,7 @@ export type jobsOrderByWithAggregationInput = {
   job_is_remote?: Prisma.SortOrderInput | Prisma.SortOrder
   qualifications?: Prisma.SortOrder
   responsibilities?: Prisma.SortOrder
+  jobCertifications?: Prisma.SortOrder
   created_at?: Prisma.SortOrderInput | Prisma.SortOrder
   updated_at?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.jobsCountOrderByAggregateInput
@@ -330,6 +337,7 @@ export type jobsScalarWhereWithAggregatesInput = {
   job_is_remote?: Prisma.BoolNullableWithAggregatesFilter<"jobs"> | boolean | null
   qualifications?: Prisma.StringNullableListFilter<"jobs">
   responsibilities?: Prisma.StringNullableListFilter<"jobs">
+  jobCertifications?: Prisma.StringNullableListFilter<"jobs">
   created_at?: Prisma.DateTimeNullableWithAggregatesFilter<"jobs"> | Date | string | null
   updated_at?: Prisma.DateTimeNullableWithAggregatesFilter<"jobs"> | Date | string | null
 }
@@ -347,6 +355,7 @@ export type jobsCreateInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesCreateNestedOneWithoutJobsInput
@@ -367,6 +376,7 @@ export type jobsUncheckedCreateInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUncheckedCreateNestedOneWithoutJobsInput
@@ -387,6 +397,7 @@ export type jobsUpdateInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUpdateOneWithoutJobsNestedInput
@@ -407,6 +418,7 @@ export type jobsUncheckedUpdateInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUncheckedUpdateOneWithoutJobsNestedInput
@@ -427,6 +439,7 @@ export type jobsCreateManyInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
 }
@@ -444,6 +457,7 @@ export type jobsUpdateManyMutationInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -461,6 +475,7 @@ export type jobsUncheckedUpdateManyInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -483,6 +498,7 @@ export type jobsCountOrderByAggregateInput = {
   job_is_remote?: Prisma.SortOrder
   qualifications?: Prisma.SortOrder
   responsibilities?: Prisma.SortOrder
+  jobCertifications?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -562,12 +578,21 @@ export type jobsCreateresponsibilitiesInput = {
   set: string[]
 }
 
+export type jobsCreatejobCertificationsInput = {
+  set: string[]
+}
+
 export type jobsUpdatequalificationsInput = {
   set?: string[]
   push?: string | string[]
 }
 
 export type jobsUpdateresponsibilitiesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type jobsUpdatejobCertificationsInput = {
   set?: string[]
   push?: string | string[]
 }
@@ -599,6 +624,7 @@ export type jobsCreateWithoutJob_responsibilitiesInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_skills?: Prisma.job_skillsCreateNestedOneWithoutJobsInput
@@ -618,6 +644,7 @@ export type jobsUncheckedCreateWithoutJob_responsibilitiesInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_skills?: Prisma.job_skillsUncheckedCreateNestedOneWithoutJobsInput
@@ -653,6 +680,7 @@ export type jobsUpdateWithoutJob_responsibilitiesInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_skills?: Prisma.job_skillsUpdateOneWithoutJobsNestedInput
@@ -672,6 +700,7 @@ export type jobsUncheckedUpdateWithoutJob_responsibilitiesInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_skills?: Prisma.job_skillsUncheckedUpdateOneWithoutJobsNestedInput
@@ -691,6 +720,7 @@ export type jobsCreateWithoutJob_skillsInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesCreateNestedOneWithoutJobsInput
@@ -710,6 +740,7 @@ export type jobsUncheckedCreateWithoutJob_skillsInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUncheckedCreateNestedOneWithoutJobsInput
@@ -745,6 +776,7 @@ export type jobsUpdateWithoutJob_skillsInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUpdateOneWithoutJobsNestedInput
@@ -764,6 +796,7 @@ export type jobsUncheckedUpdateWithoutJob_skillsInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUncheckedUpdateOneWithoutJobsNestedInput
@@ -783,6 +816,7 @@ export type jobsCreateWithoutRecruiterJobInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesCreateNestedOneWithoutJobsInput
@@ -802,6 +836,7 @@ export type jobsUncheckedCreateWithoutRecruiterJobInput = {
   job_is_remote?: boolean | null
   qualifications?: Prisma.jobsCreatequalificationsInput | string[]
   responsibilities?: Prisma.jobsCreateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsCreatejobCertificationsInput | string[]
   created_at?: Date | string | null
   updated_at?: Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUncheckedCreateNestedOneWithoutJobsInput
@@ -837,6 +872,7 @@ export type jobsUpdateWithoutRecruiterJobInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUpdateOneWithoutJobsNestedInput
@@ -856,6 +892,7 @@ export type jobsUncheckedUpdateWithoutRecruiterJobInput = {
   job_is_remote?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   qualifications?: Prisma.jobsUpdatequalificationsInput | string[]
   responsibilities?: Prisma.jobsUpdateresponsibilitiesInput | string[]
+  jobCertifications?: Prisma.jobsUpdatejobCertificationsInput | string[]
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updated_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   job_responsibilities?: Prisma.job_responsibilitiesUncheckedUpdateOneWithoutJobsNestedInput
@@ -877,6 +914,7 @@ export type jobsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   job_is_remote?: boolean
   qualifications?: boolean
   responsibilities?: boolean
+  jobCertifications?: boolean
   created_at?: boolean
   updated_at?: boolean
   job_responsibilities?: boolean | Prisma.jobs$job_responsibilitiesArgs<ExtArgs>
@@ -897,6 +935,7 @@ export type jobsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   job_is_remote?: boolean
   qualifications?: boolean
   responsibilities?: boolean
+  jobCertifications?: boolean
   created_at?: boolean
   updated_at?: boolean
 }, ExtArgs["result"]["jobs"]>
@@ -914,6 +953,7 @@ export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   job_is_remote?: boolean
   qualifications?: boolean
   responsibilities?: boolean
+  jobCertifications?: boolean
   created_at?: boolean
   updated_at?: boolean
 }, ExtArgs["result"]["jobs"]>
@@ -931,11 +971,12 @@ export type jobsSelectScalar = {
   job_is_remote?: boolean
   qualifications?: boolean
   responsibilities?: boolean
+  jobCertifications?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "job_publisher" | "job_title" | "employer_name" | "employer_logo" | "job_apply_link" | "job_location" | "job_description" | "job_posted_at" | "job_is_remote" | "qualifications" | "responsibilities" | "created_at" | "updated_at", ExtArgs["result"]["jobs"]>
+export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "job_publisher" | "job_title" | "employer_name" | "employer_logo" | "job_apply_link" | "job_location" | "job_description" | "job_posted_at" | "job_is_remote" | "qualifications" | "responsibilities" | "jobCertifications" | "created_at" | "updated_at", ExtArgs["result"]["jobs"]>
 export type jobsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   job_responsibilities?: boolean | Prisma.jobs$job_responsibilitiesArgs<ExtArgs>
   job_skills?: boolean | Prisma.jobs$job_skillsArgs<ExtArgs>
@@ -964,6 +1005,7 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     job_is_remote: boolean | null
     qualifications: string[]
     responsibilities: string[]
+    jobCertifications: string[]
     created_at: Date | null
     updated_at: Date | null
   }, ExtArgs["result"]["jobs"]>
@@ -1404,6 +1446,7 @@ export interface jobsFieldRefs {
   readonly job_is_remote: Prisma.FieldRef<"jobs", 'Boolean'>
   readonly qualifications: Prisma.FieldRef<"jobs", 'String[]'>
   readonly responsibilities: Prisma.FieldRef<"jobs", 'String[]'>
+  readonly jobCertifications: Prisma.FieldRef<"jobs", 'String[]'>
   readonly created_at: Prisma.FieldRef<"jobs", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"jobs", 'DateTime'>
 }

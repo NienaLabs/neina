@@ -3,7 +3,7 @@
  * createTavusConversation
  * Server-side only function to create a Tavus conversation.
  */
-export async function createTavusConversation(role?: string, description?: string): Promise<{ url: string; conversation_id: string }> {
+export async function createTavusConversation(role?: string, description?: string, resumeContent?: string): Promise<{ url: string; conversation_id: string }> {
   const API_KEY = process.env.TAVUS_API_KEY;
   const PERSONA_ID = process.env.TAVUS_PERSONA_ID;
   const REPLICA_ID = process.env.TAVUS_REPLICA_ID;
@@ -25,6 +25,9 @@ export async function createTavusConversation(role?: string, description?: strin
     }
     if (description) {
       context += `. The candidate has the following background/experience: ${description}`;
+    }
+    if (resumeContent) {
+      context += `. Candidate's Resume details: ${resumeContent}`;
     }
     context += ". Please tailor your questions to assess their suitability for this specific role and experience level.";
 

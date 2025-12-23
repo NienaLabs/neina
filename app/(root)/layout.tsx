@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
-            
+
 
             {/* Role-based Dashboard Links */}
             {session?.user?.role === 'recruiter' && (
@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
               >
                 <Building2 className="h-4 w-4" />
-                Recruiter Dashboard
+                Visit Recruiter Dashboard
               </Link>
             )}
             {session?.user?.role === 'admin' && (
@@ -40,7 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
               >
                 <Shield_Check className="h-4 w-4" />
-                Admin Dashboard
+                Visit Admin Dashboard
               </Link>
             )}
 

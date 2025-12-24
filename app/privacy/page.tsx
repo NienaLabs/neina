@@ -84,6 +84,16 @@ const PrivacyPage = () => {
                                     IP address, device type, browser information, cookies and analytics data.
                                 </p>
                             </div>
+
+                            <div className="mt-6 p-6 bg-gray-50 dark:bg-slate-800/40 rounded-2xl border border-gray-100 dark:border-gray-800 not-prose">
+                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-2">
+                                    <div className="w-5 h-5 flex items-center justify-center">🌐</div>
+                                    Public Data Sources
+                                </h3>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                    We collect and aggregate job listings from publicly available sources on the internet to provide our search services. This includes job titles, descriptions, company names, and locations found on public job boards and career pages.
+                                </p>
+                            </div>
                         </section>
 
                         <section className="mb-12">

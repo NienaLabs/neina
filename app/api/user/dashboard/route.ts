@@ -48,6 +48,7 @@ export async function GET(req: Request) {
                     name: true,
                     updatedAt: true,
                     scoreData: true,
+                    analysisData: true, // Fetch analysis data for score calculation
                 }
             }),
 
@@ -165,8 +166,36 @@ export async function GET(req: Request) {
         let resumeStrength = 0;
         if (resumes.length > 0) {
             const latestResume = resumes[0];
-            const score = (latestResume.scoreData as any)?.overallScore || 0;
-            resumeStrength = score;
+            
+            // Logic mirrored from Resume Edit Page:
+            // Calculate score based on total issues found in analysisData
+            try {
+                const analysisData = latestResume.analysisData;
+                if (analysisData) {
+                    const parsedData = typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData;
+                    // Fixes object contains the actual fix usage, the rest of keys are issue counts
+                    const { fixes = {}, ...fixCountRaw } = parsedData as any;
+                    
+                    const totalIssues = Object.values(fixCountRaw).reduce((acc: number, curr: any) => {
+                        return acc + (typeof curr === 'number' ? curr : 0);
+                    }, 0);
+
+                    // Score Formula: 100 - (Total Issues * 2)
+                    resumeStrength = Math.max(0, 100 - (totalIssues * 2));
+                } else {
+                     // Fallback if no analysis data yet
+                     resumeStrength = 0;
+                }
+            } catch (e) {
+                console.error("Error calculating resume strength:", e);
+                resumeStrength = 0;
+            }
+
+            // Fallback: If for some reason we have a tailored resume here (unlikely for "latest" if we consider primary),
+            // or if we want to support scoreData as an alternative source:
+            if (resumeStrength === 0 && (latestResume.scoreData as any)?.overallScore) {
+                 resumeStrength = (latestResume.scoreData as any).overallScore;
+            }
         }
 
         // 3. Interview Readiness - Use average analysis score

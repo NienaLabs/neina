@@ -13,6 +13,9 @@ export default async function AuthPage({ params }: { params: Promise<{ path: str
     return (
         <main className="flex grow jigsaw-background min-h-screen flex-col items-center justify-center  p-4 md:p-6">
             <AuthView path={path} className="bg-indigo-100 border-black/30 " />
+            <p className="text-xs text-center text-muted-foreground mt-4 max-w-sm">
+                By signing up or signing in, you accept our <a href="/terms" className="underline hover:text-primary">Terms of Service</a> and <a href="/privacy" className="underline hover:text-primary">Privacy Policy</a>.
+            </p>
         </main>
     )
 }

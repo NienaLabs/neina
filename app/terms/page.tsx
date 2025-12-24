@@ -78,6 +78,9 @@ const TermsPage = () => {
                                 <li>Practice real-time video interviews with an AI avatar</li>
                                 <li>Receive automated analysis of interview performance, including content quality, tone, clarity, and pacing</li>
                             </ul>
+                            <p className="mt-4 text-gray-700 dark:text-gray-300">
+                                <strong>Job Aggregation:</strong> Niena Labs aggregates job listings from various publicly available sources on the internet ("scraped data") to provide a comprehensive database of opportunities. We do not claim ownership of these listings, and they remain the intellectual property of the original posters.
+                            </p>
                             <p className="mt-4 italic text-gray-600 dark:text-gray-400">
                                 These services may be offered in free, trial, paid plans, pay as you go or one time payments.
                             </p>

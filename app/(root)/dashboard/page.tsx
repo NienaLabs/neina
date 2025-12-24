@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, Suspense, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FileText,
@@ -182,8 +183,8 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background p-8 relative overflow-hidden">
       {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-400/10 dark:bg-violet-900/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-400/10 dark:bg-indigo-900/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-400/10 dark:bg-violet-900/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-400/10 dark:bg-indigo-900/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       {/* Search params handler wrapped in Suspense */}
       <Suspense fallback={<Spinner />}>
@@ -203,13 +204,17 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button onClick={() => router.push('/interview-ai')} className="gap-2">
-              <Video className="h-4 w-4" />
-              Practice Interview
+            <Button asChild className="gap-2">
+              <Link href="/interview-ai">
+                <Video className="h-4 w-4" />
+                Practice Interview
+              </Link>
             </Button>
-            <Button variant="outline" onClick={() => router.push('/resume')} className="gap-2">
-              <FileText className="h-4 w-4" />
-              New Resume
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/resume">
+                <FileText className="h-4 w-4" />
+                New Resume
+              </Link>
             </Button>
           </div>
         </div>

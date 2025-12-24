@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 providers: ["google"]
             }}
             // redirectTo="/dashboard" // Removed to allow verification wait screen
-            emailOTP
             emailVerification
             deleteUser
         >

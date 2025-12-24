@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FileText,
@@ -109,29 +109,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/user/dashboard');
-        if (!res.ok) {
-          if (res.status === 401) {
-            router.push('/auth/sign-in');
-            return;
-          }
-          throw new Error('Failed to fetch dashboard data');
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/user/dashboard');
+      if (!res.ok) {
+        if (res.status === 401) {
+          router.push('/auth/sign-in');
+          return;
         }
-        const jsonData = await res.json();
-        setData(jsonData);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
+        throw new Error('Failed to fetch dashboard data');
       }
-    };
-
-    fetchData();
+      const jsonData = await res.json();
+      setData(jsonData);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -195,10 +197,6 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent inline-flex items-center gap-2">
               {getGreeting()}, {data.name?.split(' ')[0] || 'there'}
-              <FeatureGuide 
-                 description="This is your personal command center. Track your resume strength, interview readiness, and recent job search activity here."
-                 side="right"
-              />
             </h1>
             <p className="text-muted-foreground mt-1">
               Here&apos;s what&apos;s happening with your job search today.
@@ -227,6 +225,7 @@ export default function DashboardPage() {
             gradient="from-violet-500/10 to-indigo-500/10"
             iconColor="text-violet-600 dark:text-violet-400"
             delay={0}
+            tooltip="AI credits used for resume optimization and analysis. Each optimization costs 1 credit."
           />
           <MetricCard
             title="Resume Strength"
@@ -234,9 +233,10 @@ export default function DashboardPage() {
             icon={FileText}
             description="Latest analysis score"
             progress={data.resumeStrength}
-             gradient="from-fuchsia-500/10 to-pink-500/10"
-             iconColor="text-fuchsia-600 dark:text-fuchsia-400"
-             delay={100}
+            gradient="from-fuchsia-500/10 to-pink-500/10"
+            iconColor="text-fuchsia-600 dark:text-fuchsia-400"
+            delay={100}
+            tooltip="Calculated based on your latest resume content, covering keywords, impact, and structure."
           />
           <MetricCard
             title="Interview Readiness"
@@ -246,7 +246,8 @@ export default function DashboardPage() {
             progress={data.aiInsight.readiness}
             gradient="from-blue-500/10 to-cyan-500/10"
             iconColor="text-blue-600 dark:text-blue-400"
-             delay={200}
+            delay={200}
+            tooltip="The average score of all your analyzed interviews. Higher scores indicate better performance."
           />
           <MetricCard
             title="Interview AI Credits"
@@ -257,19 +258,24 @@ export default function DashboardPage() {
             hideProgress
             gradient="from-amber-500/10 to-orange-500/10"
             iconColor="text-amber-600 dark:text-amber-400"
-             delay={300}
+            delay={300}
+            tooltip="Minutes available for AI mock interviews. Credits are deducted based on interview duration."
           />
         </div>
 
         <div className="grid grid-cols-1 gap-8 mt-8">
           <Card className="border-none shadow-lg bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl relative overflow-hidden group">
-             <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <CardHeader className="relative">
               <CardTitle className="text-xl flex items-center gap-2">
                 <span className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400">
-                   <Clock className="w-5 h-5"/>
+                  <Clock className="w-5 h-5" />
                 </span>
                 Recent Activity
+                <FeatureGuide
+                  description="Your latest interview and resume activities. Use 'Generate Report' for ended interviews to see AI analysis."
+                  side="right"
+                />
               </CardTitle>
               <CardDescription>Your latest actions and progress</CardDescription>
             </CardHeader>
@@ -301,33 +307,50 @@ export default function DashboardPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 text-xs"
-                              onClick={() => router.push(`/interviews/${activity.id}/result`)}
+                              className="h-8 text-xs font-semibold px-4 border-primary/20 hover:border-primary/50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/interviews/${activity.id}/result`);
+                              }}
                             >
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-primary" />
                               View Report
                             </Button>
                           )}
-                          {activity.type === 'interview' && activity.status === 'ENDED' && (
+                          {activity.type === 'interview' && (activity.status === 'ENDED' || activity.status === 'TIMEOUT') && (
                             <Button
                               size="sm"
-                              variant="outline"
-                              className="h-6 text-xs"
-                              onClick={async () => {
+                              variant="default"
+                              className="h-8 text-xs font-semibold shadow-sm hover:shadow-md transition-all px-4"
+                              onClick={async (e) => {
+                                e.stopPropagation();
                                 toast.loading('Generating analysis...', { id: activity.id });
                                 try {
                                   const res = await fetch(`/api/interviews/${activity.id}/analyze`, {
                                     method: 'POST'
                                   });
-                                  if (!res.ok) throw new Error('Failed to generate analysis');
+                                  const analyzeData = await res.json();
+
+                                  if (res.status === 422) {
+                                    toast.error(analyzeData.error || 'Transcript not ready yet. Please wait 1-2 minutes.', { id: activity.id, duration: 5000 });
+                                    return;
+                                  }
+
+                                  if (!res.ok) throw new Error(analyzeData.error || 'Failed to generate analysis');
+
                                   toast.success('Analysis complete!', { id: activity.id });
+
+                                  // Refresh dashboard data so status updates to ANALYZED
+                                  await fetchData();
+
+                                  // Redirect to result page
                                   router.push(`/interviews/${activity.id}/result`);
                                 } catch (error) {
-                                  toast.error('Failed to generate analysis', { id: activity.id });
+                                  toast.error(error instanceof Error ? error.message : 'Failed to generate analysis', { id: activity.id });
                                 }
                               }}
                             >
-                              <Zap className="h-3 w-3 mr-1" />
+                              <Zap className="h-3.5 w-3.5 mr-1.5" />
                               Generate Report
                             </Button>
                           )}
@@ -354,7 +377,8 @@ function MetricCard({
   hideProgress,
   gradient = "from-slate-50 to-slate-100",
   iconColor = "text-muted-foreground",
-  delay = 0
+  delay = 0,
+  tooltip
 }: {
   title: string;
   value: string;
@@ -365,35 +389,43 @@ function MetricCard({
   gradient?: string;
   iconColor?: string;
   delay?: number;
+  tooltip?: string;
 }) {
   return (
     <Card className={`border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br ${gradient} dark:from-slate-900 dark:to-slate-800/50 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4`}>
-       {/* Decorative shimmer */}
-       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-       
+      {/* Decorative shimmer */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
           {title}
+          {tooltip && (
+            <FeatureGuide
+              description={tooltip}
+              className="h-4 w-4"
+              side="top"
+            />
+          )}
         </CardTitle>
         <div className={`p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 shadow-sm ${iconColor}`}>
-           <Icon className="h-4 w-4" />
+          <Icon className="h-4 w-4" />
         </div>
       </CardHeader>
       <CardContent className="relative z-10">
         <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300">
-            {value}
+          {value}
         </div>
         <p className="text-xs text-muted-foreground mt-1 font-medium">
           {description}
         </p>
         {!hideProgress && progress !== undefined && (
           <div className="mt-3">
-             <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-slate-900 dark:bg-white transition-all duration-1000 ease-out" 
-                  style={{ width: `${progress}%` }}
-                />
-             </div>
+            <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-slate-900 dark:bg-white transition-all duration-1000 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         )}
       </CardContent>

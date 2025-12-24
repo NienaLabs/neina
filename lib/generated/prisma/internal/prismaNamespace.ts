@@ -2255,7 +2255,10 @@ export const UserScalarFieldEnum = {
   role: 'role',
   interview_minutes: 'interview_minutes',
   planExpiresAt: 'planExpiresAt',
-  plan: 'plan'
+  plan: 'plan',
+  polarCustomerId: 'polarCustomerId',
+  polarSubscriptionId: 'polarSubscriptionId',
+  preferredProvider: 'preferredProvider'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -2274,7 +2277,9 @@ export const TransactionScalarFieldEnum = {
   minutes: 'minutes',
   metadata: 'metadata',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  polarCheckoutId: 'polarCheckoutId',
+  provider: 'provider'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
@@ -2335,7 +2340,8 @@ export const ResumeScalarFieldEnum = {
   extractedData: 'extractedData',
   analysisData: 'analysisData',
   scoreData: 'scoreData',
-  userId: 'userId'
+  userId: 'userId',
+  status: 'status'
 } as const
 
 export type ResumeScalarFieldEnum = (typeof ResumeScalarFieldEnum)[keyof typeof ResumeScalarFieldEnum]
@@ -2353,7 +2359,8 @@ export const TailoredResumeScalarFieldEnum = {
   analysisData: 'analysisData',
   primaryResumeId: 'primaryResumeId',
   userId: 'userId',
-  scores: 'scores'
+  scores: 'scores',
+  status: 'status'
 } as const
 
 export type TailoredResumeScalarFieldEnum = (typeof TailoredResumeScalarFieldEnum)[keyof typeof TailoredResumeScalarFieldEnum]
@@ -2449,9 +2456,9 @@ export const JobsScalarFieldEnum = {
   job_is_remote: 'job_is_remote',
   qualifications: 'qualifications',
   responsibilities: 'responsibilities',
-  jobCertifications: 'jobCertifications',
   created_at: 'created_at',
-  updated_at: 'updated_at'
+  updated_at: 'updated_at',
+  jobCertifications: 'jobCertifications'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -2538,11 +2545,11 @@ export const RecruiterApplicationScalarFieldEnum = {
   message: 'message',
   status: 'status',
   reviewedBy: 'reviewedBy',
-  verificationDocuments: 'verificationDocuments',
   reviewedAt: 'reviewedAt',
   rejectionReason: 'rejectionReason',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  verificationDocuments: 'verificationDocuments'
 } as const
 
 export type RecruiterApplicationScalarFieldEnum = (typeof RecruiterApplicationScalarFieldEnum)[keyof typeof RecruiterApplicationScalarFieldEnum]
@@ -2740,6 +2747,34 @@ export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'J
  * Reference to a field of type 'QueryMode'
  */
 export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'TransactionProvider'
+ */
+export type EnumTransactionProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionProvider'>
+    
+
+
+/**
+ * Reference to a field of type 'TransactionProvider[]'
+ */
+export type ListEnumTransactionProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionProvider[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ResumeStatus'
+ */
+export type EnumResumeStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ResumeStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ResumeStatus[]'
+ */
+export type ListEnumResumeStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ResumeStatus[]'>
     
 
 

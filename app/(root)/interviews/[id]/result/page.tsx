@@ -213,7 +213,7 @@ export default function InterviewResultPage() {
                             <CardContent>
                                 <div className="prose dark:prose-invert max-w-none prose-headings:text-base prose-headings:font-semibold prose-p:text-sm prose-li:text-sm">
                                     <div dangerouslySetInnerHTML={{
-                                        __html: result.analysisFeedback
+                                        __html: (result.analysisFeedback || 'No feedback available yet.')
                                             .replace(/\n/g, '<br />')
                                             .replace(/### /g, '<h3 class="mt-4 mb-2">')
                                             .replace(/- /g, '• ')
@@ -230,7 +230,7 @@ export default function InterviewResultPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                                    {result.transcript.map((msg, idx) => (
+                                    {Array.isArray(result.transcript) ? result.transcript.map((msg, idx) => (
                                         <div
                                             key={idx}
                                             className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -249,7 +249,9 @@ export default function InterviewResultPage() {
                                                 <p className="text-sm leading-relaxed">{msg.content}</p>
                                             </div>
                                         </div>
-                                    ))}
+                                    )) : (
+                                        <p className="text-center text-muted-foreground py-8">No transcript available for this session.</p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

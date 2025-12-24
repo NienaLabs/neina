@@ -8,7 +8,7 @@ import { CVIProvider } from '@/components/cvi/components/cvi-provider';
 import { trpc } from '@/trpc/client';
 import { toast } from 'sonner';
 import { useDaily } from '@daily-co/daily-react';
-
+import { useSidebar } from '@/components/ui/sidebar';
 import { InterviewTimer } from '@/components/interview-timer';
 import {
   Loader2,
@@ -34,32 +34,41 @@ type TavusConversationResponse = {
 };
 
 // VideoCallComponent that uses useDailyCall inside CVIProvider
-const VideoCallComponent = ({
+const VideoCallComponent = React.memo(({
   meetingUrl,
-  onLeave
+  role,
+  interviewId,
+  onLeave,
+  onTimeExpired,
+  onWarning
 }: {
   meetingUrl: string;
+  role?: string;
+  interviewId?: string;
   onLeave: () => Promise<void>;
+  onTimeExpired?: () => void;
+  onWarning?: (level: 'low' | 'critical') => void;
 }) => {
-  // We'll use the daily object from the Conversation component's context
-  // instead of directly using useDailyCall here
-
   return (
     <Conversation
       meetingUrl={meetingUrl}
+      role={role}
+      interviewId={interviewId}
       onLeave={onLeave}
+      onTimeExpired={onTimeExpired}
+      onWarning={onWarning}
     />
   );
-};
+});
 
 const VideoInterview = () => {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const { setOpen: setSidebarOpen } = useSidebar();
 
   // State
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
 
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -71,6 +80,9 @@ const VideoInterview = () => {
   const [userDescription, setUserDescription] = useState<string>('');
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [interviewId, setInterviewId] = useState<string | null>(null);
+  const [lastInterviewId, setLastInterviewId] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(30);
   const [showTimeWarning, setShowTimeWarning] = useState<string>('');
   const [useResume, setUseResume] = useState(false);
@@ -79,19 +91,36 @@ const VideoInterview = () => {
   const { data: resumes } = trpc.resume.getPrimaryResumes.useQuery();
   const hasResume = resumes && resumes.length > 0;
 
+  // Set useResume to true by default if user has a resume
+  useEffect(() => {
+    if (hasResume) {
+      setUseResume(true);
+    }
+  }, [hasResume]);
+
   // ADDED: Ref to track if we're currently ending to prevent duplicate calls
   const isEndingRef = useRef(false);
 
-  // Start timer
+  // Connection timeout monitor
   useEffect(() => {
+    if (!isConnecting || !connectionStartTime) return;
+
     const timer = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-      if (connectionStartTime && Date.now() - connectionStartTime > 30000) {
+      if (Date.now() - connectionStartTime > 30000) {
         setHasTimedOut(true);
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [connectionStartTime]);
+  }, [isConnecting, connectionStartTime]);
+
+  // Handle Sidebar state based on conversation state
+  useEffect(() => {
+    if (conversationUrl) {
+      setSidebarOpen(false);
+    } else {
+      setSidebarOpen(true);
+    }
+  }, [conversationUrl, setSidebarOpen]);
 
   // Create Tavus conversation with subscription check
   const createConversation = async (role: string, description?: string) => {
@@ -154,6 +183,17 @@ const VideoInterview = () => {
     }
   };
 
+  // Consolidate cleanup logic to avoid duplication and guard conflicts
+  const performCleanup = useCallback(() => {
+    setConversationUrl(null);
+    setConversationId(null);
+    if (interviewId) setLastInterviewId(interviewId);
+    setInterviewId(null);
+    setConversationState('ended');
+    isEndingRef.current = false;
+    console.log('Interview cleanup complete');
+  }, [interviewId]);
+
   // FIXED: Memoized endConversation with useCallback to prevent stale closures
   const endConversation = useCallback(async () => {
     console.log('endConversation called - ending interview...');
@@ -208,12 +248,7 @@ const VideoInterview = () => {
       }
       // Don't re-throw - we want to clean up state even if ending failed
     } finally {
-      // Always clean up the state, even if there was an error
-      setConversationUrl(null);
-      setConversationId(null);
-      setInterviewId(null);
-      setConversationState('ended');
-      isEndingRef.current = false;
+      performCleanup();
     }
   }, [interviewId]); // FIXED: Only depend on interviewId
 
@@ -239,54 +274,35 @@ const VideoInterview = () => {
       interviewId
     });
 
-    // FIXED: Simplified guard - just check if we're already ending
+    // FIXED: Immediately set refs and state to prevent re-entry
     if (isEndingRef.current) {
       console.log('Already ending interview, skipping');
       return;
     }
 
+    isEndingRef.current = true;
+    setConversationState('ending');
+
     console.log('Time expired, ending interview immediately...');
 
-    // 1. First try to leave the call to stop any ongoing streams
-    try {
-      try {
+    // 1. Immediately transition UI to ended state
+    // We don't wait for backend to transition the UI - better UX
+    performCleanup();
 
-        // FIXED: Check meetingState before leaving
-        if (dailyCall && dailyCall.meetingState() === 'joined-meeting') {
-          console.log('Leaving Daily call...');
-          await dailyCall.leave();
-          console.log('Successfully left Daily call');
-        }
-      } catch (callError) {
-        console.warn('Error leaving call:', callError);
-        // Continue with cleanup even if leaving fails
-      }
-
-      // 2. End the interview using the memoized function
-      await endConversation();
-
-      // 3. Force-end as backup
-      if (interviewId) {
-        try {
-          await fetch('/api/interviews/force-end', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ interview_id: interviewId })
-          });
-        } catch (forceEndError) {
-          console.warn('Error force-ending interview:', forceEndError);
-        }
-      }
-
-    } catch (error) {
-      console.error('Error in timeout cleanup:', error);
-    } finally {
-      // Always clean up state
-      console.log('Final cleanup of interview state');
-      setIsEnding(false);
-      setShowTimeWarning('');
+    // 2. Trigger backend cleanup in the background
+    if (interviewId) {
+      console.log(`Timeout cleanup: Triggering background force-end for ${interviewId}...`);
+      fetch('/api/interviews/force-end', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interview_id: interviewId })
+      }).catch(err => console.warn('Background force-end failed:', err));
     }
-  }, [dailyCall, endConversation, interviewId, conversationState]); // FIXED: Proper dependencies
+
+    // Always clean up local UI state
+    setIsEnding(false);
+    setShowTimeWarning('');
+  }, [interviewId, conversationState, performCleanup]); // Removed dailyCall dependency as it was null here anyway
 
   // Handle time warnings
   const handleTimeWarning = useCallback((level: 'low' | 'critical') => {
@@ -333,89 +349,168 @@ const VideoInterview = () => {
     }
   }, [session, isPending, router]);
 
+  const handleGenerateReport = async () => {
+    const idToAnalyze = interviewId || lastInterviewId;
+    if (!idToAnalyze) {
+      toast.error('No interview found to analyze');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+
+    try {
+      const res = await fetch(`/api/interviews/${idToAnalyze}/analyze`, {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+
+      if (res.status === 422) {
+        // Transcript not ready
+        setAnalysisError(data.error || 'Transcript not ready. Please wait a moment and try again.');
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to generate report');
+      }
+
+      toast.success('Report generated successfully!');
+      router.push(`/interviews/${idToAnalyze}/result`);
+    } catch (error) {
+      console.error('Report generation error:', error);
+      setAnalysisError(error instanceof Error ? error.message : 'An error occurred during analysis');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      {/* Header with camera toggle */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 shrink-0">
-        <div className="max-w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Video Interview</h1>
-              <FeatureGuide 
-                 title="AI Interview"
-                 description="Real-time video interview practice with an AI avatar. Your performance will be analyzed for content, tone, and pacing."
-              />
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Connect with our AI interviewer for a face-to-face conversation
-            </p>
-            {interviewId && (
-              <div className="mt-2">
-                <InterviewTimer
-                  interviewId={interviewId}
-                  onTimeExpired={handleTimeExpired}
-                  onWarning={handleTimeWarning}
-                  dailyCall={dailyCall}
+    <div className="h-[calc(100vh-64px)] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-500">
+      {/* Header with camera toggle - hidden when active for professional look */}
+      {!conversationUrl && (
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 shrink-0 animate-in fade-in slide-in-from-top duration-500">
+          <div className="max-w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Video Interview</h1>
+                <FeatureGuide
+                  title="AI Interview"
+                  description="Real-time video interview practice with an AI avatar. Your performance will be analyzed for content, tone, and pacing."
                 />
               </div>
-            )}
-          </div>
-          <div className="flex items-center space-x-4 w-full md:w-auto justify-between md:justify-end">
-            <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-              {isFullscreen ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
-              {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-            </Button>
-            {!isVideoOn && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={toggleVideo}
-                disabled={isConnecting}
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Video className="h-4 w-4 mr-2" />
-                    Start Interview
-                  </>
-                )}
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Connect with our AI interviewer for a face-to-face conversation
+              </p>
+              {interviewId && (
+                <div className="mt-2">
+                  <InterviewTimer
+                    interviewId={interviewId}
+                    onTimeExpired={handleTimeExpired}
+                    onWarning={handleTimeWarning}
+                    dailyCall={dailyCall}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-4 w-full md:w-auto justify-between md:justify-end">
+              <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+                {isFullscreen ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
+                {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
               </Button>
-            )}
+              {!isVideoOn && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={toggleVideo}
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Video className="h-4 w-4 mr-2" />
+                      Start Interview
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Full Screen Video Area */}
-      <div className="relative flex-1 bg-gray-900 overflow-hidden">
+      <div className={`relative flex-1 bg-gray-900 overflow-hidden min-h-0 ${conversationUrl ? 'rounded-none' : 'm-0 md:m-4 rounded-none md:rounded-2xl'} shadow-2xl transition-all duration-700`}>
         {conversationUrl ? (
           <CVIProvider meetingUrl={conversationUrl}>
             <VideoCallComponent
               meetingUrl={conversationUrl}
-              onLeave={async () => {
-                try {
-                  await endConversation();
-                } catch (error) {
-                  console.error('Error ending conversation:', error);
-                  // Even if there's an error, we should reset to a clean state
-                  setConversationUrl(null);
-                  setConversationId(null);
-                  setInterviewId(null);
-                  setConversationState('idle');
-                }
-              }}
+              role={userRole}
+              interviewId={interviewId || undefined}
+              onTimeExpired={handleTimeExpired}
+              onWarning={handleTimeWarning}
+              onLeave={endConversation}
             />
           </CVIProvider>
+        ) : conversationState === 'ended' || conversationState === 'ending' ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900 animate-in fade-in zoom-in duration-500">
+            <div className="max-w-md w-full mx-auto p-8 rounded-3xl bg-gray-800/50 backdrop-blur-xl border border-white/10 text-center shadow-2xl">
+              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Clock className="h-10 w-10 text-green-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Interview Completed!</h2>
+              <p className="text-gray-400 mb-8">
+                Great job on completing your practice session. Would you like to generate an AI performance report now?
+              </p>
+
+              {analysisError && (
+                <Alert variant="destructive" className="mb-6 bg-red-500/10 border-red-500/20 text-red-400">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{analysisError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={handleGenerateReport}
+                  disabled={isAnalyzing}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-lg font-semibold rounded-2xl transition-all"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    'Generate AI Report'
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/dashboard')}
+                  disabled={isAnalyzing}
+                  className="w-full text-gray-400 hover:text-white hover:bg-white/5 h-12 rounded-2xl"
+                >
+                  Return to Dashboard
+                </Button>
+              </div>
+
+              <p className="mt-6 text-xs text-gray-500 italic">
+                {isAnalyzing ? "Our AI is reviewing your transcript, tone, and pacing..." : "Note: AI analysis may take a few moments to become available after the call ends."}
+              </p>
+            </div>
+          </div>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="text-center w-full px-4">
               {isConnecting ? (
                 <>
-                  <Loader2 className="h-16 w-16 mx-auto mb-4 text-blue-500 animate-spin" />
-                  <p className="text-gray-400 text-xl">Connecting to AI Interviewer...</p>
+                  <Loader2 className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 text-blue-500 animate-spin" />
+                  <p className="text-gray-400 text-lg md:text-xl">Connecting to AI Interviewer...</p>
                   {hasTimedOut && (
                     <>
                       <p className="text-yellow-400 text-sm mt-2">Taking longer than expected...</p>
@@ -427,11 +522,11 @@ const VideoInterview = () => {
                 </>
               ) : (
                 <>
-                  <div className="w-48 h-48 bg-gray-700 rounded-full mx-auto mb-6 flex items-center justify-center">
-                    <Video className="h-24 w-24 text-gray-500" />
+                  <div className="w-32 h-32 md:w-48 md:h-48 bg-gray-700 rounded-full mx-auto mb-6 flex items-center justify-center">
+                    <Video className="h-16 w-16 md:h-24 md:w-24 text-gray-500" />
                   </div>
-                  <p className="text-gray-400 text-2xl mb-2">AI Interviewer</p>
-                  <p className="text-gray-500 text-lg">Click "Start Interview" to begin</p>
+                  <p className="text-gray-400 text-xl md:text-2xl mb-2">AI Interviewer</p>
+                  <p className="text-gray-500 text-base md:text-lg">Click "Start Interview" to begin</p>
                 </>
               )}
             </div>

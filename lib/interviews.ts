@@ -263,15 +263,23 @@ export async function getRemainingTime(interviewId: string): Promise<{
     return { remaining_seconds: 0, should_end: true };
   }
 
-  const elapsedSeconds = Math.floor((new Date().getTime() - interview.start_time.getTime()) / 1000);
-
-  // If user has no minutes left, don't calculate negative time
-  if (interview.user.interview_minutes <= 0) {
-    return { remaining_seconds: 0, should_end: true };
-  }
+  const now = new Date();
+  const startTime = interview.start_time;
+  const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+  const totalAvailableSeconds = Math.floor(interview.user.interview_minutes * 60);
 
   // interview_minutes is in minutes; convert to seconds for countdown
-  const remainingSeconds = Math.floor(interview.user.interview_minutes * 60) - elapsedSeconds;
+  const remainingSeconds = totalAvailableSeconds - elapsedSeconds;
+
+  if (process.env.DEBUG_API === 'true' || process.env.NODE_ENV === 'development') {
+    console.log(`[TimeCheck] Interview: ${interviewId.substring(0, 8)}...`, {
+      dbMinutes: interview.user.interview_minutes,
+      totalSecs: totalAvailableSeconds,
+      elapsedSecs: elapsedSeconds,
+      remainingSecs: remainingSeconds,
+      status: interview.status
+    });
+  }
 
   let warning_level: 'low' | 'critical' | undefined;
   if (remainingSeconds <= 10 && remainingSeconds > 0) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = 'force-dynamic';
 import { forceEndInterview } from "@/lib/interviews";
 import { endTavusConversation } from "@/lib/tavus";
 import { auth } from "@/lib/auth";
@@ -8,22 +9,22 @@ export async function POST(request: Request) {
   const DEBUG_LOGGING = process.env.NODE_ENV === 'development' || process.env.DEBUG_API === 'true';
   try {
     const { interview_id } = await request.json();
-    
+
     // Get authenticated session
     const session = await auth.api.getSession({
       headers: request.headers,
     });
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Unauthorized",
         code: "UNAUTHORIZED"
       }, { status: 401 });
     }
-    
+
     const userId = session.user.id;
     if (!interview_id) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Interview ID is required",
         code: "MISSING_INTERVIEW_ID"
       }, { status: 400 });
@@ -31,11 +32,11 @@ export async function POST(request: Request) {
 
     // Get interview data with conversation_id in a single query
     const interview = await prisma.interview.findUnique({
-      where: { 
+      where: {
         id: interview_id,
         user_id: userId // Ensure the interview belongs to the user
       },
-      select: { 
+      select: {
         id: true,
         status: true,
         conversation_id: true,
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     });
 
     if (!interview) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Interview not found or access denied",
         code: "NOT_FOUND"
       }, { status: 404 });
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
 
     // If interview is already in a terminal state, just return success
     if (['ENDED', 'TIMEOUT', 'CANCELLED'].includes(interview.status)) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         interview_id: interview.id,
         status: interview.status,
         message: `Interview was already ${interview.status.toLowerCase()}`,
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
           const conversationIdShort = interview.conversation_id.substring(0, 8) + '...';
           console.log(`[DEBUG] Force-end: Attempting to end Tavus conversation: ${conversationIdShort}`);
         }
-        
+
         // Only try to end the Tavus conversation if it's not already ended
         if (!['ENDED', 'TIMEOUT', 'CANCELLED'].includes(interview.status)) {
           tavusEndResult = await endTavusConversation(interview.conversation_id);
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
         } else {
           console.error('[ERROR] Force-end: Failed to end Tavus conversation:', error);
           // CRITICAL: If Tavus fails, don't update database to prevent mismatch
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: "Failed to end Tavus conversation. Interview not marked as timeout to prevent state mismatch.",
             code: "TAVUS_END_FAILED",
             details: DEBUG_LOGGING ? error.message : undefined
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
     // Now end the interview in database
     const result = await forceEndInterview(interview_id, userId);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       interview_id: result.interview.id,
       duration_seconds: result.interview.duration_seconds,
       end_time: result.interview.end_time,
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
         name: err.name
       });
     }
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: "Failed to force end interview",
       code: "INTERNAL_SERVER_ERROR",
       details: DEBUG_LOGGING ? err.message : undefined

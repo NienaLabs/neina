@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = 'force-dynamic';
 import { endInterview } from "@/lib/interviews";
 import { endTavusConversation } from "@/lib/tavus";
 import { auth } from "@/lib/auth";
@@ -6,31 +7,31 @@ import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
   const DEBUG_LOGGING = process.env.NODE_ENV === 'development' || process.env.DEBUG_API === 'true';
-  
+
   try {
     const { interview_id } = await request.json();
-    
+
     if (DEBUG_LOGGING) {
       const interviewIdShort = interview_id ? `${interview_id.substring(0, 8)}...` : 'none';
       console.log(`[DEBUG] End interview request received: ${interviewIdShort}`);
     }
-    
+
     // Get authenticated session
     const session = await auth.api.getSession({
       headers: request.headers,
     });
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Unauthorized",
         code: "UNAUTHORIZED"
       }, { status: 401 });
     }
-    
+
     const userId = session.user.id;
-    
+
     if (!interview_id) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Interview ID is required",
         code: "MISSING_INTERVIEW_ID"
       }, { status: 400 });
@@ -38,11 +39,11 @@ export async function POST(request: Request) {
 
     // Get interview data with conversation_id in a single query
     const interview = await prisma.interview.findUnique({
-      where: { 
+      where: {
         id: interview_id,
         user_id: userId // Ensure the interview belongs to the user
       },
-      select: { 
+      select: {
         id: true,
         status: true,
         conversation_id: true,
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
     });
 
     if (!interview) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Interview not found or access denied",
         code: "NOT_FOUND"
       }, { status: 404 });
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
 
     // If interview is already in a terminal state, just return success
     if (['ENDED', 'TIMEOUT', 'CANCELLED'].includes(interview.status)) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         interview_id: interview.id,
         status: interview.status,
         message: `Interview was already ${interview.status.toLowerCase()}`
@@ -80,13 +81,22 @@ export async function POST(request: Request) {
           console.log('[DEBUG] End: Tavus conversation ended:', tavusEndResult);
         }
       } catch (error: any) {
-        console.error('[ERROR] End: Failed to end Tavus conversation:', error);
-        // CRITICAL: If Tavus fails, don't update database to prevent mismatch
-        return NextResponse.json({ 
-          error: "Failed to end Tavus conversation. Interview not marked as ended to prevent state mismatch.",
-          code: "TAVUS_END_FAILED",
-          details: DEBUG_LOGGING ? error.message : undefined
-        }, { status: 500 });
+        const isIdempotentError = error.message?.includes('already ended') ||
+          error.message?.includes('not found') ||
+          error.message?.includes('404') ||
+          error.message?.includes('400');
+
+        if (isIdempotentError) {
+          if (DEBUG_LOGGING) console.log('[DEBUG] End: Tavus conversation already ended, continuing...');
+        } else {
+          console.error('[ERROR] End: Failed to end Tavus conversation:', error);
+          // If it's a critical error (like API keys), we still want to know
+          return NextResponse.json({
+            error: "Failed to end Tavus conversation. Interview not marked as ended to prevent state mismatch.",
+            code: "TAVUS_END_FAILED",
+            details: DEBUG_LOGGING ? error.message : undefined
+          }, { status: 500 });
+        }
       }
     } else if (DEBUG_LOGGING) {
       const interviewIdShort = interview_id.substring(0, 8) + '...';
@@ -95,23 +105,23 @@ export async function POST(request: Request) {
 
     // Now end the interview in database
     if (DEBUG_LOGGING) {
-      console.log(`[DEBUG] Calling endInterview with:`, { 
-        interview_id: `${interview_id.substring(0, 8)}...`, 
-        userId 
+      console.log(`[DEBUG] Calling endInterview with:`, {
+        interview_id: `${interview_id.substring(0, 8)}...`,
+        userId
       });
     }
-    
+
     const result = await endInterview(interview_id, userId);
-    
+
     if (DEBUG_LOGGING) {
-      console.log('[DEBUG] endInterview completed successfully:', { 
+      console.log('[DEBUG] endInterview completed successfully:', {
         interview_id: result.interview.id,
         status: result.interview.status,
         duration: result.interview.duration_seconds
       });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       interview_id: result.interview.id,
       duration_seconds: result.interview.duration_seconds,
       end_time: result.interview.end_time,
@@ -130,8 +140,8 @@ export async function POST(request: Request) {
     } else {
       console.error('End interview error:', err.message);
     }
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       error: "Failed to end interview",
       code: "INTERNAL_SERVER_ERROR",
       details: DEBUG_LOGGING ? err.message : undefined

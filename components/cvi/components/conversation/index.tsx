@@ -5,8 +5,10 @@ import {
   DailyAudioTrack,
   DailyVideo,
   useDevices,
+  useDaily,
   useLocalSessionId,
   useMeetingState,
+  useNetwork,
   useScreenVideoTrack,
   useVideoTrack
 } from "@daily-co/daily-react";
@@ -15,12 +17,17 @@ import { useLocalScreenshare } from "../../hooks/use-local-screenshare";
 import { useReplicaIDs } from "../../hooks/use-replica-ids";
 import { useCVICall } from "../../hooks/use-cvi-call";
 import { AudioWave } from "../audio-wave";
+import { InterviewTimer } from "@/components/interview-timer";
 
 import styles from "./conversation.module.css";
 
 interface ConversationProps {
   onLeave: () => Promise<void>;
   meetingUrl: string;
+  role?: string;
+  interviewId?: string;
+  onTimeExpired?: () => void;
+  onWarning?: (level: 'low' | 'critical') => void;
 }
 
 const VideoPreview = React.memo(({ id }: { id: string }) => {
@@ -49,6 +56,41 @@ const VideoPreview = React.memo(({ id }: { id: string }) => {
 const PreviewVideos = React.memo(() => {
   const localId = useLocalSessionId();
   return <VideoPreview id={localId} />;
+});
+
+const NetworkIndicator = React.memo(() => {
+  const network = useNetwork();
+  const [quality, setQuality] = useState<'good' | 'low' | 'very-low'>('good');
+
+  useEffect(() => {
+    if (network?.threshold && network.threshold !== quality) {
+      setQuality(network.threshold as any);
+    }
+  }, [network?.threshold, quality]);
+
+  const getBarClass = useCallback((level: number) => {
+    const isActive =
+      (quality === 'good' && level <= 3) ||
+      (quality === 'low' && level <= 2) ||
+      (quality === 'very-low' && level <= 1);
+
+    if (!isActive) return styles.networkBar;
+
+    if (quality === 'good') return `${styles.networkBar} ${styles.networkBarActive}`;
+    if (quality === 'low') return `${styles.networkBar} ${styles.networkBarWarning}`;
+    return `${styles.networkBar} ${styles.networkBarCritical}`;
+  }, [quality]);
+
+  return (
+    <div className={styles.networkIndicator}>
+      <div className={styles.networkBars}>
+        <div className={getBarClass(1)} style={{ height: '6px' }} />
+        <div className={getBarClass(2)} style={{ height: '9px' }} />
+        <div className={getBarClass(3)} style={{ height: '12px' }} />
+      </div>
+      <span className="ml-1 uppercase text-[10px] font-bold tracking-wider">Network</span>
+    </div>
+  );
 });
 
 const MainVideo = React.memo(({ onLeave }: { onLeave: () => void }) => {
@@ -84,15 +126,15 @@ const MainVideo = React.memo(({ onLeave }: { onLeave: () => void }) => {
   if (!replicaId) {
     return (
       <div className={styles.waitingContainer}>
-        <p>{showTimeout ? "AI Interviewer is taking a moment to join..." : "Connecting..."}</p>
+        <div className={styles.waitingSpinner} />
+        <p className="text-gray-400">{showTimeout ? "AI Interviewer is taking a moment to join..." : "Connecting to AI Interviewer..."}</p>
 
         {showTimeout && (
           <button
             onClick={handleLeave}
-            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-white"
+            className="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md border border-white/20 transition-all text-white text-sm"
           >
-            Retrying...
-
+            Cancel and Retry
           </button>
         )}
       </div>
@@ -112,22 +154,15 @@ const MainVideo = React.memo(({ onLeave }: { onLeave: () => void }) => {
   );
 });
 
-export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationProps) => {
+export const Conversation = React.memo(({ onLeave, meetingUrl, role, interviewId, onTimeExpired, onWarning }: ConversationProps) => {
   const { joinCall, leaveCall } = useCVICall();
+  const dailyCall = useDaily();
   const meetingState = useMeetingState();
   const { hasMicError } = useDevices();
   const replicaIds = useReplicaIDs();
   const localId = useLocalSessionId();
 
-  // Debug logging
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Meeting state:', meetingState);
-      console.log('Replica IDs:', replicaIds);
-      console.log('Local ID:', localId);
-      console.log('Has mic error:', hasMicError);
-    }
-  }, [meetingState, replicaIds, localId, hasMicError]);
+  // Debug logging removed to prevent console spam and potential lag during network fluctuations
 
   // ------------------------------
   // Join Call Effect
@@ -173,6 +208,17 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
   }, [leaveCall, onLeave]);
 
   // ------------------------------
+  // Time Expired Handler
+  // ------------------------------
+  const handleTimeExpiredInternal = useCallback(async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Timeout detected in Conversation component, leaving call locally...');
+    }
+    leaveCall(); // End media streams immediately
+    if (onTimeExpired) onTimeExpired(); // Notify parent to transition UI
+  }, [leaveCall, onTimeExpired]);
+
+  // ------------------------------
   // Error Handling
   // ------------------------------
   useEffect(() => {
@@ -183,12 +229,30 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
   return (
     <div className={styles.container}>
       <div className={styles.videoContainer}>
-        {/* Debug info - remove later */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Top left overlay: Role and Live Indicator */}
+        <div className={styles.overlayTop}>
+          {role && <div className={styles.roleBadge}>Interviewing for {role}</div>}
+          <NetworkIndicator />
+        </div>
+
+        {/* Top right overlay: Timer */}
+        <div className={styles.timerContainer}>
+          {interviewId && (
+            <InterviewTimer
+              interviewId={interviewId}
+              dailyCall={dailyCall}
+              onTimeExpired={handleTimeExpiredInternal}
+              onWarning={onWarning}
+            />
+          )}
+        </div>
+
+        {/* Debug info - only show in dev and if explicitly needed */}
+        {process.env.NODE_ENV === 'development' && false && (
           <div style={{
             position: 'absolute',
-            top: '10px',
-            left: '10px',
+            bottom: '100px',
+            left: '1.5rem',
             background: 'rgba(0,0,0,0.8)',
             color: 'white',
             padding: '10px',
@@ -202,32 +266,13 @@ export const Conversation = React.memo(({ onLeave, meetingUrl }: ConversationPro
           </div>
         )}
 
-        {/* Show meeting error if present - but NOT just because we left */}
-        {(meetingState === 'error') && (
-          <div className={styles.errorContainer}>
-            <p>Meeting has ended. The interview link may have expired.</p>
-            <button
-              onClick={handleLeave}
-              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-white"
-            >
-              Get New Link
-            </button>
-          </div>
-        )}
-
-        {hasMicError && (
-          <div className={styles.errorContainer}>
-            <p>Camera or microphone access denied. Please check your settings and try again.</p>
-          </div>
-        )}
-
-        {/* Main video = Interviewer */}
-        <MainVideo onLeave={handleLeave} />
-
-        {/* Self view = User */}
+        {/* Self view = User (Always on top with higher z-index) */}
         <div className={styles.selfViewContainer}>
           <PreviewVideos />
         </div>
+
+        {/* Main video = Interviewer */}
+        <MainVideo onLeave={handleLeave} />
       </div>
 
       <div className={styles.footer}>

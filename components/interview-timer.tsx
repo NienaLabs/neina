@@ -18,22 +18,25 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
   onWarning
 }) => {
   const [remainingSeconds, setRemainingSeconds] = useState<number>(30);
-  const [shouldEnd, setShouldEnd] = useState(false);
   const [warningLevel, setWarningLevel] = useState<'low' | 'critical' | null>(null);
-  const [warnedLow, setWarnedLow] = useState(false);
-  const [warnedCritical, setWarnedCritical] = useState(false);
 
+  // Use refs for tracking warnings to avoid stale closures in the polling loop
+  const warnedLowRef = React.useRef(false);
+  const warnedCriticalRef = React.useRef(false);
+  const hasTriggeredEndRef = React.useRef(false);
+
+  // Sync state with refs for UI display if needed, but logic uses refs
   const [hasEnded, setHasEnded] = useState(false);
 
   // Helper function to inject time context via WebRTC
   const sendAIWarning = async (timeRemaining: number) => {
     // Check if we have all required conditions to send a message
-    if (!interviewId || !dailyCall || !dailyCall.joined()) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Skipping AI warning - call not ready:', {
+    if (!interviewId || !dailyCall || dailyCall.meetingState() !== 'joined-meeting') {
+      if (process.env.NODE_ENV === 'development' && dailyCall) {
+        console.log('Skipping AI warning - call not joined:', {
           hasInterviewId: !!interviewId,
           hasDailyCall: !!dailyCall,
-          isJoined: dailyCall?.joined()
+          meetingState: dailyCall.meetingState()
         });
       }
       return;
@@ -42,17 +45,13 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
     let contextMessage = '';
     if (timeRemaining <= 30) {
       contextMessage = "[SYSTEM: 30 seconds remaining - please announce this to the user and wrap up the conversation]";
-    } else if (timeRemaining <= 60) {
-      contextMessage = "[SYSTEM: 1 minute remaining - please announce this to the user and focus on concluding thoughts]";
-    } else if (timeRemaining <= 120) {
-      contextMessage = "[SYSTEM: 2 minutes remaining - please announce this to the user and start wrapping up]";
     } else {
-      return; // No warning needed for more than 2 minutes
+      return; // Only warn at 30 seconds
     }
 
     try {
       // Add additional safety checks before sending
-      if (dailyCall && dailyCall.joined() && dailyCall.meetingState() === 'joined-meeting') {
+      if (dailyCall && dailyCall.meetingState() === 'joined-meeting') {
         await dailyCall.sendAppMessage({
           message_type: "conversation",
           event_type: "conversation.respond",
@@ -76,89 +75,85 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
   };
 
   useEffect(() => {
-    // FIXED: Don't start polling if already ended
-    if (hasEnded) {
-      return;
-    }
+    if (hasEnded) return;
 
     let isMounted = true;
-    let checkTimeout: NodeJS.Timeout | null = null;
+    let timerId: NodeJS.Timeout | null = null;
 
     const checkTime = async () => {
-      // FIXED: Added hasEnded check to prevent processing after end
-      if (!isMounted || !interviewId || hasEnded) return;
+      if (!isMounted || !interviewId || hasEnded) {
+        if (process.env.NODE_ENV === 'development' && !hasEnded && interviewId) {
+          console.log('[Timer] Polling cycle skipped:', { isMounted, hasInterviewId: !!interviewId, hasEnded });
+        }
+        return;
+      }
 
       try {
         const response = await fetch(`/api/interviews/time?interview_id=${interviewId}`, {
-          cache: 'no-store' // Prevent caching of the time check
+          cache: 'no-store'
         });
 
-        if (!isMounted) return;
+        if (!isMounted || hasEnded) return;
 
         if (response.ok) {
           const data = await response.json();
 
-          setRemainingSeconds(data.remaining_seconds);
-          setShouldEnd(data.should_end);
-
-          // Handle time expiration - only trigger once
-          if (data.should_end && !hasEnded) {
-            console.log('Interview should end - calling onTimeExpired');
-            setHasEnded(true);
-
-            if (onTimeExpired) {
-              onTimeExpired();
-            }
-
-            return; // Exit early to stop further processing
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[Timer] API Data: ${data.remaining_seconds}s, should_end: ${data.should_end}`);
           }
 
-          // Process warnings if we have a valid call object and time remaining
-          // FIXED: Only process warnings if not ended
-          if (dailyCall && data.remaining_seconds > 0 && !data.should_end) {
-            const currentSeconds = data.remaining_seconds;
+          setRemainingSeconds(data.remaining_seconds);
 
-            // Critical warning (last 10 seconds)
-            if (currentSeconds <= 10 && !warnedCritical) {
-              if (onWarning) onWarning('critical');
-              await sendAIWarning(currentSeconds);
-              if (isMounted) setWarnedCritical(true);
+          if (data.should_end && !hasTriggeredEndRef.current) {
+            hasTriggeredEndRef.current = true;
+            setHasEnded(true);
+            if (onTimeExpired) {
+              console.log("[Timer] Hit zero, triggering onTimeExpired handler");
+              onTimeExpired();
+            } else {
+              console.warn("[Timer] Hit zero but onTimeExpired handler is missing!");
             }
-            // Low warning (11-30 seconds)
-            else if (currentSeconds <= 30 && currentSeconds > 10 && !warnedLow) {
+            return;
+          }
+
+          if (data.remaining_seconds > 0 && !data.should_end) {
+            const currentSeconds = data.remaining_seconds;
+            if (currentSeconds <= 10 && !warnedCriticalRef.current) {
+              warnedCriticalRef.current = true;
+              if (onWarning) onWarning('critical');
+            } else if (currentSeconds <= 30 && currentSeconds > 10 && !warnedLowRef.current) {
+              warnedLowRef.current = true;
               if (onWarning) onWarning('low');
               await sendAIWarning(currentSeconds);
-              if (isMounted) setWarnedLow(true);
             }
-
           }
 
-          // Update warning level for UI
-          if (data.warning_level && data.warning_level !== warningLevel) {
-            setWarningLevel(data.warning_level);
+          if (data.warning_level !== warningLevel) {
+            setWarningLevel(data.warning_level || null);
           }
+        } else {
+          console.error(`[Timer] API Error: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
-        console.error('Error checking time:', error);
+        console.error('[Timer] Fetch error:', error);
+      } finally {
+        // Schedule next check only after the current one completes
+        if (isMounted && !hasEnded) {
+          timerId = setTimeout(checkTime, 1000);
+        }
       }
     };
 
-    // Initial check with a small delay to allow component to mount
-    checkTimeout = setTimeout(() => {
-      checkTime();
-    }, 100);
-
-    // Set up interval for polling
-    const interval = setInterval(checkTime, 1000);
+    // Initial check
+    timerId = setTimeout(checkTime, 100);
 
     return () => {
       isMounted = false;
-      clearInterval(interval);
-      if (checkTimeout) {
-        clearTimeout(checkTimeout);
-      }
+      if (timerId) clearTimeout(timerId);
     };
-  }, [interviewId, onTimeExpired, onWarning, warningLevel, dailyCall, hasEnded, warnedLow, warnedCritical]);
+    // Dependencies removed: dailyCall, onTimeExpired, onWarning to prevent infinite effect restart loops
+    // We access them via closure which is safe as they are expected to be stable or the effect re-runs if interviewId/hasEnded change
+  }, [interviewId, hasEnded]);
 
 
   const formatTime = (seconds: number) => {

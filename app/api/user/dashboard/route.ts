@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { headers } from 'next/headers';
@@ -19,9 +20,10 @@ export async function GET(req: Request) {
         const [
             user,
             resumes,
-            interviews,
+            interviewCount,
             recentInterviews,
-            jobs
+            jobs,
+            avgScore
         ] = await Promise.all([
             // 1. User details
             prisma.user.findUnique({
@@ -61,7 +63,7 @@ export async function GET(req: Request) {
             prisma.interview.findMany({
                 where: { user_id: userId },
                 orderBy: { start_time: 'desc' },
-                take: 3,
+                take: 10,
                 select: {
                     id: true,
                     role: true,
@@ -88,6 +90,17 @@ export async function GET(req: Request) {
                             skill_text: true
                         }
                     }
+                }
+            }),
+
+            // 6. Average analysis score
+            prisma.interview.aggregate({
+                where: {
+                    user_id: userId,
+                    status: 'ANALYZED'
+                },
+                _avg: {
+                    analysisScore: true
                 }
             })
         ]);
@@ -156,8 +169,8 @@ export async function GET(req: Request) {
             resumeStrength = score;
         }
 
-        // 3. Interview Readiness
-        const interviewReadiness = Math.min(100, interviews * 20);
+        // 3. Interview Readiness - Use average analysis score
+        const interviewReadiness = Math.round(avgScore._avg?.analysisScore || 0);
 
         // 4. Job Match Rate
         const jobMatchRate = resumes.length > 0 ? 75 : 0;
@@ -171,7 +184,7 @@ export async function GET(req: Request) {
                 status: i.status, // Return actual status: ENDED, ANALYZED, ACTIVE, etc.
                 id: i.id
             })),
-            ...resumes.slice(0, 3).map(r => ({
+            ...resumes.slice(0, 5).map(r => ({
                 type: 'resume',
                 title: `Updated resume: ${r.name}`,
                 date: r.updatedAt,
@@ -194,7 +207,7 @@ export async function GET(req: Request) {
 
             aiInsight: {
                 readiness: interviewReadiness,
-                interviewCount: interviews,
+                interviewCount: interviewCount,
             },
 
             recentActivity: activity,

@@ -17,8 +17,49 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Niena",
-  description: "Achieve your career goals with AI-powered tools",
+  metadataBase: new URL('https://app.nienalabs.com'),
+  title: {
+    default: "Niena - Achieve Career Goals with AI-powered Tools",
+    template: "%s | Niena"
+  },
+  description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
+  keywords: ["niena", "interview ai", "resume ai", "matcher", "jobs", "career", "ai job search", "interview coach"],
+  authors: [{ name: "Niena Labs" }],
+  creator: "Niena Labs",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://app.nienalabs.com",
+    title: "Niena - Achieve Career Goals with AI-powered Tools",
+    description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
+    siteName: "Niena",
+    images: [
+      {
+        url: "/og-image.jpg", // Needs to be added or ensure it exists
+        width: 1200,
+        height: 630,
+        alt: "Niena - AI Career Platform",
+      }
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Niena - Achieve Career Goals with AI-powered Tools",
+    description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
+    creator: "@nienalabs", // Assuming handle or placeholder
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({

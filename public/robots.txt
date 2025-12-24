@@ -3,3 +3,5 @@ Disallow: /admin/
 Disallow: /account/
 Disallow: /api/
 Allow: /
+
+Sitemap: https://app.nienalabs.com/sitemap.xml

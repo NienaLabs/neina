@@ -394,7 +394,7 @@ model JobView {
 }
 
 model blog_post {
-  id              String       @id
+  id              String       @id @default(cuid())
   slug            String       @unique
   title           String
   content         String
@@ -408,7 +408,7 @@ model blog_post {
   metaTitle       String?
   metaDescription String?
   createdAt       DateTime     @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime     @updatedAt
 }
 
 enum Plan {

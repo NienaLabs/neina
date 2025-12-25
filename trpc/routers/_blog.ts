@@ -30,7 +30,7 @@ export const blogRouter = createTRPCRouter({
                 where.category = category;
             }
 
-            const posts = await prisma.blogPost.findMany({
+            const posts = await prisma.blog_post.findMany({
                 take: limit + 1,
                 where,
                 cursor: cursor ? { id: cursor } : undefined,
@@ -63,7 +63,7 @@ export const blogRouter = createTRPCRouter({
     getPostBySlug: baseProcedure
         .input(z.object({ slug: z.string() }))
         .query(async ({ input }) => {
-            const post = await prisma.blogPost.findUnique({
+            const post = await prisma.blog_post.findUnique({
                 where: { slug: input.slug },
             });
 
@@ -96,7 +96,7 @@ export const blogRouter = createTRPCRouter({
                 ];
             }
 
-            const posts = await prisma.blogPost.findMany({
+            const posts = await prisma.blog_post.findMany({
                 take: limit + 1,
                 where,
                 cursor: cursor ? { id: cursor } : undefined,
@@ -119,7 +119,7 @@ export const blogRouter = createTRPCRouter({
         .input(z.object({ id: z.string() }))
         .query(async ({ ctx, input }) => {
             await checkAdmin(ctx.session.user.id);
-            const post = await prisma.blogPost.findUnique({ where: { id: input.id } });
+            const post = await prisma.blog_post.findUnique({ where: { id: input.id } });
             if (!post) throw new TRPCError({ code: 'NOT_FOUND' });
             return post;
         }),
@@ -145,12 +145,12 @@ export const blogRouter = createTRPCRouter({
             await checkAdmin(ctx.session.user.id);
 
             // Check if slug is unique
-            const existing = await prisma.blogPost.findUnique({ where: { slug: input.slug } });
+            const existing = await prisma.blog_post.findUnique({ where: { slug: input.slug } });
             if (existing) {
                 throw new TRPCError({ code: 'CONFLICT', message: 'Slug already exists' });
             }
 
-            return await prisma.blogPost.create({
+            return await prisma.blog_post.create({
                 data: input
             });
         }),
@@ -179,7 +179,7 @@ export const blogRouter = createTRPCRouter({
             const { id, ...data } = input;
 
             if (data.slug) {
-                const existing = await prisma.blogPost.findFirst({
+                const existing = await prisma.blog_post.findFirst({
                     where: {
                         slug: data.slug,
                         NOT: { id }
@@ -190,7 +190,7 @@ export const blogRouter = createTRPCRouter({
                 }
             }
 
-            return await prisma.blogPost.update({
+            return await prisma.blog_post.update({
                 where: { id },
                 data,
             });
@@ -200,6 +200,6 @@ export const blogRouter = createTRPCRouter({
         .input(z.object({ id: z.string() }))
         .mutation(async ({ ctx, input }) => {
             await checkAdmin(ctx.session.user.id);
-            return await prisma.blogPost.delete({ where: { id: input.id } });
+            return await prisma.blog_post.delete({ where: { id: input.id } });
         }),
 });

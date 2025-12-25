@@ -2957,20 +2957,6 @@ export type EnumBlogCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 export type ListEnumBlogCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BlogCategory[]'>
     
 
-
-/**
- * Reference to a field of type 'BlogCategory'
- */
-export type EnumBlogCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BlogCategory'>
-    
-
-
-/**
- * Reference to a field of type 'BlogCategory[]'
- */
-export type ListEnumBlogCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BlogCategory[]'>
-    
-
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */

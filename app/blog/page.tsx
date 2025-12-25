@@ -21,7 +21,7 @@ export default function BlogListingPage() {
     return (
         <div className="min-h-screen bg-black text-white selection:bg-indigo-500/30">
             {/* Hero Section */}
-            <div className="relative pt-32 pb-20 overflow-hidden">
+            <div className="relative pt-10 pb-10 overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full" />
                     <div className="absolute top-20 right-1/4 w-[400px] h-[400px] bg-purple-600/10 blur-[100px] rounded-full" />

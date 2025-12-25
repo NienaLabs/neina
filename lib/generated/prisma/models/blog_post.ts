@@ -346,7 +346,7 @@ export type blog_postScalarWhereWithAggregatesInput = {
 }
 
 export type blog_postCreateInput = {
-  id: string
+  id?: string
   slug: string
   title: string
   content: string
@@ -360,11 +360,11 @@ export type blog_postCreateInput = {
   metaTitle?: string | null
   metaDescription?: string | null
   createdAt?: Date | string
-  updatedAt: Date | string
+  updatedAt?: Date | string
 }
 
 export type blog_postUncheckedCreateInput = {
-  id: string
+  id?: string
   slug: string
   title: string
   content: string
@@ -378,7 +378,7 @@ export type blog_postUncheckedCreateInput = {
   metaTitle?: string | null
   metaDescription?: string | null
   createdAt?: Date | string
-  updatedAt: Date | string
+  updatedAt?: Date | string
 }
 
 export type blog_postUpdateInput = {
@@ -418,7 +418,7 @@ export type blog_postUncheckedUpdateInput = {
 }
 
 export type blog_postCreateManyInput = {
-  id: string
+  id?: string
   slug: string
   title: string
   content: string
@@ -432,7 +432,7 @@ export type blog_postCreateManyInput = {
   metaTitle?: string | null
   metaDescription?: string | null
   createdAt?: Date | string
-  updatedAt: Date | string
+  updatedAt?: Date | string
 }
 
 export type blog_postUpdateManyMutationInput = {

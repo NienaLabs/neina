@@ -60,7 +60,7 @@ const isAuthed = t.middleware(async ({ next, ctx }) => {
         },
       });
       console.log(`User ${user.id} subscription expired. Downgraded to FREE.`);
-      
+
       // Update session user object explicitly so downstream procedures see FREE
       user.plan = "FREE";
       user.planExpiresAt = null;

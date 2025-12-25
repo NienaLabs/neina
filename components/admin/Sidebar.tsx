@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Briefcase, Settings, MessageSquare, BarChart3, Megaphone, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Settings, MessageSquare, BarChart3, Megaphone, AlertCircle, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,11 @@ const sidebarLinks = [
         label: "Announcements",
         href: "/admin/announcements",
         icon: Megaphone,
+    },
+    {
+        label: "Blog",
+        href: "/admin/blog",
+        icon: FileText,
     },
     {
         label: "Errors",

@@ -79,27 +79,28 @@ const serviceLinks = [
 const helpfulLinks = [
   { text: 'FAQs', href: data.help.faqs },
   { text: 'Support', href: data.help.support },
+  { text: 'Blog', href: '/blog' },
   { text: 'Terms of Service', href: '/terms' },
   { text: 'Privacy Policy', href: '/privacy' },
   { text: 'Live Chat', href: data.help.livechat, hasIndicator: true },
 ];
 
 const contactInfo = [
-  { 
-    icon: Mail, 
+  {
+    icon: Mail,
     text: data.contact.email,
     href: `mailto:${data.contact.email}`,
     ariaLabel: `Email ${data.contact.email}`
   },
-  { 
-    icon: Phone, 
+  {
+    icon: Phone,
     text: data.contact.phone,
     href: `tel:${data.contact.phone.replace(/[^0-9+]/g, '')}`,
     ariaLabel: `Call ${data.contact.phone}`
   },
-  { 
-    icon: MapPin, 
-    text: data.contact.address, 
+  {
+    icon: MapPin,
+    text: data.contact.address,
     isAddress: true,
     href: `https://www.google.com/maps/search/${encodeURIComponent(data.contact.address)}`,
     ariaLabel: `Open map for ${data.contact.address}`,
@@ -109,38 +110,38 @@ const contactInfo = [
 ];
 
 export default function Footer4Col() {
-    const footerRef = useRef<HTMLElement>(null)
+  const footerRef = useRef<HTMLElement>(null)
 
-    useGSAP(() => {
-        // Animate all top-level grid columns
-        const columns = footerRef.current?.querySelectorAll(".footer-col")
-        
-        gsap.from(columns || [], {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: "power2.out",
-            scrollTrigger: {
-                trigger: footerRef.current,
-                start: "top 90%"
-            }
-        })
-        
-    }, { scope: footerRef })
+  useGSAP(() => {
+    // Animate all top-level grid columns
+    const columns = footerRef.current?.querySelectorAll(".footer-col")
+
+    gsap.from(columns || [], {
+      y: 50,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.2,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: footerRef.current,
+        start: "top 90%"
+      }
+    })
+
+  }, { scope: footerRef })
 
   return (
     <footer ref={footerRef} id="footer" className="bg-secondary dark:bg-secondary/20 mt-16 w-full place-self-end rounded-t-xl overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 pt-16 pb-6 sm:px-6 lg:px-8 lg:pt-24">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="footer-col">
-            
-              <Image
-                src={'/company_logo.png'}
-                alt="logo"
-                width={100}
-                height={20}
-              />
+
+            <Image
+              src={'/company_logo.png'}
+              alt="logo"
+              width={100}
+              height={20}
+            />
             <p className="text-foreground/50 mt-6 max-w-md text-center leading-relaxed sm:max-w-xs sm:text-left">
               {data.company.description}
             </p>
@@ -200,11 +201,10 @@ export default function Footer4Col() {
                   <li key={text}>
                     <a
                       href={href}
-                      className={`${
-                        hasIndicator
+                      className={`${hasIndicator
                           ? 'group flex justify-center gap-1.5 sm:justify-start'
                           : 'text-secondary-foreground/70 transition'
-                      }`}
+                        }`}
                     >
                       <span className="text-secondary-foreground/70 transition">
                         {text}

@@ -453,3 +453,30 @@ enum TransactionProvider {
   PAYSTACK
   POLAR
 }
+
+enum BlogCategory {
+  GENERAL
+  DEVELOPERS
+  JOB_HUNT
+  CHANGELOGS
+}
+
+model BlogPost {
+  id              String       @id @default(cuid())
+  slug            String       @unique
+  title           String
+  content         String       @db.Text
+  excerpt         String?      @db.Text
+  coverImage      String?
+  imagePosition   String       @default("TOP") // "TOP" or "BOTTOM"
+  published       Boolean      @default(false)
+  authorName      String       @default("Admin")
+  readTime        String? // e.g., "5 min read"
+  category        BlogCategory @default(GENERAL)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("blog_post")
+}

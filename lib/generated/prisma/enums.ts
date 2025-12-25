@@ -95,3 +95,13 @@ export const TransactionProvider = {
 } as const
 
 export type TransactionProvider = (typeof TransactionProvider)[keyof typeof TransactionProvider]
+
+
+export const BlogCategory = {
+  GENERAL: 'GENERAL',
+  DEVELOPERS: 'DEVELOPERS',
+  JOB_HUNT: 'JOB_HUNT',
+  CHANGELOGS: 'CHANGELOGS'
+} as const
+
+export type BlogCategory = (typeof BlogCategory)[keyof typeof BlogCategory]

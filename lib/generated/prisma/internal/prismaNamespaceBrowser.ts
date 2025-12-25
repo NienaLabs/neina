@@ -74,7 +74,8 @@ export const ModelName = {
   RecruiterApplication: 'RecruiterApplication',
   RecruiterJob: 'RecruiterJob',
   CandidatePipeline: 'CandidatePipeline',
-  JobView: 'JobView'
+  JobView: 'JobView',
+  BlogPost: 'BlogPost'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -447,6 +448,27 @@ export const JobViewScalarFieldEnum = {
 } as const
 
 export type JobViewScalarFieldEnum = (typeof JobViewScalarFieldEnum)[keyof typeof JobViewScalarFieldEnum]
+
+
+export const BlogPostScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  title: 'title',
+  content: 'content',
+  excerpt: 'excerpt',
+  coverImage: 'coverImage',
+  imagePosition: 'imagePosition',
+  published: 'published',
+  authorName: 'authorName',
+  readTime: 'readTime',
+  category: 'category',
+  metaTitle: 'metaTitle',
+  metaDescription: 'metaDescription',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BlogPostScalarFieldEnum = (typeof BlogPostScalarFieldEnum)[keyof typeof BlogPostScalarFieldEnum]
 
 
 export const SortOrder = {

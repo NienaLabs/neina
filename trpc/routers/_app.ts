@@ -7,6 +7,7 @@ import { supportRouter } from './_support';
 import { recruiterRouter } from './_recruiter';
 import { userRouter } from './_user';
 import { paymentRouter } from './_payment';
+import { blogRouter } from './_blog';
 
 export const appRouter = createTRPCRouter({
   resume: resumeRouter,
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
   recruiter: recruiterRouter,
   user: userRouter,
   payment: paymentRouter,
+  blog: blogRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

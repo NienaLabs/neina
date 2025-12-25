@@ -407,7 +407,8 @@ export const ModelName = {
   RecruiterApplication: 'RecruiterApplication',
   RecruiterJob: 'RecruiterJob',
   CandidatePipeline: 'CandidatePipeline',
-  JobView: 'JobView'
+  JobView: 'JobView',
+  blog_post: 'blog_post'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -423,7 +424,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "transaction" | "session" | "account" | "verification" | "resume" | "tailoredResume" | "interview" | "rateLimiterFlexible" | "job_categories" | "job_ingest_runs" | "job_responsibilities" | "job_skills" | "jobs" | "resume_experience" | "resume_skills" | "supportTicket" | "ticketMessage" | "announcement" | "announcement_read" | "recruiterApplication" | "recruiterJob" | "candidatePipeline" | "jobView"
+    modelProps: "user" | "transaction" | "session" | "account" | "verification" | "resume" | "tailoredResume" | "interview" | "rateLimiterFlexible" | "job_categories" | "job_ingest_runs" | "job_responsibilities" | "job_skills" | "jobs" | "resume_experience" | "resume_skills" | "supportTicket" | "ticketMessage" | "announcement" | "announcement_read" | "recruiterApplication" | "recruiterJob" | "candidatePipeline" | "jobView" | "blog_post"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2203,6 +2204,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    blog_post: {
+      payload: Prisma.$blog_postPayload<ExtArgs>
+      fields: Prisma.blog_postFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.blog_postFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.blog_postFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>
+        }
+        findFirst: {
+          args: Prisma.blog_postFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.blog_postFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>
+        }
+        findMany: {
+          args: Prisma.blog_postFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>[]
+        }
+        create: {
+          args: Prisma.blog_postCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>
+        }
+        createMany: {
+          args: Prisma.blog_postCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.blog_postCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>[]
+        }
+        delete: {
+          args: Prisma.blog_postDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>
+        }
+        update: {
+          args: Prisma.blog_postUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>
+        }
+        deleteMany: {
+          args: Prisma.blog_postDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.blog_postUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.blog_postUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>[]
+        }
+        upsert: {
+          args: Prisma.blog_postUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$blog_postPayload>
+        }
+        aggregate: {
+          args: Prisma.Blog_postAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBlog_post>
+        }
+        groupBy: {
+          args: Prisma.blog_postGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Blog_postGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.blog_postCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Blog_postCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2598,6 +2673,27 @@ export const JobViewScalarFieldEnum = {
 export type JobViewScalarFieldEnum = (typeof JobViewScalarFieldEnum)[keyof typeof JobViewScalarFieldEnum]
 
 
+export const Blog_postScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  title: 'title',
+  content: 'content',
+  excerpt: 'excerpt',
+  coverImage: 'coverImage',
+  imagePosition: 'imagePosition',
+  published: 'published',
+  authorName: 'authorName',
+  readTime: 'readTime',
+  category: 'category',
+  metaTitle: 'metaTitle',
+  metaDescription: 'metaDescription',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type Blog_postScalarFieldEnum = (typeof Blog_postScalarFieldEnum)[keyof typeof Blog_postScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2847,6 +2943,20 @@ export type EnumCandidateStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
 export type ListEnumCandidateStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CandidateStatus[]'>
     
 
+
+/**
+ * Reference to a field of type 'BlogCategory'
+ */
+export type EnumBlogCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BlogCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'BlogCategory[]'
+ */
+export type ListEnumBlogCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BlogCategory[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -2966,6 +3076,7 @@ export type GlobalOmitConfig = {
   recruiterJob?: Prisma.RecruiterJobOmit
   candidatePipeline?: Prisma.CandidatePipelineOmit
   jobView?: Prisma.JobViewOmit
+  blog_post?: Prisma.blog_postOmit
 }
 
 /* Types for Logging */

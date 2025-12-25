@@ -137,3 +137,8 @@ export type CandidatePipeline = Prisma.CandidatePipelineModel
  * 
  */
 export type JobView = Prisma.JobViewModel
+/**
+ * Model blog_post
+ * 
+ */
+export type blog_post = Prisma.blog_postModel

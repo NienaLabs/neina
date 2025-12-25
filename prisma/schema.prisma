@@ -393,6 +393,24 @@ model JobView {
   @@map("job_view")
 }
 
+model blog_post {
+  id              String       @id
+  slug            String       @unique
+  title           String
+  content         String
+  excerpt         String?
+  coverImage      String?
+  imagePosition   String       @default("TOP")
+  published       Boolean      @default(false)
+  authorName      String       @default("Admin")
+  readTime        String?
+  category        BlogCategory @default(GENERAL)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime
+}
+
 enum Plan {
   FREE
   SILVER
@@ -452,4 +470,11 @@ enum ResumeStatus {
 enum TransactionProvider {
   PAYSTACK
   POLAR
+}
+
+enum BlogCategory {
+  GENERAL
+  DEVELOPERS
+  JOB_HUNT
+  CHANGELOGS
 }

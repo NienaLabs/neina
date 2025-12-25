@@ -1,4 +1,3 @@
-import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,6 +6,7 @@ import { ArrowLeft, Calendar, Clock, User, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Metadata } from "next";
+import { createCaller } from "@/trpc/server-caller";
 
 interface PageProps {
     params: Promise<{ slug: string }>;
@@ -14,73 +14,76 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const post = await prisma.blogPost.findUnique({ where: { slug } });
 
-    if (!post) {
+    try {
+        const caller = await createCaller();
+        const post = await caller.blog.getPostBySlug({ slug });
+
+        const postUrl = `https://app.nienalabs.com/blog/${post.slug}`;
+        const ogImage = post.coverImage || "/og-image.jpg";
+        const metaTitle = post.metaTitle || post.title;
+        const metaDescription = post.metaDescription || post.excerpt || "Read this insightful article on Niena's blog.";
+
+        return {
+            title: metaTitle,
+            description: metaDescription,
+            keywords: ["niena", "blog", post.category.toLowerCase(), "career", "ai", "job search"],
+            authors: [{ name: post.authorName }],
+            creator: post.authorName,
+            openGraph: {
+                type: "article",
+                locale: "en_US",
+                url: postUrl,
+                title: metaTitle,
+                description: metaDescription,
+                siteName: "Niena",
+                publishedTime: post.createdAt.toISOString(),
+                modifiedTime: post.updatedAt.toISOString(),
+                authors: [post.authorName],
+                images: [
+                    {
+                        url: ogImage,
+                        width: 1200,
+                        height: 630,
+                        alt: post.title,
+                    }
+                ],
+            },
+            twitter: {
+                card: "summary_large_image",
+                title: metaTitle,
+                description: metaDescription,
+                creator: "@nienalabs",
+                images: [ogImage],
+            },
+            robots: {
+                index: true,
+                follow: true,
+                googleBot: {
+                    index: true,
+                    follow: true,
+                    'max-video-preview': -1,
+                    'max-image-preview': 'large',
+                    'max-snippet': -1,
+                },
+            },
+        };
+    } catch (error) {
         return {
             title: "Post Not Found",
             description: "The requested blog post could not be found.",
         };
     }
-
-    const postUrl = `https://app.nienalabs.com/blog/${post.slug}`;
-    const ogImage = post.coverImage || "/og-image.jpg";
-    const metaTitle = post.metaTitle || post.title;
-    const metaDescription = post.metaDescription || post.excerpt || "Read this insightful article on Niena's blog.";
-
-    return {
-        title: metaTitle,
-        description: metaDescription,
-        keywords: ["niena", "blog", post.category.toLowerCase(), "career", "ai", "job search"],
-        authors: [{ name: post.authorName }],
-        creator: post.authorName,
-        openGraph: {
-            type: "article",
-            locale: "en_US",
-            url: postUrl,
-            title: metaTitle,
-            description: metaDescription,
-            siteName: "Niena",
-            publishedTime: post.createdAt.toISOString(),
-            modifiedTime: post.updatedAt.toISOString(),
-            authors: [post.authorName],
-            images: [
-                {
-                    url: ogImage,
-                    width: 1200,
-                    height: 630,
-                    alt: post.title,
-                }
-            ],
-        },
-        twitter: {
-            card: "summary_large_image",
-            title: metaTitle,
-            description: metaDescription,
-            creator: "@nienalabs",
-            images: [ogImage],
-        },
-        robots: {
-            index: true,
-            follow: true,
-            googleBot: {
-                index: true,
-                follow: true,
-                'max-video-preview': -1,
-                'max-image-preview': 'large',
-                'max-snippet': -1,
-            },
-        },
-    };
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
     const { slug } = await params;
-    const post = await prisma.blogPost.findUnique({
-        where: { slug },
-    });
 
-    if (!post || !post.published) {
+    let post;
+    try {
+        const caller = await createCaller();
+        post = await caller.blog.getPostBySlug({ slug });
+    } catch (error) {
         notFound();
     }
 

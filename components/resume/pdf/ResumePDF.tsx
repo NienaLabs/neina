@@ -6,49 +6,47 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 40,
-    fontFamily: 'Helvetica',
+    padding: 30,
+    fontFamily: 'Times-Roman',
     color: '#333333',
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 16,
     borderBottomWidth: 0.5,
     borderBottomColor: '#CCCCCC',
-    paddingBottom: 16,
-    alignItems: 'center',
+    paddingBottom: 12,
+    alignItems: 'flex-end',
   },
   name: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 6,
     color: '#111827',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   contactInfo: {
-    fontSize: 9,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 12,
-    color: '#6B7280',
+    fontSize: 10,
+    flexDirection: 'column',
+    gap: 2,
+    color: '#4B5563',
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     color: '#374151',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-    paddingBottom: 4,
+    paddingBottom: 2,
   },
   itemContainer: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   row: {
     flexDirection: 'row',
@@ -57,12 +55,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   mainText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#1F2937',
   },
   subText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#4B5563',
   },
   dateLocation: {
@@ -71,25 +69,25 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   description: {
-    fontSize: 10,
-    marginTop: 4,
-    lineHeight: 1.5,
+    fontSize: 9,
+    marginTop: 2,
+    lineHeight: 1.3,
     color: '#4B5563',
   },
   bulletPoint: {
     flexDirection: 'row',
-    marginTop: 2,
+    marginTop: 1,
     paddingLeft: 4,
   },
   bullet: {
-    width: 10,
-    fontSize: 10,
+    width: 8,
+    fontSize: 9,
     color: '#6B7280',
   },
   bulletContent: {
     flex: 1,
-    fontSize: 10,
-    lineHeight: 1.5,
+    fontSize: 9,
+    lineHeight: 1.3,
     color: '#4B5563',
   },
   skillsContainer: {
@@ -98,7 +96,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   skillItem: {
-    fontSize: 10,
+    fontSize: 9,
     backgroundColor: '#F3F4F6',
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -166,11 +164,10 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
   });
 
   return (
-    <Document>
+    <Document title={fullName} author={fullName} subject="Resume" creator="Job AI" producer="Job AI">
       <Page size="A4" style={styles.page}>
         {/* Header Section */}
         <View style={styles.header}>
-          {fullName && <Text style={styles.name}>{fullName}</Text>}
           <View style={styles.contactInfo}>
             {address?.email && <Text>{address.email}</Text>}
             {address?.telephone && <Text>{address.telephone}</Text>}

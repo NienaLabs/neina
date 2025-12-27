@@ -68,6 +68,15 @@ export const resumeRouter = createTRPCRouter({
     )
     .mutation(
         async({input,ctx})=>{
+         // Fetch existing resume to get previous analysis data
+         const existingResume = await prisma.resume.findUnique({
+             where: {
+                 id: input.resumeId,
+                 userId: ctx.session?.session.userId
+             },
+             select: { analysisData: true }
+         });
+
          // Update status to PENDING
          await prisma.resume.update({
              where: {
@@ -85,7 +94,8 @@ export const resumeRouter = createTRPCRouter({
            name:"app/resume.updated", 
            data:{
             ...input,
-            userId:ctx.session?.session.userId
+            userId:ctx.session?.session.userId,
+            previousAnalysis: existingResume?.analysisData
         }
         })
         }
@@ -386,7 +396,8 @@ export const resumeRouter = createTRPCRouter({
                         role: tailoredResume.role || "General",
                         description: tailoredResume.jobDescription || "",
                         name: tailoredResume.name,
-                        primaryResumeId: tailoredResume.primaryResumeId
+                        primaryResumeId: tailoredResume.primaryResumeId,
+                        previousAnalysis: tailoredResume.analysisData
                     }
                 });
             } else {
@@ -433,7 +444,8 @@ export const resumeRouter = createTRPCRouter({
                         content: content,
                         role: "General",
                         description: "",
-                        name: resume.name
+                        name: resume.name,
+                        previousAnalysis: resume.analysisData
                     }
                 });
             }

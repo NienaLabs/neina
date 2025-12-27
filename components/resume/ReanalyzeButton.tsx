@@ -6,6 +6,7 @@ import { RefreshCcw } from "lucide-react"
 import { trpc } from "@/trpc/client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useResumeControl } from "./ResumeControlContext"
 
 interface ReanalyzeButtonProps {
     resumeId: string
@@ -14,23 +15,31 @@ interface ReanalyzeButtonProps {
 
 export function ReanalyzeButton({ resumeId, isTailored }: ReanalyzeButtonProps) {
     const router = useRouter()
-    const [isAnalyzing, setIsAnalyzing] = useState(false)
+    const { setIsProcessing } = useResumeControl()
+    
+    // Local state just for the button spinner distinct from the global overlay
+    const [isStarting, setIsStarting] = useState(false)
 
+    const utils = trpc.useUtils()
     const reanalyzeMutation = trpc.resume.reanalyze.useMutation({
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success("Analysis started. This may take a few moments.")
-            // Don't reset isAnalyzing - let the status wrapper handle it
-            // The wrapper will show a full-page overlay while processing
+            // Invalidate to start polling found in ResumeStatusWrapper
+            await utils.resume.getUnique.invalidate({ resumeId }) 
+            
+            setIsStarting(false)
             router.refresh()
         },
         onError: (error) => {
             toast.error(error.message || "Failed to start analysis")
-            setIsAnalyzing(false)
+            setIsStarting(false)
+            setIsProcessing(false) // Reset global overlay on error
         }
     })
 
     const handleReanalyze = () => {
-        setIsAnalyzing(true)
+        setIsStarting(true)
+        setIsProcessing(true) // <--- INSTANT OVERLAY
         reanalyzeMutation.mutate({
             resumeId,
             isTailored
@@ -42,10 +51,10 @@ export function ReanalyzeButton({ resumeId, isTailored }: ReanalyzeButtonProps) 
             className="w-full rounded-full shadow-md hover:shadow-lg transition-all" 
             size="lg"
             onClick={handleReanalyze}
-            disabled={isAnalyzing}
+            disabled={isStarting}
         >
-            <RefreshCcw className={`mr-2 h-4 w-4 ${isAnalyzing ? "animate-spin" : ""}`} />
-            {isAnalyzing ? "Analyzing..." : "Re-analyze"}
+            <RefreshCcw className={`mr-2 h-4 w-4 ${isStarting ? "animate-spin" : ""}`} />
+            {isStarting ? "Starting..." : "Re-analyze"}
         </Button>
     )
 }

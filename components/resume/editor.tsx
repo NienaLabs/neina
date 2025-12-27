@@ -97,10 +97,16 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
 
   // History State for Undo
   const [history, setHistory] = useState<ResumeExtraction[]>([])
+  const lastHistoryTime = useRef(0)
 
-  const addToHistory = () => {
+  const addToHistory = (immediate = false) => {
     if (editorState) {
-      setHistory((prev) => [...prev.slice(-19), editorState]); // Keep last 20 states
+        const now = Date.now();
+        // Save if immediate (structural change) or if enough time passed (new edit session)
+        if (immediate || (now - lastHistoryTime.current > 1000)) {
+            setHistory((prev) => [...prev.slice(-49), editorState]); // Keep last 50 states
+            lastHistoryTime.current = now;
+        }
     }
   }
 
@@ -132,6 +138,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
 
   // ---------- Generic Updaters ----------
   const handleFieldChange = (section: keyof ResumeExtraction, value: unknown) => {
+    addToHistory(false);
     handleFieldChangeUtil(section, value, setEditorState, setSave);
   }
 
@@ -141,40 +148,49 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
     key: string,
     value: unknown
   ) => {
+    addToHistory(false);
     handleNestedFieldChangeUtil(section, index, key, value, setEditorState, setSave);
   }
 
   const handleArrayAdd = (section: keyof ResumeExtraction, newItem: unknown) => {
+    addToHistory(true);
     handleArrayAddUtil(section, newItem, setEditorState, setSave);
   }
 
   const handleArrayDelete = (section: keyof ResumeExtraction, index: number) => {
+    addToHistory(true);
     handleArrayDeleteUtil(section, index, setEditorState, setSave);
   }
 
   // ---------- Address Section Handlers ----------
   const handleAddressChange = (key: keyof NonNullable<ResumeExtraction['address']>, value: string) => {
+    addToHistory(false);
     handleAddressChangeUtil(key, value, setEditorState, setSave);
   }
 
   const handleOtherLinksChange = (index: number, value: string) => {
+    addToHistory(false);
     handleOtherLinksChangeUtil(index, value, setEditorState, setSave);
   }
 
   const addNewOtherLink = () => {
+    addToHistory(true);
     addNewOtherLinkUtil(setEditorState, setSave);
   }
 
   // ---------- Skills Section Handlers ----------
   const handleSkillArrayChange = (type: keyof NonNullable<ResumeExtraction['skills']>, index: number, value: string) => {
+    addToHistory(false);
     handleSkillArrayChangeUtil(type, index, value, setEditorState, setSave);
   };
 
   const addSkill = (type: keyof NonNullable<ResumeExtraction['skills']>) => {
+    addToHistory(true);
     addSkillUtil(type, setEditorState, setSave);
   };
 
   const removeSkill = (type: keyof NonNullable<ResumeExtraction['skills']>, index: number) => {
+    addToHistory(true);
     removeSkillUtil(type, index, setEditorState, setSave);
   };
 
@@ -186,14 +202,17 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
     key: string,
     value: string
   ) => {
+    addToHistory(false);
     handleCustomFieldChangeUtil(section, index, fieldIndex, key, value, setEditorState, setSave);
   };
 
   const addCustomField = (section: keyof ResumeExtraction, index: number) => {
+    addToHistory(true);
     addCustomFieldUtil(section, index, setEditorState, setSave);
   };
 
   const removeCustomField = (section: keyof ResumeExtraction, index: number, fieldIndex: number) => {
+    addToHistory(true);
     removeCustomFieldUtil(section, index, fieldIndex, setEditorState, setSave);
   };
 
@@ -253,7 +272,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
     if (!fixes) return;
 
     // Snapshot current state before applying fixes
-    addToHistory(); 
+    addToHistory(true); 
 
     Object.keys(fixes).forEach((key) => {
       // "otherSections" in fixes maps to "customSections" in data
@@ -300,7 +319,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
                size="icon"
                onClick={undo}
                disabled={history.length === 0}
-               title="Undo last auto-fix"
+               title="Undo last change"
              >
                <RotateCcw className="size-4" />
              </Button>
@@ -335,7 +354,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             handleOtherLinksChange={handleOtherLinksChange}
             addNewOtherLink={addNewOtherLink}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('address', data); }}
+            onUpdate={(data) => { handleFieldChange('address', data); }}
           />
         )}
 
@@ -346,7 +365,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             objective={editorState.objective}
             handleFieldChange={handleFieldChange}
             fixes={fixes}
-            onFixApply={(section, value) => { addToHistory(); handleFieldChange(section, value); }}
+            onFixApply={(section, value) => { handleFieldChange(section, value); }}
           />
         )}
 
@@ -361,7 +380,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             addCustomField={addCustomField}
             removeCustomField={removeCustomField}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('education', data); }}
+            onUpdate={(data) => { handleFieldChange('education', data); }}
           />
         )}
 
@@ -377,7 +396,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             removeCustomField={removeCustomField}
             renderStringArray={renderStringArray}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('experience', data); }}
+            onUpdate={(data) => { handleFieldChange('experience', data); }}
           />
         )}
 
@@ -393,7 +412,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             removeCustomField={removeCustomField}
             renderStringArray={renderStringArray}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('projects', data); }}
+            onUpdate={(data) => { handleFieldChange('projects', data); }}
           />
         )}
 
@@ -405,7 +424,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             addSkill={addSkill}
             removeSkill={removeSkill}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('skills', data); }}
+            onUpdate={(data) => { handleFieldChange('skills', data); }}
           />
         )}
 
@@ -420,7 +439,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             addCustomField={addCustomField}
             removeCustomField={removeCustomField}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('certifications', data); }}
+            onUpdate={(data) => { handleFieldChange('certifications', data); }}
           />
         )}
 
@@ -435,7 +454,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             addCustomField={addCustomField}
             removeCustomField={removeCustomField}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('awards', data); }}
+            onUpdate={(data) => { handleFieldChange('awards', data); }}
           />
         )}
 
@@ -450,7 +469,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             addCustomField={addCustomField}
             removeCustomField={removeCustomField}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('publications', data); }}
+            onUpdate={(data) => { handleFieldChange('publications', data); }}
           />
         )}
 
@@ -463,7 +482,7 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
             handleNestedFieldChange={handleNestedFieldChange}
             setEditorState={setEditorState}
             fixes={fixes}
-            onUpdate={(data) => { addToHistory(); handleFieldChange('customSections', data); }}
+            onUpdate={(data) => { handleFieldChange('customSections', data); }}
           />
         )}
       </div>
@@ -473,6 +492,8 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
         onSave={handleSave}
         onCancel={() => setSave(false)}
         isLoading={saveDataMutation.isPending}
+        onUndo={undo}
+        canUndo={history.length > 0}
       />
     </>
   )

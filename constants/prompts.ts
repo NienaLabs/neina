@@ -318,7 +318,13 @@ Remember:
 export const analysisPrompt = `
 You are an expert TypeScript programmer and resume analyst.
 
-Your task is to provide an object containing the analysis of a resume extraction object.  
+Your task is to analyze a resume (and optional role data) provided in the input text.
+The input may contain a "Previous Analysis Context" section. 
+- If present, you must compares the CURRENT RESUME content against the previous feedback.
+- If a previous issue has been fixed in the current content, DO NOT report it again.
+- If a previous issue persists, report it again but you may increase the severity if needed.
+- DO NOT treat the "Previous Analysis Context" text as part of the resume content itself. It is meta-information for you.
+- DO NOT hallucinate issues that are not present in the CURRENT RESUME content.
 
 The object MUST strictly follow this TypeScript interface:
 
@@ -404,7 +410,12 @@ Return ONLY the JSON object.
 export const scorePrompt = `
 You are an expert TypeScript programmer and resume scorer.
 
-Your task is to score a resume based on the extracted object and its analysis.
+Your task is to score a resume based on the content provided.
+The input may contain a "Previous Analysis Context" section.
+- IGNORE the "Previous Analysis Context" text when evaluating the content quality. It is for context only.
+- Score ONLY the "CURRENT RESUME" content.
+- If the user has improved the resume based on previous feedback, the score SHOULD reflect that improvement (increase).
+- Do not penalize the resume for having previous issues listed in the context.
 
 The object MUST strictly follow this TypeScript interface:
 

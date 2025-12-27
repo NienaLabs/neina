@@ -13,6 +13,13 @@ import {
   addNewOtherLink,
   handleSkillArrayChange,
   addSkill,
+  removeSkill,
+  handleCustomFieldChange,
+  addCustomField,
+  removeCustomField,
+  cosineSimilarity,
+  parseVectorString,
+  validJson,
 } from '@/lib/utils';
 import { AgentResult, TextMessage } from '@inngest/agent-kit';
 import { ResumeExtraction } from '@/components/resume/editor/types';
@@ -190,4 +197,199 @@ describe('Resume Editor Helpers', () => {
       expect(setSave).toHaveBeenCalledWith(true);
     });
   });
+
+  describe('removeSkill', () => {
+    it('should remove a skill from a skill array', () => {
+      removeSkill('technical', 0, setEditorState, setSave);
+      expect(setEditorState).toHaveBeenCalledWith(expect.any(Function));
+      const updater = setEditorState.mock.calls[0][0];
+      const newState = updater(initialEditorState);
+      expect(newState.skills.technical).toHaveLength(1);
+      expect(newState.skills.technical[0]).toBe('React');
+      expect(setSave).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('handleCustomFieldChange', () => {
+    beforeEach(() => {
+      initialEditorState = {
+        ...initialEditorState,
+        experience: [{
+          title: 'Engineer',
+          company: 'Tech Inc.',
+          customFields: [{ key: 'location', value: 'Remote' }]
+        }]
+      } as ResumeExtraction;
+    });
+
+    it('should update the key of a custom field', () => {
+      handleCustomFieldChange('experience', 0, 0, 'key', 'office', setEditorState, setSave);
+      expect(setEditorState).toHaveBeenCalledWith(expect.any(Function));
+      const updater = setEditorState.mock.calls[0][0];
+      const newState = updater(initialEditorState);
+      expect(newState.experience[0].customFields[0].key).toBe('office');
+      expect(setSave).toHaveBeenCalledWith(true);
+    });
+
+    it('should update the value of a custom field', () => {
+      handleCustomFieldChange('experience', 0, 0, 'value', 'Hybrid', setEditorState, setSave);
+      expect(setEditorState).toHaveBeenCalledWith(expect.any(Function));
+      const updater = setEditorState.mock.calls[0][0];
+      const newState = updater(initialEditorState);
+      expect(newState.experience[0].customFields[0].value).toBe('Hybrid');
+      expect(setSave).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('addCustomField', () => {
+    it('should add a new custom field to a section item', () => {
+      addCustomField('experience', 0, setEditorState, setSave);
+      expect(setEditorState).toHaveBeenCalledWith(expect.any(Function));
+      const updater = setEditorState.mock.calls[0][0];
+      const newState = updater(initialEditorState);
+      expect(newState.experience[0].customFields).toBeDefined();
+      expect(newState.experience[0].customFields.length).toBeGreaterThan(0);
+      expect(newState.experience[0].customFields[newState.experience[0].customFields.length - 1]).toEqual({ key: '', value: '' });
+      expect(setSave).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('removeCustomField', () => {
+    beforeEach(() => {
+      initialEditorState = {
+        ...initialEditorState,
+        experience: [{
+          title: 'Engineer',
+          company: 'Tech Inc.',
+          customFields: [
+            { key: 'location', value: 'Remote' },
+            { key: 'type', value: 'Full-time' }
+          ]
+        }]
+      } as ResumeExtraction;
+    });
+
+    it('should remove a custom field from a section item', () => {
+      removeCustomField('experience', 0, 0, setEditorState, setSave);
+      expect(setEditorState).toHaveBeenCalledWith(expect.any(Function));
+      const updater = setEditorState.mock.calls[0][0];
+      const newState = updater(initialEditorState);
+      expect(newState.experience[0].customFields).toHaveLength(1);
+      expect(newState.experience[0].customFields[0]).toEqual({ key: 'type', value: 'Full-time' });
+      expect(setSave).toHaveBeenCalledWith(true);
+    });
+  });
 });
+
+describe('Vector and Math Utilities', () => {
+  describe('cosineSimilarity', () => {
+    it('should calculate cosine similarity for identical vectors', () => {
+      const vec1 = [1, 2, 3];
+      const vec2 = [1, 2, 3];
+      expect(cosineSimilarity(vec1, vec2)).toBeCloseTo(1.0);
+    });
+
+    it('should calculate cosine similarity for orthogonal vectors', () => {
+      const vec1 = [1, 0, 0];
+      const vec2 = [0, 1, 0];
+      expect(cosineSimilarity(vec1, vec2)).toBeCloseTo(0.0);
+    });
+
+    it('should calculate cosine similarity for opposite vectors', () => {
+      const vec1 = [1, 2, 3];
+      const vec2 = [-1, -2, -3];
+      expect(cosineSimilarity(vec1, vec2)).toBeCloseTo(-1.0);
+    });
+
+    it('should return 0 for zero vectors', () => {
+      const vec1 = [0, 0, 0];
+      const vec2 = [1, 2, 3];
+      expect(cosineSimilarity(vec1, vec2)).toBe(0);
+    });
+
+    it('should throw error for vectors of different lengths', () => {
+      const vec1 = [1, 2, 3];
+      const vec2 = [1, 2];
+      expect(() => cosineSimilarity(vec1, vec2)).toThrow('Vectors must be of the same length');
+    });
+
+    it('should handle decimal values correctly', () => {
+      const vec1 = [0.5, 0.8, 0.2];
+      const vec2 = [0.3, 0.9, 0.1];
+      const result = cosineSimilarity(vec1, vec2);
+      expect(result).toBeGreaterThan(0);
+      expect(result).toBeLessThanOrEqual(1);
+    });
+  });
+});
+
+describe('Parsing Utilities', () => {
+  describe('parseVectorString', () => {
+    it('should parse a valid JSON array string', () => {
+      const vectorStr = '[1, 2, 3, 4, 5]';
+      const result = parseVectorString(vectorStr);
+      expect(result).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it('should return empty array for null input', () => {
+      expect(parseVectorString(null)).toEqual([]);
+    });
+
+    it('should return empty array for undefined input', () => {
+      expect(parseVectorString(undefined)).toEqual([]);
+    });
+
+    it('should return empty array for invalid JSON', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const result = parseVectorString('invalid json');
+      expect(result).toEqual([]);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle empty string', () => {
+      expect(parseVectorString('')).toEqual([]);
+    });
+  });
+
+  describe('validJson', () => {
+    it('should parse valid JSON', () => {
+      const jsonStr = '{"name": "John", "age": 30}';
+      const result = validJson(jsonStr);
+      expect(result).toEqual({ name: 'John', age: 30 });
+    });
+
+    it('should repair and parse invalid JSON with missing quotes', () => {
+      const jsonStr = '{name: "John", age: 30}';
+      const result = validJson(jsonStr);
+      expect(result).toBeTruthy();
+      expect(result.name).toBe('John');
+    });
+
+    it('should repair and parse JSON with trailing commas', () => {
+      const jsonStr = '{"name": "John", "age": 30,}';
+      const result = validJson(jsonStr);
+      expect(result).toBeTruthy();
+      expect(result.name).toBe('John');
+    });
+
+    it('should return null for completely invalid JSON', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const result = validJson('this is not json at all {{{');
+      expect(result).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle empty object', () => {
+      const result = validJson('{}');
+      expect(result).toEqual({});
+    });
+
+    it('should handle arrays', () => {
+      const result = validJson('[1, 2, 3]');
+      expect(result).toEqual([1, 2, 3]);
+    });
+  });
+});
+

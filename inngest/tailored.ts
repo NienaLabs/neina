@@ -203,7 +203,7 @@ export const tailoredResumeUpdated = inngest.createFunction(
       parserAgent:"",
       analyserAgent:""
     })
-    const resumeText =`
+    let resumeText =`
     #Resume
     ${event.data.content}
     
@@ -212,6 +212,36 @@ export const tailoredResumeUpdated = inngest.createFunction(
     #Job Description
     ${event.data.description}
     `
+    
+    if (event.data.previousAnalysis) {
+            let prevFixes = "";
+             try {
+                const prev = typeof event.data.previousAnalysis === 'string' 
+                    ? JSON.parse(event.data.previousAnalysis) 
+                    : event.data.previousAnalysis;
+                if (prev && prev.fixes) {
+                    prevFixes = JSON.stringify(prev.fixes, null, 2);
+                }
+             } catch (e) {
+                console.error("Failed to parse previous analysis", e);
+             }
+
+             if (prevFixes) {
+                 resumeText += `
+        
+        ---------------------------------------------------
+        # PREVIOUS ISSUES CHECKLIST (META-DATA)
+        The following is a list of issues found in a PREVIOUS version of this resume.
+        YOUR GOAL: Check if these specific issues have been fixed in the CURRENT RESUME content above.
+        - If an issue is fixed, IGNORE it.
+        - If an issue is NOT fixed, Re-report it.
+        - DO NOT hallucinate that these issues exist if the current text shows they are fixed.
+        
+        ${prevFixes}
+        ---------------------------------------------------
+                 `
+             }
+    }
     const result = await network.run(resumeText,{state});
 
     // Extract skills and responsibilities (Moved out of step.run to avoid NESTING_STEPS)

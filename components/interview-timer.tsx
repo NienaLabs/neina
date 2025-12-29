@@ -5,7 +5,9 @@ import { AlertCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface InterviewTimerProps {
-  interviewId: string;
+  interviewId: string; // The internal DB ID (used for polling)
+  tavusId?: string;    // The external Tavus ID (used for Data Channel messaging)
+  initialSeconds?: number; // Optional initial time to prevent 'Syncing' lag
   dailyCall?: any; // Daily call object for WebRTC messages
   onTimeExpired?: () => void;
   onWarning?: (level: 'low' | 'critical') => void;
@@ -13,11 +15,13 @@ interface InterviewTimerProps {
 
 export const InterviewTimer: React.FC<InterviewTimerProps> = ({
   interviewId,
+  tavusId,
+  initialSeconds,
   dailyCall,
   onTimeExpired,
   onWarning
 }) => {
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(30);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(initialSeconds ?? null);
   const [warningLevel, setWarningLevel] = useState<'low' | 'critical' | null>(null);
 
   // Use refs for tracking warnings to avoid stale closures in the polling loop
@@ -28,51 +32,6 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
   // Sync state with refs for UI display if needed, but logic uses refs
   const [hasEnded, setHasEnded] = useState(false);
 
-  // Helper function to inject time context via WebRTC
-  const sendAIWarning = async (timeRemaining: number) => {
-    // Check if we have all required conditions to send a message
-    if (!interviewId || !dailyCall || dailyCall.meetingState() !== 'joined-meeting') {
-      if (process.env.NODE_ENV === 'development' && dailyCall) {
-        console.log('Skipping AI warning - call not joined:', {
-          hasInterviewId: !!interviewId,
-          hasDailyCall: !!dailyCall,
-          meetingState: dailyCall.meetingState()
-        });
-      }
-      return;
-    }
-
-    let contextMessage = '';
-    if (timeRemaining <= 30) {
-      contextMessage = "[SYSTEM: 30 seconds remaining - please announce this to the user and wrap up the conversation]";
-    } else {
-      return; // Only warn at 30 seconds
-    }
-
-    try {
-      // Add additional safety checks before sending
-      if (dailyCall && dailyCall.meetingState() === 'joined-meeting') {
-        await dailyCall.sendAppMessage({
-          message_type: "conversation",
-          event_type: "conversation.respond",
-          conversation_id: interviewId,
-          properties: {
-            text: contextMessage,
-            inject_context: true
-          }
-        }, '*');
-
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`AI warning sent for ${timeRemaining}s remaining`);
-        }
-      }
-    } catch (error: unknown) {
-      // Only log errors that aren't related to the call not being ready
-      if (error instanceof Error && !error.message.includes('sendAppMessage() only supported after join')) {
-        console.error('Error injecting time context:', error);
-      }
-    }
-  };
 
   useEffect(() => {
     if (hasEnded) return;
@@ -118,13 +77,14 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
 
           if (data.remaining_seconds > 0 && !data.should_end) {
             const currentSeconds = data.remaining_seconds;
-            if (currentSeconds <= 10 && !warnedCriticalRef.current) {
+            // User requested range 12-9s. Triggering at <= 12 ensures we catch it early.
+            // User requested range 12-9s. Triggering at <= 12 ensures we catch it early.
+            if (currentSeconds <= 12 && !warnedCriticalRef.current) {
               warnedCriticalRef.current = true;
               if (onWarning) onWarning('critical');
-            } else if (currentSeconds <= 30 && currentSeconds > 10 && !warnedLowRef.current) {
+            } else if (currentSeconds <= 30 && currentSeconds > 12 && !warnedLowRef.current) {
               warnedLowRef.current = true;
               if (onWarning) onWarning('low');
-              await sendAIWarning(currentSeconds);
             }
           }
 
@@ -163,6 +123,7 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
   };
 
   const getTimerColor = () => {
+    if (remainingSeconds === null) return 'text-gray-400';
     if (remainingSeconds <= 10) return 'text-red-500';
     if (remainingSeconds <= 15) return 'text-yellow-500';
     return 'text-green-500';
@@ -170,16 +131,16 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
 
   return (
     <div className="flex items-center space-x-2">
-      <Clock className={`h-4 w-4 ${getTimerColor()}`} />
-      <span className={`font-medium ${getTimerColor()}`}>
-        {formatTime(remainingSeconds)} remaining
+      <Clock className={`h-4 w-4 ${remainingSeconds === null ? 'text-gray-400' : getTimerColor()}`} />
+      <span className={`font-medium ${remainingSeconds === null ? 'text-gray-400' : getTimerColor()}`}>
+        {remainingSeconds === null ? 'Syncing...' : `${formatTime(remainingSeconds)} remaining`}
       </span>
 
       {warningLevel === 'critical' && (
         <Alert className="ml-4 py-2">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            Time running out! Interview will end in {remainingSeconds} seconds.
+            Time running out! Interview will end in {remainingSeconds ?? 0} seconds.
           </AlertDescription>
         </Alert>
       )}

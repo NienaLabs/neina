@@ -88,7 +88,7 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
       description: data.description,
       conversation_id: conversation_id,
       resume_id: data.resume_id,
-      status: 'ACTIVE'
+      status: 'SCHEDULED' // Initially scheduled, timer doesn't run yet
     }
   });
 
@@ -259,8 +259,16 @@ export async function getRemainingTime(interviewId: string): Promise<{
     }
   });
 
-  if (!interview || interview.status !== 'ACTIVE') {
+  if (!interview || (interview.status !== 'ACTIVE' && interview.status !== 'SCHEDULED')) {
     return { remaining_seconds: 0, should_end: true };
+  }
+
+  // If still scheduled, return the full duration (timer hasn't started)
+  if (interview.status === 'SCHEDULED') {
+    return {
+      remaining_seconds: Math.max(0, Math.floor(interview.user.interview_minutes * 60)),
+      should_end: false,
+    };
   }
 
   const now = new Date();

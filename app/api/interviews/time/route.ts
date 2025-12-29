@@ -66,3 +66,66 @@ export async function GET(request: Request) {
     }, { status: 500 });
   }
 }
+
+import { sendTavusMessage } from "@/lib/tavus";
+
+/**
+ * POST /api/interviews/time
+ * 
+ * Triggers a time-based warning/message to the AI interviewer.
+ * Used for 30s and 15s warnings.
+ */
+export async function POST(request: Request) {
+  try {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const body = await request.json();
+    const { interview_id, message, type } = body;
+
+    if (!interview_id || !message) {
+      return NextResponse.json({ error: "Missing interview_id or message" }, { status: 400 });
+    }
+
+    // Verify interview ownership
+    const interview = await prisma.interview.findUnique({
+      where: {
+        id: interview_id,
+        user_id: userId
+      },
+      select: { conversation_id: true }
+    });
+
+    if (!interview || !interview.conversation_id) {
+      return NextResponse.json({ error: "Interview not found or invalid" }, { status: 404 });
+    }
+
+    // If this is the "start" message (User Joined), activate the interview clock
+    if (type === 'start') {
+      console.log(`Activating interview ${interview_id} clock...`);
+      await prisma.interview.update({
+        where: { id: interview_id },
+        data: {
+          status: 'ACTIVE',
+          start_time: new Date()
+        }
+      });
+    }
+
+    // Send message to Tavus
+    console.log(`Sending time warning to interview ${interview_id}: ${message}`);
+    await sendTavusMessage(interview.conversation_id, message);
+
+    return NextResponse.json({ success: true });
+
+  } catch (err: any) {
+    console.error('Time warning error:', err);
+    return NextResponse.json({ error: err.message || "Failed to send warning" }, { status: 500 });
+  }
+}

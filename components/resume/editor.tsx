@@ -286,6 +286,11 @@ export default function ResumeEditor({ fixes, extractedData, resumeId, isTailore
       if (Array.isArray(sectionFixes)) {
          const autoFix = sectionFixes.find(f => f.autoFix)?.autoFix;
          if (autoFix) {
+           // Additional validation for customSections to ensure it's an array
+           if (dataKey === 'customSections' && !Array.isArray(autoFix)) {
+             console.warn(`Auto-fix for customSections is not an array, skipping:`, autoFix);
+             return;
+           }
            // We cast to any because we trust the AI/Prompt to match the type structure 
            // and TypeScript runtime checks are complex here.
            (newEditorState as any)[dataKey] = autoFix;

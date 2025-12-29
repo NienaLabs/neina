@@ -38,6 +38,9 @@ export const CustomSections = ({
   fixes,
   onUpdate,
 }: CustomSectionsProps) => {
+  // Safeguard: ensure customSections is always an array
+  const safeCustomSections = Array.isArray(customSections) ? customSections : [];
+
   return (
     <section>
       <div className="text-xl font-semibold mb-3 flex items-center justify-between">
@@ -47,7 +50,14 @@ export const CustomSections = ({
             <FixesDisplay 
               fixes={fixes} 
               section="otherSections" 
-              onApplyFix={(fix) => onUpdate(fix.autoFix)}
+              onApplyFix={(fix) => {
+                // Validate autoFix data is an array before applying
+                if (Array.isArray(fix.autoFix)) {
+                  onUpdate(fix.autoFix);
+                } else {
+                  console.warn('Auto-fix data for customSections is not an array:', fix.autoFix);
+                }
+              }}
             />
           </div>
         </div>
@@ -63,7 +73,7 @@ export const CustomSections = ({
       </div>
 
       <div className="flex flex-col gap-6">
-        {customSections.map((section, secIndex) => (
+        {safeCustomSections.map((section, secIndex) => (
           <div key={secIndex} className="p-4 border rounded-lg bg-gray-50">
             <div className="flex justify-between items-center mb-2">
               <Input
@@ -103,7 +113,9 @@ export const CustomSections = ({
                   <Trash2 className="size-4 text-red-500" />
                 </Button>
 
-                {Object.keys(entry).map((key) => (
+                {Object.keys(entry)
+                  .filter((key) => key !== 'customFields') // Filter out customFields as it's an array of objects
+                  .map((key) => (
                   <div key={key} className="mt-2">
                     <p className="text-sm font-medium capitalize">{key}</p>
                     <Input

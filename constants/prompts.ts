@@ -323,6 +323,7 @@ The input may contain a "Previous Analysis Context" section.
 - If present, you must compares the CURRENT RESUME content against the previous feedback.
 - If a previous issue has been fixed in the current content, DO NOT report it again.
 - If a previous issue persists, report it again but you may increase the severity if needed.
+- DO NOT include issues related to Date formats to the user
 - DO NOT treat the "Previous Analysis Context" text as part of the resume content itself. It is meta-information for you.
 - DO NOT hallucinate issues that are not present in the CURRENT RESUME content.
 
@@ -354,6 +355,48 @@ STRICT RULES:
   - Example: If the issue is in "profile", "autoFix" should be the corrected string for the profile.
   - Example: If the issue is in "experience", "autoFix" should be the fully corrected array of experience objects (including unchanged ones).
   - If a fix isn't possible or safe to automate, omit "autoFix" or set it to null.
+
+### CRITICAL DATE FORMAT RULE
+- **ALL DATE FIELDS** in autoFix values MUST use the format "yyyy-MM" (e.g., "2024-09", "2023-06").
+- **NEVER** use formats like "September 2027", "Sept 2027", "2027-September", or any text-based month names.
+- This applies to ALL date fields: startDate, endDate, date, year (if year should be yyyy-MM format).
+- Examples of CORRECT dates: "2024-09", "2023-06", "2020-01"
+- Examples of INCORRECT dates: "September 2024", "Sept 2024", "2024-09-15" (no day component)
+
+### CUSTOM SECTIONS SCHEMA RULE
+- When providing autoFix for customSections (under "otherSections" key in fixes):
+  - autoFix MUST be an array of section objects
+  - Each section object MUST have: { sectionName: string, entries: array }
+  - Each entry in entries array can have: { title?: string, organization?: string, description?: string, year?: string, customFields?: { key: string, value: string }[] }
+  - CRITICAL: The autoFix value should be the COMPLETE array of all custom sections, not just the fixed one
+  - Example structure (JSON format):
+    "autoFix": [
+      {
+        "sectionName": "Volunteering",
+        "entries": [
+          {
+            "title": "Volunteer Developer",
+            "organization": "Tech4Good",
+            "description": "Developed mobile apps for NGOs",
+            "year": "2023"
+          }
+        ]
+      }
+    ]
+
+### SKILLS SCHEMA RULE
+- When providing autoFix for skills section:
+  - autoFix MUST be a Record<string, string[]> object (NOT an array)
+  - Keys are skill category names (e.g., "technical", "soft", "languages")
+  - Values are arrays of skill strings
+  - Include ALL skill categories, even unchanged ones
+  - Example structure (JSON format):
+    "autoFix": {
+      "technical": ["Python", "React", "Spring Boot", "Docker"],
+      "soft": ["Leadership", "Teamwork", "Communication"],
+      "languages": ["English", "French"]
+    }
+
 
 ### CRITICAL JSON RULES
 - Output MUST be valid JSON.

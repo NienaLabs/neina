@@ -219,6 +219,26 @@ export const Conversation = React.memo(({ onLeave, meetingUrl, role, interviewId
   }, [leaveCall, onTimeExpired]);
 
   // ------------------------------
+  // User Joined Trigger
+  // ------------------------------
+  useEffect(() => {
+    if (meetingState === 'joined-meeting' && interviewId) {
+      console.log('User joined meeting - triggering AI greeting...');
+
+      // Fire and forget
+      fetch('/api/interviews/time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interview_id: interviewId,
+          message: "The user has joined the call. Please introduce yourself now.",
+          type: "start"
+        })
+      }).catch(err => console.error('Failed to trigger AI greeting:', err));
+    }
+  }, [meetingState, interviewId]);
+
+  // ------------------------------
   // Error Handling
   // ------------------------------
   useEffect(() => {

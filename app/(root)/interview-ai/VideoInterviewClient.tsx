@@ -304,17 +304,57 @@ const VideoInterview = () => {
     setShowTimeWarning('');
   }, [interviewId, conversationState, performCleanup]); // Removed dailyCall dependency as it was null here anyway
 
-  // Handle time warnings
+  // Handle time warnings and trigger AI speech
   const handleTimeWarning = useCallback((level: 'low' | 'critical') => {
-    if (level === 'critical') {
-      setShowTimeWarning('Critical: Only 10 seconds remaining!');
-    } else {
-      setShowTimeWarning('Warning: 15 seconds remaining');
+    // Only proceed if we have an interview ID
+    if (!interviewId) return;
+
+    let message = "";
+    let uiMessage = "";
+
+    if (level === 'critical') { // ~12 seconds left (triggered by InterviewTimer)
+      uiMessage = 'Critical: Time is ending!';
+      // Explicit instruction to say goodbye immediately
+      message = "URGENT: The interview time is ending now. Stop asking questions. Say goodbye and wrap up the call immediately.";
+    } else { // ~30 seconds left
+      uiMessage = 'Warning: 30 seconds remaining';
+      message = "We have about 30 seconds left. Please inform the user.";
     }
 
-    // Clear warning after 3 seconds
-    setTimeout(() => setShowTimeWarning(''), 3000);
-  }, []);
+    setShowTimeWarning(uiMessage);
+
+    // Trigger AI speech via Daily Data Channel (Tavus Interactions Protocol)
+    if (dailyCall) {
+      console.log(`Sending ${level} warning to AI via Data Channel:`, message);
+
+      // LAYER 2: INTERRUPT (Only for critical wrap-up)
+      // If the AI is mid-sentence, this forces it to stop and listen to the next command immediately.
+      if (level === 'critical') {
+        dailyCall.sendAppMessage(
+          {
+            event_type: 'conversation.interrupt',
+            conversation_id: conversationId // Correct Tavus ID
+          },
+          '*'
+        );
+      }
+
+      // Then send the response command
+      dailyCall.sendAppMessage(
+        {
+          event_type: 'conversation.respond',
+          properties: {
+            text: message
+          },
+          conversation_id: conversationId // Correct Tavus ID
+        },
+        '*' // Send to all participants (the AI will pick it up)
+      );
+    }
+
+    // Clear warning after 5 seconds
+    setTimeout(() => setShowTimeWarning(''), 5000);
+  }, [interviewId, dailyCall, conversationId]);
 
   // Handle role submission
   const handleRoleSubmit = async () => {
@@ -407,6 +447,8 @@ const VideoInterview = () => {
                 <div className="mt-2">
                   <InterviewTimer
                     interviewId={interviewId}
+                    initialSeconds={remainingSeconds}
+                    tavusId={conversationId || undefined}
                     onTimeExpired={handleTimeExpired}
                     onWarning={handleTimeWarning}
                     dailyCall={dailyCall}

@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     siteName: "Niena",
     images: [
       {
-        url: "/og-image.jpg", // Needs to be added or ensure it exists
+        url: "/logo.png", // Needs to be added or ensure it exists
         width: 1200,
         height: 630,
         alt: "Niena - AI Career Platform",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: "Niena - Achieve Career Goals with AI-powered Tools",
     description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
     creator: "@nienalabs", // Assuming handle or placeholder
-    images: ["/og-image.jpg"],
+    images: ["/logo.png"],
   },
   robots: {
     index: true,

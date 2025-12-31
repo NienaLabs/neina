@@ -75,7 +75,7 @@ export default function SidebarUsage() {
 
   return (
     <div className="px-2 py-4 space-y-4">
-      <div className="bg-muted/30 p-3 rounded-lg text-xs leading-relaxed text-muted-foreground border border-border/50 space-y-3">
+      <div className=" bg-linear-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/50 p-3 rounded-lg text-xs leading-relaxed text-muted-foreground border  space-y-3">
         <p>
           You have <span className="font-bold text-amber-600 dark:text-amber-500">{user.resume_credits}</span> resume credits and {user.interview_minutes > 0 ? (
             <>

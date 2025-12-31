@@ -14,23 +14,26 @@ interface ResumeStatusWrapperProps {
 
 function ResumeStatusLogic({ resumeId, children }: ResumeStatusWrapperProps) {
   const { isProcessing, setIsProcessing } = useResumeControl()
-  // Query the resume status with polling
+  const utils = trpc.useUtils()
+  // Query the resume status without automatic refetchInterval
   const { data: resume } = trpc.resume.getUnique.useQuery(
-    { resumeId },
-    {
-      refetchInterval: (data) => {
-        if (!data) return false
-        const isPending = data.status === 'PENDING' || data.status === 'PROCESSING'
-        
-        return isPending ? 3000 : false // Poll every 3 seconds
-      }
-    }
+    { resumeId }
   )
 
   // Derived state for local UI
   const router = useRouter()
 
   const isPending = resume?.status === 'PENDING' || resume?.status === 'PROCESSING'
+
+  useEffect(() => {
+    // Poll manually if pending
+    if (isPending) {
+        const interval = setInterval(() => {
+          utils.resume.getUnique.invalidate({ resumeId })
+        }, 2000)
+        return () => clearInterval(interval)
+    }
+  }, [isPending, utils, resumeId])
 
   useEffect(() => {
     // Sync context state

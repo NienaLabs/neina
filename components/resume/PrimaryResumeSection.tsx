@@ -149,8 +149,8 @@ if (res.success) {
       </div>
     
       {resumes && resumes.length > 0 ? (
-        <>
-          <Carousel className="w-full max-w-6xl mx-auto relative">
+        <div className="overflow-hidden max-w-3xl">
+          <Carousel className="max-w-3xl mx-auto relative">
             <CarouselContent>
               {resumes.map((resume) => (
                 <CarouselItem
@@ -181,7 +181,7 @@ if (res.success) {
               onOpenChange={setIsDialogOpen}
             />
           )}
-        </>
+        </div>
       ) : (
         <Empty
           icon={<Upload className="h-12 w-12 text-gray-400" />}

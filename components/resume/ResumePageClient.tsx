@@ -52,21 +52,29 @@ export type ResumeWithTailored = Resume & {
 
 const ResumePageClient = () => {
   const { data: primaryResumes, isLoading, isError, error, refetch } = trpc.resume.getPrimaryResumes.useQuery(undefined, {
-    refetchInterval: (data) => {
-        if (!data || !Array.isArray(data)) return false;
-        // Check if any primary resume or tailored resume is pending or processing
-        const hasPending = data.some(resume => 
-            resume?.status === 'PENDING' || 
-            resume?.status === 'PROCESSING' ||
-            (Array.isArray(resume?.tailoredResumes) && resume.tailoredResumes.some(tr => tr?.status === 'PENDING' || tr?.status === 'PROCESSING'))
-        );
-        return hasPending ? 2000 : false;
-    }
   })
   const [selectedResume, setSelectedResume] = useState<ResumeWithTailored | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const utils = trpc.useUtils()
+
+  useEffect(() => {
+    if (primaryResumes) {
+      // Check if any resume or tailored resume is pending/processing
+      const hasPending = primaryResumes.some(resume => 
+        resume?.status === 'PENDING' || 
+        resume?.status === 'PROCESSING' ||
+        (Array.isArray(resume?.tailoredResumes) && resume.tailoredResumes.some(tr => tr?.status === 'PENDING' || tr?.status === 'PROCESSING'))
+      );
+
+      if (hasPending) {
+        const interval = setInterval(() => {
+          utils.resume.getPrimaryResumes.invalidate();
+        }, 2000);
+        return () => clearInterval(interval);
+      }
+    }
+  }, [primaryResumes, utils]);
 
   useEffect(() => {
     if (primaryResumes && primaryResumes.length > 0) {

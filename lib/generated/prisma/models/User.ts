@@ -53,6 +53,14 @@ export type UserMinAggregateOutputType = {
   polarCustomerId: string | null
   polarSubscriptionId: string | null
   preferredProvider: string | null
+  onboardingCompleted: boolean | null
+  goal: string | null
+  referralSource: string | null
+  jobTitle: string | null
+  experienceLevel: string | null
+  location: string | null
+  jobType: string | null
+  remotePreference: string | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -72,6 +80,14 @@ export type UserMaxAggregateOutputType = {
   polarCustomerId: string | null
   polarSubscriptionId: string | null
   preferredProvider: string | null
+  onboardingCompleted: boolean | null
+  goal: string | null
+  referralSource: string | null
+  jobTitle: string | null
+  experienceLevel: string | null
+  location: string | null
+  jobType: string | null
+  remotePreference: string | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -91,6 +107,15 @@ export type UserCountAggregateOutputType = {
   polarCustomerId: number
   polarSubscriptionId: number
   preferredProvider: number
+  onboardingCompleted: number
+  goal: number
+  referralSource: number
+  jobTitle: number
+  experienceLevel: number
+  selectedTopics: number
+  location: number
+  jobType: number
+  remotePreference: number
   _all: number
 }
 
@@ -122,6 +147,14 @@ export type UserMinAggregateInputType = {
   polarCustomerId?: true
   polarSubscriptionId?: true
   preferredProvider?: true
+  onboardingCompleted?: true
+  goal?: true
+  referralSource?: true
+  jobTitle?: true
+  experienceLevel?: true
+  location?: true
+  jobType?: true
+  remotePreference?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -141,6 +174,14 @@ export type UserMaxAggregateInputType = {
   polarCustomerId?: true
   polarSubscriptionId?: true
   preferredProvider?: true
+  onboardingCompleted?: true
+  goal?: true
+  referralSource?: true
+  jobTitle?: true
+  experienceLevel?: true
+  location?: true
+  jobType?: true
+  remotePreference?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -160,6 +201,15 @@ export type UserCountAggregateInputType = {
   polarCustomerId?: true
   polarSubscriptionId?: true
   preferredProvider?: true
+  onboardingCompleted?: true
+  goal?: true
+  referralSource?: true
+  jobTitle?: true
+  experienceLevel?: true
+  selectedTopics?: true
+  location?: true
+  jobType?: true
+  remotePreference?: true
   _all?: true
 }
 
@@ -266,6 +316,15 @@ export type UserGroupByOutputType = {
   polarCustomerId: string | null
   polarSubscriptionId: string | null
   preferredProvider: string | null
+  onboardingCompleted: boolean
+  goal: string | null
+  referralSource: string | null
+  jobTitle: string | null
+  experienceLevel: string | null
+  selectedTopics: string[]
+  location: string | null
+  jobType: string | null
+  remotePreference: string | null
   _count: UserCountAggregateOutputType | null
   _avg: UserAvgAggregateOutputType | null
   _sum: UserSumAggregateOutputType | null
@@ -308,6 +367,15 @@ export type UserWhereInput = {
   polarCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
   polarSubscriptionId?: Prisma.StringNullableFilter<"User"> | string | null
   preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
+  onboardingCompleted?: Prisma.BoolFilter<"User"> | boolean
+  goal?: Prisma.StringNullableFilter<"User"> | string | null
+  referralSource?: Prisma.StringNullableFilter<"User"> | string | null
+  jobTitle?: Prisma.StringNullableFilter<"User"> | string | null
+  experienceLevel?: Prisma.StringNullableFilter<"User"> | string | null
+  selectedTopics?: Prisma.StringNullableListFilter<"User">
+  location?: Prisma.StringNullableFilter<"User"> | string | null
+  jobType?: Prisma.StringNullableFilter<"User"> | string | null
+  remotePreference?: Prisma.StringNullableFilter<"User"> | string | null
   accounts?: Prisma.AccountListRelationFilter
   announcement_read?: Prisma.Announcement_readListRelationFilter
   interview?: Prisma.InterviewListRelationFilter
@@ -337,6 +405,15 @@ export type UserOrderByWithRelationInput = {
   polarCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrderInput | Prisma.SortOrder
   preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  onboardingCompleted?: Prisma.SortOrder
+  goal?: Prisma.SortOrderInput | Prisma.SortOrder
+  referralSource?: Prisma.SortOrderInput | Prisma.SortOrder
+  jobTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  experienceLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedTopics?: Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
+  jobType?: Prisma.SortOrderInput | Prisma.SortOrder
+  remotePreference?: Prisma.SortOrderInput | Prisma.SortOrder
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   announcement_read?: Prisma.announcement_readOrderByRelationAggregateInput
   interview?: Prisma.interviewOrderByRelationAggregateInput
@@ -369,6 +446,15 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   polarCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
   polarSubscriptionId?: Prisma.StringNullableFilter<"User"> | string | null
   preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
+  onboardingCompleted?: Prisma.BoolFilter<"User"> | boolean
+  goal?: Prisma.StringNullableFilter<"User"> | string | null
+  referralSource?: Prisma.StringNullableFilter<"User"> | string | null
+  jobTitle?: Prisma.StringNullableFilter<"User"> | string | null
+  experienceLevel?: Prisma.StringNullableFilter<"User"> | string | null
+  selectedTopics?: Prisma.StringNullableListFilter<"User">
+  location?: Prisma.StringNullableFilter<"User"> | string | null
+  jobType?: Prisma.StringNullableFilter<"User"> | string | null
+  remotePreference?: Prisma.StringNullableFilter<"User"> | string | null
   accounts?: Prisma.AccountListRelationFilter
   announcement_read?: Prisma.Announcement_readListRelationFilter
   interview?: Prisma.InterviewListRelationFilter
@@ -398,6 +484,15 @@ export type UserOrderByWithAggregationInput = {
   polarCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrderInput | Prisma.SortOrder
   preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  onboardingCompleted?: Prisma.SortOrder
+  goal?: Prisma.SortOrderInput | Prisma.SortOrder
+  referralSource?: Prisma.SortOrderInput | Prisma.SortOrder
+  jobTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  experienceLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedTopics?: Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
+  jobType?: Prisma.SortOrderInput | Prisma.SortOrder
+  remotePreference?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -425,6 +520,15 @@ export type UserScalarWhereWithAggregatesInput = {
   polarCustomerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   polarSubscriptionId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   preferredProvider?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  onboardingCompleted?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  goal?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  referralSource?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  jobTitle?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  experienceLevel?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  selectedTopics?: Prisma.StringNullableListFilter<"User">
+  location?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  jobType?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  remotePreference?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
 }
 
 export type UserCreateInput = {
@@ -444,6 +548,15 @@ export type UserCreateInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -473,6 +586,15 @@ export type UserUncheckedCreateInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -502,6 +624,15 @@ export type UserUpdateInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -531,6 +662,15 @@ export type UserUncheckedUpdateInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -560,6 +700,15 @@ export type UserCreateManyInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
 }
 
 export type UserUpdateManyMutationInput = {
@@ -579,6 +728,15 @@ export type UserUpdateManyMutationInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -598,6 +756,23 @@ export type UserUncheckedUpdateManyInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type StringNullableListFilter<$PrismaModel = never> = {
+  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -617,6 +792,15 @@ export type UserCountOrderByAggregateInput = {
   polarCustomerId?: Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrder
   preferredProvider?: Prisma.SortOrder
+  onboardingCompleted?: Prisma.SortOrder
+  goal?: Prisma.SortOrder
+  referralSource?: Prisma.SortOrder
+  jobTitle?: Prisma.SortOrder
+  experienceLevel?: Prisma.SortOrder
+  selectedTopics?: Prisma.SortOrder
+  location?: Prisma.SortOrder
+  jobType?: Prisma.SortOrder
+  remotePreference?: Prisma.SortOrder
 }
 
 export type UserAvgOrderByAggregateInput = {
@@ -641,6 +825,14 @@ export type UserMaxOrderByAggregateInput = {
   polarCustomerId?: Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrder
   preferredProvider?: Prisma.SortOrder
+  onboardingCompleted?: Prisma.SortOrder
+  goal?: Prisma.SortOrder
+  referralSource?: Prisma.SortOrder
+  jobTitle?: Prisma.SortOrder
+  experienceLevel?: Prisma.SortOrder
+  location?: Prisma.SortOrder
+  jobType?: Prisma.SortOrder
+  remotePreference?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -660,6 +852,14 @@ export type UserMinOrderByAggregateInput = {
   polarCustomerId?: Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrder
   preferredProvider?: Prisma.SortOrder
+  onboardingCompleted?: Prisma.SortOrder
+  goal?: Prisma.SortOrder
+  referralSource?: Prisma.SortOrder
+  jobTitle?: Prisma.SortOrder
+  experienceLevel?: Prisma.SortOrder
+  location?: Prisma.SortOrder
+  jobType?: Prisma.SortOrder
+  remotePreference?: Prisma.SortOrder
 }
 
 export type UserSumOrderByAggregateInput = {
@@ -670,6 +870,10 @@ export type UserSumOrderByAggregateInput = {
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserCreateselectedTopicsInput = {
+  set: string[]
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -702,6 +906,11 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 
 export type EnumPlanFieldUpdateOperationsInput = {
   set?: $Enums.Plan
+}
+
+export type UserUpdateselectedTopicsInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type UserCreateNestedOneWithoutTransactionsInput = {
@@ -861,6 +1070,15 @@ export type UserCreateWithoutTransactionsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -889,6 +1107,15 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -933,6 +1160,15 @@ export type UserUpdateWithoutTransactionsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -961,6 +1197,15 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -989,6 +1234,15 @@ export type UserCreateWithoutSessionsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1017,6 +1271,15 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1061,6 +1324,15 @@ export type UserUpdateWithoutSessionsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1089,6 +1361,15 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1117,6 +1398,15 @@ export type UserCreateWithoutAccountsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationCreateNestedOneWithoutUserInput
@@ -1145,6 +1435,15 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedCreateNestedOneWithoutUserInput
@@ -1189,6 +1488,15 @@ export type UserUpdateWithoutAccountsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUpdateOneWithoutUserNestedInput
@@ -1217,6 +1525,15 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedUpdateOneWithoutUserNestedInput
@@ -1245,6 +1562,15 @@ export type UserCreateWithoutResumesInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1273,6 +1599,15 @@ export type UserUncheckedCreateWithoutResumesInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1317,6 +1652,15 @@ export type UserUpdateWithoutResumesInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1345,6 +1689,15 @@ export type UserUncheckedUpdateWithoutResumesInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1373,6 +1726,15 @@ export type UserCreateWithoutTailoredResumesInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1401,6 +1763,15 @@ export type UserUncheckedCreateWithoutTailoredResumesInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1445,6 +1816,15 @@ export type UserUpdateWithoutTailoredResumesInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1473,6 +1853,15 @@ export type UserUncheckedUpdateWithoutTailoredResumesInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1501,6 +1890,15 @@ export type UserCreateWithoutInterviewInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationCreateNestedOneWithoutUserInput
@@ -1529,6 +1927,15 @@ export type UserUncheckedCreateWithoutInterviewInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedCreateNestedOneWithoutUserInput
@@ -1573,6 +1980,15 @@ export type UserUpdateWithoutInterviewInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUpdateOneWithoutUserNestedInput
@@ -1601,6 +2017,15 @@ export type UserUncheckedUpdateWithoutInterviewInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedUpdateOneWithoutUserNestedInput
@@ -1629,6 +2054,15 @@ export type UserCreateWithoutSupportTicketsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1657,6 +2091,15 @@ export type UserUncheckedCreateWithoutSupportTicketsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1701,6 +2144,15 @@ export type UserUpdateWithoutSupportTicketsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1729,6 +2181,15 @@ export type UserUncheckedUpdateWithoutSupportTicketsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -1757,6 +2218,15 @@ export type UserCreateWithoutAnnouncement_readInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationCreateNestedOneWithoutUserInput
@@ -1785,6 +2255,15 @@ export type UserUncheckedCreateWithoutAnnouncement_readInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedCreateNestedOneWithoutUserInput
@@ -1829,6 +2308,15 @@ export type UserUpdateWithoutAnnouncement_readInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUpdateOneWithoutUserNestedInput
@@ -1857,6 +2345,15 @@ export type UserUncheckedUpdateWithoutAnnouncement_readInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
   recruiterApplication?: Prisma.RecruiterApplicationUncheckedUpdateOneWithoutUserNestedInput
@@ -1885,6 +2382,15 @@ export type UserCreateWithoutRecruiterApplicationInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -1913,6 +2419,15 @@ export type UserUncheckedCreateWithoutRecruiterApplicationInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -1957,6 +2472,15 @@ export type UserUpdateWithoutRecruiterApplicationInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -1985,6 +2509,15 @@ export type UserUncheckedUpdateWithoutRecruiterApplicationInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -2013,6 +2546,15 @@ export type UserCreateWithoutRecruiterJobsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewCreateNestedManyWithoutUserInput
@@ -2041,6 +2583,15 @@ export type UserUncheckedCreateWithoutRecruiterJobsInput = {
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
   preferredProvider?: string | null
+  onboardingCompleted?: boolean
+  goal?: string | null
+  referralSource?: string | null
+  jobTitle?: string | null
+  experienceLevel?: string | null
+  selectedTopics?: Prisma.UserCreateselectedTopicsInput | string[]
+  location?: string | null
+  jobType?: string | null
+  remotePreference?: string | null
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   announcement_read?: Prisma.announcement_readUncheckedCreateNestedManyWithoutUserInput
   interview?: Prisma.interviewUncheckedCreateNestedManyWithoutUserInput
@@ -2085,6 +2636,15 @@ export type UserUpdateWithoutRecruiterJobsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUpdateManyWithoutUserNestedInput
@@ -2113,6 +2673,15 @@ export type UserUncheckedUpdateWithoutRecruiterJobsInput = {
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referralSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedTopics?: Prisma.UserUpdateselectedTopicsInput | string[]
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  remotePreference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   announcement_read?: Prisma.announcement_readUncheckedUpdateManyWithoutUserNestedInput
   interview?: Prisma.interviewUncheckedUpdateManyWithoutUserNestedInput
@@ -2244,6 +2813,15 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
   preferredProvider?: boolean
+  onboardingCompleted?: boolean
+  goal?: boolean
+  referralSource?: boolean
+  jobTitle?: boolean
+  experienceLevel?: boolean
+  selectedTopics?: boolean
+  location?: boolean
+  jobType?: boolean
+  remotePreference?: boolean
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   announcement_read?: boolean | Prisma.User$announcement_readArgs<ExtArgs>
   interview?: boolean | Prisma.User$interviewArgs<ExtArgs>
@@ -2274,6 +2852,15 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
   preferredProvider?: boolean
+  onboardingCompleted?: boolean
+  goal?: boolean
+  referralSource?: boolean
+  jobTitle?: boolean
+  experienceLevel?: boolean
+  selectedTopics?: boolean
+  location?: boolean
+  jobType?: boolean
+  remotePreference?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2293,6 +2880,15 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
   preferredProvider?: boolean
+  onboardingCompleted?: boolean
+  goal?: boolean
+  referralSource?: boolean
+  jobTitle?: boolean
+  experienceLevel?: boolean
+  selectedTopics?: boolean
+  location?: boolean
+  jobType?: boolean
+  remotePreference?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -2312,9 +2908,18 @@ export type UserSelectScalar = {
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
   preferredProvider?: boolean
+  onboardingCompleted?: boolean
+  goal?: boolean
+  referralSource?: boolean
+  jobTitle?: boolean
+  experienceLevel?: boolean
+  selectedTopics?: boolean
+  location?: boolean
+  jobType?: boolean
+  remotePreference?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan" | "polarCustomerId" | "polarSubscriptionId" | "preferredProvider", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan" | "polarCustomerId" | "polarSubscriptionId" | "preferredProvider" | "onboardingCompleted" | "goal" | "referralSource" | "jobTitle" | "experienceLevel" | "selectedTopics" | "location" | "jobType" | "remotePreference", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   announcement_read?: boolean | Prisma.User$announcement_readArgs<ExtArgs>
@@ -2362,6 +2967,15 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     polarCustomerId: string | null
     polarSubscriptionId: string | null
     preferredProvider: string | null
+    onboardingCompleted: boolean
+    goal: string | null
+    referralSource: string | null
+    jobTitle: string | null
+    experienceLevel: string | null
+    selectedTopics: string[]
+    location: string | null
+    jobType: string | null
+    remotePreference: string | null
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -2811,6 +3425,15 @@ export interface UserFieldRefs {
   readonly polarCustomerId: Prisma.FieldRef<"User", 'String'>
   readonly polarSubscriptionId: Prisma.FieldRef<"User", 'String'>
   readonly preferredProvider: Prisma.FieldRef<"User", 'String'>
+  readonly onboardingCompleted: Prisma.FieldRef<"User", 'Boolean'>
+  readonly goal: Prisma.FieldRef<"User", 'String'>
+  readonly referralSource: Prisma.FieldRef<"User", 'String'>
+  readonly jobTitle: Prisma.FieldRef<"User", 'String'>
+  readonly experienceLevel: Prisma.FieldRef<"User", 'String'>
+  readonly selectedTopics: Prisma.FieldRef<"User", 'String[]'>
+  readonly location: Prisma.FieldRef<"User", 'String'>
+  readonly jobType: Prisma.FieldRef<"User", 'String'>
+  readonly remotePreference: Prisma.FieldRef<"User", 'String'>
 }
     
 

@@ -24,6 +24,16 @@ model User {
   polarCustomerId      String?
   polarSubscriptionId  String?
   preferredProvider    String?               @default("AUTO")
+  onboardingCompleted  Boolean               @default(false)
+  goal                 String?
+  referralSource       String?
+  jobTitle             String?
+  experienceLevel      String?
+  selectedTopics       String[]              @default([])
+  location             String?
+  jobType              String?
+  remotePreference     String?
+  companyName          String?
   accounts             Account[]
   announcement_read    announcement_read[]
   interview            interview[]

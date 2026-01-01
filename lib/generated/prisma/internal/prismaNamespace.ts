@@ -2333,7 +2333,16 @@ export const UserScalarFieldEnum = {
   plan: 'plan',
   polarCustomerId: 'polarCustomerId',
   polarSubscriptionId: 'polarSubscriptionId',
-  preferredProvider: 'preferredProvider'
+  preferredProvider: 'preferredProvider',
+  onboardingCompleted: 'onboardingCompleted',
+  goal: 'goal',
+  referralSource: 'referralSource',
+  jobTitle: 'jobTitle',
+  experienceLevel: 'experienceLevel',
+  selectedTopics: 'selectedTopics',
+  location: 'location',
+  jobType: 'jobType',
+  remotePreference: 'remotePreference'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]

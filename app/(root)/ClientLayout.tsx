@@ -11,8 +11,14 @@ import Link from "next/link"
 import { useSession } from "@/auth-client"
 import { Building2, ShieldCheck as Shield_Check } from "lucide-react"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession()
+  const { data: session, isPending } = useSession()
+  const router = useRouter()
+
+
   return (
     <SidebarProvider>
       <NotificationListener />
@@ -24,7 +30,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
 
             {/* Role-based Dashboard Links */}
-            {session?.user?.role === 'recruiter' && (
+            {(session?.user as any)?.role === 'recruiter' && (
               <Link
                 href="/recruiters/dashboard"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
@@ -33,7 +39,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 Visit Recruiter Dashboard
               </Link>
             )}
-            {session?.user?.role === 'admin' && (
+            {(session?.user as any)?.role === 'admin' && (
               <Link
                 href="/admin"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"

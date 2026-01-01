@@ -108,14 +108,22 @@ export async function POST(request: Request) {
 
     // If this is the "start" message (User Joined), activate the interview clock
     if (type === 'start') {
-      console.log(`Activating interview ${interview_id} clock...`);
-      await prisma.interview.update({
-        where: { id: interview_id },
+      const updateResult = await prisma.interview.updateMany({
+        where: {
+          id: interview_id,
+          status: 'SCHEDULED'
+        },
         data: {
           status: 'ACTIVE',
           start_time: new Date()
         }
       });
+
+      if (updateResult.count > 0) {
+        console.log(`Successfully activated interview ${interview_id}`);
+      } else {
+        console.log(`Interview ${interview_id} already active or not found in SCHEDULED state, skipping activation.`);
+      }
     }
 
     // Send message to Tavus

@@ -1,0 +1,25 @@
+yarn run v1.22.22
+$ jest app/__test__/AddressSection.test.tsx --no-coverage
+FAIL app/__test__/AddressSection.test.tsx
+  ● Test suite failed to run
+
+    Cannot find module '@/components/ui/dropdown-menu' from 'app/__test__/AddressSection.test.tsx'
+
+    [0m [90m 18 |[39m
+     [90m 19 |[39m [90m// Mock DropdownMenu components to avoid Recoil/Radix issues in JSDOM[39m
+    [31m[1m>[22m[39m[90m 20 |[39m jest[33m.[39mmock([32m'@/components/ui/dropdown-menu'[39m[33m,[39m () [33m=>[39m ({
+     [90m    |[39m      [31m[1m^[22m[39m
+     [90m 21 |[39m   [33mDropdownMenu[39m[33m:[39m ({ children }[33m:[39m { children[33m:[39m [33mReact[39m[33m.[39m[33mReactNode[39m }) [33m=>[39m [33m<[39m[33mdiv[39m[33m>[39m{children}[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[33m,[39m
+     [90m 22 |[39m   [33mDropdownMenuTrigger[39m[33m:[39m ({ children }[33m:[39m { children[33m:[39m [33mReact[39m[33m.[39m[33mReactNode[39m }) [33m=>[39m [33m<[39m[33mdiv[39m[33m>[39m{children}[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[33m,[39m
+     [90m 23 |[39m   [33mDropdownMenuContent[39m[33m:[39m ({ children }[33m:[39m { children[33m:[39m [33mReact[39m[33m.[39m[33mReactNode[39m }) [33m=>[39m [33m<[39m[33mdiv[39m[33m>[39m{children}[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[33m,[39m[0m
+
+      at Resolver._throwModNotFoundError (node_modules/jest-resolve/build/resolver.js:427:11)
+      at Object.mock (app/__test__/AddressSection.test.tsx:20:6)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        14.394 s
+Ran all test suites matching /app\\__test__\\AddressSection.test.tsx/i.
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

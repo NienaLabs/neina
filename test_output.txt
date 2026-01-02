@@ -1,0 +1,232 @@
+yarn run v1.22.22
+$ jest app/__test__/AddressSection.test.tsx --no-coverage
+FAIL app/__test__/AddressSection.test.tsx (9.391 s)
+  AddressSection
+    √ renders the Personal Details header with User icon (1043 ms)
+    √ renders existing fields with correct icons (131 ms)
+    √ shows "Add Field" button when there are missing fields (111 ms)
+    × renders the missing fields in the dropdown (187 ms)
+    × calls handleAddressChange when a missing field is added (107 ms)
+    √ does not show "Add Field" button when all fields are present (105 ms)
+
+  ● AddressSection › renders the missing fields in the dropdown
+
+    TestingLibraryElementError: Unable to find an element with the text: Telephone. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<section>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-row gap-2 items-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2 mb-3"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mdata-testid[39m=[32m"icon-user"[39m
+              [36m/>[39m
+              [36m<h2[39m
+                [33mclass[39m=[32m"text-xl font-semibold"[39m
+              [36m>[39m
+                [0mPersonal Details[0m
+              [36m</h2>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"p-1 mb-3 flex items-center justify-center"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-3 gap-3"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2 mb-1"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"icon-mail"[39m
+                [36m/>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"font-medium capitalize"[39m
+                [36m>[39m
+                  [0mEmail[0m
+                [36m</p>[39m
+              [36m</div>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"[39m
+                [33mdata-slot[39m=[32m"input"[39m
+                [33mplaceholder[39m=[32m"Email"[39m
+                [33mvalue[39m=[32m"test@example.com"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2 mb-1"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"icon-map-pin"[39m
+                [36m/>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"font-medium capitalize"[39m
+                [36m>[39m
+                  [0mLocation[0m
+                [36m</p>[39m
+              [36m</div>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"[39m
+                [33mdata-slot[39m=[32m"input"[39m
+                [33mplaceholder[39m=[32m"Location"[39m
+                [33mvalue[39m=[32m"Test City"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"col-span-3 mt-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-haspopup[39m=[32m"menu"[39m
+                [33mclass[39m=[32m"inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5"[39m
+                [33mdata-slot[39m=[32m"dropdown-menu-trigger"[39m
+                [33mdata-state[39m=[32m"closed"[39m
+                [33mid[39m=[32m"radix-_r_6_"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"icon-plus"[39m
+                [36m/>[39m
+                [0m Add Field[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 61 |[39m     fireEvent[33m.[39mclick(addButton)[33m;[39m
+     [90m 62 |[39m
+    [31m[1m>[22m[39m[90m 63 |[39m     expect(screen[33m.[39mgetByText([32m'Telephone'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 64 |[39m     expect(screen[33m.[39mgetByText([32m'LinkedIn'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 65 |[39m     expect(screen[33m.[39mgetByText([32m'GitHub'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m
+     [90m 66 |[39m     expect(screen[33m.[39mgetByText([32m'Portfolio'[39m))[33m.[39mtoBeInTheDocument()[33m;[39m[0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (app/__test__/AddressSection.test.tsx:63:19)
+
+  ● AddressSection › calls handleAddressChange when a missing field is added
+
+    TestingLibraryElementError: Unable to find an element with the text: GitHub. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<section>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-row gap-2 items-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2 mb-3"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mdata-testid[39m=[32m"icon-user"[39m
+              [36m/>[39m
+              [36m<h2[39m
+                [33mclass[39m=[32m"text-xl font-semibold"[39m
+              [36m>[39m
+                [0mPersonal Details[0m
+              [36m</h2>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"p-1 mb-3 flex items-center justify-center"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-3 gap-3"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2 mb-1"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"icon-mail"[39m
+                [36m/>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"font-medium capitalize"[39m
+                [36m>[39m
+                  [0mEmail[0m
+                [36m</p>[39m
+              [36m</div>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"[39m
+                [33mdata-slot[39m=[32m"input"[39m
+                [33mplaceholder[39m=[32m"Email"[39m
+                [33mvalue[39m=[32m"test@example.com"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2 mb-1"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"icon-map-pin"[39m
+                [36m/>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"font-medium capitalize"[39m
+                [36m>[39m
+                  [0mLocation[0m
+                [36m</p>[39m
+              [36m</div>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"[39m
+                [33mdata-slot[39m=[32m"input"[39m
+                [33mplaceholder[39m=[32m"Location"[39m
+                [33mvalue[39m=[32m"Test City"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"col-span-3 mt-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-haspopup[39m=[32m"menu"[39m
+                [33mclass[39m=[32m"inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5"[39m
+                [33mdata-slot[39m=[32m"dropdown-menu-trigger"[39m
+                [33mdata-state[39m=[32m"closed"[39m
+                [33mid[39m=[32m"radix-_r_8_"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"icon-plus"[39m
+                [36m/>[39m
+                [0m Add Field[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 73 |[39m     fireEvent[33m.[39mclick(addButton)[33m;[39m
+     [90m 74 |[39m
+    [31m[1m>[22m[39m[90m 75 |[39m     [36mconst[39m githubOption [33m=[39m screen[33m.[39mgetByText([32m'GitHub'[39m)[33m;[39m
+     [90m    |[39m                                 [31m[1m^[22m[39m
+     [90m 76 |[39m     fireEvent[33m.[39mclick(githubOption)[33m;[39m
+     [90m 77 |[39m
+     [90m 78 |[39m     expect(mockHandleAddressChange)[33m.[39mtoHaveBeenCalledWith([32m'githubProfile'[39m[33m,[39m [32m''[39m)[33m;[39m[0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (app/__test__/AddressSection.test.tsx:75:33)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 4 passed, 6 total
+Snapshots:   0 total
+Time:        14.936 s, estimated 21 s
+Ran all test suites matching /app\\__test__\\AddressSection.test.tsx/i.
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

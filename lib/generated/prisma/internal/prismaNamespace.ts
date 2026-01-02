@@ -2334,15 +2334,16 @@ export const UserScalarFieldEnum = {
   polarCustomerId: 'polarCustomerId',
   polarSubscriptionId: 'polarSubscriptionId',
   preferredProvider: 'preferredProvider',
-  onboardingCompleted: 'onboardingCompleted',
-  goal: 'goal',
-  referralSource: 'referralSource',
-  jobTitle: 'jobTitle',
   experienceLevel: 'experienceLevel',
-  selectedTopics: 'selectedTopics',
-  location: 'location',
+  goal: 'goal',
+  jobTitle: 'jobTitle',
   jobType: 'jobType',
-  remotePreference: 'remotePreference'
+  location: 'location',
+  onboardingCompleted: 'onboardingCompleted',
+  referralSource: 'referralSource',
+  remotePreference: 'remotePreference',
+  selectedTopics: 'selectedTopics',
+  companyName: 'companyName'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -2542,7 +2543,8 @@ export const JobsScalarFieldEnum = {
   responsibilities: 'responsibilities',
   created_at: 'created_at',
   updated_at: 'updated_at',
-  jobCertifications: 'jobCertifications'
+  jobCertifications: 'jobCertifications',
+  category: 'category'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]

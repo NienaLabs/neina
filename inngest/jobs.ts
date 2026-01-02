@@ -5,7 +5,22 @@ import { fetchJobs } from '../lib/jsearchClient'
 import generateChunksAndEmbeddings, { generateEmbedding } from '../lib/embeddings'
 import { v4 as uuidv4 } from 'uuid';
 import { jobExtractorAgent } from './agents';
-import { createState } from '@inngest/agent-kit';
+import { createState, createNetwork } from '@inngest/agent-kit';
+
+// ... (existing imports)
+
+// Create a network to run the agent properly so that lifecycle hooks work
+const jobExtractionNetwork = createNetwork({
+  name: 'job-extraction-network',
+  agents: [jobExtractorAgent],
+  defaultState: createState<{ jobExtractorAgent: string }>({
+    jobExtractorAgent: ''
+  }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return jobExtractorAgent;
+  }
+});
 
 
 type CategoryRow = {
@@ -203,8 +218,12 @@ ${responsibilities}
       jobExtractorAgent: ''
     });
     
-    const result = await jobExtractorAgent.run(combinedText, { state: extractionState });
-    const extracted = JSON.parse(result.state.data.jobExtractorAgent || '{}');
+    // Run via network to ensure lifecycle hooks populate the state
+    const result = await jobExtractionNetwork.run(combinedText, { state: extractionState });
+    
+    // safely access data
+    const rawState = result.state?.data?.jobExtractorAgent;
+    const extracted = typeof rawState === 'string' ? JSON.parse(rawState || '{}') : (rawState || {});
     
     return {
       respBullets: extracted.responsibilities || [],
@@ -279,12 +298,13 @@ export const jsearchIngestCategory = inngest.createFunction(
             job_description: it.job_description ?? null,
             job_posted_at: it.job_posted_at ?? null,
             job_is_remote: it.job_is_remote ?? it.remote ?? false,
+            category: category,
             qualifications: it.job_highlights?.Qualifications ?? it.qualifications ?? [],
             responsibilities: it.job_highlights?.Responsibilities ?? it.responsibilities ?? [],
           }
 
-          // Generate full job embedding
-          const fullJobText = `${it.job_title ?? ''} ${it.job_description ?? ''} ${skillBullets.join(' ')} ${respBullets.join(' ')}`.trim();
+          // Generate full job embedding (Targeting Title + Description only for "Overall" score)
+          const fullJobText = `${it.job_title ?? ''}\n\n${it.job_description ?? ''}`.trim();
           let fullJobEmbedding: number[] | null = null;
           try {
             fullJobEmbedding = await step.run?.(`embed-full-job-${page}-${idx}`, async () => {
@@ -327,26 +347,23 @@ export const jsearchIngestCategory = inngest.createFunction(
           let skillVectors: number[][] = []
 
           try {
-            const textsToEmbed = []
-            if (respBullets.length) textsToEmbed.push({ kind: 'resp', items: respBullets.slice() })
-            if (skillBullets.length) textsToEmbed.push({ kind: 'skill', items: skillBullets.slice() })
-
-            // For clarity: call generateChunksAndEmbeddings for resp and skill separately so we get corresponding vectors
+            
+            // Generate single vector for all responsibilities
             if (respBullets.length) {
              respVectors = await step.run?.(`embed-resp-${page}-${idx}`, async () => {
-                const r = await generateChunksAndEmbeddings(respBullets.join('\n\n'))
-                // r.vectorStore expected to be array of vectors corresponding to r.chunks.
-                // To keep 1:1 mapping with respBullets we attempt to align; if not possible, fallback to per-bullet embed function.
-                const vectors = Array.isArray(r.vectorStore) ? r.vectorStore : []
-                return vectors
+                // Join all bullets to form one text for embedding
+                const text = respBullets.join('\n');
+                const vector = await generateEmbedding(text);
+                return [vector]; // Return as array of one vector to match expected type
               })
             }
 
+            // Generate single vector for all skills
             if (skillBullets.length) {
              skillVectors = await step.run?.(`embed-skill-${page}-${idx}`, async () => {
-                const s = await generateChunksAndEmbeddings(skillBullets.join('\n\n'))
-                const vectors = Array.isArray(s.vectorStore) ? s.vectorStore : []
-                return vectors
+                const text = skillBullets.join('\n');
+                const vector = await generateEmbedding(text);
+                return [vector]; // Return as array of one vector
               })
               console.log(skillVectors)
             }

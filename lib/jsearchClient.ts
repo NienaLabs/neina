@@ -29,7 +29,7 @@ export async function fetchJobs(
   location = '',
   page = 1,
 ): Promise<JobApiPage> {
-  const url = `${JSEARCH_BASE}/search?query=${encodeURIComponent(query)}&page=${page}${location ? `&location=${encodeURIComponent(location)}&fields=${encodeURIComponent("employer_name,job_publisher,job_title,job_country,job_description,job_posted_at,job_highlights,job_is_remote")}` : ''}`
+const url = `${JSEARCH_BASE}/search?query=${encodeURIComponent(query)}&page=${page}${location ? `&location=${encodeURIComponent(location)}` : ''}`
      try {
       const res = await fetch(url, {
         method: 'GET',

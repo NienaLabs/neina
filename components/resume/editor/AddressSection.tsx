@@ -1,6 +1,22 @@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import {
+  Plus,
+  User,
+  Mail,
+  MapPin,
+  Phone,
+  Linkedin,
+  Github,
+  Globe,
+  Link as LinkIcon,
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ResumeExtraction, Fixes } from './types';
 import { FixesDisplay } from './FixesDisplay';
 
@@ -30,14 +46,45 @@ export const AddressSection = ({
   fixes,
   onUpdate,
 }: AddressSectionProps) => {
+  const fieldAttributes: Partial<
+    Record<
+      keyof NonNullable<ResumeExtraction['address']>,
+      { label: string; icon: React.ReactNode }
+    >
+  > = {
+    email: { label: 'Email', icon: <Mail className="w-4 h-4" /> },
+    location: { label: 'Location', icon: <MapPin className="w-4 h-4" /> },
+    telephone: { label: 'Telephone', icon: <Phone className="w-4 h-4" /> },
+    linkedInProfile: { label: 'LinkedIn', icon: <Linkedin className="w-4 h-4" /> },
+    githubProfile: { label: 'GitHub', icon: <Github className="w-4 h-4" /> },
+    portfolio: { label: 'Portfolio', icon: <Globe className="w-4 h-4" /> },
+  };
+
+  const allFields = Object.keys(fieldAttributes) as (keyof NonNullable<
+    ResumeExtraction['address']
+  >)[];
+  const currentFields = Object.keys(address) as (keyof NonNullable<
+    ResumeExtraction['address']
+  >)[];
+  const missingFields = allFields.filter(
+    (field) => !currentFields.includes(field) && field !== 'otherLinks'
+  );
+
+  const addField = (field: keyof NonNullable<ResumeExtraction['address']>) => {
+    handleAddressChange(field, '');
+  };
+
   return (
     <section>
       <div className="flex flex-row gap-2 items-center">
-        <h2 className="text-xl font-semibold mb-3">Personal Details</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <User className="w-5 h-5" />
+          <h2 className="text-xl font-semibold">Personal Details</h2>
+        </div>
         <div className="p-1 mb-3 flex items-center justify-center">
-          <FixesDisplay 
-            fixes={fixes} 
-            section="address" 
+          <FixesDisplay
+            fixes={fixes}
+            section="address"
             onApplyFix={(fix) => onUpdate(fix.autoFix)}
           />
         </div>
@@ -47,7 +94,10 @@ export const AddressSection = ({
           if (key === 'otherLinks') {
             return (
               <div key={key} className="col-span-3">
-                <p className="font-medium mb-1">Other Links</p>
+                 <div className="flex items-center gap-2 mb-1">
+                  <LinkIcon className="w-4 h-4" />
+                  <p className="font-medium">Other Links</p>
+                </div>
                 <div className="flex flex-col gap-2">
                   {address.otherLinks?.map((link, i) => (
                     <Input
@@ -57,7 +107,12 @@ export const AddressSection = ({
                       placeholder={`Link ${i + 1}`}
                     />
                   ))}
-                  <Button onClick={addNewOtherLink} variant="outline" size="sm" className="w-fit">
+                  <Button
+                    onClick={addNewOtherLink}
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                  >
                     <Plus className="w-4 h-4 mr-2" /> Add Link
                   </Button>
                 </div>
@@ -65,19 +120,43 @@ export const AddressSection = ({
             );
           }
 
+          const fieldKey = key as keyof NonNullable<ResumeExtraction['address']>;
+          const attributes = fieldAttributes[fieldKey];
+
           return (
             <div key={key}>
-              <p className="font-medium mb-1 capitalize">{key}</p>
+              <div className="flex items-center gap-2 mb-1">
+                {attributes?.icon}
+                <p className="font-medium capitalize">
+                  {attributes?.label || key}
+                </p>
+              </div>
               <Input
-                value={address[key as keyof ResumeExtraction['address']] ?? ''}
-                onChange={(e) =>
-                  handleAddressChange(key as keyof ResumeExtraction['address'], e.target.value)
-                }
-                placeholder={key}
+                value={address[fieldKey] ?? ''}
+                onChange={(e) => handleAddressChange(fieldKey, e.target.value)}
+                placeholder={attributes?.label || key}
               />
             </div>
           );
         })}
+        {missingFields.length > 0 && (
+          <div className="col-span-3 mt-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Plus className="w-4 h-4 mr-2" /> Add Field
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {missingFields.map((field) => (
+                  <DropdownMenuItem key={field} onClick={() => addField(field)}>
+                    {fieldAttributes[field]?.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
     </section>
   );

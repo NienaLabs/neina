@@ -24,15 +24,15 @@ model User {
   polarCustomerId      String?
   polarSubscriptionId  String?
   preferredProvider    String?               @default("AUTO")
-  onboardingCompleted  Boolean               @default(false)
-  goal                 String?
-  referralSource       String?
-  jobTitle             String?
   experienceLevel      String?
-  selectedTopics       String[]              @default([])
-  location             String?
+  goal                 String?
+  jobTitle             String?
   jobType              String?
+  location             String?
+  onboardingCompleted  Boolean               @default(false)
+  referralSource       String?
   remotePreference     String?
+  selectedTopics       String[]              @default([])
   companyName          String?
   accounts             Account[]
   announcement_read    announcement_read[]
@@ -250,6 +250,7 @@ model jobs {
   updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
   embedding            Unsupported("vector")?
   jobCertifications    String[]
+  category             String?
   job_responsibilities job_responsibilities?
   job_skills           job_skills?
   recruiterJob         RecruiterJob?

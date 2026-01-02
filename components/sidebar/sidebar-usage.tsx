@@ -79,7 +79,7 @@ export default function SidebarUsage() {
         <p>
           You have <span className="font-bold text-amber-600 dark:text-amber-500">{user.resume_credits}</span> resume credits and {user.interview_minutes > 0 ? (
             <>
-              <span className="font-bold text-indigo-600 dark:text-indigo-500">{user.interview_minutes}</span> interview minutes
+              <span className="font-bold text-indigo-600 dark:text-indigo-500">{user.interview_minutes}</span>
             </>
           ) : (
             <span className="font-semibold text-foreground">no</span>

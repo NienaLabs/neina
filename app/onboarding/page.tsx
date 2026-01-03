@@ -76,9 +76,16 @@ export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const updateProfile = trpc.user.updateProfile.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       toast.success("Profile updated successfully!");
-      window.location.href = "/dashboard";
+
+      // If user selected recruiter, redirect to application page
+      if (formData.role === "recruiter") {
+        window.location.href = "/recruiters/apply";
+      } else {
+        // Job seekers go to dashboard
+        window.location.href = "/dashboard";
+      }
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update profile. Please try again.");
@@ -491,7 +498,7 @@ export default function OnboardingPage() {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4 font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900 text-zinc-900 dark:text-zinc-100">
-      
+
       {/* Background Ambience */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[120px]" />
@@ -500,7 +507,7 @@ export default function OnboardingPage() {
 
       <div className="w-full max-w-xl relative z-10">
         <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-[2rem] border border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl shadow-zinc-200/50 dark:shadow-zinc-950/50 overflow-hidden flex flex-col min-h-[580px]">
-          
+
           {/* Header */}
           <div className="px-8 pt-8 pb-4">
             <div className="flex items-center justify-between mb-8">
@@ -572,7 +579,7 @@ export default function OnboardingPage() {
             </Button>
           </div>
         </div>
-        
+
         {/* Footer info */}
         <p className="text-center text-xs text-zinc-400 dark:text-zinc-600 mt-6 font-medium">
           Niena • AI Powered Career Elevator

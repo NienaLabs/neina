@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
 import { sendRecruiterApprovalEmail, sendRecruiterRejectionEmail } from '@/lib/email';
+import { sendPushNotification, sendMulticastPushNotification } from '@/lib/firebase-admin';
 
 export const adminRouter = createTRPCRouter({
     // --- User Management ---
@@ -808,4 +809,181 @@ export const adminRouter = createTRPCRouter({
 
             return { success: true };
         }),
+
+    // --- Push Notifications ---
+    sendJobNotifications: protectedProcedure
+        .input(z.object({ userId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            try {
+                const subscriptions = await prisma.pushSubscription.findMany({
+                    where: { userId: input.userId },
+                });
+
+                if (subscriptions.length === 0) {
+                    throw new TRPCError({ code: 'NOT_FOUND', message: 'User has no active push subscriptions' });
+                }
+
+                const targetUser = await prisma.user.findUnique({
+                    where: { id: input.userId },
+                    select: {
+                        selectedTopics: true,
+                        experienceLevel: true,
+                        location: true,
+                        jobType: true,
+                        remotePreference: true,
+                    },
+                });
+
+                if (!targetUser) {
+                    throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+                }
+
+                const jobs = await prisma.jobs.findMany({
+                    where: {},
+                    take: 3,
+                    orderBy: { created_at: 'desc' },
+                    select: {
+                        id: true,
+                        job_title: true,
+                        employer_name: true,
+                        job_location: true,
+                    },
+                });
+
+                if (jobs.length === 0) {
+                    throw new TRPCError({ code: 'NOT_FOUND', message: 'No matching jobs found' });
+                }
+
+                const jobTitles = jobs.map(j => j.job_title).join(', ');
+                const notificationTitle = '🎯 New Job Matches!';
+                const notificationBody = `We found ${jobs.length} perfect matches for you: ${jobTitles}`;
+
+                // Create persistent in-app notification
+                await prisma.announcement.create({
+                    data: {
+                        title: notificationTitle,
+                        content: `${notificationBody}\n\nView them here: /dashboard/jobs`,
+                        type: 'in-app', // Use 'in-app' so it appears in the list. Push is handled separately below.
+                        targetUserIds: [input.userId],
+                        createdBy: ctx.session.user.id,
+                    },
+                });
+
+                const notification = {
+                    title: notificationTitle,
+                    body: notificationBody,
+                    icon: '/logo.png',
+                };
+
+                const data = {
+                    type: 'job_matches',
+                    url: '/dashboard/jobs',
+                    jobIds: jobs.map(j => j.id).join(','),
+                };
+
+                const tokens = subscriptions.map(s => s.endpoint);
+                const invalidTokens: string[] = [];
+
+                for (const token of tokens) {
+                    const result = await sendPushNotification(token, notification, data);
+                    if (!result.success && result.invalidToken) {
+                        invalidTokens.push(token);
+                    }
+                }
+
+                if (invalidTokens.length > 0) {
+                    await prisma.pushSubscription.deleteMany({
+                        where: { endpoint: { in: invalidTokens } },
+                    });
+                }
+
+                return {
+                    success: true,
+                    message: `Sent notifications to ${tokens.length - invalidTokens.length} devices`,
+                    jobCount: jobs.length,
+                };
+            } catch (error: any) {
+                console.error('Error sending job notifications:', error);
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: error.message || 'Failed to send job notifications',
+                });
+            }
+        }),
+
+    sendCustomNotification: protectedProcedure
+        .input(
+            z.object({
+                userIds: z.array(z.string()).min(1),
+                title: z.string().min(1).max(100),
+                body: z.string().min(1).max(200),
+                url: z.string().optional(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            try {
+                const subscriptions = await prisma.pushSubscription.findMany({
+                    where: { userId: { in: input.userIds } },
+                });
+
+                if (subscriptions.length === 0) {
+                    throw new TRPCError({
+                        code: 'NOT_FOUND',
+                        message: 'No active push subscriptions found for the selected users',
+                    });
+                }
+
+                const notification = {
+                    title: input.title,
+                    body: input.body,
+                    icon: '/logo.png',
+                };
+
+                const data = {
+                    type: 'custom',
+                    url: input.url || '/dashboard',
+                };
+
+                const tokens = subscriptions.map(s => s.endpoint);
+                const result = await sendMulticastPushNotification(tokens, notification, data);
+
+                return {
+                    success: true,
+                    message: `Sent to ${result.successCount} devices`,
+                    successCount: result.successCount,
+                    failureCount: result.failureCount,
+                };
+            } catch (error: any) {
+                console.error('Error sending custom notification:', error);
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: error.message || 'Failed to send notification',
+                });
+            }
+        }),
+
+    getPushSubscriptionStats: protectedProcedure.query(async ({ ctx }) => {
+        const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+        if (user?.role !== 'admin') {
+            throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Admin access required' });
+        }
+
+        const totalSubscriptions = await prisma.pushSubscription.count();
+        const uniqueUsers = await prisma.pushSubscription.groupBy({
+            by: ['userId'],
+        });
+
+        return {
+            totalSubscriptions,
+            uniqueUsers: uniqueUsers.length,
+            averageDevicesPerUser:
+                uniqueUsers.length > 0 ? (totalSubscriptions / uniqueUsers.length).toFixed(2) : 0,
+        };
+    }),
 });

@@ -164,3 +164,8 @@ export type JobView = Prisma.JobViewModel
  * 
  */
 export type blog_post = Prisma.blog_postModel
+/**
+ * Model PushSubscription
+ * 
+ */
+export type PushSubscription = Prisma.PushSubscriptionModel

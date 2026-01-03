@@ -38,18 +38,28 @@ export default function SupportPage() {
         },
     });
 
-    const createTicketMutation = trpc.support.createTicket.useMutation({
-        onSuccess: () => {
-            toast.success("Ticket submitted successfully! Our team will get back to you soon.");
+    const sendAdminMessageMutation = trpc.user.sendAdminMessage.useMutation({
+        onSuccess: (data) => {
+            if (data.method === 'push') {
+                toast.success("Admins notified instantly via push notification! We'll be in touch.");
+            } else {
+                toast.success("Support ticket created. Our team will get back to you soon.");
+            }
             form.reset();
         },
         onError: (error) => {
-            toast.error(error.message || "Failed to create ticket");
+            toast.error(error.message || "Failed to send message");
         },
     });
 
     const onSubmit = (data: TicketFormData) => {
-        createTicketMutation.mutate(data);
+        // Format message to include category and priority
+        const fullMessage = `[${data.category.toUpperCase()}] [${data.priority.toUpperCase()}]\n\n${data.message}`;
+
+        sendAdminMessageMutation.mutate({
+            subject: data.subject,
+            message: fullMessage,
+        });
     };
 
     return (
@@ -61,7 +71,7 @@ export default function SupportPage() {
                         <div>
                             <CardTitle className="text-2xl">Contact Support</CardTitle>
                             <CardDescription>
-                                Submit a support ticket and our team will assist you
+                                Send a message directly to our admin team. We'll be notified instantly.
                             </CardDescription>
                         </div>
                     </div>
@@ -154,18 +164,18 @@ export default function SupportPage() {
                             <Button
                                 type="submit"
                                 className="w-full"
-                                disabled={createTicketMutation.isPending}
+                                disabled={sendAdminMessageMutation.isPending}
                                 size="lg"
                             >
-                                {createTicketMutation.isPending ? "Submitting..." : "Submit Ticket"}
+                                {sendAdminMessageMutation.isPending ? "Sending..." : "Send Message"}
                             </Button>
                         </form>
                     </Form>
 
                     <div className="mt-6 p-4 bg-muted rounded-lg">
                         <p className="text-sm text-muted-foreground">
-                            <strong>Note:</strong> After submitting your ticket, our support team will review it and respond via email.
-                            Please check your inbox for updates.
+                            <strong>Note:</strong> Admins with push notifications enabled will receive this immediately.
+                            Otherwise, a support ticket will be created automatically.
                         </p>
                     </div>
                 </CardContent>

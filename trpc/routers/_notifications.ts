@@ -203,4 +203,83 @@ export const notificationsRouter = createTRPCRouter({
 
         return { success: true, count: announcements.length };
     }),
+
+    /**
+     * Subscribe user to push notifications
+     */
+    subscribeToPush: protectedProcedure
+        .input(
+            z.object({
+                token: z.string(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            try {
+                // Check if subscription already exists
+                const existing = await prisma.pushSubscription.findFirst({
+                    where: {
+                        userId,
+                        endpoint: input.token,
+                    },
+                });
+
+                if (existing) {
+                    return { success: true, message: 'Already subscribed' };
+                }
+
+                // Create new subscription
+                await prisma.pushSubscription.create({
+                    data: {
+                        userId,
+                        endpoint: input.token,
+                        keys: {}, // FCM tokens don't need additional keys
+                    },
+                });
+
+                return { success: true, message: 'Successfully subscribed to push notifications' };
+            } catch (error: any) {
+                console.error('Error subscribing to push:', error);
+                throw new Error('Failed to subscribe to push notifications');
+            }
+        }),
+
+    /**
+     * Unsubscribe user from push notifications
+     */
+    unsubscribeFromPush: protectedProcedure.mutation(async ({ ctx }) => {
+        const userId = ctx.session.user.id;
+
+        try {
+            await prisma.pushSubscription.deleteMany({
+                where: {
+                    userId,
+                },
+            });
+
+            return { success: true, message: 'Successfully unsubscribed from push notifications' };
+        } catch (error: any) {
+            console.error('Error unsubscribing from push:', error);
+            throw new Error('Failed to unsubscribe from push notifications');
+        }
+    }),
+
+    /**
+     * Get user's subscription status
+     */
+    getSubscriptionStatus: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id;
+
+        const count = await prisma.pushSubscription.count({
+            where: {
+                userId,
+            },
+        });
+
+        return {
+            isSubscribed: count > 0,
+            deviceCount: count,
+        };
+    }),
 });

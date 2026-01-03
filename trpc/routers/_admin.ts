@@ -885,24 +885,36 @@ export const adminRouter = createTRPCRouter({
                 };
 
                 const tokens = subscriptions.map(s => s.endpoint);
-                const invalidTokens: string[] = [];
 
-                for (const token of tokens) {
-                    const result = await sendPushNotification(token, notification, data);
-                    if (!result.success && result.invalidToken) {
-                        invalidTokens.push(token);
-                    }
+                // Use multicast for performance
+                const result = await sendMulticastPushNotification(tokens, notification, data);
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to send notifications');
                 }
 
-                if (invalidTokens.length > 0) {
-                    await prisma.pushSubscription.deleteMany({
-                        where: { endpoint: { in: invalidTokens } },
+                // Handle invalid tokens
+                if ((result.failureCount ?? 0) > 0 && result.responses) {
+                    const invalidTokens: string[] = [];
+                    result.responses.forEach((resp, idx) => {
+                        if (!resp.success && (
+                            resp.error?.code === 'messaging/invalid-registration-token' ||
+                            resp.error?.code === 'messaging/registration-token-not-registered'
+                        )) {
+                            invalidTokens.push(tokens[idx]);
+                        }
                     });
+
+                    if (invalidTokens.length > 0) {
+                        await prisma.pushSubscription.deleteMany({
+                            where: { endpoint: { in: invalidTokens } },
+                        });
+                    }
                 }
 
                 return {
                     success: true,
-                    message: `Sent notifications to ${tokens.length - invalidTokens.length} devices`,
+                    message: `Sent notifications to ${result.successCount} devices`,
                     jobCount: jobs.length,
                 };
             } catch (error: any) {
@@ -910,6 +922,109 @@ export const adminRouter = createTRPCRouter({
                 throw new TRPCError({
                     code: 'INTERNAL_SERVER_ERROR',
                     message: error.message || 'Failed to send job notifications',
+                });
+            }
+        }),
+
+    sendGlobalJobNotifications: protectedProcedure
+        .mutation(async ({ ctx }) => {
+            const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
+            if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+            try {
+                // 1. Get all active subscriptions
+                const subscriptions = await prisma.pushSubscription.findMany({});
+
+                if (subscriptions.length === 0) {
+                    throw new TRPCError({ code: 'NOT_FOUND', message: 'No active push subscriptions found in the system' });
+                }
+
+                // 2. Fetch latest jobs
+                const jobs = await prisma.jobs.findMany({
+                    where: {},
+                    take: 3,
+                    orderBy: { created_at: 'desc' },
+                });
+
+                if (jobs.length === 0) {
+                    throw new TRPCError({ code: 'NOT_FOUND', message: 'No jobs found to send' });
+                }
+
+                const jobTitles = jobs.map(j => j.job_title).join(', ');
+                const notificationTitle = '🎯 New Jobs Available!';
+                const notificationBody = `Check out the latest ${jobs.length} jobs: ${jobTitles}`;
+
+                // 3. Create persistent in-app announcements for ALL users
+                // We use createMany for performance
+                // First get unique user IDs from subscriptions
+                const userIds = [...new Set(subscriptions.map(s => s.userId))];
+
+                // Create one announcement for everyone (using targetRoles or explicit IDs)
+                // Since this is "Global", we can use a system-wide announcement logic or just target all users
+                // For now, let's target specifically the users who have push enabled to ensure they see it in history
+                await prisma.announcement.create({
+                    data: {
+                        title: notificationTitle,
+                        content: `${notificationBody}\n\nView them here: /dashboard/jobs`,
+                        type: 'both', // persistent + push
+                        targetUserIds: userIds, // Target all subscribed users
+                        createdBy: ctx.session.user.id,
+                    },
+                });
+
+                // 4. Send Multicast Push
+                const tokens = subscriptions.map(s => s.endpoint);
+                const notification = {
+                    title: notificationTitle,
+                    body: notificationBody,
+                    icon: '/logo.png',
+                };
+                const data = {
+                    type: 'job_matches',
+                    url: '/dashboard/jobs',
+                    jobIds: jobs.map(j => j.id).join(','),
+                };
+
+                // Use multicast for performance
+                // Note: FCM multicast has a limit of 500 tokens per call. 
+                // For a real prod app with >500 users, we'd need to batch this.
+                // Assuming <500 for now.
+                const result = await sendMulticastPushNotification(tokens, notification, data);
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to send global notifications');
+                }
+
+                // Handle invalid tokens
+                if ((result.failureCount ?? 0) > 0 && result.responses) {
+                    const invalidTokens: string[] = [];
+                    result.responses.forEach((resp, idx) => {
+                        if (!resp.success && (
+                            resp.error?.code === 'messaging/invalid-registration-token' ||
+                            resp.error?.code === 'messaging/registration-token-not-registered'
+                        )) {
+                            invalidTokens.push(tokens[idx]);
+                        }
+                    });
+
+                    if (invalidTokens.length > 0) {
+                        await prisma.pushSubscription.deleteMany({
+                            where: { endpoint: { in: invalidTokens } },
+                        });
+                    }
+                }
+
+                return {
+                    success: true,
+                    message: `Sent global alerts to ${result.successCount} devices`,
+                    totalSubscribers: tokens.length,
+                };
+
+            } catch (error: any) {
+                console.error('Error sending global notifications:', error);
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: error.message || 'Failed to send global notifications',
                 });
             }
         }),

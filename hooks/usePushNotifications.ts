@@ -7,8 +7,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { requestNotificationPermission, onMessageListener } from '@/lib/firebase';
 import { trpc } from '@/trpc/client';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export function usePushNotifications() {
+    const router = useRouter();
     const [permission, setPermission] = useState<NotificationPermission>('default');
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +25,22 @@ export function usePushNotifications() {
         }
     }, []);
 
+    // Check server-side subscription status
+    const { data: subscriptionStatus, isLoading: isCheckingStatus } = trpc.notifications.getSubscriptionStatus.useQuery(
+        undefined,
+        {
+            enabled: typeof window !== 'undefined' && permission === 'granted',
+            retry: false,
+        }
+    );
+
+    // Sync local state with server status
+    useEffect(() => {
+        if (subscriptionStatus) {
+            setIsSubscribed(subscriptionStatus.isSubscribed);
+        }
+    }, [subscriptionStatus]);
+
     // Listen for foreground messages
     useEffect(() => {
         if (permission !== 'granted') return;
@@ -35,7 +53,7 @@ export function usePushNotifications() {
                 description: payload.notification?.body,
                 action: payload.data?.url ? {
                     label: 'View',
-                    onClick: () => window.location.href = payload.data.url,
+                    onClick: () => router.push(payload.data.url),
                 } : undefined,
             });
         });
@@ -47,7 +65,7 @@ export function usePushNotifications() {
                 }
             }).catch(err => console.error('Error in message listener cleanup:', err));
         };
-    }, [permission]);
+    }, [permission, router]);
 
     /**
      * Request notification permission and subscribe to push notifications
@@ -120,7 +138,7 @@ export function usePushNotifications() {
     return {
         permission,
         isSubscribed,
-        isLoading,
+        isLoading: isLoading || isCheckingStatus,
         subscribe,
         unsubscribe,
         canRequestPermission: permission === 'default',

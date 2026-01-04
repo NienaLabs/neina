@@ -1,16 +1,20 @@
 /**
  * NotificationListener component
- * Polls for new notifications and displays toast notifications when new announcements arrive
+ * Polls for new notifications and handles global push notification listening
  */
 "use client";
 
 import { useEffect, useRef } from "react";
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const STORAGE_KEY = "notification_last_count";
 
 export function NotificationListener() {
+    // Enable global push notification listening
+    usePushNotifications();
+
     const lastCountRef = useRef<number | null>(null);
     const isInitializedRef = useRef(false);
 
@@ -36,6 +40,10 @@ export function NotificationListener() {
         // If count increased, show toast notification
         if (unreadCount !== undefined && lastCountRef.current !== null && unreadCount > lastCountRef.current) {
             const newNotifications = unreadCount - lastCountRef.current;
+
+            // If we have push notifications enabled, we might not want to double-toast,
+            // but the polling is a fallback for when push fails or for non-push alerts.
+            // For now, keeping both is safer.
 
             toast.info(
                 newNotifications === 1

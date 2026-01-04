@@ -858,7 +858,7 @@ export const adminRouter = createTRPCRouter({
                 }
 
                 const jobTitles = jobs.map(j => j.job_title).join(', ');
-                const notificationTitle = '🎯 New Job Matches!';
+                const notificationTitle = 'New Job Matches!';
                 const notificationBody = `We found ${jobs.length} perfect matches for you: ${jobTitles}`;
 
                 // Create persistent in-app notification
@@ -879,7 +879,7 @@ export const adminRouter = createTRPCRouter({
                 };
 
                 const data = {
-                    type: 'job_matches',
+                    type: 'job_alert',
                     url: '/dashboard/jobs',
                     jobIds: jobs.map(j => j.id).join(','),
                 };
@@ -980,7 +980,7 @@ export const adminRouter = createTRPCRouter({
                     icon: '/logo.png',
                 };
                 const data = {
-                    type: 'job_matches',
+                    type: 'job_alert',
                     url: '/dashboard/jobs',
                     jobIds: jobs.map(j => j.id).join(','),
                 };

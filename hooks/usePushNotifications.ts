@@ -48,14 +48,86 @@ export function usePushNotifications() {
         const unsubscribePromise = onMessageListener((payload) => {
             console.log('Foreground message received:', payload);
 
-            // Show toast notification for foreground messages
-            toast.info(payload.notification?.title || 'New Notification', {
-                description: payload.notification?.body,
-                action: payload.data?.url ? {
-                    label: 'View',
-                    onClick: () => router.push(payload.data.url),
-                } : undefined,
-            });
+            const title = payload.notification?.title || 'New Notification';
+            const body = payload.notification?.body || '';
+            const icon = payload.notification?.icon || '/logo.png';
+            const url = payload.data?.url || '/';
+
+            // 1. Play "ding" sound
+            const playNotificationSound = async () => {
+                try {
+                    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                    }
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Higher pitch
+                    oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.3); // Drop pitch
+
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } catch (e) {
+                    console.error('Error playing notification sound:', e);
+                }
+            };
+
+            playNotificationSound();
+
+            // 2. Show native browser notification immediately (Direct API)
+            console.log('🔔 [usePushNotifications] Permission Status:', Notification.permission);
+            if (Notification.permission === 'granted') {
+                try {
+                    console.log('🔍 [usePushNotifications] Attempting Window Notification...');
+                    const n = new Notification(title, {
+                        body,
+                        icon: '/logo.png',
+                        tag: 'job-alert',
+                        renotify: true,
+                        silent: true,
+                        requireInteraction: true
+                    } as any);
+
+                    console.log('✅ [usePushNotifications] Window Notification object created');
+
+                    n.onclick = (e) => {
+                        e.preventDefault();
+                        window.focus();
+                        router.push(url);
+                        n.close();
+                    };
+                } catch (err) {
+                    console.warn('⚠️ [usePushNotifications] Window Notification failed, trying SW...', err);
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.ready.then((reg) => {
+                            reg.showNotification(title, { body, tag: 'job-alert', silent: true });
+                        });
+                    }
+                }
+            } else {
+                console.warn('❌ [usePushNotifications] Notification blocked by settings');
+                toast.error("Notifications are blocked in your browser.");
+            }
+
+            // 3. Show toast notification for foreground messages (UI feedback)
+            // Skip toast for job alerts as per user request (they only want native notification for job alerts)
+            if (payload.data?.type !== 'job_alert') {
+                toast.info(title, {
+                    description: body,
+                    action: {
+                        label: 'View',
+                        onClick: () => router.push(url),
+                    },
+                });
+            }
         });
 
         return () => {

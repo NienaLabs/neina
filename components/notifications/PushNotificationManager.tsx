@@ -72,38 +72,66 @@ export function PushNotificationManager() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-2">
-                    {canRequestPermission && (
-                        <Button
-                            onClick={subscribe}
-                            disabled={isLoading}
-                            className="flex-1"
-                        >
-                            <Bell className="h-4 w-4 mr-2" />
-                            {isLoading ? 'Subscribing...' : 'Enable Notifications'}
-                        </Button>
-                    )}
+                <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                        {canRequestPermission && (
+                            <Button
+                                onClick={subscribe}
+                                disabled={isLoading}
+                                className="flex-1"
+                            >
+                                <Bell className="h-4 w-4 mr-2" />
+                                {isLoading ? 'Subscribing...' : 'Enable Notifications'}
+                            </Button>
+                        )}
 
-                    {permission === 'granted' && !isSubscribed && (
-                        <Button
-                            onClick={subscribe}
-                            disabled={isLoading}
-                            className="flex-1"
-                        >
-                            <Bell className="h-4 w-4 mr-2" />
-                            {isLoading ? 'Subscribing...' : 'Subscribe'}
-                        </Button>
-                    )}
+                        {permission === 'granted' && !isSubscribed && (
+                            <Button
+                                onClick={subscribe}
+                                disabled={isLoading}
+                                className="flex-1"
+                            >
+                                <Bell className="h-4 w-4 mr-2" />
+                                {isLoading ? 'Subscribing...' : 'Subscribe'}
+                            </Button>
+                        )}
 
-                    {isSubscribed && (
+                        {isSubscribed && (
+                            <Button
+                                onClick={unsubscribe}
+                                disabled={isLoading}
+                                variant="outline"
+                                className="flex-1"
+                            >
+                                <BellOff className="h-4 w-4 mr-2" />
+                                {isLoading ? 'Unsubscribing...' : 'Unsubscribe'}
+                            </Button>
+                        )}
+                    </div>
+
+                    {permission === 'granted' && (
                         <Button
-                            onClick={unsubscribe}
-                            disabled={isLoading}
-                            variant="outline"
-                            className="flex-1"
+                            onClick={() => {
+                                if ('serviceWorker' in navigator) {
+                                    navigator.serviceWorker.ready.then((reg) => {
+                                        reg.showNotification('🧪 Test Notification', {
+                                            body: 'If you see this, your browser and OS are correctly configured!',
+                                            icon: '/logo.png',
+                                            requireInteraction: true,
+                                            tag: 'test-local',
+                                        });
+                                    });
+                                } else {
+                                    new Notification('🧪 Test Notification', {
+                                        body: 'Standard notification fallback works!',
+                                        icon: '/logo.png',
+                                    });
+                                }
+                            }}
+                            variant="ghost"
+                            className="w-full text-xs text-muted-foreground hover:text-foreground"
                         >
-                            <BellOff className="h-4 w-4 mr-2" />
-                            {isLoading ? 'Unsubscribing...' : 'Unsubscribe'}
+                            Send Test Local Notification
                         </Button>
                     )}
                 </div>

@@ -1,75 +1,88 @@
-// Firebase Messaging Service Worker
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+/*
+* Firebase Service Worker
+* This file MUST be in the public/ directory
+*/
 
-// Fetch Firebase config from the server
-// This is safer than hardcoding credentials in a public file
-self.addEventListener('install', (event) => {
-    console.log('[firebase-messaging-sw.js] Service worker installing...');
-    self.skipWaiting();
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
+
+// Fetch configuration from the API endpoint
+importScripts('/api/firebase-sw-env');
+
+// firebaseConfig is defined globally by the importScripts('/api/firebase-sw-env') call
+firebase.initializeApp(firebaseConfig);
+
+const messaging = firebase.messaging();
+
+console.log('[firebase-messaging-sw.js] Firebase Messaging Initialized.');
+
+/**
+ * Handle background messages from FCM
+ */
+messaging.onBackgroundMessage((payload) => {
+    console.log('[firebase-messaging-sw.js] Received FCM background message:', payload);
+
+    const notificationTitle = payload.notification?.title || payload.data?.title || 'Job AI';
+    const notificationOptions = {
+        body: payload.notification?.body || payload.data?.body || '',
+        icon: '/logo.png',
+        badge: '/logo.png',
+        data: payload.data,
+        tag: 'job-alert',
+        requireInteraction: true,
+        renotify: true,
+        silent: false,
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-self.addEventListener('activate', (event) => {
-    console.log('[firebase-messaging-sw.js] Service worker activating...');
-    event.waitUntil(clients.claim());
+/**
+ * RAW PUSH LISTENER (For Debugging & DevTools "Push" button)
+ * If you click "Push" in DevTools, this will trigger even if FCM doesn't.
+ */
+self.addEventListener('push', (event) => {
+    console.log('[firebase-messaging-sw.js] Raw Push Event received!');
+
+    // Attempt to parse data if possible
+    let data = {};
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch (e) {
+        data = { body: event.data ? event.data.text() : 'No data' };
+    }
+
+    const title = data.title || 'Diagnostic Push';
+    const options = {
+        body: data.body || 'The Service Worker received a push event.',
+        icon: '/logo.png',
+        requireInteraction: true,
+        tag: 'diagnostic',
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+            .then(() => console.log('✅ Diagnostic notification displayed!'))
+            .catch(err => console.error('❌ Diagnostic notification failed:', err))
+    );
 });
 
-// Initialize Firebase with config from environment
-// Note: These are public API keys and are safe to expose
-// The actual security is handled by Firebase security rules
-fetch('/api/firebase-config')
-    .then(response => response.json())
-    .then(config => {
-        firebase.initializeApp(config);
-        const messaging = firebase.messaging();
-
-        // Handle background messages
-        messaging.onBackgroundMessage((payload) => {
-            console.log('[firebase-messaging-sw.js] Received background message ', payload);
-
-            // If the payload has a 'notification' property, the browser usually displays it automatically.
-            // However, if we want to customize it or if it's a data-only message, we do it here.
-
-            const notificationTitle = payload.notification?.title || payload.data?.title || 'New Notification';
-            const notificationOptions = {
-                body: payload.notification?.body || payload.data?.body || '',
-                icon: payload.notification?.icon || payload.data?.icon || '/logo.png',
-                image: payload.notification?.image || payload.data?.image,
-                badge: '/logo.png',
-                data: payload.data,
-                tag: payload.data?.tag || 'default',
-                requireInteraction: false,
-            };
-
-            return self.registration.showNotification(notificationTitle, notificationOptions);
-        });
-    })
-    .catch(error => {
-        console.error('[firebase-messaging-sw.js] Failed to initialize Firebase:', error);
-    });
-
-// Handle notification clicks
+/**
+ * Handle notification click
+ */
 self.addEventListener('notificationclick', (event) => {
-    console.log('[firebase-messaging-sw.js] Notification click received.');
-
     event.notification.close();
-
-    // Get the URL from notification data or default to home
     const urlToOpen = event.notification.data?.url || '/';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then((clientList) => {
-                // Check if there's already a window open
                 for (const client of clientList) {
                     if (client.url === urlToOpen && 'focus' in client) {
                         return client.focus();
                     }
                 }
-                // If not, open a new window
-                if (clients.openWindow) {
-                    return clients.openWindow(urlToOpen);
-                }
+                if (clients.openWindow) return clients.openWindow(urlToOpen);
             })
     );
 });

@@ -230,6 +230,19 @@ export function UsersTable() {
                                                         </DropdownMenuItem>
                                                     </DropdownMenuSubContent>
                                                 </DropdownMenuSub>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        const promise = utils.client.admin.sendJobNotifications.mutate({ userId: user.id });
+                                                        toast.promise(promise, {
+                                                            loading: 'Sending job alert...',
+                                                            success: 'Job alert sent!',
+                                                            error: (err) => err.message || 'Failed to send alert'
+                                                        });
+                                                    }}
+                                                >
+                                                    Send Job Alert
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>

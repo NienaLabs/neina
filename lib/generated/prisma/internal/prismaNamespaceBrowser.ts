@@ -75,7 +75,8 @@ export const ModelName = {
   RecruiterJob: 'RecruiterJob',
   CandidatePipeline: 'CandidatePipeline',
   JobView: 'JobView',
-  blog_post: 'blog_post'
+  blog_post: 'blog_post',
+  PushSubscription: 'PushSubscription'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -482,6 +483,18 @@ export const Blog_postScalarFieldEnum = {
 export type Blog_postScalarFieldEnum = (typeof Blog_postScalarFieldEnum)[keyof typeof Blog_postScalarFieldEnum]
 
 
+export const PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  keys: 'keys',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -496,6 +509,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: 'JsonNull'
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {

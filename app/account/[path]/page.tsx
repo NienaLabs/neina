@@ -1,4 +1,5 @@
 import { AccountView } from "@daveyplate/better-auth-ui"
+import { PushNotificationManager } from '@/components/notifications/PushNotificationManager';
 import { accountViewPaths } from "@daveyplate/better-auth-ui/server"
 
 export const dynamicParams = false
@@ -13,6 +14,7 @@ export default async function AccountPage({ params }: { params: Promise<{ path: 
     return (
         <main className="container p-4 md:p-6">
             <AccountView path={path} />
+            <PushNotificationManager />
         </main>
     )
 }

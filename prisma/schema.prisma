@@ -44,6 +44,7 @@ model User {
   supportTickets       SupportTicket[]
   tailoredResumes      TailoredResume[]
   transactions         Transaction[]
+  pushSubscriptions    PushSubscription[]
 
   @@map("user")
 }
@@ -488,4 +489,17 @@ enum BlogCategory {
   DEVELOPERS
   JOB_HUNT
   CHANGELOGS
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  keys      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("push_subscription")
 }

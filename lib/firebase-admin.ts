@@ -59,13 +59,21 @@ export async function sendPushNotification(
             notification: {
                 title: standardNotification.title,
                 body: standardNotification.body,
-                imageUrl: image, // FCM uses imageUrl for the main image
             },
-            data,
+            data: data || {},
             webpush: {
+                headers: {
+                    Urgency: 'high',
+                },
                 notification: {
-                    icon,
-                    image,
+                    title: standardNotification.title,
+                    body: standardNotification.body,
+                    icon: icon || '/logo.png',
+                    image: image,
+                    requireInteraction: true,
+                    renotify: true,
+                    tag: data?.tag || 'job-notification',
+                    silent: false,
                 },
                 fcmOptions: {
                     link: data?.url || '/',
@@ -74,6 +82,7 @@ export async function sendPushNotification(
         };
 
         const response = await admin.messaging().send(message);
+        console.log('✅ Firebase Admin: Push notification sent successfully:', response);
         return { success: true, messageId: response };
     } catch (error: any) {
         console.error('Error sending push notification:', error);
@@ -121,13 +130,21 @@ export async function sendMulticastPushNotification(
             notification: {
                 title: standardNotification.title,
                 body: standardNotification.body,
-                imageUrl: image,
             },
-            data,
+            data: data || {},
             webpush: {
+                headers: {
+                    Urgency: 'high',
+                },
                 notification: {
-                    icon,
-                    image,
+                    title: standardNotification.title,
+                    body: standardNotification.body,
+                    icon: icon || '/logo.png',
+                    image: image,
+                    requireInteraction: true,
+                    renotify: true,
+                    tag: data?.tag || 'job-notification',
+                    silent: false,
                 },
                 fcmOptions: {
                     link: data?.url || '/',
@@ -136,6 +153,7 @@ export async function sendMulticastPushNotification(
         };
 
         const response = await admin.messaging().sendEachForMulticast(message);
+        console.log(`✅ Firebase Admin: Multicast sent successfully. Success: ${response.successCount}, Failure: ${response.failureCount}`);
 
         return {
             success: true,

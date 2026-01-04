@@ -10,6 +10,7 @@ import { Button } from '../ui/button'
 import { SquarePen, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { FeatureGuide } from '@/components/FeatureGuide'
+import { ResumePageSkeleton } from './ResumePageSkeleton'
 
 // Define the types for the resume data
 export type PrimaryResumeScoreData = {
@@ -132,14 +133,8 @@ const ResumePageClient = () => {
     }
   };
      
-    if (isLoading) {
-    return (
-      <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
-        <Skeleton className="h-12 w-1/2" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    )
+  if (isLoading) {
+    return <ResumePageSkeleton />
   }
 
   if (isError) {

@@ -89,7 +89,7 @@ export function usePushNotifications() {
                     console.log('🔍 [usePushNotifications] Attempting Window Notification...');
                     const n = new Notification(title, {
                         body,
-                        icon: '/logo.png',
+                        icon: '/niena.png',
                         tag: 'job-alert',
                         renotify: true,
                         silent: true,

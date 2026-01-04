@@ -50,7 +50,16 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
             return null;
         }
 
-        const token = await getToken(messaging, { vapidKey });
+        let serviceWorkerRegistration = undefined;
+        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            try {
+                serviceWorkerRegistration = await navigator.serviceWorker.ready;
+            } catch (e) {
+                console.warn('Service worker ready check failed', e);
+            }
+        }
+
+        const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration });
         return token;
     } catch (error) {
         console.error('Error getting FCM token:', error);

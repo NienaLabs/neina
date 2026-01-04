@@ -3,7 +3,7 @@ export const PLANS = {
     key: "FREE",
     name: "Free",
     price: 0,
-    features: ["1 resume upload", "10 job matches/week", "3 Resume AI credits/month"],
+    features: ["1 resume upload", "Unlimited Job Recommendations", "3 Resume AI credits (one-time)"],
     credits: 3,
     minutes: 0,
     matches: 10,

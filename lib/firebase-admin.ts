@@ -54,26 +54,24 @@ export async function sendPushNotification(
         const { icon, image, ...standardNotification } = notification;
 
         // Construct proper FCM payload
+        // CRITICAL: We send "data-only" messages to allow the Service Worker
+        // to handle the display. This ensures 'onBackgroundMessage' triggers
+        // reliably and allows us to customize the notification (e.g. icons, actions).
         const message: admin.messaging.Message = {
             token,
-            notification: {
+            // notification: { ... }  <-- OMITTED INTENTIONALLY
+            data: {
+                ...(data || {}),
                 title: standardNotification.title,
                 body: standardNotification.body,
+                icon: icon || '/logo.png',
+                image: image || '',
+                // Add any other fields needed by the SW
+                type: data?.type || 'notification',
             },
-            data: data || {},
             webpush: {
                 headers: {
                     Urgency: 'high',
-                },
-                notification: {
-                    title: standardNotification.title,
-                    body: standardNotification.body,
-                    icon: icon || '/logo.png',
-                    image: image,
-                    requireInteraction: true,
-                    renotify: true,
-                    tag: data?.tag || 'job-notification',
-                    silent: false,
                 },
                 fcmOptions: {
                     link: data?.url || '/',
@@ -125,26 +123,21 @@ export async function sendMulticastPushNotification(
         // Extract extra fields
         const { icon, image, ...standardNotification } = notification;
 
+        // CRITICAL: Data-only payload for consistent background handling
         const message: admin.messaging.MulticastMessage = {
             tokens,
-            notification: {
+            // notification: { ... } <-- OMITTED
+            data: {
+                ...(data || {}),
                 title: standardNotification.title,
                 body: standardNotification.body,
+                icon: icon || '/logo.png',
+                image: image || '',
+                type: data?.type || 'notification',
             },
-            data: data || {},
             webpush: {
                 headers: {
                     Urgency: 'high',
-                },
-                notification: {
-                    title: standardNotification.title,
-                    body: standardNotification.body,
-                    icon: icon || '/logo.png',
-                    image: image,
-                    requireInteraction: true,
-                    renotify: true,
-                    tag: data?.tag || 'job-notification',
-                    silent: false,
                 },
                 fcmOptions: {
                     link: data?.url || '/',

@@ -616,6 +616,43 @@ export const adminRouter = createTRPCRouter({
                 }
             }
 
+            // Send Push Notification if type is 'in-app' or 'both'
+            if (input.type === 'in-app' || input.type === 'both') {
+                try {
+                    const where: any = {};
+                    if (input.targetUserIds && input.targetUserIds.length > 0) {
+                        where.userId = { in: input.targetUserIds };
+                    }
+
+                    // Fetch all valid subscriptions for target users
+                    const subscriptions = await prisma.pushSubscription.findMany({
+                        where,
+                        select: { endpoint: true }
+                    });
+
+                    const tokens = subscriptions.map(s => s.endpoint).filter(Boolean);
+
+                    if (tokens.length > 0) {
+                        // Send multicast push
+                        const result = await sendMulticastPushNotification(
+                            tokens,
+                            {
+                                title: input.title,
+                                body: input.content, // Use content as body, or plain text version
+                                icon: '/logo.png',
+                            },
+                            {
+                                url: '/dashboard', // Default to dashboard or specific announcement page if exists
+                                type: 'announcement',
+                            }
+                        );
+                        console.log(`✅ Push sent to ${result.successCount} devices`);
+                    }
+                } catch (pushError) {
+                    console.error('❌ Failed to send announcement push:', pushError);
+                }
+            }
+
             return announcement;
         }),
 

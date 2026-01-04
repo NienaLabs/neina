@@ -5,6 +5,7 @@ import { TRPCProvider } from "@/trpc/client";
 import { AuthProvider } from "@/providers/AuthUIProvider";
 import { Toaster } from 'sonner'
 import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,7 +74,6 @@ export default function RootLayout({
   return (
     <TRPCProvider>
       <AuthProvider>
-
         <html lang="en" suppressHydrationWarning>
           <body
             className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
@@ -82,6 +82,7 @@ export default function RootLayout({
               <SuspensionGuard>
                 {children}
               </SuspensionGuard>
+              <ServiceWorkerRegister />
               <Toaster />
           </body>
         </html>

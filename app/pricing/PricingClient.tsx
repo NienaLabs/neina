@@ -20,9 +20,10 @@ const PLANS = [
     priceUSD: "Free",
     description: "Essential tools to start your journey.",
     features: [
+      { text: "Unlimited Job Recommendations", included: true },
+      { text: "Free Resume Autofix", included: true },
       { text: "1 resume upload total", included: true },
-      { text: "10 job matches per week", included: true },
-      { text: "3 Resume AI credits per month", included: true },
+      { text: "3 Resume AI credits (one-time)", included: true },
       { text: "Interview AI access", included: false },
     ],
     highlight: false,
@@ -38,7 +39,8 @@ const PLANS = [
     period: "/mo",
     description: "Perfect for active job seekers.",
     features: [
-      { text: "30 job matches per week", included: true },
+      { text: "Unlimited Job Recommendations", included: true },
+      { text: "Free Resume Autofix", included: true },
       { text: "10 Resume AI credits per month", included: true },
       { text: "No Interview AI access", included: false },
     ],
@@ -55,7 +57,8 @@ const PLANS = [
     period: "/mo",
     description: "Most popular for ambitious professionals.",
     features: [
-      { text: "60 job matches per week", included: true },
+      { text: "Unlimited Job Recommendations", included: true },
+      { text: "Free Resume Autofix", included: true },
       { text: "20 Resume AI credits per month", included: true },
       { text: "15 mins Interview AI per month", included: true },
     ],
@@ -72,7 +75,8 @@ const PLANS = [
     period: "/mo",
     description: "Maximum power for serious career moves.",
     features: [
-      { text: "Unlimited matches", included: true },
+      { text: "Unlimited Job Recommendations", included: true },
+      { text: "Free Resume Autofix", included: true },
       { text: "30 Resume AI credits per month", included: true },
       { text: "60 Interview AI mins per month", included: true },
       { text: "4 Interview Sessions (15m each)", included: true },

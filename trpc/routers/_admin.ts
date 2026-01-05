@@ -10,8 +10,8 @@ export const adminRouter = createTRPCRouter({
     getUsers: protectedProcedure
         .input(
             z.object({
-                limit: z.number().min(1).max(100).default(20),
-                cursor: z.string().nullish(),
+                limit: z.number().min(1).max(100).default(10),
+                page: z.number().min(1).default(1),
                 search: z.string().optional(),
                 filter: z.enum(['all', 'active', 'suspended']).optional().default('all'),
             })
@@ -22,8 +22,8 @@ export const adminRouter = createTRPCRouter({
                 throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Admin access required' });
             }
 
-            const limit = input.limit ?? 20;
-            const { cursor, search, filter } = input;
+            const { limit, page, search, filter } = input;
+            const skip = (page - 1) * limit;
 
             const where: any = {};
 
@@ -40,22 +40,20 @@ export const adminRouter = createTRPCRouter({
                 where.isSuspended = false;
             }
 
-            const users = await prisma.user.findMany({
-                take: limit + 1,
-                where,
-                cursor: cursor ? { id: cursor } : undefined,
-                orderBy: { createdAt: 'desc' },
-            });
-
-            let nextCursor: typeof cursor | undefined = undefined;
-            if (users.length > limit) {
-                const nextItem = users.pop();
-                nextCursor = nextItem!.id;
-            }
+            const [users, total] = await Promise.all([
+                prisma.user.findMany({
+                    take: limit,
+                    skip,
+                    where,
+                    orderBy: { createdAt: 'desc' },
+                }),
+                prisma.user.count({ where }),
+            ]);
 
             return {
                 users,
-                nextCursor,
+                total,
+                totalPages: Math.ceil(total / limit),
             };
         }),
 

@@ -1,55 +1,90 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, LogOut, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSession, signOut } from "@/auth-client";
 
 export function Header() {
+    const { data: session } = useSession();
+
     return (
-        <header className="sticky top-0 z-40 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none p-4">
-            <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
-                <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
-                    {/* Hamburger Toggle Button would go here for mobile */}
-                </div>
-
-                <div className="hidden sm:block">
-                    <form action="#" method="POST">
-                        <div className="relative">
-                            <button className="absolute left-0 top-1/2 -translate-y-1/2">
-                                <Search className="h-5 w-5 text-muted-foreground" />
-                            </button>
-                            <input
-                                type="text"
-                                placeholder="Type to search..."
-                                className="w-full bg-transparent pl-9 pr-4 text-black focus:outline-none dark:text-white xl:w-125"
-                            />
-                        </div>
-                    </form>
-                </div>
-
-                <div className="flex items-center gap-3 2xsm:gap-7">
-                    <ul className="flex items-center gap-2 2xsm:gap-4">
-                        <li>
-                            <Button variant="ghost" size="icon" className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white">
-                                <Bell className="h-5 w-5 duration-300 ease-in-out" />
-                                <span className="absolute -right-0.5 -top-0.5 z-1 h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                            </Button>
-                        </li>
-                    </ul>
-
-                    {/* User Area */}
-                    <div className="relative">
-                        <Link className="flex items-center gap-4" href="#">
-                            <span className="hidden text-right lg:block">
-                                <span className="block text-sm font-medium text-black dark:text-white">Admin User</span>
-                                <span className="block text-xs text-muted-foreground">Administrator</span>
-                            </span>
-                            <div className="h-10 w-10 text-muted-foreground bg-gray-100 rounded-full flex items-center justify-center">
-                                <User />
-                            </div>
-                        </Link>
+        <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-white/80 backdrop-blur-md">
+            <div className="flex h-20 items-center justify-between px-4 md:px-8">
+                {/* Search Bar */}
+                <div className="hidden md:flex flex-1 max-w-md">
+                    <div className="relative w-full group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        <Input
+                            type="text"
+                            placeholder="Search everything..."
+                            className="w-full bg-secondary/50 border-transparent focus:border-primary/20 focus:bg-white pl-10 h-10 rounded-xl transition-all"
+                        />
                     </div>
+                </div>
+
+                {/* Placeholder for mobile logo space */}
+                <div className="flex items-center gap-4 lg:hidden ml-12">
+                    <span className="font-syne font-bold text-lg">Job AI</span>
+                </div>
+
+                {/* Right Side Actions */}
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-xl hover:bg-secondary">
+                        <Bell className="h-5 w-5 text-muted-foreground" />
+                        <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-white"></span>
+                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative h-10 flex items-center gap-3 px-2 rounded-xl hover:bg-secondary">
+                                <div className="hidden text-right lg:block">
+                                    <p className="text-sm font-semibold text-foreground leading-none">
+                                        {session?.user.name || "Admin User"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-bold opacity-70">
+                                        {(session?.user as any)?.role || "Admin"}
+                                    </p>
+                                </div>
+                                <Avatar className="h-9 w-9 border border-border/50 shadow-sm">
+                                    <AvatarImage src={session?.user.image || ""} />
+                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                                        {session?.user.name?.charAt(0) || "A"}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl p-2" sideOffset={8}>
+                            <DropdownMenuLabel className="font-syne font-bold px-3 py-2">My Account</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-border/50" />
+                            <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer gap-2">
+                                <User className="h-4 w-4" />
+                                <span>Profile</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer gap-2">
+                                <Settings className="h-4 w-4" />
+                                <span>Settings</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-border/50" />
+                            <DropdownMenuItem
+                                className="rounded-lg px-3 py-2 cursor-pointer gap-2 text-destructive focus:bg-destructive/5 focus:text-destructive"
+                                onClick={() => signOut()}
+                            >
+                                <LogOut className="h-4 w-4" />
+                                <span>Sign Out</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </header>

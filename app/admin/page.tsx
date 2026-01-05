@@ -1,8 +1,11 @@
-
 import { StatsCard } from "@/components/admin/StatsCard";
-
+import { AdminCard } from "@/components/admin/AdminCard";
+import { AdminSectionHeader } from "@/components/admin/AdminSectionHeader";
 import prisma from "@/lib/prisma";
-import { Users, Briefcase, Video, FileText } from "lucide-react";
+import { Users, Briefcase, Video, FileText, ArrowUpRight, TrendingUp } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 export default async function AdminPage() {
     const [userCount, jobCount, interviewCount, resumeCount, recentUsers] = await Promise.all([
@@ -11,7 +14,7 @@ export default async function AdminPage() {
         prisma.interview.count(),
         prisma.resume.count(),
         prisma.user.findMany({
-            take: 5,
+            take: 6,
             orderBy: { createdAt: 'desc' },
             select: {
                 id: true,
@@ -25,68 +28,129 @@ export default async function AdminPage() {
     ]);
 
     return (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-8">
-            <StatsCard
-                title="Total Users"
-                total={userCount.toString()}
-                icon={<Users className="text-primary h-6 w-6" />}
-            />
-            <StatsCard
-                title="Total Jobs"
-                total={jobCount.toString()}
-                icon={<Briefcase className="text-primary h-6 w-6" />}
-            />
-            <StatsCard
-                title="Interviews"
-                total={interviewCount.toString()}
-                icon={<Video className="text-primary h-6 w-6" />}
-            />
-            <StatsCard
-                title="Resumes"
-                total={resumeCount.toString()}
-                icon={<FileText className="text-primary h-6 w-6" />}
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <AdminSectionHeader
+                title="Admin Overview"
+                description="Welcome back. Here's what's happening with Job AI today."
+                action={
+                    <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                        <TrendingUp className="h-4 w-4" />
+                        <span>System Stable</span>
+                    </div>
+                }
             />
 
-            <div className="col-span-full mt-4">
-                <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-                    <h4 className="mb-6 text-xl font-semibold text-black dark:text-white">
-                        Recent Users
-                    </h4>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+                <StatsCard
+                    title="Total Users"
+                    total={userCount.toLocaleString()}
+                    icon={<Users className="h-5 w-5" />}
+                    trend="+12% from last month"
+                />
+                <StatsCard
+                    title="Active Jobs"
+                    total={jobCount.toLocaleString()}
+                    icon={<Briefcase className="h-5 w-5" />}
+                    trend="+5% new this week"
+                />
+                <StatsCard
+                    title="Interviews"
+                    total={interviewCount.toLocaleString()}
+                    icon={<Video className="h-5 w-5" />}
+                    trend="24 scheduled today"
+                />
+                <StatsCard
+                    title="Resumes"
+                    total={resumeCount.toLocaleString()}
+                    icon={<FileText className="h-5 w-5" />}
+                    trend="High activity"
+                />
+            </div>
 
-                    <div className="flex flex-col">
-                        <div className="grid grid-cols-3 rounded-sm bg-gray-2 dark:bg-meta-4 sm:grid-cols-4">
-                            <div className="p-2.5 xl:p-5">
-                                <h5 className="text-sm font-medium uppercase xsm:text-base">User</h5>
-                            </div>
-                            <div className="p-2.5 text-center xl:p-5">
-                                <h5 className="text-sm font-medium uppercase xsm:text-base">Email</h5>
-                            </div>
-                            <div className="hidden p-2.5 text-center sm:block xl:p-5">
-                                <h5 className="text-sm font-medium uppercase xsm:text-base">Role</h5>
-                            </div>
-                        </div>
-
-                        {recentUsers.map((user, key) => (
-                            <div className={`grid grid-cols-3 sm:grid-cols-4 ${key === recentUsers.length - 1 ? "" : "border-b border-stroke dark:border-strokedark"}`} key={user.id}>
-                                <div className="flex items-center gap-3 p-2.5 xl:p-5">
-                                    <div className="h-10 w-10 flex-shrink-0 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
-                                        {user.image ? <img src={user.image} alt="User" /> : <span className="text-lg font-bold text-slate-500">{user.name.charAt(0)}</span>}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                {/* Recent Users Section */}
+                <AdminCard
+                    title="Recent Registrations"
+                    description="The latest users to join the platform."
+                    className="xl:col-span-2"
+                    headerAction={
+                        <button className="text-sm font-semibold text-primary hover:underline flex items-center gap-1 group">
+                            View All <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </button>
+                    }
+                >
+                    <div className="divide-y divide-border/50">
+                        {recentUsers.map((user) => (
+                            <div key={user.id} className="flex items-center justify-between py-4 group hover:bg-secondary/30 px-2 rounded-xl transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <Avatar className="h-12 w-12 border-2 border-white shadow-sm ring-1 ring-border/50">
+                                        <AvatarImage src={user.image || ""} />
+                                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                                            {user.name?.charAt(0) || "U"}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-bold text-foreground font-syne group-hover:text-primary transition-colors">
+                                            {user.name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {user.email}
+                                        </p>
                                     </div>
-                                    <p className="hidden text-black dark:text-white sm:block">{user.name}</p>
                                 </div>
-
-                                <div className="flex items-center justify-center p-2.5 xl:p-5">
-                                    <p className="text-meta-3 text-xs">{user.email}</p>
-                                </div>
-
-                                <div className="hidden items-center justify-center p-2.5 sm:flex xl:p-5">
-                                    <p className="text-black dark:text-white capitalize">{user.role}</p>
+                                <div className="text-right space-y-1">
+                                    <Badge variant="outline" className="capitalize text-[10px] font-bold tracking-wider opacity-70">
+                                        {user.role}
+                                    </Badge>
+                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                                        {format(new Date(user.createdAt), "MMM d, h:mm a")}
+                                    </p>
                                 </div>
                             </div>
                         ))}
                     </div>
+                </AdminCard>
+
+                {/* Quick Actions / System Info */}
+                <div className="space-y-6">
+                    <AdminCard title="Quick Actions">
+                        <div className="grid gap-2">
+                            <button className="w-full text-left px-4 py-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                                    <Megaphone className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-bold font-syne">New Announcement</span>
+                            </button>
+                            <button className="w-full text-left px-4 py-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                                    <Briefcase className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-bold font-syne">Post New Job</span>
+                            </button>
+                            <button className="w-full text-left px-4 py-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                                    <Settings className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-bold font-syne">Platform Settings</span>
+                            </button>
+                        </div>
+                    </AdminCard>
+
+                    <AdminCard title="Activity Pulse" className="bg-primary text-primary-foreground border-none shadow-xl shadow-primary/20 overflow-hidden relative">
+                        <div className="relative z-10 space-y-4">
+                            <p className="text-sm opacity-80">System traffic is up 15% today. Engagement on new job postings remains high.</p>
+                            <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-white w-[65%] rounded-full shadow-[0_0_10px_white]"></div>
+                            </div>
+                        </div>
+                        <div className="absolute -right-8 -bottom-8 h-32 w-32 bg-white/10 rounded-full blur-2xl"></div>
+                    </AdminCard>
                 </div>
             </div>
         </div>
     );
 }
+
+// Internal icons needed for quick actions
+import { Megaphone, Settings } from "lucide-react";

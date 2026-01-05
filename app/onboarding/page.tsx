@@ -168,6 +168,12 @@ export default function OnboardingPage() {
       description: "Find tailored jobs.",
       icon: Search,
     },
+    {
+      id: "recruiting",
+      title: "Recruiter",
+      description: "Find Top talents for you job.",
+      icon:Building2
+    }
   ];
 
   useGSAP(() => {

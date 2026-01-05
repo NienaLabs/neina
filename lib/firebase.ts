@@ -53,9 +53,24 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
         let serviceWorkerRegistration = undefined;
         if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
             try {
-                serviceWorkerRegistration = await navigator.serviceWorker.ready;
+                console.log('Testing 1: Waiting for service worker ready...');
+                // Race between ready and a timeout
+                const readyPromise = navigator.serviceWorker.ready;
+                const timeoutPromise = new Promise<undefined>((_, reject) =>
+                    setTimeout(() => reject(new Error('Service worker ready timeout')), 5000)
+                );
+
+                serviceWorkerRegistration = await Promise.race([readyPromise, timeoutPromise]);
+                console.log('Testing 2: Service worker is ready', serviceWorkerRegistration);
             } catch (e) {
-                console.warn('Service worker ready check failed', e);
+                console.warn('Service worker ready check failed or timed out:', e);
+                // Fallback: try to get registration explicitly if ready hangs
+                try {
+                    serviceWorkerRegistration = await navigator.serviceWorker.getRegistration();
+                    console.log('Testing 3: Explicit registration fallback:', serviceWorkerRegistration);
+                } catch (err) {
+                    console.error('Fallback registration check failed:', err);
+                }
             }
         }
 

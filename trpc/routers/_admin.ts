@@ -624,29 +624,44 @@ export const adminRouter = createTRPCRouter({
                         where.userId = { in: input.targetUserIds };
                     }
 
-                    // Fetch all valid subscriptions for target users
+                    // Fetch all valid subscriptions with user names
                     const subscriptions = await prisma.pushSubscription.findMany({
                         where,
-                        select: { endpoint: true }
+                        include: {
+                            user: {
+                                select: { name: true }
+                            }
+                        }
                     });
 
-                    const tokens = subscriptions.map(s => s.endpoint).filter(Boolean);
+                    if (subscriptions.length > 0) {
+                        const { sendPushNotification } = await import('@/lib/firebase-admin');
 
-                    if (tokens.length > 0) {
-                        // Send multicast push
-                        const result = await sendMulticastPushNotification(
-                            tokens,
-                            {
-                                title: input.title,
-                                body: input.content, // Use content as body, or plain text version
-                                icon: '/logo.png',
-                            },
-                            {
-                                url: '/dashboard', // Default to dashboard or specific announcement page if exists
-                                type: 'announcement',
+                        let successCount = 0;
+                        for (const sub of subscriptions) {
+                            try {
+                                const userName = (sub as any).user?.name || 'there';
+                                const personalizedBody = `Hey ${userName.split(' ')[0]}, ${input.content}`;
+
+                                const result = await sendPushNotification(
+                                    sub.endpoint,
+                                    {
+                                        title: input.title,
+                                        body: personalizedBody,
+                                        icon: '/niena.png',
+                                    },
+                                    {
+                                        url: '/dashboard',
+                                        type: 'announcement',
+                                        tag: 'announcement',
+                                    }
+                                );
+                                if (result.success) successCount++;
+                            } catch (err) {
+                                console.error(`Error sending push to ${sub.endpoint}:`, err);
                             }
-                        );
-                        console.log(`✅ Push sent to ${result.successCount} devices`);
+                        }
+                        console.log(`✅ Personalized push sent to ${successCount} devices`);
                     }
                 } catch (pushError) {
                     console.error('❌ Failed to send announcement push:', pushError);
@@ -902,7 +917,7 @@ export const adminRouter = createTRPCRouter({
                 await prisma.announcement.create({
                     data: {
                         title: notificationTitle,
-                        content: `${notificationBody}\n\nView them here: /dashboard/jobs`,
+                        content: notificationBody,
                         type: 'in-app', // Use 'in-app' so it appears in the list. Push is handled separately below.
                         targetUserIds: [input.userId],
                         createdBy: ctx.session.user.id,
@@ -912,12 +927,12 @@ export const adminRouter = createTRPCRouter({
                 const notification = {
                     title: notificationTitle,
                     body: notificationBody,
-                    icon: '/logo.png',
+                    icon: '/niena.png',
                 };
 
                 const data = {
                     type: 'job_alert',
-                    url: '/dashboard/jobs',
+                    url: '/job-search',
                     jobIds: jobs.map(j => j.id).join(','),
                 };
 
@@ -1014,7 +1029,7 @@ export const adminRouter = createTRPCRouter({
                 const notification = {
                     title: notificationTitle,
                     body: notificationBody,
-                    icon: '/logo.png',
+                    icon: '/niena.png',
                 };
                 const data = {
                     type: 'job_alert',
@@ -1094,7 +1109,7 @@ export const adminRouter = createTRPCRouter({
                 const notification = {
                     title: input.title,
                     body: input.body,
-                    icon: '/logo.png',
+                    icon: '/niena.png',
                 };
 
                 const data = {

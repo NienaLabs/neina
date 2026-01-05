@@ -6,6 +6,7 @@ import { AuthProvider } from "@/providers/AuthUIProvider";
 import { Toaster } from 'sonner'
 import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { NotificationBanner } from "@/components/notifications/NotificationBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,13 +78,14 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
           <body
             className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
-          >    
-              {/*<Header/>*/}
-              <SuspensionGuard>
-                {children}
-              </SuspensionGuard>
-              <ServiceWorkerRegister />
-              <Toaster />
+          >
+            <NotificationBanner />
+            {/*<Header/>*/}
+            <SuspensionGuard>
+              {children}
+            </SuspensionGuard>
+            <ServiceWorkerRegister />
+            <Toaster />
           </body>
         </html>
       </AuthProvider>

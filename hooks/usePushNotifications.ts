@@ -86,11 +86,14 @@ export function usePushNotifications() {
             console.log('🔔 [usePushNotifications] Permission Status:', Notification.permission);
             if (Notification.permission === 'granted') {
                 try {
-                    console.log('🔍 [usePushNotifications] Attempting Window Notification...');
+                    const tag = payload.data?.tag || 'job-alert';
+                    const icon = payload.data?.icon || '/niena.png';
+
+                    console.log('🔍 [usePushNotifications] Attempting Window Notification with tag:', tag);
                     const n = new Notification(title, {
                         body,
-                        icon: '/niena.png',
-                        tag: 'job-alert',
+                        icon: icon,
+                        tag: tag,
                         renotify: true,
                         silent: true,
                         requireInteraction: true
@@ -108,7 +111,9 @@ export function usePushNotifications() {
                     console.warn('⚠️ [usePushNotifications] Window Notification failed, trying SW...', err);
                     if ('serviceWorker' in navigator) {
                         navigator.serviceWorker.ready.then((reg) => {
-                            reg.showNotification(title, { body, tag: 'job-alert', silent: true });
+                            const tag = payload.data?.tag || 'job-alert';
+                            const icon = payload.data?.icon || '/niena.png';
+                            reg.showNotification(title, { body, tag: tag, icon: icon, silent: true });
                         });
                     }
                 }

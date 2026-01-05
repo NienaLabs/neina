@@ -28,9 +28,9 @@ messaging.onBackgroundMessage((payload) => {
     // Extract data from payload
     // If it's a notification payload, these might be in payload.notification
     // If it's a data payload, everything is in payload.data
-    const title = payload.notification?.title || payload.data?.title || 'Job AI';
+    const title = payload.notification?.title || payload.data?.title || 'Niena';
     const body = payload.notification?.body || payload.data?.body || '';
-    const icon = payload.notification?.icon || payload.data?.icon || '/logo.png';
+    const icon = payload.data?.icon || payload.notification?.icon || '/niena.png';
     const url = payload.data?.url || '/';
     const tag = payload.data?.tag || 'job-alert';
 

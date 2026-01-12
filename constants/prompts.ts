@@ -665,3 +665,25 @@ EXAMPLE (FOR REFERENCE ONLY):
 Return ONLY the JSON object.
 `;
 
+export const interviewQuestionPrompt = `
+You are an expert technical interviewer.
+Your task is to generate a list of interview questions based on the provided Job Description, Role, Interview Type, and Resume (optional).
+
+The output MUST strictly follow this structure:
+interface InterviewQuestions {
+  questions: string[];
+}
+
+STRICT RULES:
+- Return ONLY one JSON object.
+- Generate specific, relevant questions.
+- For "technical" interviews, focus on hard skills and coding concepts.
+- For "behavioral", focus on STAR method scenarios.
+- For "screening", focus on background and fit.
+- The number of questions should match the requested count (default 10).
+
+JSON RULES:
+- Valid JSON.
+- No markdown formatting.
+- No trailing commas.
+`;

@@ -97,6 +97,7 @@ function getTTSConfig(vendor: TTSVendor) {
     return {
       vendor: TTSVendor.ElevenLabs,
       params: {
+        base_url: "wss://api.elevenlabs.io/v1",
         key,
         model_id,
         voice_id,
@@ -122,13 +123,73 @@ function getTTSConfig(vendor: TTSVendor) {
   throw new Error(`Unsupported TTS vendor: ${vendor}`);
 }
 
+import prisma from '@/lib/prisma';
+
+// ... (existing imports)
+
 export async function POST(request: Request) {
   try {
     // Get our configuration
     const config = getValidatedConfig();
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name, input_modalities, output_modalities } =
-      body;
+    const { requester_id, channel_name, input_modalities, output_modalities, interviewId } = body;
+
+    let dynamicSystemPrompt = body.systemPrompt || 'You are a helpful assistant. Respond concisely and naturally as if in a spoken conversation.';
+    let greetingMessage = 'Hello! are you ready for the interview?'; // Default
+
+    if (interviewId) {
+        const interview = await prisma.interview.findUnique({
+            where: { id: interviewId },
+            select: { 
+              questions: true, 
+              role: true, 
+              type: true, 
+              questionCount: true,
+              user: {
+                select: { name: true }
+              }
+            }
+        });
+
+        if (interview) {
+             const candidateName = interview.user.name.split(' ')[0]; // First name
+             const interviewType = interview.type || 'General';
+             const questionCount = interview.questionCount || 10;
+             const expectedDuration = Math.ceil(questionCount * 1.5);
+             const interviewerName = "Sara";
+
+             // Helper to get structure explanation
+             const getStructureExplanation = (t: string) => {
+                const typeStr = t.toUpperCase();
+                if (typeStr === 'SCREENING') return "I'll ask about your background and qualifications.";
+                if (typeStr === 'BEHAVIORAL') return "I'll ask scenario-based questions about your past experiences.";
+                if (typeStr === 'TECHNICAL') return "I'll ask technical questions to assess your hard skills.";
+                return "I'll ask a mix of behavioral and technical questions.";
+             };
+
+             const structureExplanation = getStructureExplanation(interview.type || 'GENERAL');
+
+             // Construct the custom greeting
+             greetingMessage = `Hi, ${candidateName}; welcome to a mock ${interviewType.toLowerCase()} interview. I’m ${interviewerName}. Before we begin, I’ll briefly explain the structure of this interview. ${structureExplanation} The interview will last about ${expectedDuration} minutes. Do you have any questions before we start?`;
+
+             if (interview.questions && Array.isArray(interview.questions)) { 
+                 const questions = interview.questions as string[];
+                 if (questions.length > 0) {
+                     dynamicSystemPrompt = `
+                     You are ${interviewerName}, an AI interviewer conducting a ${interview.type} interview for the role of ${interview.role}.
+                     Your goal is to ask the following questions one by one, listening to the candidate's response, and then moving to the next question.
+                     Do not ask all questions at once. Ask one, wait for answer, acknowledge, then ask the next.
+                     
+                     Here are the questions:
+                     ${questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+                     
+                     Start by introducing yourself using the exact greeting message provided.
+                     `;
+                 }
+             }
+        }
+    }
+
 
     // Generate a unique token for the AI agent
     const timestamp = Date.now();
@@ -178,11 +239,10 @@ export async function POST(request: Request) {
           system_messages: [
             {
               role: 'system',
-              content:
-                'You are a helpful assistant. Respond concisely and naturally as if in a spoken conversation.',
+              content: dynamicSystemPrompt,
             },
           ],
-          greeting_message: 'Hello! How can I assist you today?',
+          greeting_message: greetingMessage,
           failure_message: 'Please wait a moment while I process that.',
           max_history: 10,
           params: {
@@ -191,8 +251,8 @@ export async function POST(request: Request) {
             temperature: 0.7,
             top_p: 0.95,
           },
-          input_modalities: input_modalities || config.modalities.input,
-          output_modalities: output_modalities || config.modalities.output,
+        //  input_modalities: input_modalities || config.modalities.input,
+      //    output_modalities: output_modalities || config.modalities.output,
         },
         // VAD (Voice Activity Detection) settings
         vad: {

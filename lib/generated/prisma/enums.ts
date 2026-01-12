@@ -9,6 +9,25 @@
 * 🟢 You can import this file directly.
 */
 
+export const InterviewType = {
+  SCREENING: 'SCREENING',
+  BEHAVIORAL: 'BEHAVIORAL',
+  TECHNICAL: 'TECHNICAL',
+  GENERAL: 'GENERAL',
+  PROMPT_SCHOLARSHIP: 'PROMPT_SCHOLARSHIP'
+} as const
+
+export type InterviewType = (typeof InterviewType)[keyof typeof InterviewType]
+
+
+export const InterviewMode = {
+  VOICE: 'VOICE',
+  AVATAR: 'AVATAR'
+} as const
+
+export type InterviewMode = (typeof InterviewMode)[keyof typeof InterviewMode]
+
+
 export const Plan = {
   FREE: 'FREE',
   SILVER: 'SILVER',

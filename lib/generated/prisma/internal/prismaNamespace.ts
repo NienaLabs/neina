@@ -2535,12 +2535,17 @@ export const InterviewScalarFieldEnum = {
   status: 'status',
   role: 'role',
   description: 'description',
+  type: 'type',
+  mode: 'mode',
+  questionCount: 'questionCount',
+  questions: 'questions',
   conversation_id: 'conversation_id',
   analysisFeedback: 'analysisFeedback',
   analysisScore: 'analysisScore',
   analyzedAt: 'analyzedAt',
   perceptionData: 'perceptionData',
   transcript: 'transcript',
+  feedback: 'feedback',
   resume_id: 'resume_id'
 } as const
 
@@ -2990,6 +2995,34 @@ export type EnumInterviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'InterviewStatus[]'
  */
 export type ListEnumInterviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'InterviewType'
+ */
+export type EnumInterviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewType'>
+    
+
+
+/**
+ * Reference to a field of type 'InterviewType[]'
+ */
+export type ListEnumInterviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'InterviewMode'
+ */
+export type EnumInterviewModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewMode'>
+    
+
+
+/**
+ * Reference to a field of type 'InterviewMode[]'
+ */
+export type ListEnumInterviewModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewMode[]'>
     
 
 

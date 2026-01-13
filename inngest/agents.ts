@@ -1,4 +1,4 @@
-import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt } from "@/constants/prompts";
+import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt, autofixPrompt } from "@/constants/prompts";
 import { createAgent, openai } from "@inngest/agent-kit";
 import { lastAssistantTextMessageContent, validJson } from "@/lib/utils";
 
@@ -65,6 +65,25 @@ export const scoreAgent = createAgent({
     const assistantMessage = lastAssistantTextMessageContent(result)
     if(assistantMessage && network){
       network.state.data.scoreAgent = assistantMessage
+    }
+    return result
+    },
+  }
+
+});
+
+export const autofixAgent = createAgent({
+  name: "autofix-agent",
+  system: autofixPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  }),
+  lifecycle:{
+    onResponse:async({result,network})=>{
+    const assistantMessage = lastAssistantTextMessageContent(result)
+    if(assistantMessage && network){
+      network.state.data.autofixAgent = extractJson(assistantMessage)
     }
     return result
     },

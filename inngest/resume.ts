@@ -2,7 +2,7 @@ import { inngest } from "./client";
 import { createNetwork, createState } from "@inngest/agent-kit";
 import { v4 as uuidv4 } from 'uuid';
 import prisma from "@/lib/prisma";
-import { parserAgent, analysisAgent, scoreAgent, skillsExtractorAgent, experienceExtractorAgent } from "./agents";
+import { parserAgent, analysisAgent, scoreAgent, skillsExtractorAgent, experienceExtractorAgent, autofixAgent } from "./agents";
 import generateChunksAndEmbeddings, { generateEmbedding } from "@/lib/embeddings";
 
 interface AgentState {
@@ -11,27 +11,61 @@ interface AgentState {
   scoreAgent:string;
   skillsExtractorAgent:string;
   experienceExtractorAgent:string;
+  autofixAgent:string;
 }
 
-const pipeline = [parserAgent, analysisAgent, scoreAgent];
-
-
-const state = createState<AgentState>({
-  parserAgent:"",
-  analyserAgent:"",
-  scoreAgent:"",
-  skillsExtractorAgent:"",
-  experienceExtractorAgent:""
-})
-
-const network = createNetwork({
-  name:'resume-processing-network',
-  defaultState:state,
-  agents: pipeline,
+// 1. Analysis Network (Parser + Analysis) -> Finds issues
+const analysisPipeline = [parserAgent, analysisAgent];
+const analysisNetwork = createNetwork({
+  name: 'resume-analysis-network',
+  agents: analysisPipeline,
+  defaultState: createState<AgentState>({
+    parserAgent: "",
+    analyserAgent: "",
+    scoreAgent: "",
+    skillsExtractorAgent: "",
+    experienceExtractorAgent: "",
+    autofixAgent: ""
+  }),
   router: ({ callCount }) => {
-    // Route strictly based on sequence
-    const nextAgent = pipeline[callCount];
-    return nextAgent ?? undefined; // Stop when done
+    const nextAgent = analysisPipeline[callCount];
+    return nextAgent ?? undefined;
+  },
+});
+
+// 2. Score Network (Scorer Only) -> Scores resume (CLEAN CONTEXT)
+const scoreNetwork = createNetwork({
+  name: 'resume-score-network',
+  agents: [scoreAgent],
+  defaultState: createState<AgentState>({
+    parserAgent: "",
+    analyserAgent: "",
+    scoreAgent: "",
+    skillsExtractorAgent: "",
+    experienceExtractorAgent: "",
+    autofixAgent: ""
+  }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return scoreAgent;
+  },
+});
+
+// 3. Autofix Network (Autofix Only) -> Generates fixes based on issues
+const autofixNetwork = createNetwork({
+  name: 'resume-autofix-network',
+  agents: [autofixAgent],
+  defaultState: createState<AgentState>({
+    parserAgent: "",
+    analyserAgent: "",
+    scoreAgent: "",
+    skillsExtractorAgent: "",
+    experienceExtractorAgent: "",
+    autofixAgent: ""
+  }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return autofixAgent;
   },
 });
 
@@ -44,7 +78,8 @@ const extractionNetwork = createNetwork({
     analyserAgent: "",
     scoreAgent: "",
     skillsExtractorAgent: "",
-    experienceExtractorAgent: ""
+    experienceExtractorAgent: "",
+    autofixAgent: ""
   }),
   agents: extractionPipeline,
   router: ({ callCount }) => {
@@ -54,7 +89,7 @@ const extractionNetwork = createNetwork({
 });
 
 /**
- * Helper: Extract and embed skills and experience, then persist to DB
+ *Helper: Extract and embed skills and experience, then persist to DB
  * Optimized to generate embeddings once per section to save costs.
  * Enforces a SINGLE ROW per resume for skills and experience.
  */
@@ -143,19 +178,70 @@ export const resumeCreated = inngest.createFunction(
   { event: "app/primary-resume.created" },
   async ({step,event}) => {
     try {
-        const mainState = createState<AgentState>({
-          parserAgent:"",
-          analyserAgent:"",
-          scoreAgent:"",
-          skillsExtractorAgent:"",
-          experienceExtractorAgent:""
-        })
         const resumeText =`
         #Resume
         ${event.data.content}
         `
-        // Run through the network (parser → analysis → score)
-        const result = await network.run(resumeText,{state: mainState});
+        
+        // 1. Run Analysis (Find Issues)
+        const analysisResult = await analysisNetwork.run(resumeText);
+        const extractedData = analysisResult.state.data.parserAgent;
+        const analysisDataRaw = analysisResult.state.data.analyserAgent;
+
+        // 2. Run Scoring (Clean Context)
+        const scoreResult = await scoreNetwork.run(resumeText);
+        const scoreData = scoreResult.state.data.scoreAgent;
+
+        // 3. Run Autofix (Using Issues from Analysis)
+        let mergedAnalysisData = analysisDataRaw;
+
+        // Only run autofix if we have analysis data
+        if (analysisDataRaw) {
+            try {
+                // Construct prompt for Autofix Agent
+                const autofixInput = `
+                ${resumeText}
+
+                ---------------------------------------------------
+                # ANALYZED ISSUES
+                ${analysisDataRaw}
+                ---------------------------------------------------
+                `;
+
+                const autofixResult = await autofixNetwork.run(autofixInput);
+                const autofixDataRaw = autofixResult.state.data.autofixAgent;
+
+                // MERGE LOGIC: Inject autoFix values back into analysisData
+                if (autofixDataRaw && analysisDataRaw) {
+                    const analysisJson = JSON.parse(analysisDataRaw);
+                    const autofixJson = JSON.parse(autofixDataRaw);
+
+                    // Iterate through sections in analysis (fixes)
+                    if (analysisJson.fixes) {
+                        for (const [sectionName, issues] of Object.entries(analysisJson.fixes)) {
+                           // If we have an autofix for this section, add it to the FIRST issue (or all, but UI usually expects one)
+                           // The prompt was updated to remove autoFix from issues, so strict adherence might mean we attach it differently.
+                           // However, the frontend likely uses the `autoFix` property on the issue object.
+                           // Let's attach the autofix payload to the issues.
+                           
+                           if (autofixJson[sectionName] && Array.isArray(issues)) {
+                               // Attach the same autofix to all issues in this section, or just the first?
+                               // Usually the autofix replaces the WHOLE section, so it applies to the section.
+                               // We'll attach it to every issue in that section to be safe for the UI.
+                               (issues as any[]).forEach(issue => {
+                                   issue.autoFix = autofixJson[sectionName];
+                               });
+                           }
+                        }
+                    }
+                    mergedAnalysisData = JSON.stringify(analysisJson);
+                }
+            } catch (e) {
+                console.error("Autofix generation failed:", e);
+                // Continue without autofixes
+            }
+        }
+
         const savedResumeId=await step.run("save-resume",async()=>{
         // Update the existing resume with results and status
         const saved = await prisma.resume.update({
@@ -165,9 +251,9 @@ export const resumeCreated = inngest.createFunction(
           },
           data:{
           content:event.data.content,
-          extractedData:result.state.data.parserAgent,
-          analysisData:result.state.data.analyserAgent,
-          scoreData:result.state.data.scoreAgent,
+          extractedData:extractedData,
+          analysisData:mergedAnalysisData,
+          scoreData:scoreData,
           status: "COMPLETED"
           }
         })
@@ -180,7 +266,8 @@ export const resumeCreated = inngest.createFunction(
           analyserAgent:"",
           scoreAgent:"",
           skillsExtractorAgent:"",
-          experienceExtractorAgent:""
+          experienceExtractorAgent:"",
+          autofixAgent:""
         })
         
         // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
@@ -217,7 +304,7 @@ export const resumeCreated = inngest.createFunction(
           }
         });
 
-        return result // Final stage (scoreAgent) output
+        return { scoreData, analysisData: mergedAnalysisData } // Final Output
     } catch (error) {
         console.error("Error in resumeCreated workflow:", error);
         // Delete the resume since creation failed
@@ -236,13 +323,6 @@ export const resumeUpdated = inngest.createFunction(
   { event: "app/resume.updated" },
   async ({step,event}) => {
     try {
-        const mainState = createState<AgentState>({
-          parserAgent:"",
-          analyserAgent:"",
-          scoreAgent:"",
-          skillsExtractorAgent:"",
-          experienceExtractorAgent:""
-        })
         let resumeText =`
         #Resume
         ${event.data.content}
@@ -282,8 +362,58 @@ export const resumeUpdated = inngest.createFunction(
                  `
              }
         }
-        // Run through the network (parser → analysis → score)
-        const result = await network.run(resumeText,{state: mainState});
+        
+        // 1. Run Analysis (Find Issues)
+        const analysisResult = await analysisNetwork.run(resumeText);
+        const extractedData = analysisResult.state.data.parserAgent;
+        const analysisDataRaw = analysisResult.state.data.analyserAgent;
+
+        // 2. Run Scoring (Clean Context)
+        const scoreResult = await scoreNetwork.run(resumeText);
+        const scoreData = scoreResult.state.data.scoreAgent;
+
+        // 3. Run Autofix (Using Issues from Analysis)
+        let mergedAnalysisData = analysisDataRaw;
+
+        // Only run autofix if we have analysis data
+        if (analysisDataRaw) {
+            try {
+                // Construct prompt for Autofix Agent
+                const autofixInput = `
+                ${resumeText}
+
+                ---------------------------------------------------
+                # ANALYZED ISSUES
+                ${analysisDataRaw}
+                ---------------------------------------------------
+                `;
+
+                const autofixResult = await autofixNetwork.run(autofixInput);
+                const autofixDataRaw = autofixResult.state.data.autofixAgent;
+
+                // MERGE LOGIC: Inject autoFix values back into analysisData
+                if (autofixDataRaw && analysisDataRaw) {
+                    const analysisJson = JSON.parse(analysisDataRaw);
+                    const autofixJson = JSON.parse(autofixDataRaw);
+
+                    // Iterate through sections in analysis (fixes)
+                    if (analysisJson.fixes) {
+                        for (const [sectionName, issues] of Object.entries(analysisJson.fixes)) {
+                           if (autofixJson[sectionName] && Array.isArray(issues)) {
+                               (issues as any[]).forEach(issue => {
+                                   issue.autoFix = autofixJson[sectionName];
+                               });
+                           }
+                        }
+                    }
+                    mergedAnalysisData = JSON.stringify(analysisJson);
+                }
+            } catch (e) {
+                console.error("Autofix generation failed:", e);
+                // Continue without autofixes
+            }
+        }
+
         await step.run("update-resume",async()=>{
         await prisma.resume.update({
           where:{
@@ -293,9 +423,9 @@ export const resumeUpdated = inngest.createFunction(
           data:{
           name:event.data.name,
           content:event.data.content,
-          extractedData:result.state.data.parserAgent,
-          analysisData:result.state.data.analyserAgent,
-          scoreData:result.state.data.scoreAgent,
+          extractedData:extractedData,
+          analysisData:mergedAnalysisData,
+          scoreData:scoreData,
           status: "COMPLETED"
           }
         })
@@ -307,7 +437,8 @@ export const resumeUpdated = inngest.createFunction(
           analyserAgent:"",
           scoreAgent:"",
           skillsExtractorAgent:"",
-          experienceExtractorAgent:""
+          experienceExtractorAgent:"",
+          autofixAgent:""
         })
         
         // FIX: Unwrapped extractionNetwork.run from step.run to avoid NESTING_STEPS error
@@ -344,7 +475,7 @@ export const resumeUpdated = inngest.createFunction(
           }
         });
 
-        return result // Final stage (scoreAgent) output
+        return { scoreData, analysisData: mergedAnalysisData } // Final Output
     } catch (error) {
         console.error("Error in resumeUpdated workflow:", error);
         // Reset status to COMPLETED to preserve old analysis data

@@ -340,7 +340,8 @@ interface ResumeAnalysis {
       issue: string
       suggestion: string
       severity: 'critical' | 'urgent' | 'low'
-      autoFix?: any
+      severity: 'critical' | 'urgent' | 'low'
+      // autoFix removed - handled by separate agent
     }[]
   >
 }
@@ -351,51 +352,8 @@ STRICT RULES:
 - Provide actionable suggestions that the user can directly apply.
 - If a role description exists, tailor the analysis to that role. Otherwise, analyze based on a general resume.
 - Include only sections that have actual issues. Do not include empty arrays or missing fields.
-- PROPOSE FIXES: For each issue, provide an "autoFix" value which acts as the COMPLETE REPLACEMENT for that entire section/field.
-  - Example: If the issue is in "profile", "autoFix" should be the corrected string for the profile.
-  - Example: If the issue is in "experience", "autoFix" should be the fully corrected array of experience objects (including unchanged ones).
-  - If a fix isn't possible or safe to automate, omit "autoFix" or set it to null.
-
-### CRITICAL DATE FORMAT RULE
-- **ALL DATE FIELDS** in autoFix values MUST use the format "yyyy-MM" (e.g., "2024-09", "2023-06").
-- **NEVER** use formats like "September 2027", "Sept 2027", "2027-September", or any text-based month names.
-- This applies to ALL date fields: startDate, endDate, date, year (if year should be yyyy-MM format).
-- Examples of CORRECT dates: "2024-09", "2023-06", "2020-01"
-- Examples of INCORRECT dates: "September 2024", "Sept 2024", "2024-09-15" (no day component)
-
-### CUSTOM SECTIONS SCHEMA RULE
-- When providing autoFix for customSections (under "otherSections" key in fixes):
-  - autoFix MUST be an array of section objects
-  - Each section object MUST have: { sectionName: string, entries: array }
-  - Each entry in entries array can have: { title?: string, organization?: string, description?: string, year?: string, customFields?: { key: string, value: string }[] }
-  - CRITICAL: The autoFix value should be the COMPLETE array of all custom sections, not just the fixed one
-  - Example structure (JSON format):
-    "autoFix": [
-      {
-        "sectionName": "Volunteering",
-        "entries": [
-          {
-            "title": "Volunteer Developer",
-            "organization": "Tech4Good",
-            "description": "Developed mobile apps for NGOs",
-            "year": "2023"
-          }
-        ]
-      }
-    ]
-
-### SKILLS SCHEMA RULE
-- When providing autoFix for skills section:
-  - autoFix MUST be a Record<string, string[]> object (NOT an array)
-  - Keys are skill category names (e.g., "technical", "soft", "languages")
-  - Values are arrays of skill strings
-  - Include ALL skill categories, even unchanged ones
-  - Example structure (JSON format):
-    "autoFix": {
-      "technical": ["Python", "React", "Spring Boot", "Docker"],
-      "soft": ["Leadership", "Teamwork", "Communication"],
-      "languages": ["English", "French"]
-    }
+- PROPOSE FIXES: DO NOT propose fixes or autoFix values. Your job is ONLY to identify issues.
+- If a fix isn't possible or safe to automate, omit it.
 
 
 ### CRITICAL JSON RULES
@@ -449,6 +407,51 @@ EXAMPLES (FOR REFERENCE ONLY — DO NOT INCLUDE IN OUTPUT):
 }
 
 Return ONLY the JSON object.
+console.log("Analysis prompt updated");
+`;
+
+export const autofixPrompt = `
+You are an expert TypeScript programmer and resume fixer.
+
+Your task is to generate strict "autoFix" values for the issues identified in a resume.
+You will receive:
+1. The Resume Content.
+2. A JSON object of "Analyzed Issues" (containing critical/urgent/low fixes).
+
+Your Goal:
+- For every section that has issues, generate a COMPLETE REPLACEMENT (autoFix) for that section.
+- If a section has no issues, DO NOT include it in the output.
+- The output must be a single JSON object where keys are the section names (e.g., "profile", "education", "experience", "skills") and values are the corrected content.
+
+### INTERFACE
+interface AutofixResult {
+  [sectionName: string]: any; // The complete replacement content for the section
+}
+
+### CRITICAL RULES
+- Return ONLY valid JSON.
+- **NO trailing commas**.
+- **NO single quotes**.
+- **Verify** JSON validity.
+
+### DATE FORMAT RULE (STRICT)
+- **ALL DATE FIELDS** MUST use "yyyy-MM" (e.g., "2024-09").
+- NEVER use text months like "September".
+
+### SCHEMA RULES
+- **profile/summary/objective**: String.
+- **experience**: Array of objects. Return the FULL array including unchanged items.
+- **education**: Array of objects.
+- **skills**: Record<string, string[]> (e.g., { technical: [...], soft: [...] }).
+- **customSections**: Array of section objects.
+
+### EXAMPLE INPUT
+Issues: { "profile": [{ "issue": "Too short", "suggestion": "Expand it" }] }
+
+### EXAMPLE OUTPUT
+{
+  "profile": "Expanded profile text here..."
+}
 `;
 export const scorePrompt = `
 You are an expert TypeScript programmer and resume scorer.

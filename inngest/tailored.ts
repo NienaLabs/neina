@@ -1,28 +1,45 @@
 import { inngest } from "./client";
 import { createNetwork, createState } from "@inngest/agent-kit";
 import prisma from "@/lib/prisma";
-import { parserAgent, analysisAgent, jobExtractorAgent } from "./agents";
+import { parserAgent, analysisAgent, jobExtractorAgent, autofixAgent } from "./agents";
 import { generateEmbedding } from "@/lib/embeddings";
 import { cosineSimilarity, parseVectorString } from "@/lib/utils";
 
 interface AgentState {
   parserAgent:string;
   analyserAgent:string;
+  autofixAgent:string;
 }
-const pipeline = [parserAgent, analysisAgent];
 
-const state = createState<AgentState>({
-  parserAgent:"",
-  analyserAgent:"",
-})
-const network = createNetwork({
-  name:'resume-processing-network',
-  defaultState:state,
-  agents: pipeline,
+// 1. Analysis Network (Parser + Analysis)
+const analysisPipeline = [parserAgent, analysisAgent];
+const analysisNetwork = createNetwork({
+  name: 'tailored-resume-analysis-network',
+  defaultState: createState<AgentState>({
+    parserAgent:"",
+    analyserAgent:"",
+    autofixAgent:""
+  }),
+  agents: analysisPipeline,
   router: ({ callCount }) => {
     // Route strictly based on sequence
-    const nextAgent = pipeline[callCount];
+    const nextAgent = analysisPipeline[callCount];
     return nextAgent ?? undefined; // Stop when done
+  },
+});
+
+// 2. Autofix Network
+const autofixNetwork = createNetwork({
+  name: 'tailored-resume-autofix-network',
+  agents: [autofixAgent],
+  defaultState: createState<AgentState>({
+    parserAgent:"",
+    analyserAgent:"",
+    autofixAgent:""
+  }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return autofixAgent;
   },
 });
 
@@ -43,10 +60,6 @@ export const tailoredResumeCreated = inngest.createFunction(
   { event: "app/tailored-resume.created" },
   async ({step,event}) => {
     try {
-        const state = createState<AgentState>({
-          parserAgent:"",
-          analyserAgent:""
-        })
         const resumeText =`
         #Resume
         ${event.data.content}
@@ -56,7 +69,48 @@ export const tailoredResumeCreated = inngest.createFunction(
         #Job Description
         ${event.data.description}
         `
-        const result = await network.run(resumeText,{state});
+        
+        // 1. Run Analysis
+        const analysisResult = await analysisNetwork.run(resumeText);
+        const parserData = analysisResult.state.data.parserAgent;
+        const analysisDataRaw = analysisResult.state.data.analyserAgent;
+
+        // 2. Run Autofix (Using Issues from Analysis)
+        let mergedAnalysisData = analysisDataRaw;
+
+        if (analysisDataRaw) {
+            try {
+                const autofixInput = `
+                ${resumeText}
+
+                ---------------------------------------------------
+                # ANALYZED ISSUES
+                ${analysisDataRaw}
+                ---------------------------------------------------
+                `;
+
+                const autofixResult = await autofixNetwork.run(autofixInput);
+                const autofixDataRaw = autofixResult.state.data.autofixAgent;
+
+                if (autofixDataRaw && analysisDataRaw) {
+                    const analysisJson = JSON.parse(analysisDataRaw);
+                    const autofixJson = JSON.parse(autofixDataRaw);
+
+                    if (analysisJson.fixes) {
+                        for (const [sectionName, issues] of Object.entries(analysisJson.fixes)) {
+                           if (autofixJson[sectionName] && Array.isArray(issues)) {
+                               (issues as any[]).forEach(issue => {
+                                   issue.autoFix = autofixJson[sectionName];
+                               });
+                           }
+                        }
+                    }
+                    mergedAnalysisData = JSON.stringify(analysisJson);
+                }
+            } catch (e) {
+                console.error("Autofix generation failed:", e);
+            }
+        }
 
         // Extract skills and responsibilities (Moved out of step.run to avoid NESTING_STEPS)
         let extractedSkills: string[] = [];
@@ -138,8 +192,8 @@ export const tailoredResumeCreated = inngest.createFunction(
               content: event.data.content,
               role: event.data.role,
               jobDescription: event.data.description,
-              extractedData: result.state.data.parserAgent,
-              analysisData: result.state.data.analyserAgent,
+              extractedData: parserData,
+              analysisData: mergedAnalysisData,
               scores: {...scores },
               status: "COMPLETED"
             }
@@ -180,7 +234,7 @@ export const tailoredResumeCreated = inngest.createFunction(
           }
         })
 
-        return result
+        return { scores, analysisData: mergedAnalysisData }
     } catch (error) {
         console.error("Error in tailoredResumeCreated workflow:", error);
         // Delete the tailored resume since creation failed
@@ -199,10 +253,6 @@ export const tailoredResumeUpdated = inngest.createFunction(
   { event: "app/tailored-resume.updated" },
   async ({step,event}) => {
     try {
-    const state = createState<AgentState>({
-      parserAgent:"",
-      analyserAgent:""
-    })
     let resumeText =`
     #Resume
     ${event.data.content}
@@ -242,7 +292,49 @@ export const tailoredResumeUpdated = inngest.createFunction(
                  `
              }
     }
-    const result = await network.run(resumeText,{state});
+    
+    // 1. Run Analysis
+    const analysisResult = await analysisNetwork.run(resumeText);
+    const parserData = analysisResult.state.data.parserAgent;
+    const analysisDataRaw = analysisResult.state.data.analyserAgent;
+
+    // 2. Run Autofix
+    let mergedAnalysisData = analysisDataRaw;
+
+    if (analysisDataRaw) {
+        try {
+            const autofixInput = `
+            ${resumeText}
+
+            ---------------------------------------------------
+            # ANALYZED ISSUES
+            ${analysisDataRaw}
+            ---------------------------------------------------
+            `;
+
+            const autofixResult = await autofixNetwork.run(autofixInput);
+            const autofixDataRaw = autofixResult.state.data.autofixAgent;
+
+            if (autofixDataRaw && analysisDataRaw) {
+                const analysisJson = JSON.parse(analysisDataRaw);
+                const autofixJson = JSON.parse(autofixDataRaw);
+
+                if (analysisJson.fixes) {
+                    for (const [sectionName, issues] of Object.entries(analysisJson.fixes)) {
+                       if (autofixJson[sectionName] && Array.isArray(issues)) {
+                           (issues as any[]).forEach(issue => {
+                               issue.autoFix = autofixJson[sectionName];
+                           });
+                       }
+                    }
+                }
+                mergedAnalysisData = JSON.stringify(analysisJson);
+            }
+        } catch (e) {
+            console.error("Autofix generation failed:", e);
+        }
+    }
+
 
     // Extract skills and responsibilities (Moved out of step.run to avoid NESTING_STEPS)
     let extractedSkills: string[] = [];
@@ -326,8 +418,8 @@ export const tailoredResumeUpdated = inngest.createFunction(
           content: event.data.content,
           role: event.data.role,
           jobDescription: event.data.description,
-          extractedData: result.state.data.parserAgent,
-          analysisData: result.state.data.analyserAgent,
+          extractedData: parserData,
+          analysisData: mergedAnalysisData,
           scores: {...scores },
           status: "COMPLETED"
         }
@@ -368,7 +460,7 @@ export const tailoredResumeUpdated = inngest.createFunction(
       }
     })
 
-    return result 
+    return { scores, analysisData: mergedAnalysisData } 
   } catch (error) {
       console.error("Error in tailoredResumeUpdated workflow:", error);
       // Reset status to COMPLETED to preserve old analysis data

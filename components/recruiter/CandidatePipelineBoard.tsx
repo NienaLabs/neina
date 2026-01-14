@@ -28,6 +28,24 @@ const PIPELINE_STAGES = [
     { id: 'REJECTED', label: 'Rejected', color: 'bg-rose-500', bgColor: 'bg-rose-50' },
 ];
 
+/**
+ * CandidatePipelineBoard Component
+ * 
+ * Renders the candidate pipeline board for a given job, allowing recruiters
+ * to visualize and manage candidates across different stages of the recruitment process.
+ * 
+ * @param {string} props.recruiterJobId - The ID of the recruiter job to fetch candidates for.
+ * @returns {JSX.Element} The rendered candidate pipeline board.
+ * 
+ * @behavior
+ * - Fetches candidates using TRPC query based on `recruiterJobId`.
+ * - Groups candidates by their current status.
+ * - Allows updating candidate status via a controlled Select component.
+ * - Re-fetches data on successful status update.
+ * 
+ * @example
+ * <CandidatePipelineBoard recruiterJobId="job-123" />
+ */
 export function CandidatePipelineBoard({ recruiterJobId }: { recruiterJobId: string }) {
     const { data: candidates, isLoading, refetch } = trpc.recruiter.getCandidates.useQuery({ recruiterJobId });
 
@@ -111,7 +129,7 @@ export function CandidatePipelineBoard({ recruiterJobId }: { recruiterJobId: str
 
                                             <div className="pt-3 border-t mt-1">
                                                 <Select
-                                                    defaultValue={candidate.status}
+                                                    value={candidate.status}
                                                     onValueChange={(val) =>
                                                         updateStatusMutation.mutate({
                                                             candidateId: candidate.id,

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/trpc/client";
+import { signOut } from "@/auth-client";
 
 const sidebarLinks = [
     {
@@ -92,7 +93,7 @@ export function RecruiterSidebar() {
 
                             <nav className="flex-1 space-y-1">
                                 {sidebarLinks.map((link) => {
-                                    const isActive = pathname === link.href;
+                                    const isActive = pathname === link.href || (link.href !== "/recruiters/dashboard" && pathname.startsWith(link.href));
                                     const Icon = link.icon;
                                     return (
                                         <Link
@@ -114,7 +115,11 @@ export function RecruiterSidebar() {
                             </nav>
 
                             <div className="mt-auto border-t pt-4">
-                                <Button variant="ghost" className="w-full justify-start gap-3 rounded-lg text-muted-foreground">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start gap-3 rounded-lg text-muted-foreground"
+                                    onClick={() => signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
+                                >
                                     <LogOut className="h-4.5 w-4.5" /> Sign Out
                                 </Button>
                             </div>

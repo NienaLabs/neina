@@ -16,8 +16,10 @@ export default function RecruiterDashboardLayout({
     const { data: user, isLoading } = trpc.user.getMe.useQuery();
 
     useEffect(() => {
-        if (!isLoading && user) {
-            if (user.role !== "recruiter") {
+        if (!isLoading) {
+            if (!user) {
+                router.push("/");
+            } else if (user.role !== "recruiter") {
                 router.push("/recruiters/apply");
             }
         }

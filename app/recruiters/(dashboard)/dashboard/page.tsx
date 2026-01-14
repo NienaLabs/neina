@@ -34,9 +34,21 @@ import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
+
+type SortOption = "newest" | "views" | "applications";
 
 export default function RecruiterDashboardPage() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<SortOption>("newest");
     const { data: dashboard, isLoading } = trpc.recruiter.getRecruiterDashboardData.useQuery();
 
     if (isLoading) {
@@ -52,9 +64,19 @@ export default function RecruiterDashboardPage() {
 
     if (!dashboard) return null;
 
-    const filteredJobs = dashboard.activeJobs.filter(rj =>
-        rj.job.job_title?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredJobs = dashboard.activeJobs
+        .filter(rj =>
+            rj.job.job_title?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => {
+            if (sortBy === "views") {
+                return b._count.jobViews - a._count.jobViews;
+            }
+            if (sortBy === "applications") {
+                return b._count.candidates - a._count.candidates;
+            }
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
 
     const stats = [
         {
@@ -319,9 +341,28 @@ export default function RecruiterDashboardPage() {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs font-semibold">
-                                <Filter className="h-3.5 w-3.5 mr-2" /> Filter
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs font-semibold">
+                                        <Filter className="h-3.5 w-3.5 mr-2" /> Filter
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                                    <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest opacity-50">Sort By</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                                        <DropdownMenuRadioItem value="newest" className="text-xs font-medium rounded-lg">
+                                            Newest First
+                                        </DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="views" className="text-xs font-medium rounded-lg">
+                                            Most Views
+                                        </DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="applications" className="text-xs font-medium rounded-lg">
+                                            Most Applications
+                                        </DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </CardHeader>
                     <CardContent className="p-0">

@@ -5,6 +5,7 @@ import { trpc } from "@/trpc/client";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function PipelinePage() {
     const params = useParams();
@@ -16,37 +17,48 @@ export default function PipelinePage() {
 
     if (isLoading) {
         return (
-            <div className="flex h-64 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex h-[60vh] items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary opacity-40" />
+                    <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">Loading pipeline...</p>
+                </div>
             </div>
         );
     }
 
     if (!job) {
         return (
-            <div className="container py-20 text-center text-muted-foreground">
-                Job not found or access denied.
+            <div className="py-20 text-center">
+                <p className="text-sm font-medium text-muted-foreground">Job position not found or access denied.</p>
+                <Link href="/recruiters/jobs" className="text-xs font-bold text-primary uppercase mt-4 block hover:underline">Return to Jobs</Link>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-[calc(100vh-100px)]">
-            <div className="mb-6 flex items-center gap-4">
-                <Link href="/recruiters/jobs" className="text-muted-foreground hover:text-foreground">
-                    <ArrowLeft className="h-5 w-5" />
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{job.job.job_title}</h1>
-                    <p className="text-muted-foreground text-sm">
-                        Candidate Pipeline &bull; {job.job.job_location}
-                    </p>
+        <div className="flex flex-col h-[calc(100vh-120px)] max-w-7xl mx-auto space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b pb-8">
+                <div className="flex items-center gap-4">
+                    <Link href="/recruiters/jobs" className="h-10 w-10 rounded-xl border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Link>
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-extrabold tracking-tight font-syne text-foreground line-clamp-1 max-w-xl">
+                            {job.job.job_title} <span className="text-muted-foreground/40 font-normal">Pipeline</span>
+                        </h1>
+                        <p className="text-sm text-muted-foreground font-medium">{job.job.job_location} &bull; Manage and track candidate progress.</p>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-hidden">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="flex-1 overflow-hidden"
+            >
                 <CandidatePipelineBoard recruiterJobId={recruiterJobId} />
-            </div>
+            </motion.div>
         </div>
     );
 }

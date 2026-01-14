@@ -37,6 +37,7 @@ model User {
   accounts             Account[]
   announcement_read    announcement_read[]
   interview            interview[]
+  pushSubscriptions    PushSubscription[]
   recruiterApplication RecruiterApplication?
   recruiterJobs        RecruiterJob[]
   resumes              Resume[]
@@ -44,7 +45,6 @@ model User {
   supportTickets       SupportTicket[]
   tailoredResumes      TailoredResume[]
   transactions         Transaction[]
-  pushSubscriptions    PushSubscription[]
 
   @@map("user")
 }
@@ -164,19 +164,6 @@ model TailoredResume {
   @@map("tailored_resume")
 }
 
-enum InterviewType {
-  SCREENING
-  BEHAVIORAL
-  TECHNICAL
-  GENERAL
-  PROMPT_SCHOLARSHIP
-}
-
-enum InterviewMode {
-  VOICE
-  AVATAR
-}
-
 model interview {
   id               String          @id @default(cuid())
   user_id          String
@@ -186,18 +173,18 @@ model interview {
   status           InterviewStatus @default(SCHEDULED)
   role             String?
   description      String?
-  type             InterviewType?
-  mode             InterviewMode   @default(VOICE)
-  questionCount    Int             @default(10)
-  questions        Json?
   conversation_id  String?
   analysisFeedback String?
   analysisScore    Float?
   analyzedAt       DateTime?
   perceptionData   Json?
   transcript       Json?
-  feedback         Json?
   resume_id        String?
+  feedback         Json?
+  mode             InterviewMode   @default(VOICE)
+  questionCount    Int             @default(10)
+  questions        Json?
+  type             InterviewType?
   resume           Resume?         @relation(fields: [resume_id], references: [id])
   user             User            @relation(fields: [user_id], references: [id])
 
@@ -441,6 +428,32 @@ model blog_post {
   updatedAt       DateTime     @updatedAt
 }
 
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  keys      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscription")
+}
+
+enum InterviewType {
+  SCREENING
+  BEHAVIORAL
+  TECHNICAL
+  GENERAL
+  PROMPT_SCHOLARSHIP
+}
+
+enum InterviewMode {
+  VOICE
+  AVATAR
+}
+
 enum Plan {
   FREE
   SILVER
@@ -507,17 +520,4 @@ enum BlogCategory {
   DEVELOPERS
   JOB_HUNT
   CHANGELOGS
-}
-
-model PushSubscription {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  endpoint  String   @unique
-  keys      Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@map("push_subscription")
 }

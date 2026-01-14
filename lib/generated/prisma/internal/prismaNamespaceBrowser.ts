@@ -238,18 +238,18 @@ export const InterviewScalarFieldEnum = {
   status: 'status',
   role: 'role',
   description: 'description',
-  type: 'type',
-  mode: 'mode',
-  questionCount: 'questionCount',
-  questions: 'questions',
   conversation_id: 'conversation_id',
   analysisFeedback: 'analysisFeedback',
   analysisScore: 'analysisScore',
   analyzedAt: 'analyzedAt',
   perceptionData: 'perceptionData',
   transcript: 'transcript',
+  resume_id: 'resume_id',
   feedback: 'feedback',
-  resume_id: 'resume_id'
+  mode: 'mode',
+  questionCount: 'questionCount',
+  questions: 'questions',
+  type: 'type'
 } as const
 
 export type InterviewScalarFieldEnum = (typeof InterviewScalarFieldEnum)[keyof typeof InterviewScalarFieldEnum]

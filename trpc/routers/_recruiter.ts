@@ -612,4 +612,147 @@ export const recruiterRouter = createTRPCRouter({
             totalViews,
         };
     }),
+
+    /**
+     * Get consolidated dashboard data for recruiter
+     */
+    getRecruiterDashboardData: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id;
+
+        // Check recruiter role
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true, name: true, image: true, companyName: true },
+        });
+
+        if (user?.role !== 'recruiter') {
+            throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+
+        // 1. Stats
+        const jobsByStatus = await prisma.recruiterJob.groupBy({
+            by: ['status'],
+            where: { recruiterId: userId },
+            _count: true,
+        });
+
+        const activeJobsCount = jobsByStatus.find(s => s.status === 'ACTIVE')?._count || 0;
+
+        const totalCandidates = await prisma.candidatePipeline.count({
+            where: {
+                recruiterJob: { recruiterId: userId },
+            },
+        });
+
+        const candidatesByStatus = await prisma.candidatePipeline.groupBy({
+            by: ['status'],
+            where: {
+                recruiterJob: { recruiterId: userId },
+            },
+            _count: true,
+        });
+
+        const totalViews = await prisma.jobView.count({
+            where: {
+                recruiterJob: { recruiterId: userId },
+            },
+        });
+
+        // 2. Recent Activity (last 10 events: new applications and status updates)
+        const recentActivities = await prisma.candidatePipeline.findMany({
+            where: {
+                recruiterJob: { recruiterId: userId },
+            },
+            include: {
+                recruiterJob: {
+                    include: { job: { select: { job_title: true } } },
+                },
+            },
+            orderBy: { updatedAt: 'desc' },
+            take: 10,
+        });
+
+        // 3. Active Jobs Summary (last 5)
+        const activeJobs = await prisma.recruiterJob.findMany({
+            where: { recruiterId: userId, status: 'ACTIVE' },
+            include: {
+                job: true,
+                _count: {
+                    select: {
+                        candidates: true,
+                        jobViews: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+        });
+
+        // 4. Analytics Trend (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const viewsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
+            SELECT DATE("viewedAt") as date, COUNT(*)::int as count
+            FROM "job_view"
+            JOIN "recruiter_job" ON "job_view"."recruiterJobId" = "recruiter_job"."id"
+            WHERE "recruiter_job"."recruiterId" = ${userId}
+            AND "viewedAt" >= ${thirtyDaysAgo}
+            GROUP BY DATE("viewedAt")
+            ORDER BY date ASC
+        `;
+
+        const applicationsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
+            SELECT DATE("appliedAt") as date, COUNT(*)::int as count
+            FROM "candidate_pipeline"
+            JOIN "recruiter_job" ON "candidate_pipeline"."recruiterJobId" = "recruiter_job"."id"
+            WHERE "recruiter_job"."recruiterId" = ${userId}
+            AND "appliedAt" >= ${thirtyDaysAgo}
+            GROUP BY DATE("appliedAt")
+            ORDER BY date ASC
+        `;
+
+        // Format trend data for charting
+        const trendData: Record<string, { date: string; views: number; applications: number }> = {};
+
+        // Initialize with last 30 days
+        for (let i = 0; i < 30; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            trendData[dateStr] = { date: dateStr, views: 0, applications: 0 };
+        }
+
+        viewsByDay.forEach(row => {
+            const dateStr = new Date(row.date).toISOString().split('T')[0];
+            if (trendData[dateStr]) trendData[dateStr].views = Number(row.count);
+        });
+
+        applicationsByDay.forEach(row => {
+            const dateStr = new Date(row.date).toISOString().split('T')[0];
+            if (trendData[dateStr]) trendData[dateStr].applications = Number(row.count);
+        });
+
+        const sortedTrend = Object.values(trendData).sort((a, b) => a.date.localeCompare(b.date));
+
+        return {
+            user: {
+                name: user.name,
+                image: user.image,
+                companyName: user.companyName,
+            },
+            stats: {
+                activeJobs: activeJobsCount,
+                totalCandidates,
+                totalViews,
+            },
+            candidateFunnel: candidatesByStatus.map(s => ({
+                status: s.status,
+                count: s._count,
+            })),
+            recentActivities,
+            activeJobs,
+            trendData: sortedTrend,
+        };
+    }),
 });

@@ -20,12 +20,14 @@ interface ConversationComponentProps {
   agoraLocalUserInfo: AgoraLocalUserInfo;
   onTokenWillExpire: (uid: string) => Promise<string>;
   onEndConversation: () => void;
+  onTranscriptUpdate?: (text: string, uid: string) => void;
 }
 
 export default function ConversationComponent({
   agoraLocalUserInfo,
   onTokenWillExpire,
   onEndConversation,
+  onTranscriptUpdate
 }: ConversationComponentProps) {
   // Access the client from the provider context
    const [joinedUID, setJoinedUID] = useState<UID>(0); // New: After joining the channel we'll store the uid for renewing the token
@@ -103,9 +105,19 @@ export default function ConversationComponent({
       setIsEnabled(!isEnabled);
     }
   };
+  
   // New: Add listener for connection state changes
   useClientEvent(client, 'connection-state-change', (curState, prevState) => {
     console.log(`Connection state changed from ${prevState} to ${curState}`);
+  });
+
+  // Capture Stream Messages (Captions/Transcript)
+  useClientEvent(client, 'stream-message', (uid, data) => {
+      const text = new TextDecoder().decode(data);
+      console.log('Stream Message (Transcript):', uid, text);
+      if (onTranscriptUpdate) {
+          onTranscriptUpdate(text, uid.toString());
+      }
   });
 
   // Add token renewal handler to avoid disconnections

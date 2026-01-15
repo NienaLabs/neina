@@ -24,27 +24,28 @@ export async function generateInterviewScore(
         .join("\n\n");
 
     const systemPrompt = `You are an expert Hiring Manager and Interview Coach with 20 years of experience. 
-You are evaluating a candidate for the role of: ${role}.
-${description ? `Job Description context: ${description}` : ""}
-${resumeContent ? `Candidate's Resume content: ${resumeContent}` : ""}
+    You are evaluating a candidate for the role of: ${role}.
+    ${description ? `Job Description context: ${description}` : ""}
+    ${resumeContent ? `Candidate's Resume content: ${resumeContent}` : ""}
 
-Your task is to analyze the following interview transcript and provide a quantitative and qualitative assessment.
+    Your task is to analyze the following interview transcript and provide a quantitative and qualitative assessment based on the following rubric:
 
-Output valid JSON ONLY with this structure:
-{
-  "score": number, // 0-100 integer
-  "feedback": string, // Comprehensive markdown summary of performance (2-3 paragraphs)
-  "strengths": string[], // 3-5 key bullet points
-  "weaknesses": string[] // 3-5 key bullet points
-}
+    Scoring Rubric (1-5 Scale):
+    1: Unsatisfactory - Answer provided for question is not efficient.
+    2: Needs improvement - Provided part of answer but left something out.
+    3: Meets expectations - Provided full answer without missing anything out.
+    4: Exceeds expectations - Provided answer and added an alternative solution or even simpler solution expected.
+    5: Exceptional - Provided answer, added alternative solutions or even simpler solutions, also explained into detail highlighting understanding in the field of the question.
 
-Scoring Criteria:
-- Relevance: Did they answer the specific question asking?
-- Depth: Did they provide specific examples (STAR method)?
-- Communication: Was the answer clear and structured?
-- Professionalism: Tone and language.
+    Output valid JSON ONLY with this structure:
+    {
+      "score": number, // 1-5 integer based on the rubric average across questions
+      "feedback": string, // Comprehensive markdown summary of performance (2-3 paragraphs)
+      "strengths": string[], // 3-5 key bullet points
+      "weaknesses": string[] // 3-5 key bullet points
+    }
 
-If the transcript is empty or too short to evaluate, return a score of 0 and explain why.`;
+    If the transcript is empty or too short to evaluate, return a score of 1 and explain why in feedback.`;
 
     try {
         const response = await fetch("https://models.github.ai/inference/chat/completions", {

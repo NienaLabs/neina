@@ -156,7 +156,7 @@ export async function POST(request: Request) {
              const interviewType = interview.type || 'General';
              const questionCount = interview.questionCount || 10;
              const expectedDuration = Math.ceil(questionCount * 1.5);
-             const interviewerName = "Sara";
+             const interviewerName = "Wilfred";
 
              // Helper to get structure explanation
              const getStructureExplanation = (t: string) => {
@@ -258,7 +258,7 @@ export async function POST(request: Request) {
         vad: {
           silence_duration_ms: 1000, // Increased to wait longer before cutting off
           speech_duration_ms: 20000, 
-          threshold: 0.4, // Lower threshold to be more sensitive to speech
+          threshold: 0.7, // Lower threshold to be more sensitive to speech
           interrupt_duration_ms: 200,
           prefix_padding_ms: 300,
         },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { 
@@ -13,14 +13,15 @@ import {
   Briefcase, 
   FileText,
   Code,
-  Clock
+  Clock,
+  Timer as TimerIcon,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -35,6 +36,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { FeatureGuide } from '@/components/FeatureGuide';
+import { Progress } from '@/components/ui/progress';
 
 // Dynamic import for Agora Provider
 const AgoraProvider = dynamic(
@@ -55,7 +57,7 @@ const ConversationComponent = dynamic(() => import('@/components/interview/Conve
 });
 
 type InterviewMode = 'VOICE' | 'AVATAR';
-type Step = 'config' | 'briefing' | 'active';
+type Step = 'config' | 'briefing' | 'active' | 'summary';
 
 export default function InterviewPage() {
   const params = useParams();
@@ -75,8 +77,22 @@ export default function InterviewPage() {
   // Agora State
   const [agoraLocalUserInfo, setAgoraLocalUserInfo] = useState<AgoraLocalUserInfo | null>(null);
 
+  // Session State
+  const [createdInterviewId, setCreatedInterviewId] = useState<string | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [transcript, setTranscript] = useState<{ role: string; content: string }[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [scoreResult, setScoreResult] = useState<any>(null);
+
   // Queries
   const { data: resumes, isLoading: isLoadingResumes } = trpc.resume.getPrimaryResumes.useQuery();
+
+  // Mutations
+  const createSessionMutation = trpc.interview.createSession.useMutation();
+  const endSessionMutation = trpc.interview.endSession.useMutation();
 
   // Mock User Plan Check (TODO: Replace with actual subscription check)
   const isDiamondPlan = false; 
@@ -110,24 +126,18 @@ export default function InterviewPage() {
     setStep('briefing');
   };
 
-  const [createdInterviewId, setCreatedInterviewId] = useState<string | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
-
-  // Mutations
-  const createSessionMutation = trpc.interview.createSession.useMutation();
-
   // Polling for interview status
   const { data: interviewData } = trpc.interview.getInterview.useQuery(
     { interviewId: createdInterviewId! },
     { 
         enabled: !!createdInterviewId && isPolling,
-        refetchInterval: 1000, // Poll every second
+        refetchInterval: 1000, 
     }
   );
 
   useEffect(() => {
       if (interviewData && interviewData.questions && (interviewData.questions as any[]).length > 0 && isPolling) {
-          setIsPolling(false); // Stop polling
+          setIsPolling(false); 
           initiateAgoraSession(interviewData.id);
       }
   }, [interviewData, isPolling]);
@@ -136,12 +146,10 @@ export default function InterviewPage() {
   const handleStartSession = async () => {
     setIsLoading(true);
     try {
-        // Append technical topic to description if present
         const finalDescription = technicalTopic 
           ? `${jobDescription}\n\nFocus Topic/Skill: ${technicalTopic}`
           : jobDescription;
 
-        // 1. Create Interview Session
         const result = await createSessionMutation.mutateAsync({
             role,
             description: finalDescription,
@@ -165,12 +173,10 @@ export default function InterviewPage() {
       try {
            toast.success("Questions generated! Connecting...");
            
-           // 2. Get Agora Token
            const tokenResponse = await fetch('/api/generate-agora-token');
            if (!tokenResponse.ok) throw new Error("Failed to generate token");
            const tokenData = await tokenResponse.json();
 
-           // 3. Invite Agent
            const inviteResponse = await fetch('/api/invite-agent', {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
@@ -183,7 +189,6 @@ export default function InterviewPage() {
 
            if (!inviteResponse.ok) throw new Error("Failed to invite agent");
            
-           // 4. Set Agora Info & Start
            setAgoraLocalUserInfo({
                uid: tokenData.uid,
                token: tokenData.token,
@@ -191,17 +196,26 @@ export default function InterviewPage() {
                agentId: undefined 
            });
            
+           // Start Timer
+           setStartTime(new Date());
+           setElapsedSeconds(0);
+           setTranscript([]); // Reset
            setStep('active');
+           
+           if(timerRef.current) clearInterval(timerRef.current);
+           timerRef.current = setInterval(() => {
+               setElapsedSeconds(prev => prev + 1);
+           }, 1000);
+
       } catch (error) {
            console.error("Connection failed", error);
            toast.error("Failed to connect to interview session");
-           setIsPolling(false); // Reset
+           setIsPolling(false); 
       } finally {
            setIsLoading(false);
       }
   };
 
-  
   const handleTokenWillExpire = async (uid: string) => {
      const response = await fetch(
         `/api/generate-agora-token?channel=${agoraLocalUserInfo?.channel}&uid=${uid}`
@@ -210,20 +224,74 @@ export default function InterviewPage() {
       return data.token;
   };
 
+  const formatTime = (seconds: number) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleTranscriptUpdate = (text: string, uid: string) => {
+      // Simple heuristic: if uid matches agent (usually not us), assume agent.
+      // But we receive our own too? 
+      // For now, let's just push it.
+      // Ideally check uid vs local uid.
+      const isAgent = uid !== agoraLocalUserInfo?.uid.toString();
+      setTranscript(prev => [...prev, { role: isAgent ? 'interviewer' : 'candidate', content: text }]);
+  };
+
+  const handleEndSession = async () => {
+      if(timerRef.current) clearInterval(timerRef.current);
+      setIsAnalyzing(true);
+      setStep('summary'); // Show loading state in summary step
+
+      try {
+          const result = await endSessionMutation.mutateAsync({
+              interviewId: createdInterviewId!,
+              durationSeconds: elapsedSeconds,
+              transcript: transcript
+          });
+          
+          if(result.feedback) {
+             setScoreResult(result.feedback);
+          }
+      } catch (error) {
+          console.error("Failed to end session:", error);
+          toast.error("Failed to generate score");
+      } finally {
+          setIsAnalyzing(false);
+      }
+  };
+
+  // Cleanup timer
+  useEffect(() => {
+      return () => {
+          if(timerRef.current) clearInterval(timerRef.current);
+      }
+  }, []);
+
   if (step === 'active' && agoraLocalUserInfo) {
       return (
         <div className="h-screen w-full bg-slate-950 relative overflow-hidden flex flex-col">
             <div className="absolute top-4 left-4 z-10">
-                 <Button variant="ghost" className="text-white hover:bg-white/10 gap-2" onClick={() => setStep('briefing')}>
-                    <ArrowLeft className="w-4 h-4" /> Exit
+                 <Button variant="ghost" className="text-white hover:bg-white/10 gap-2" onClick={handleEndSession}>
+                    <ArrowLeft className="w-4 h-4" /> End Call
                  </Button>
             </div>
             
+            {/* Timer Display */}
+            <div className="absolute top-4 right-4 z-10">
+                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 backdrop-blur-md rounded-full border border-white/10 text-white font-mono shadow-lg">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <TimerIcon className="w-4 h-4 text-slate-400" />
+                    <span>{formatTime(elapsedSeconds)}</span>
+                 </div>
+            </div>
+
             <div className="flex-1 px-4 relative">
                 {/* Background Orb or Avatar */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     {mode === 'VOICE' ? (
-                        <div className="w-full h-full max-w-4xl max-h-[80vh]">
+                        <div className="w-[85vw] aspect-square max-w-[400px] md:w-full md:h-full md:max-w-4xl md:max-h-[80vh] md:aspect-auto">
                              <Orb 
                                 agentState="listening" 
                                 volumeMode="auto" 
@@ -243,12 +311,138 @@ export default function InterviewPage() {
                         <ConversationComponent 
                             agoraLocalUserInfo={agoraLocalUserInfo}
                             onTokenWillExpire={handleTokenWillExpire}
-                            onEndConversation={() => setStep('briefing')} 
+                            onEndConversation={handleEndSession} // Handle end here
+                            onTranscriptUpdate={handleTranscriptUpdate}
                         />
                     </AgoraProvider>
                  </div>
             </div>
         </div>
+      );
+  }
+
+  if (step === 'summary') {
+      return (
+          <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+              <Card className="w-full max-w-3xl border-slate-200 dark:border-slate-800 shadow-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur">
+                  <CardHeader className="text-center pb-8 border-b border-slate-100 dark:border-slate-800">
+                      <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                          Interview Summary
+                      </CardTitle>
+                      <CardDescription className="text-lg">
+                          Here is how you performed in your {type} interview.
+                      </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-8">
+                       {isAnalyzing ? (
+                           <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                               <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                               <p className="text-slate-500 animate-pulse">Analyzing transcript & generating score...</p>
+                           </div>
+                       ) : scoreResult ? (
+                           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                               {/* Score Display */}
+                               <div className="flex flex-col items-center justify-center space-y-4">
+                                   <div className="relative w-40 h-40 flex items-center justify-center">
+                                       <svg className="w-full h-full transform -rotate-90">
+                                            <circle
+                                                cx="80"
+                                                cy="80"
+                                                r="70"
+                                                stroke="currentColor"
+                                                strokeWidth="12"
+                                                fill="transparent"
+                                                className="text-slate-200 dark:text-slate-800"
+                                            />
+                                            <circle
+                                                cx="80"
+                                                cy="80"
+                                                r="70"
+                                                stroke="currentColor"
+                                                strokeWidth="12"
+                                                fill="transparent"
+                                                strokeDasharray={440}
+                                                strokeDashoffset={440 - (440 * (scoreResult.score / 5))} // 1-5 scale
+                                                className={cn(
+                                                    "transition-all duration-1000 ease-out",
+                                                    scoreResult.score >= 4 ? "text-green-500" :
+                                                    scoreResult.score >= 3 ? "text-blue-500" :
+                                                    "text-orange-500"
+                                                )}
+                                            />
+                                       </svg>
+                                       <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span className="text-5xl font-bold">{scoreResult.score}</span>
+                                            <span className="text-sm text-slate-500 uppercase tracking-widest">/ 5</span>
+                                       </div>
+                                   </div>
+                                   
+                                   <div className="text-center space-y-1">
+                                       <h3 className="text-xl font-bold">
+                                           {scoreResult.score >= 5 ? "Exceptional" :
+                                            scoreResult.score >= 4 ? "Exceeds Expectations" :
+                                            scoreResult.score >= 3 ? "Meets Expectations" :
+                                            scoreResult.score >= 2 ? "Needs Improvement" : "Unsatisfactory"}
+                                       </h3>
+                                       <p className="text-slate-500 max-w-sm mx-auto text-sm">
+                                            {scoreResult.score === 1 && "Answer provided was not efficient."}
+                                            {scoreResult.score === 2 && "Part of answer provided but something left out."}
+                                            {scoreResult.score === 3 && "Full answer provided without missing details."}
+                                            {scoreResult.score === 4 && "Provided answer and alternative/simpler solutions."}
+                                            {scoreResult.score === 5 && "Provided detailed answer, alternatives, and deep understanding."}
+                                       </p>
+                                   </div>
+                               </div>
+
+                               {/* Detailed Feedback */}
+                               <div className="space-y-4">
+                                   <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
+                                       <h4 className="font-semibold mb-2 flex items-center gap-2">
+                                           <Sparkles className="w-4 h-4 text-purple-500" />
+                                           AI Feedback
+                                       </h4>
+                                       <div className="prose dark:prose-invert text-sm max-w-none">
+                                           {scoreResult.feedback}
+                                       </div>
+                                   </div>
+                                   
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                       <div className="p-5 rounded-xl border border-green-200 bg-green-50/50 dark:border-green-900/30 dark:bg-green-900/10">
+                                            <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2 flex items-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4" /> Strengths
+                                            </h4>
+                                            <ul className="space-y-1">
+                                                {scoreResult.strengths?.map((s: string, i: number) => (
+                                                    <li key={i} className="text-sm text-green-800 dark:text-green-300">• {s}</li>
+                                                ))}
+                                            </ul>
+                                       </div>
+                                       <div className="p-5 rounded-xl border border-orange-200 bg-orange-50/50 dark:border-orange-900/30 dark:bg-orange-900/10">
+                                            <h4 className="font-semibold text-orange-700 dark:text-orange-400 mb-2 flex items-center gap-2">
+                                                <Target className="w-4 h-4" /> Areas for Improvement
+                                            </h4>
+                                            <ul className="space-y-1">
+                                                {scoreResult.weaknesses?.map((w: string, i: number) => (
+                                                    <li key={i} className="text-sm text-orange-800 dark:text-orange-300">• {w}</li>
+                                                ))}
+                                            </ul>
+                                       </div>
+                                   </div>
+                               </div>
+
+                               <div className="flex justify-center pt-4">
+                                   <Button size="lg" onClick={() => setStep('config')}>Start New Interview</Button>
+                               </div>
+                           </div>
+                       ) : (
+                           <div className="text-center py-8">
+                               <p className="text-red-500">Failed to load results. Please try again.</p>
+                               <Button variant="outline" onClick={() => setStep('config')} className="mt-4">Back to Home</Button>
+                           </div>
+                       )}
+                  </CardContent>
+              </Card>
+          </div>
       );
   }
 
@@ -338,7 +532,7 @@ export default function InterviewPage() {
                           </ul>
                      </div>
 
-                     <div className="flex gap-3 pt-2">
+                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                          <Button variant="outline" className="flex-1 h-12 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-base" onClick={() => setStep('config')}>
                              Back to Settings
                          </Button>
@@ -359,11 +553,11 @@ export default function InterviewPage() {
 
   // Config Step (Immersive Layout)
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col lg:flex-row relative overflow-hidden">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col lg:flex-row relative lg:overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none" />
 
       {/* Left Column: Visual & Info */}
       <div className="lg:w-5/12 p-8 lg:p-12 flex flex-col relative z-10 bg-white/40 dark:bg-black/20 backdrop-blur-sm lg:border-r border-white/20">
@@ -427,7 +621,7 @@ export default function InterviewPage() {
       </div>
 
       {/* Right Column: Configuration Form */}
-      <div className="lg:w-7/12 flex flex-col overflow-y-auto">
+      <div className="lg:w-7/12 flex flex-col lg:overflow-y-auto relative z-10">
          <div className="flex-1 p-6 lg:p-12 max-w-2xl mx-auto w-full flex flex-col justify-center">
             
             <div className="space-y-8">
@@ -513,22 +707,37 @@ export default function InterviewPage() {
                         </Select>
                     </div>
 
-                    {/* Question Count Slider */}
+                    {/* Question Count Input */}
                     <div className="space-y-4 pt-2">
                         <div className="flex justify-between items-center">
-                            <Label>Question Intensity</Label>
+                            <Label htmlFor="questions" className="flex items-center gap-2">
+                                Question Intensity
+                                <FeatureGuide description="Choose between 3 to 10 questions for your session." />
+                            </Label>
                             <Badge variant="secondary" className="text-sm px-3 py-1">
                                 {questionCount[0]} Questions
                             </Badge>
                         </div>
-                        <Slider
-                            value={questionCount}
-                            onValueChange={setQuestionCount}
+                        <Input
+                            id="questions"
+                            type="number"
                             min={3}
-                            max={20}
-                            step={1}
-                            className="py-4"
+                            max={10}
+                            value={questionCount[0]}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (!isNaN(val)) setQuestionCount([val]);
+                                else setQuestionCount([0]); // Allow clearing to type, handle onBlur
+                            }}
+                            onBlur={() => {
+                                let val = questionCount[0];
+                                if (val < 3) val = 3;
+                                if (val > 10) val = 10;
+                                setQuestionCount([val]);
+                            }}
+                            className="h-12 border-slate-200 dark:border-slate-800 focus-visible:ring-blue-500"
                         />
+                        <p className="text-xs text-muted-foreground">Enter a value between 3 and 10.</p>
                     </div>
 
                     {/* Mode Selection with Upsell */}

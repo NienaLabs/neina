@@ -270,7 +270,19 @@ export const tailoredResumeUpdated = inngest.createFunction(
                     ? JSON.parse(event.data.previousAnalysis) 
                     : event.data.previousAnalysis;
                 if (prev && prev.fixes) {
-                    prevFixes = JSON.stringify(prev.fixes, null, 2);
+                    // Sanitize prev.fixes to remove massive 'autoFix' content from legacy data
+                    const sanitizedFixes: any = {};
+                    for (const [section, issues] of Object.entries(prev.fixes)) {
+                        if (Array.isArray(issues)) {
+                            sanitizedFixes[section] = issues.map((issue: any) => {
+                                const { autoFix, ...rest } = issue; // Destructure to exclude autoFix
+                                return rest;
+                            });
+                        } else {
+                            sanitizedFixes[section] = issues;
+                        }
+                    }
+                    prevFixes = JSON.stringify(sanitizedFixes, null, 2);
                 }
              } catch (e) {
                 console.error("Failed to parse previous analysis", e);

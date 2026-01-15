@@ -95,5 +95,55 @@ export const interviewRouter = createTRPCRouter({
        });
        if (!interview) throw new Error("Interview not found");
        return interview;
+    }),   
+    endSession: protectedProcedure
+    .input(z.object({
+        interviewId: z.string(),
+        durationSeconds: z.number(),
+        transcript: z.array(z.object({ role: z.string(), content: z.string() })).optional().default([]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+         const { interviewId, durationSeconds, transcript } = input;
+         
+         // 1. Get Interview Details (for context)
+         const interview = await prisma.interview.findUnique({
+             where: { id: interviewId },
+             include: { resume: { select: { content: true } } }
+         });
+
+         if (!interview) throw new Error("Interview not found");
+
+         // 2. Generate Score (Synchronous for now)
+         let scoreResult = null;
+         try {
+             // Only generate score if transcript is not empty, otherwise we get 1
+             if (transcript.length > 0) {
+                const { generateInterviewScore } = await import("@/lib/ai-scoring");
+                scoreResult = await generateInterviewScore(
+                    transcript,
+                    interview.role || 'Candidate',
+                    interview.description || undefined,
+                    interview.resume?.content || undefined
+                );
+             }
+         } catch (err) {
+             console.error("Failed to generate score:", err);
+         }
+
+         // 3. Update DB
+         const updated = await prisma.interview.update({
+             where: { id: interviewId },
+             data: {
+                 status: 'ANALYZED', // Mark as analyzed
+                 duration_seconds: durationSeconds,
+                 transcript: transcript, // Save raw transcript
+                 analysisScore: scoreResult?.score || 0,
+                 feedback: scoreResult ? (scoreResult as any) : undefined, // Save full result json
+                 analyzedAt: new Date(),
+                 end_time: new Date(),
+             }
+         });
+
+         return updated;
     }),
 });

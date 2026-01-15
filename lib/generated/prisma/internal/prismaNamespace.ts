@@ -2535,18 +2535,18 @@ export const InterviewScalarFieldEnum = {
   status: 'status',
   role: 'role',
   description: 'description',
-  type: 'type',
-  mode: 'mode',
-  questionCount: 'questionCount',
-  questions: 'questions',
   conversation_id: 'conversation_id',
   analysisFeedback: 'analysisFeedback',
   analysisScore: 'analysisScore',
   analyzedAt: 'analyzedAt',
   perceptionData: 'perceptionData',
   transcript: 'transcript',
+  resume_id: 'resume_id',
   feedback: 'feedback',
-  resume_id: 'resume_id'
+  mode: 'mode',
+  questionCount: 'questionCount',
+  questions: 'questions',
+  type: 'type'
 } as const
 
 export type InterviewScalarFieldEnum = (typeof InterviewScalarFieldEnum)[keyof typeof InterviewScalarFieldEnum]
@@ -2999,16 +2999,16 @@ export type ListEnumInterviewStatusFieldRefInput<$PrismaModel> = FieldRefInputTy
 
 
 /**
- * Reference to a field of type 'InterviewType'
+ * Reference to a field of type 'Float'
  */
-export type EnumInterviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewType'>
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
 
 
 /**
- * Reference to a field of type 'InterviewType[]'
+ * Reference to a field of type 'Float[]'
  */
-export type ListEnumInterviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewType[]'>
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -3027,16 +3027,16 @@ export type ListEnumInterviewModeFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
- * Reference to a field of type 'Float'
+ * Reference to a field of type 'InterviewType'
  */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+export type EnumInterviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewType'>
     
 
 
 /**
- * Reference to a field of type 'Float[]'
+ * Reference to a field of type 'InterviewType[]'
  */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+export type ListEnumInterviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewType[]'>
     
 
 

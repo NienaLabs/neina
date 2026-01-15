@@ -11,24 +11,37 @@ interface AgentState {
   autofixAgent:string;
 }
 
-// 1. Analysis Network (Parser + Analysis)
-const analysisPipeline = [parserAgent, analysisAgent];
-const analysisNetwork = createNetwork({
+// 1. Parser Network (Extraction Only) -> Runs on Raw Resume Content
+const parserNetwork = createNetwork({
+  name: 'tailored-resume-parser-network',
+  agents: [parserAgent],
+  defaultState: createState<AgentState>({
+    parserAgent:"",
+    analyserAgent:"",
+    autofixAgent:""
+  }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return parserAgent;
+  },
+});
+
+// 2. Issue Analysis Network (Analysis Only) -> Runs on Full Context
+const issueNetwork = createNetwork({
   name: 'tailored-resume-analysis-network',
   defaultState: createState<AgentState>({
     parserAgent:"",
     analyserAgent:"",
     autofixAgent:""
   }),
-  agents: analysisPipeline,
+  agents: [analysisAgent],
   router: ({ callCount }) => {
-    // Route strictly based on sequence
-    const nextAgent = analysisPipeline[callCount];
-    return nextAgent ?? undefined; // Stop when done
+    if (callCount > 0) return undefined;
+    return analysisAgent;
   },
 });
 
-// 2. Autofix Network
+// 3. Autofix Network
 const autofixNetwork = createNetwork({
   name: 'tailored-resume-autofix-network',
   agents: [autofixAgent],
@@ -70,12 +83,15 @@ export const tailoredResumeCreated = inngest.createFunction(
         ${event.data.description}
         `
         
-        // 1. Run Analysis
-        const analysisResult = await analysisNetwork.run(resumeText);
-        const parserData = analysisResult.state.data.parserAgent;
+        // 1. Run Parser (Raw Content Only)
+        const parserResult = await parserNetwork.run(event.data.content);
+        const parserData = parserResult.state.data.parserAgent;
+
+        // 2. Run Analysis (Full Context)
+        const analysisResult = await issueNetwork.run(resumeText);
         const analysisDataRaw = analysisResult.state.data.analyserAgent;
 
-        // 2. Run Autofix (Using Issues from Analysis)
+        // 3. Run Autofix (Using Issues from Analysis)
         let mergedAnalysisData = analysisDataRaw;
 
         if (analysisDataRaw) {
@@ -305,9 +321,13 @@ export const tailoredResumeUpdated = inngest.createFunction(
              }
     }
     
-    // 1. Run Analysis
-    const analysisResult = await analysisNetwork.run(resumeText);
-    const parserData = analysisResult.state.data.parserAgent;
+    // 1. Run Parser (Raw Content Only)
+    // Note: In an update, we usually want to re-parse the content to ensure extraction matches current text.
+    const parserResult = await parserNetwork.run(event.data.content);
+    const parserData = parserResult.state.data.parserAgent;
+
+    // 2. Run Analysis (Full Context)
+    const analysisResult = await issueNetwork.run(resumeText);
     const analysisDataRaw = analysisResult.state.data.analyserAgent;
 
     // 2. Run Autofix

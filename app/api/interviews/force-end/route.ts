@@ -65,15 +65,16 @@ export async function POST(request: Request) {
     // End Duix session FIRST before updating database
     if (interview.conversation_id) {
       try {
+        // End the Duix session on the server side to stop billing/resource usage
         if (DEBUG_LOGGING) {
           console.log(`[DEBUG] Force-end: Attempting to close Duix session: ${interview.conversation_id}`);
         }
 
-        // Ideally we pass a sessionId here if we have it
-        // await closeDuixSession(interview.conversation_id);
+        // Close the session and wait for it
+        await closeDuixSession(interview.conversation_id);
 
         if (DEBUG_LOGGING) {
-          console.log('[DEBUG] Force-end: Duix cleanup triggered');
+          console.log('[DEBUG] Force-end: Duix cleanup successfully triggered');
         }
       } catch (error: any) {
         if (DEBUG_LOGGING) {

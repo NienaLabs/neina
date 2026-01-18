@@ -82,16 +82,16 @@ export async function POST(request: Request) {
     // For now, we attempt to close using conversation_id or skip if it's just a bot ID.
     if (interview.conversation_id) {
       try {
+        // End the Duix session on the server side to stop billing/resource usage
         if (DEBUG_LOGGING) {
-          console.log(`[DEBUG] End: Attempting to close Duix session/resource: ${interview.conversation_id}`);
+          console.log(`[DEBUG] End: Attempting to close Duix session: ${interview.conversation_id}`);
         }
 
-        // If we don't have the specific sessionId from SDK start, this might fail or do nothing
-        // Ideally we should have captured sessionId on frontend and sent it here
-        // await closeDuixSession(interview.conversation_id); 
+        // Close the session and wait for it
+        await closeDuixSession(interview.conversation_id);
 
         if (DEBUG_LOGGING) {
-          console.log('[DEBUG] End: Duix session cleanup triggered');
+          console.log('[DEBUG] End: Duix session cleanup successfully triggered');
         }
       } catch (error: any) {
         if (DEBUG_LOGGING) console.log('[DEBUG] End: Duix cleanup failed (expected if ID is just avatar ID):', error.message);

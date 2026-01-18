@@ -4,7 +4,7 @@ import { trpc } from "@/trpc/client";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, Calendar, Clock, User, ChevronRight } from "lucide-react";
+import { Loader2, Calendar, Clock, User, ChevronRight, Linkedin, Twitter, Instagram } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,7 @@ export default function BlogListingPage() {
                     </p>
 
                     {/* Category Filter */}
-                    <div className="flex flex-wrap justify-center gap-2 mb-12">
+                    <div className="flex flex-wrap justify-center gap-2 mb-10">
                         {CATEGORIES.map((cat) => (
                             <button
                                 key={cat}
@@ -54,6 +54,20 @@ export default function BlogListingPage() {
                                 {cat.replace('_', ' ')}
                             </button>
                         ))}
+                    </div>
+
+                    {/* Company Socials */}
+                    <div className="flex items-center justify-center gap-4 py-4 mb-2">
+                        <span className="text-white/20 text-[10px] font-bold uppercase tracking-[0.2em] mr-2">Stay Connected</span>
+                        <a href="https://www.linkedin.com/company/niena-labs/" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors">
+                            <Linkedin className="w-4 h-4" />
+                        </a>
+                        <a href="https://x.com/LabsNiena86233" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors">
+                            <Twitter className="w-4 h-4" />
+                        </a>
+                        <a href="https://instagram.com/nienalabs" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors">
+                            <Instagram className="w-4 h-4" />
+                        </a>
                     </div>
                 </div>
             </div>

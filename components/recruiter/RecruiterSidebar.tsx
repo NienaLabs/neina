@@ -23,6 +23,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/trpc/client";
 import { signOut } from "@/auth-client";
+import Image from "next/image";
 
 const sidebarLinks = [
     {
@@ -53,9 +54,7 @@ export function RecruiterSidebar() {
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between border-b bg-background px-6 py-4">
                 <Link href="/recruiters/dashboard" className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                        <Briefcase className="h-4.5 w-4.5 text-primary-foreground" />
-                    </div>
+                    <Image src="/niena.png" alt="Neina" width={32} height={32} className="object-contain" />
                     <span className="text-xl font-bold tracking-tight font-syne text-foreground">Neina</span>
                 </Link>
                 <Button
@@ -82,12 +81,10 @@ export function RecruiterSidebar() {
                             initial={{ x: "-100%" }}
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
-                            className="fixed left-0 top-0 bottom-0 w-[260px] bg-background z-[80] border-r lg:hidden flex flex-col p-6"
+                            className="fixed left-0 top-0 bottom-0 w-[260px] bg-gradient-to-b from-indigo-50/60 via-background to-purple-50/60 z-[80] border-r border-indigo-100/50 lg:hidden flex flex-col p-6"
                         >
                             <div className="flex items-center gap-2 mb-10">
-                                <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
-                                    <Briefcase className="h-5 w-5 text-primary-foreground" />
-                                </div>
+                                <Image src="/niena.png" alt="Neina" width={36} height={36} className="object-contain" />
                                 <span className="text-2xl font-bold font-syne text-foreground">Neina</span>
                             </div>
 
@@ -131,14 +128,14 @@ export function RecruiterSidebar() {
             {/* Desktop Sidebar */}
             <aside
                 className={cn(
-                    "hidden lg:flex h-screen flex-col border-r bg-background transition-all duration-300 sticky top-0 z-50",
+                    "hidden lg:flex h-screen flex-col border-r border-indigo-100/50 bg-gradient-to-b from-indigo-50/40 via-background to-purple-50/40 transition-all duration-300 sticky top-0 z-50",
                     isCollapsed ? "w-[72px]" : "w-[260px]"
                 )}
             >
                 {/* Logo Section */}
                 <div className="p-6 h-[72px] flex items-center gap-3 border-b">
-                    <div className="h-8 w-8 min-w-[32px] rounded-lg bg-primary flex items-center justify-center shadow-sm">
-                        <Briefcase className="h-4.5 w-4.5 text-primary-foreground" />
+                    <div className="h-8 w-8 min-w-[32px] flex items-center justify-center">
+                        <Image src="/niena.png" alt="Neina" width={32} height={32} className="object-contain" />
                     </div>
                     {!isCollapsed && (
                         <span className="text-xl font-bold tracking-tight font-syne text-foreground">
@@ -153,36 +150,47 @@ export function RecruiterSidebar() {
                         const isActive = pathname === link.href || (link.href !== "/recruiters/dashboard" && pathname.startsWith(link.href));
                         const Icon = link.icon;
 
-                        return (
-                            <Link key={link.href} href={link.href}>
+                        const linkContent = (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className="block"
+                            >
                                 <div className={cn(
                                     "group flex items-center rounded-lg px-3 py-2 transition-all duration-200",
                                     isActive
-                                        ? "bg-primary/10 text-primary"
-                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 shadow-sm border border-indigo-100/50"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                                    isCollapsed && "justify-center px-2"
                                 )}>
                                     <Icon className={cn(
-                                        "h-5 w-5 transition-transform duration-200",
-                                        isActive ? "text-primary" : ""
+                                        "h-5 w-5 transition-transform duration-200 min-w-[20px]",
+                                        isActive ? "text-indigo-600" : ""
                                     )} />
 
                                     {!isCollapsed && (
-                                        <span className="ml-3 text-sm font-medium whitespace-nowrap">
+                                        <span className="ml-3 text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                                             {link.label}
                                         </span>
-                                    )}
-
-                                    {isCollapsed && (
-                                        <Tooltip>
-                                            <TooltipTrigger className="absolute inset-0" />
-                                            <TooltipContent side="right" className="font-semibold text-xs py-1.5 shadow-md">
-                                                {link.label}
-                                            </TooltipContent>
-                                        </Tooltip>
                                     )}
                                 </div>
                             </Link>
                         );
+
+                        if (isCollapsed) {
+                            return (
+                                <Tooltip key={link.href} delayDuration={0}>
+                                    <TooltipTrigger asChild>
+                                        {linkContent}
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="font-semibold text-xs py-1.5 shadow-md">
+                                        {link.label}
+                                    </TooltipContent>
+                                </Tooltip>
+                            );
+                        }
+
+                        return linkContent;
                     })}
                 </nav>
 

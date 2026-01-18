@@ -37,6 +37,7 @@ export function RecruiterApplicationsTable({ applications, onUpdate }: Recruiter
                         <TableHead>Company</TableHead>
                         <TableHead>Position</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Source</TableHead>
                         <TableHead>Applied Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -74,6 +75,13 @@ export function RecruiterApplicationsTable({ applications, onUpdate }: Recruiter
                             <TableCell>{app.position}</TableCell>
                             <TableCell>
                                 <StatusBadge status={app.status} />
+                            </TableCell>
+                            <TableCell>
+                                {app.verificationType === 'MANUAL' ? (
+                                    <Badge variant="outline" className="border-slate-400 text-slate-500">Manual</Badge>
+                                ) : (
+                                    <Badge variant="outline" className="border-blue-200 text-blue-600 bg-blue-50">Application</Badge>
+                                )}
                             </TableCell>
                             <TableCell>
                                 {format(new Date(app.createdAt), "MMM d, yyyy")}

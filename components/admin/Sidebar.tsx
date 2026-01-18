@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     Users,
     Briefcase,
     Settings,
+    Bell,
     MessageSquare,
     BarChart3,
     Megaphone,
@@ -70,6 +72,11 @@ const sidebarLinks = [
         icon: AlertCircle,
     },
     {
+        label: "Notifications",
+        href: "/admin/notifications",
+        icon: Bell,
+    },
+    {
         label: "Settings",
         href: "/admin/settings",
         icon: Settings,
@@ -120,12 +127,18 @@ export function Sidebar() {
                 {/* Logo Section */}
                 <div className="flex h-20 items-center px-6 border-b border-border/50">
                     <Link href="/admin" className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                            <Users className="h-6 w-6" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-transparent overflow-hidden">
+                            <Image
+                                src="/niena.png"
+                                alt="Neina Logo"
+                                width={40}
+                                height={40}
+                                className="object-contain"
+                            />
                         </div>
                         {!isCollapsed && (
                             <span className="text-xl font-bold font-syne tracking-tight text-foreground whitespace-nowrap">
-                                Job AI Admin
+                                Neina Admin
                             </span>
                         )}
                     </Link>

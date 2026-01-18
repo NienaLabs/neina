@@ -17,8 +17,6 @@ import {
     Edit,
     Users,
     Trash,
-    PauseCircle,
-    PlayCircle,
     ChevronRight,
     Search
 } from "lucide-react";
@@ -53,13 +51,7 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
         onError: (error) => toast.error(error.message),
     });
 
-    const toggleStatusMutation = trpc.recruiter.toggleJobStatus.useMutation({
-        onSuccess: () => {
-            toast.success("Job status updated");
-            onUpdate();
-        },
-        onError: (error) => toast.error(error.message),
-    });
+
 
     const handleDelete = (id: string) => {
         if (confirm("Are you sure you want to close this job? This cannot be undone.")) {
@@ -67,10 +59,7 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
         }
     };
 
-    const handleToggleStatus = (id: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-        toggleStatusMutation.mutate({ recruiterJobId: id, status: newStatus });
-    };
+
 
     if (jobs.length === 0) {
         return (
@@ -84,7 +73,7 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
     }
 
     return (
-        <Card className="rounded-2xl border shadow-none overflow-hidden">
+        <Card className="rounded-2xl border-indigo-100/50 shadow-sm overflow-hidden bg-gradient-to-br from-white/90 via-white/60 to-indigo-50/30 backdrop-blur-md">
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader className="bg-muted/30">
@@ -135,9 +124,9 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="rounded-xl p-2 w-48 shadow-lg border-border/50">
                                             <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest px-2 pb-1.5 opacity-40">Management</DropdownMenuLabel>
-                                            <DropdownMenuItem asChild className="rounded-lg py-2 focus:bg-primary/5 focus:text-primary cursor-pointer">
-                                                <Link href={`/recruiters/pipeline/${job.id}`} className="flex items-center w-full">
-                                                    <Users className="mr-2 h-4 w-4" /> Pipeline
+                                            <DropdownMenuItem asChild className="rounded-lg py-2 focus:bg-indigo-50 focus:text-indigo-700 cursor-pointer">
+                                                <Link href={`/recruiters/pipeline/${job.id}`} className="flex items-center w-full font-medium text-indigo-600">
+                                                    <Users className="mr-2 h-4 w-4 text-indigo-500" /> Pipeline
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild className="rounded-lg py-2 focus:bg-primary/5 focus:text-primary cursor-pointer">
@@ -146,22 +135,7 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator className="my-1.5 opacity-50" />
-                                            {job.status !== 'CLOSED' && (
-                                                <DropdownMenuItem
-                                                    onClick={() => handleToggleStatus(job.id, job.status)}
-                                                    className="rounded-lg py-2 focus:bg-primary/5 focus:text-primary cursor-pointer"
-                                                >
-                                                    {job.status === 'ACTIVE' ? (
-                                                        <>
-                                                            <PauseCircle className="mr-2 h-4 w-4" /> Pause
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <PlayCircle className="mr-2 h-4 w-4" /> Activate
-                                                        </>
-                                                    )}
-                                                </DropdownMenuItem>
-                                            )}
+
                                             <DropdownMenuItem
                                                 onClick={() => handleDelete(job.id)}
                                                 className="text-red-500 focus:text-red-500 focus:bg-red-50 rounded-lg py-2 cursor-pointer"

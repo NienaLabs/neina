@@ -21,7 +21,7 @@ export async function getSentryIssues(limit = 25) {
 
     try {
         const response = await fetch(
-            `${SENTRY_BASE_URL}/projects/${SENTRY_ORG}/${SENTRY_PROJECT}/issues/?limit=${limit}`,
+            `${SENTRY_BASE_URL}/projects/${SENTRY_ORG}/${SENTRY_PROJECT}/issues/?limit=${limit}&query=`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -37,7 +37,22 @@ export async function getSentryIssues(limit = 25) {
                 statusText: response.statusText,
                 body: errorText
             });
-            throw new Error(`Sentry API error: ${response.status} ${response.statusText}`);
+            try {
+                const errorJson = JSON.parse(errorText);
+                let errorMessage = errorJson.detail || errorJson.error || `Sentry API error: ${response.status} ${response.statusText}`;
+
+                if (response.status === 403 || errorMessage.toLowerCase().includes('permission')) {
+                    errorMessage += " (Required scopes: project:read, org:read)";
+                }
+
+                throw new Error(errorMessage);
+            } catch (e: any) {
+                // If the error we just threw is ours, rethrow it
+                if (e.message?.includes('Required scopes')) throw e;
+
+                // If not JSON, throw raw text or status
+                throw new Error(`Sentry API error: ${errorText || response.statusText}`);
+            }
         }
 
         return await response.json();

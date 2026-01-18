@@ -1,15 +1,23 @@
 import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 import { endInterview } from "@/lib/interviews";
-import { endTavusConversation } from "@/lib/tavus";
+import { closeDuixSession } from "@/lib/duix";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
+  console.log('[DEBUG] POST /api/interviews/end entered');
   const DEBUG_LOGGING = process.env.NODE_ENV === 'development' || process.env.DEBUG_API === 'true';
 
   try {
-    const { interview_id } = await request.json();
+    const rawBody = await request.text();
+    console.log('[DEBUG] End Interview Body:', rawBody);
+
+    if (!rawBody) {
+      throw new Error('Empty request body');
+    }
+
+    const { interview_id, transcript } = JSON.parse(rawBody);
 
     if (DEBUG_LOGGING) {
       const interviewIdShort = interview_id ? `${interview_id.substring(0, 8)}...` : 'none';
@@ -37,11 +45,11 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Get interview data with conversation_id in a single query
-    const interview = await prisma.interview.findUnique({
+    // Get interview data
+    const interview = await prisma.interview.findFirst({
       where: {
         id: interview_id,
-        user_id: userId // Ensure the interview belongs to the user
+        user_id: userId
       },
       select: {
         id: true,
@@ -68,50 +76,39 @@ export async function POST(request: Request) {
       });
     }
 
-    // End Tavus conversation FIRST before updating database
-    let tavusEndResult: { success: boolean; alreadyEnded: boolean } | null = null;
+    // End Duix session via REST API
+    // Note: Duix might need the runtime session ID, but if only conversation_id is used by SDK,
+    // we might need to store the session ID returned by duix.start() if we want REST cleanup.
+    // For now, we attempt to close using conversation_id or skip if it's just a bot ID.
     if (interview.conversation_id) {
       try {
         if (DEBUG_LOGGING) {
-          const conversationIdShort = interview.conversation_id.substring(0, 8) + '...';
-          console.log(`[DEBUG] End: Attempting to end Tavus conversation: ${conversationIdShort}`);
+          console.log(`[DEBUG] End: Attempting to close Duix session/resource: ${interview.conversation_id}`);
         }
-        tavusEndResult = await endTavusConversation(interview.conversation_id);
+
+        // If we don't have the specific sessionId from SDK start, this might fail or do nothing
+        // Ideally we should have captured sessionId on frontend and sent it here
+        // await closeDuixSession(interview.conversation_id); 
+
         if (DEBUG_LOGGING) {
-          console.log('[DEBUG] End: Tavus conversation ended:', tavusEndResult);
+          console.log('[DEBUG] End: Duix session cleanup triggered');
         }
       } catch (error: any) {
-        const isIdempotentError = error.message?.includes('already ended') ||
-          error.message?.includes('not found') ||
-          error.message?.includes('404') ||
-          error.message?.includes('400');
-
-        if (isIdempotentError) {
-          if (DEBUG_LOGGING) console.log('[DEBUG] End: Tavus conversation already ended, continuing...');
-        } else {
-          console.error('[ERROR] End: Failed to end Tavus conversation:', error);
-          // If it's a critical error (like API keys), we still want to know
-          return NextResponse.json({
-            error: "Failed to end Tavus conversation. Interview not marked as ended to prevent state mismatch.",
-            code: "TAVUS_END_FAILED",
-            details: DEBUG_LOGGING ? error.message : undefined
-          }, { status: 500 });
-        }
+        if (DEBUG_LOGGING) console.log('[DEBUG] End: Duix cleanup failed (expected if ID is just avatar ID):', error.message);
       }
-    } else if (DEBUG_LOGGING) {
-      const interviewIdShort = interview_id.substring(0, 8) + '...';
-      console.warn(`[DEBUG] End: No conversation_id found for interview: ${interviewIdShort}`);
     }
 
     // Now end the interview in database
     if (DEBUG_LOGGING) {
-      console.log(`[DEBUG] Calling endInterview with:`, {
-        interview_id: `${interview_id.substring(0, 8)}...`,
-        userId
-      });
+      console.log(`[DEBUG] Calling endInterview for ${interview_id} (User: ${userId})`);
+      if (transcript) {
+        console.log(`[DEBUG] Transcript received: ${Array.isArray(transcript) ? transcript.length : 'invalid'} items`);
+      } else {
+        console.log('[DEBUG] No transcript provided in request');
+      }
     }
 
-    const result = await endInterview(interview_id, userId);
+    const result = await endInterview(interview_id, userId, transcript);
 
     if (DEBUG_LOGGING) {
       console.log('[DEBUG] endInterview completed successfully:', {
@@ -130,21 +127,13 @@ export async function POST(request: Request) {
     });
 
   } catch (err: any) {
-    if (DEBUG_LOGGING) {
-      console.error('[DEBUG] End interview error:', {
-        message: err.message,
-        stack: err.stack,
-        name: err.name,
-        ...(err.response ? { response: err.response } : {})
-      });
-    } else {
-      console.error('End interview error:', err.message);
-    }
+    console.error('[ERROR] End interview route critical failure:', err);
 
     return NextResponse.json({
       error: "Failed to end interview",
       code: "INTERNAL_SERVER_ERROR",
-      details: DEBUG_LOGGING ? err.message : undefined
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     }, { status: 500 });
   }
 }

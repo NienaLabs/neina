@@ -45,7 +45,7 @@ export const userRouter = createTRPCRouter({
         .input(
             z.object({
                 subject: z.string().min(1).max(100),
-                message: z.string().min(1).max(500),
+                message: z.string().min(1).max(1000),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -60,69 +60,65 @@ export const userRouter = createTRPCRouter({
             }
 
             try {
-                // Get all admin users with push subscriptions
-                // @ts-ignore - Types might not be fully synced yet
+                // 1. Always create a support ticket
+                const ticket = await prisma.supportTicket.create({
+                    data: {
+                        userId,
+                        subject: input.subject,
+                        status: 'open',
+                        messages: {
+                            create: {
+                                sender: 'user',
+                                message: input.message,
+                            },
+                        },
+                    },
+                });
+
+                // 2. Always create an in-app notification (announcement) for admins
+                await prisma.announcement.create({
+                    data: {
+                        title: `New Support Ticket: ${input.subject}`,
+                        content: `From: ${user.name || user.email}\n\n${input.message.substring(0, 200)}...`,
+                        type: 'in-app',
+                        targetRoles: ['admin'],
+                    }
+                });
+
+                // 3. Try to send push notifications to admins
                 const admins = await prisma.user.findMany({
                     where: { role: 'admin' },
                     include: { pushSubscriptions: true },
                 });
 
-                if (admins.length === 0) {
-                    throw new Error('No admins found');
-                }
-
-                // Collect all admin tokens
                 const tokens = admins.flatMap((admin: any) =>
-                    // @ts-ignore
                     admin.pushSubscriptions?.map((sub: any) => sub.endpoint) || []
                 );
 
-                if (tokens.length === 0) {
-                    // Fallback: create support ticket if no push subscriptions
-                    await prisma.supportTicket.create({
-                        data: {
-                            userId,
-                            subject: input.subject,
-                            status: 'open',
-                            messages: {
-                                create: {
-                                    sender: 'user',
-                                    message: input.message,
-                                },
-                            },
-                        },
-                    });
-
-                    return {
-                        success: true,
-                        message: 'Support ticket created. Admins will respond soon.',
-                        method: 'ticket',
+                let pushResult = null;
+                if (tokens.length > 0) {
+                    const { sendMulticastPushNotification } = await import('@/lib/firebase-admin');
+                    const notification = {
+                        title: `📬 Support Ticket: ${input.subject}`,
+                        body: `From ${user.name || user.email}`,
+                        icon: '/niena.png',
                     };
+
+                    const data = {
+                        type: 'support_ticket',
+                        url: '/admin/support',
+                        ticketId: ticket.id,
+                        userId,
+                    };
+
+                    pushResult = await sendMulticastPushNotification(tokens, notification, data);
                 }
-
-                // Send push notifications to admins
-                const { sendMulticastPushNotification } = await import('@/lib/firebase-admin');
-
-                const notification = {
-                    title: `📬 Message from ${user.name || user.email}`,
-                    body: `${input.subject}: ${input.message.substring(0, 100)}${input.message.length > 100 ? '...' : ''}`,
-                    icon: '/logo.png',
-                };
-
-                const data = {
-                    type: 'user_message',
-                    url: '/admin/messages',
-                    userId,
-                    subject: input.subject,
-                };
-
-                const result = await sendMulticastPushNotification(tokens, notification, data);
 
                 return {
                     success: true,
-                    message: `Message sent to ${result.successCount} admin devices`,
-                    sentCount: result.successCount,
-                    method: 'push',
+                    message: pushResult ? 'Notified admins via push' : 'Ticket created and admins alerted in-app',
+                    method: pushResult ? 'push' : 'in-app',
+                    ticketId: ticket.id
                 };
             } catch (error: any) {
                 console.error('Error sending admin message:', error);

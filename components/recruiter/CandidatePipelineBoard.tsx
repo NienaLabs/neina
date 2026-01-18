@@ -13,10 +13,17 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select";
-import { Loader2, Mail, Clock, MessageSquare, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { Loader2, Mail, Clock, MessageSquare, Plus, MoreHorizontal, Trash, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 const PIPELINE_STAGES = [
     { id: 'NEW', label: 'New', color: 'bg-blue-500', bgColor: 'bg-blue-50' },
@@ -57,6 +64,20 @@ export function CandidatePipelineBoard({ recruiterJobId }: { recruiterJobId: str
         onError: (error) => toast.error(error.message),
     });
 
+    const deleteMutation = trpc.recruiter.deleteCandidate.useMutation({
+        onSuccess: () => {
+            toast.success("Candidate removed");
+            refetch();
+        },
+        onError: (error) => toast.error(error.message),
+    });
+
+    const handleDelete = (id: string) => {
+        if (confirm("Are you sure you want to remove this candidate?")) {
+            deleteMutation.mutate({ candidateId: id });
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center py-20">
@@ -81,7 +102,7 @@ export function CandidatePipelineBoard({ recruiterJobId }: { recruiterJobId: str
             <div className="flex-1 overflow-x-auto pb-6 -mx-2">
                 <div className="flex gap-6 h-full px-2 min-w-max">
                     {PIPELINE_STAGES.map((stage) => (
-                        <div key={stage.id} className="w-[320px] flex flex-col h-full bg-slate-50/50 rounded-2xl border p-2">
+                        <div key={stage.id} className="w-[320px] flex flex-col h-full bg-white/40 backdrop-blur-md border border-indigo-100/40 rounded-2xl p-2 shadow-sm">
                             <div className="flex items-center justify-between mb-4 px-3 pt-2 pb-1">
                                 <div className="flex items-center gap-2">
                                     <div className={`h-2 w-2 rounded-full ${stage.color}`} />
@@ -94,17 +115,18 @@ export function CandidatePipelineBoard({ recruiterJobId }: { recruiterJobId: str
 
                             <div className="flex-1 overflow-y-auto space-y-3 px-1 no-scrollbar pb-4">
                                 {groupedCandidates[stage.id]?.map((candidate) => (
-                                    <Card key={candidate.id} className="shadow-none border hover:border-primary/30 transition-colors rounded-xl overflow-hidden group">
-                                        <CardContent className="p-4 space-y-4">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
-                                                        <AvatarFallback className="bg-slate-100 text-[10px] font-bold">
+                                    <Card key={candidate.id} className="shadow-sm border-indigo-100/50 hover:border-indigo-300 hover:shadow-md transition-all rounded-xl overflow-hidden group bg-white/90 backdrop-blur-sm">
+                                        <CardContent className="p-4 space-y-3">
+                                            {/* Header: Avatar, Name, Menu */}
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                                                        <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 text-xs font-bold">
                                                             {candidate.candidateName.charAt(0)}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="min-w-0">
-                                                        <p className="font-bold text-xs truncate" title={candidate.candidateName}>
+                                                        <p className="font-bold text-sm text-foreground truncate" title={candidate.candidateName}>
                                                             {candidate.candidateName}
                                                         </p>
                                                         <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
@@ -113,37 +135,71 @@ export function CandidatePipelineBoard({ recruiterJobId }: { recruiterJobId: str
                                                         </p>
                                                     </div>
                                                 </div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1.5 text-muted-foreground hover:text-indigo-600">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-32 rounded-xl">
+                                                        <DropdownMenuItem className="text-xs font-medium cursor-pointer">
+                                                            <User className="mr-2 h-3.5 w-3.5" /> View Profile
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleDelete(candidate.id)}
+                                                            className="text-xs font-medium text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
+                                                        >
+                                                            <Trash className="mr-2 h-3.5 w-3.5" /> Remove
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
 
-                                            <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-2 break-all px-1">
-                                                <Mail className="h-3 w-3 flex-shrink-0 opacity-40" />
-                                                <span className="truncate">{candidate.candidateEmail}</span>
-                                            </div>
-
-                                            {candidate.notes && (
-                                                <div className="bg-muted/30 p-2.5 rounded-lg text-[10px] text-muted-foreground leading-relaxed border border-transparent group-hover:border-border/50 transition-colors">
-                                                    <MessageSquare className="h-2.5 w-2.5 inline mr-1.5 opacity-40" />
-                                                    {candidate.notes}
+                                            {/* Details Section */}
+                                            <div className="space-y-2 pt-1">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border border-transparent group-hover:border-indigo-100/50 transition-colors">
+                                                    <Mail className="h-3.5 w-3.5 text-indigo-400" />
+                                                    <span className="truncate font-medium">{candidate.candidateEmail}</span>
                                                 </div>
-                                            )}
 
-                                            <div className="pt-3 border-t mt-1">
+                                                {candidate.notes && (
+                                                    <div className="bg-amber-50/50 p-2.5 rounded-lg text-[10px] text-amber-700 leading-relaxed border border-amber-100/50">
+                                                        <div className="flex items-start gap-1.5">
+                                                            <MessageSquare className="h-3 w-3 mt-0.5 opacity-50 flex-shrink-0" />
+                                                            <span className="line-clamp-2">{candidate.notes}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Status Selector */}
+                                            <div className="pt-2">
                                                 <Select
                                                     value={candidate.status}
-                                                    onValueChange={(val) =>
-                                                        updateStatusMutation.mutate({
-                                                            candidateId: candidate.id,
-                                                            status: val as any
-                                                        })
-                                                    }
+                                                    onValueChange={(val) => {
+                                                        const stage = PIPELINE_STAGES.find(s => s.id === val);
+                                                        const confirmChange = confirm(
+                                                            `Are you sure you want to move ${candidate.candidateName} to ${stage?.label}? This will notify the candidate.`
+                                                        );
+                                                        if (confirmChange) {
+                                                            updateStatusMutation.mutate({
+                                                                candidateId: candidate.id,
+                                                                status: val as any
+                                                            });
+                                                        }
+                                                    }}
                                                 >
-                                                    <SelectTrigger className="h-7 text-[10px] font-bold w-full rounded-lg border-none bg-muted/50 hover:bg-muted transition-colors px-2">
+                                                    <SelectTrigger className="h-8 text-xs font-semibold w-full rounded-lg border-indigo-100 bg-white/50 hover:bg-white hover:border-indigo-300 transition-all px-3 shadow-sm">
                                                         <SelectValue placeholder="Move to..." />
                                                     </SelectTrigger>
-                                                    <SelectContent className="rounded-xl border-border/50 shadow-xl p-1">
+                                                    <SelectContent className="rounded-xl border-indigo-100 shadow-xl p-1">
                                                         {PIPELINE_STAGES.map((s) => (
-                                                            <SelectItem key={s.id} value={s.id} className="rounded-lg py-1.5 text-xs font-medium cursor-pointer">
-                                                                {s.label}
+                                                            <SelectItem key={s.id} value={s.id} className="rounded-lg py-2 text-xs font-medium cursor-pointer">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`h-1.5 w-1.5 rounded-full ${s.color}`} />
+                                                                    {s.label}
+                                                                </div>
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>

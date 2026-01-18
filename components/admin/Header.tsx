@@ -13,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useSession, signOut } from "@/auth-client";
 
 export function Header() {
@@ -40,10 +41,7 @@ export function Header() {
 
                 {/* Right Side Actions */}
                 <div className="flex items-center gap-2 sm:gap-4">
-                    <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-xl hover:bg-secondary">
-                        <Bell className="h-5 w-5 text-muted-foreground" />
-                        <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-white"></span>
-                    </Button>
+                    <NotificationBell />
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

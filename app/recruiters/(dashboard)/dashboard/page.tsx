@@ -137,7 +137,7 @@ export default function RecruiterDashboardPage() {
             {/* Professional Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b pb-8">
                 <motion.div variants={itemVariants} className="space-y-1">
-                    <h1 className="text-3xl font-extrabold tracking-tight font-syne text-foreground">
+                    <h1 className="text-3xl font-extrabold tracking-tight font-syne bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         {dashboard.user.companyName || "Organization"} <span className="text-muted-foreground/40 ml-1 font-normal">Dashboard</span>
                     </h1>
                     <p className="text-sm text-muted-foreground font-medium">Welcome back, {dashboard.user.name.split(" ")[0]} . Monitor your recruitment data and trends.</p>
@@ -147,7 +147,7 @@ export default function RecruiterDashboardPage() {
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         Live Data
                     </div>
-                    <Button asChild size="lg" className="rounded-xl font-bold font-syne px-6 py-6 shadow-sm">
+                    <Button asChild size="lg" className="rounded-xl font-bold font-syne px-6 py-6 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all border-none bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
                         <Link href="/recruiters/jobs/new">
                             <Plus className="mr-2 h-5 w-5" /> Post Job
                         </Link>
@@ -159,7 +159,7 @@ export default function RecruiterDashboardPage() {
             <div className="grid gap-6 md:grid-cols-3">
                 {stats.map((stat) => (
                     <motion.div key={stat.title} variants={itemVariants}>
-                        <Card className="border shadow-none hover:shadow-md transition-shadow group rounded-2xl">
+                        <Card className="border-indigo-100/50 shadow-sm hover:shadow-md transition-all group rounded-2xl bg-gradient-to-br from-white/90 via-white/60 to-indigo-50/30 backdrop-blur-md">
                             <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
                                 <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.borderColor} border`}>
                                     <stat.icon className={`h-5 w-5 ${stat.color}`} />
@@ -181,7 +181,7 @@ export default function RecruiterDashboardPage() {
             <div className="grid gap-8 lg:grid-cols-12 items-start">
                 {/* Trend Chart */}
                 <motion.div variants={itemVariants} className="lg:col-span-8">
-                    <Card className="border shadow-none rounded-2xl overflow-hidden">
+                    <Card className="border-indigo-100/50 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-white/90 via-white/60 to-indigo-50/30 backdrop-blur-md">
                         <CardHeader className="p-8 pb-0">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
@@ -267,7 +267,7 @@ export default function RecruiterDashboardPage() {
                 {/* Side Section */}
                 <div className="lg:col-span-4 space-y-6">
                     <motion.div variants={itemVariants}>
-                        <Card className="border shadow-none rounded-2xl overflow-hidden min-h-[460px] flex flex-col">
+                        <Card className="border-indigo-100/50 shadow-sm rounded-2xl overflow-hidden min-h-[460px] flex flex-col bg-gradient-to-br from-white/90 via-white/60 to-indigo-50/30 backdrop-blur-md">
                             <CardHeader className="p-6 pb-2">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
@@ -325,7 +325,7 @@ export default function RecruiterDashboardPage() {
 
             {/* Active Jobs Table */}
             <motion.div variants={itemVariants}>
-                <Card className="border shadow-none rounded-2xl overflow-hidden">
+                <Card className="border-indigo-100/50 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-white/90 via-white/60 to-indigo-50/30 backdrop-blur-md">
                     <CardHeader className="p-8 pb-6 border-b flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <CardTitle className="text-xl font-bold">Active Listings</CardTitle>

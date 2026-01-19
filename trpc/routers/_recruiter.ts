@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
-import { sendRecruiterApplicationReceivedEmail } from '@/lib/email';
+import { sendRecruiterApplicationReceivedEmail, sendCandidateStatusUpdateEmail } from '@/lib/email';
 
 export const recruiterRouter = createTRPCRouter({
     applyForRecruiter: protectedProcedure
@@ -460,9 +460,103 @@ export const recruiterRouter = createTRPCRouter({
                     status: input.status,
                     notes: input.notes ?? candidate.notes,
                 },
+                include: {
+                    recruiterJob: {
+                        include: {
+                            job: {
+                                select: { job_title: true }
+                            }
+                        }
+                    }
+                }
             });
 
+            // Send notification email if status changed
+            if (candidate.status !== input.status) {
+                const jobTitle = updated.recruiterJob.job.job_title || 'Application';
+
+                // 1. Email Notification
+                try {
+                    await sendCandidateStatusUpdateEmail(
+                        updated.candidateEmail,
+                        updated.candidateName,
+                        jobTitle,
+                        input.status
+                    );
+                } catch (error) {
+                    console.error('Failed to send status update email:', error);
+                }
+
+                // 2. In-App Notification
+                try {
+                    // Check if candidate has a user account
+                    const userAccount = await prisma.user.findUnique({
+                        where: { email: updated.candidateEmail },
+                        select: { id: true }
+                    });
+
+                    if (userAccount) {
+                        const statusLabels: Record<string, string> = {
+                            'NEW': 'Received',
+                            'REVIEWING': 'Under Review',
+                            'SHORTLISTED': 'Shortlisted',
+                            'INTERVIEWED': 'Interviewed',
+                            'OFFERED': 'Offer Received',
+                            'REJECTED': 'Updated',
+                            'HIRED': 'Hired'
+                        };
+                        const friendlyStatus = statusLabels[input.status] || input.status;
+
+                        await prisma.announcement.create({
+                            data: {
+                                title: 'Application Update',
+                                content: `Your application status for "${jobTitle}" has been updated to ${friendlyStatus}.`,
+                                type: 'in-app',
+                                targetUserIds: [userAccount.id],
+                                createdBy: 'system',
+                            },
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to create in-app notification:', error);
+                }
+            }
+
             return { success: true, candidate: updated };
+        }),
+
+    /**
+     * Delete candidate
+     */
+    deleteCandidate: protectedProcedure
+        .input(
+            z.object({
+                candidateId: z.string(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // Get candidate and verify ownership
+            const candidate = await prisma.candidatePipeline.findUnique({
+                where: { id: input.candidateId },
+                include: {
+                    recruiterJob: {
+                        select: { recruiterId: true },
+                    },
+                },
+            });
+
+            if (!candidate || candidate.recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+
+            // Delete candidate
+            await prisma.candidatePipeline.delete({
+                where: { id: input.candidateId },
+            });
+
+            return { success: true };
         }),
 
     /**

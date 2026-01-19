@@ -43,7 +43,7 @@ export default function PipelinePage() {
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-extrabold tracking-tight font-syne text-foreground line-clamp-1 max-w-xl">
+                        <h1 className="text-3xl font-extrabold tracking-tight font-syne bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent line-clamp-1 max-w-xl">
                             {job.job.job_title} <span className="text-muted-foreground/40 font-normal">Pipeline</span>
                         </h1>
                         <p className="text-sm text-muted-foreground font-medium">{job.job.job_location} &bull; Manage and track candidate progress.</p>

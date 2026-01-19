@@ -107,7 +107,7 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
 }
 
 // End interview and calculate used time
-export async function endInterview(interviewId: string, userId: string): Promise<InterviewEndResult> {
+export async function endInterview(interviewId: string, userId: string, transcript?: any): Promise<InterviewEndResult> {
   // Fetch interview and user data in parallel
   const [interview, user] = await Promise.all([
     prisma.interview.findUnique({
@@ -123,10 +123,6 @@ export async function endInterview(interviewId: string, userId: string): Promise
     throw new Error('Interview not found');
   }
 
-  if (interview.status !== 'ACTIVE') {
-    throw new Error(`Cannot end interview with status: ${interview.status}`);
-  }
-
   if (interview.user_id !== userId) {
     throw new Error('Unauthorized');
   }
@@ -135,31 +131,73 @@ export async function endInterview(interviewId: string, userId: string): Promise
     throw new Error('User not found');
   }
 
+  // If already ended, just return what we have (though this should be handled by caller)
+  if (interview.status === 'ENDED' || interview.status === 'ANALYZED') {
+    return {
+      interview: {
+        id: interview.id,
+        duration_seconds: interview.duration_seconds,
+        end_time: interview.end_time || new Date(),
+        status: interview.status
+      },
+      remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60))
+    };
+  }
+
+  // We allow ending from SCHEDULED or ACTIVE. 
+  // If SCHEDULED, duration is 0.
   const endTime = new Date();
-  const durationSeconds = Math.floor((endTime.getTime() - interview.start_time.getTime()) / 1000);
+  let durationSeconds = 0;
+
+  if (interview.status === 'ACTIVE' && interview.start_time) {
+    durationSeconds = Math.floor((endTime.getTime() - interview.start_time.getTime()) / 1000);
+  } else if (interview.status === 'SCHEDULED') {
+    console.log(`[endInterview] Ending scheduled interview ${interviewId} - setting duration to 0`);
+  } else {
+    // Other statuses like TIMEOUT, CANCELLED might still be valid to "end" but usually they are terminal.
+    console.warn(`[endInterview] Interview ${interviewId} is in status ${interview.status}. Proceeding to mark as ENDED.`);
+  }
+
+  // Protect against negative or NaN duration
+  if (isNaN(durationSeconds) || durationSeconds < 0) durationSeconds = 0;
 
   // Update interview record
-  const updatedInterview = await prisma.interview.update({
-    where: { id: interviewId },
-    data: {
-      end_time: endTime,
-      duration_seconds: durationSeconds,
-      status: 'ENDED'
-    }
-  });
+  console.log(`[endInterview] Updating interview ${interviewId} to ENDED...`);
+  let updatedInterview;
+  try {
+    updatedInterview = await prisma.interview.update({
+      where: { id: interviewId },
+      data: {
+        end_time: endTime,
+        duration_seconds: durationSeconds,
+        status: 'ENDED',
+        transcript: transcript || undefined // Save transcript if provided
+      }
+    });
+  } catch (dbErr: any) {
+    console.error(`[endInterview] Failed to update interview ${interviewId}:`, dbErr);
+    throw dbErr;
+  }
 
   // Atomic update: decrement interview_minutes but never below 0
   const usedMinutes = Math.ceil(durationSeconds / 60);
+  console.log(`[endInterview] Deducting ${usedMinutes} minutes from user ${userId}...`);
 
-  const updatedUser = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      interview_minutes: {
-        decrement: usedMinutes
-      }
-    },
-    select: { interview_minutes: true }
-  });
+  let updatedUser;
+  try {
+    updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        interview_minutes: {
+          decrement: usedMinutes
+        }
+      },
+      select: { interview_minutes: true }
+    });
+  } catch (userErr: any) {
+    console.error(`[endInterview] Failed to update user minutes for ${userId}:`, userErr);
+    throw userErr;
+  }
 
   // Ensure interview_minutes never goes below 0
   if (updatedUser.interview_minutes < 0) {

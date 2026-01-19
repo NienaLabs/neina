@@ -2,8 +2,22 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
-import { sendRecruiterApprovalEmail, sendRecruiterRejectionEmail } from '@/lib/email';
+import {
+    sendRecruiterApprovalEmail,
+    sendRecruiterRejectionEmail,
+    sendAccountSuspendedEmail,
+    sendAccountReactivatedEmail
+} from '@/lib/email';
 import { sendPushNotification, sendMulticastPushNotification } from '@/lib/firebase-admin';
+import fs from 'fs';
+import path from 'path';
+
+const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Neina/neina/email_debug.log';
+
+function logToFile(msg: string) {
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(DEBUG_LOG_PATH, `[${timestamp}] ${msg}\n`);
+}
 
 export const adminRouter = createTRPCRouter({
     // --- User Management ---
@@ -69,10 +83,33 @@ export const adminRouter = createTRPCRouter({
             });
 
             if (input.isSuspended) {
-                // Revoke all sessions directly from DB
+                logToFile(`Suspending user ${input.userId}`);
+                // Send suspension email first
+                if (updatedUser.email) {
+                    try {
+                        logToFile(`Attempting to send suspension email to ${updatedUser.email}`);
+                        const result = await sendAccountSuspendedEmail(updatedUser.email, updatedUser.name);
+                        logToFile(`Suspension email result: ${JSON.stringify(result)}`);
+                    } catch (e: any) {
+                        logToFile(`CRITICAL ERROR in suspension email: ${e.message}`);
+                    }
+                }
+
+                logToFile(`Revoking sessions for user ${input.userId}`);
                 await prisma.session.deleteMany({
                     where: { userId: input.userId }
                 });
+            } else {
+                logToFile(`Reactivating user ${input.userId}`);
+                if (updatedUser.email) {
+                    try {
+                        logToFile(`Attempting to send reactivation email to ${updatedUser.email}`);
+                        const result = await sendAccountReactivatedEmail(updatedUser.email, updatedUser.name);
+                        logToFile(`Reactivation email result: ${JSON.stringify(result)}`);
+                    } catch (e: any) {
+                        logToFile(`CRITICAL ERROR in reactivation email: ${e.message}`);
+                    }
+                }
             }
 
             return updatedUser;
@@ -162,7 +199,7 @@ export const adminRouter = createTRPCRouter({
             const ticket = await prisma.supportTicket.update({
                 where: { id: input.ticketId },
                 data: { status: 'closed' },
-                include: { user: { select: { email: true } } }
+                include: { user: { select: { email: true, name: true } } }
             });
 
             // 3. Send email notification (fire and forget)
@@ -171,6 +208,7 @@ export const adminRouter = createTRPCRouter({
                 // We don't await this so the UI response isn't delayed
                 sendSupportReplyEmail(
                     ticket.user.email,
+                    ticket.user.name || 'User',
                     ticket.subject,
                     input.message,
                     ticket.id
@@ -692,11 +730,11 @@ export const adminRouter = createTRPCRouter({
             try {
                 const { getSentryIssues } = await import('@/lib/sentry-api');
                 return await getSentryIssues(input.limit || 25);
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to fetch Sentry issues:', error);
                 throw new TRPCError({
                     code: 'INTERNAL_SERVER_ERROR',
-                    message: 'Failed to fetch Sentry issues'
+                    message: error.message || 'Failed to fetch Sentry issues'
                 });
             }
         }),
@@ -711,11 +749,11 @@ export const adminRouter = createTRPCRouter({
             try {
                 const { getSentryStats } = await import('@/lib/sentry-api');
                 return await getSentryStats();
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to fetch Sentry stats:', error);
                 throw new TRPCError({
                     code: 'INTERNAL_SERVER_ERROR',
-                    message: 'Failed to fetch Sentry stats'
+                    message: error.message || 'Failed to fetch Sentry stats'
                 });
             }
         }),
@@ -734,7 +772,45 @@ export const adminRouter = createTRPCRouter({
                 throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Admin access required' });
             }
 
-            return await prisma.recruiterApplication.findMany({
+            // If requesting APPROVED (Verified) recruiters, fetch ALL users with 'recruiter' role
+            if (input.status === 'APPROVED') {
+                const users = await prisma.user.findMany({
+                    where: { role: 'recruiter' },
+                    take: input.limit,
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        recruiterApplication: true
+                    }
+                });
+
+                // Map users to a structure compatible with RecruiterApplicationsTable
+                return users.map(user => {
+                    const app = user.recruiterApplication;
+                    return {
+                        id: app?.id || `manual-${user.id}`, // Placeholder ID for manual recruiters
+                        userId: user.id,
+                        user: {
+                            name: user.name,
+                            email: user.email,
+                            image: user.image
+                        },
+                        email: user.email,
+                        phoneNumber: app?.phoneNumber || "N/A",
+                        companyName: app?.companyName || user.companyName || "N/A",
+                        companyWebsite: app?.companyWebsite || null,
+                        position: app?.position || "Recruiter",
+                        status: 'APPROVED',
+                        createdAt: app?.createdAt || user.createdAt, // Use user creation date if no app
+                        message: app?.message || "Manually verified recruiter.",
+                        linkedInProfile: app?.linkedInProfile || null,
+                        verificationDocuments: app?.verificationDocuments || null,
+                        verificationType: app ? 'APPLICATION' : 'MANUAL'
+                    };
+                });
+            }
+
+            // For PENDING or REJECTED, continue to query the applications table directly
+            const applications = await prisma.recruiterApplication.findMany({
                 where: input.status ? { status: input.status } : undefined,
                 take: input.limit,
                 orderBy: { createdAt: 'desc' },
@@ -748,6 +824,11 @@ export const adminRouter = createTRPCRouter({
                     },
                 },
             });
+
+            return applications.map(app => ({
+                ...app,
+                verificationType: 'APPLICATION'
+            }));
         }),
 
     approveRecruiterApplication: protectedProcedure

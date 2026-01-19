@@ -29,16 +29,8 @@ export function PushNotificationManager() {
 
     return (
         <Card>
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <BellRing className="h-5 w-5" />
-                    <CardTitle>Push Notifications</CardTitle>
-                </div>
-                <CardDescription>
-                    Get notified about new job matches and important updates
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            {/* Header removed as it is handled by the parent layout */}
+            <CardContent className="pt-6 space-y-4">
                 {/* Permission Status */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                     <div className="flex items-center gap-2">
@@ -109,31 +101,7 @@ export function PushNotificationManager() {
                         )}
                     </div>
 
-                    {permission === 'granted' && (
-                        <Button
-                            onClick={() => {
-                                if ('serviceWorker' in navigator) {
-                                    navigator.serviceWorker.ready.then((reg) => {
-                                        reg.showNotification('🧪 Test Notification', {
-                                            body: 'If you see this, your browser and OS are correctly configured!',
-                                            icon: '/logo.png',
-                                            requireInteraction: true,
-                                            tag: 'test-local',
-                                        });
-                                    });
-                                } else {
-                                    new Notification('🧪 Test Notification', {
-                                        body: 'Standard notification fallback works!',
-                                        icon: '/logo.png',
-                                    });
-                                }
-                            }}
-                            variant="ghost"
-                            className="w-full text-xs text-muted-foreground hover:text-foreground"
-                        >
-                            Send Test Local Notification
-                        </Button>
-                    )}
+
                 </div>
 
                 {/* Info Text */}

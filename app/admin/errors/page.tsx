@@ -12,7 +12,27 @@ import { StatsCard } from "@/components/admin/StatsCard";
 import { AlertCircle, TrendingUp, Clock } from "lucide-react";
 
 export default function ErrorsPage() {
-    const { data: issues, isLoading } = trpc.admin.getSentryIssues.useQuery({ limit: 50 });
+    const { data: issues, isLoading, isError, error } = trpc.admin.getSentryIssues.useQuery({ limit: 50 });
+
+    if (isError) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Error Monitoring</h1>
+                    <p className="text-muted-foreground">Monitor and track application errors from Sentry</p>
+                </div>
+                <div className="rounded-md bg-destructive/15 p-4 text-destructive border border-destructive/20">
+                    <h3 className="font-semibold flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" /> Failed to load Sentry errors
+                    </h3>
+                    <p className="text-sm mt-1 opacity-90">{error.message}</p>
+                    <p className="text-xs mt-2 text-muted-foreground">
+                        Ensure SENTRY_AUTH_TOKEN is set in your environment variables.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     // Calculate stats
     const unresolvedCount = issues?.filter((i: any) => i.status === 'unresolved').length || 0;

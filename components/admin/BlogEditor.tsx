@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Save, Eye } from "lucide-react";
 import Link from "next/link";
+import { ImageKitUpload } from "@/components/ui/ImageKitUpload";
 
 interface BlogEditorProps {
     postId?: string;
@@ -249,12 +250,15 @@ export function BlogEditor({ postId }: BlogEditorProps) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="coverImage">Image URL</Label>
-                                <Input
-                                    id="coverImage"
+                                <Label htmlFor="coverImage">Image Upload</Label>
+                                <ImageKitUpload
                                     value={formData.coverImage}
-                                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                                    placeholder="https://..."
+                                    onSuccess={(url) => setFormData({ ...formData, coverImage: url })}
+                                    onClear={() => setFormData({ ...formData, coverImage: "" })}
+                                    folder="/blog-images"
+                                    buttonText="Upload Cover Image"
+                                    accept="image/*"
+                                    helperText="JPG, PNG, WEBP (Max 5MB)"
                                 />
                             </div>
                             <div className="space-y-2">

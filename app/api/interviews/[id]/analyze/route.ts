@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getTavusConversation } from "@/lib/tavus";
 import { generateInterviewScore } from "@/lib/ai-scoring";
 
 export async function POST(
@@ -24,6 +23,15 @@ export async function POST(
         // 1. Fetch Interview & Validate Ownership
         const interview = await prisma.interview.findUnique({
             where: { id: interviewId },
+            select: {
+                id: true,
+                user_id: true,
+                conversation_id: true,
+                transcript: true,
+                role: true,
+                description: true,
+                resume_id: true
+            }
         });
 
         if (!interview) {
@@ -41,43 +49,21 @@ export async function POST(
             );
         }
 
-        // 2. Fetch Data from Tavus
-        console.log(`Fetching Tavus data for conversation: ${interview.conversation_id}`);
-        const tavusData = await getTavusConversation(interview.conversation_id);
+        // 2. Use Stored Transcript from DB
+        // We now capture transcript on the client and save it to the DB when the interview ends.
+        const transcript = interview.transcript as any[];
 
-        // Debug: Log what we got from Tavus
-        console.log('Tavus API Response:', JSON.stringify(tavusData, null, 2));
-
-        // Extract transcript from events array
-        const transcriptEvent = tavusData?.events?.find(
-            (event: any) => event.event_type === 'application.transcription_ready'
-        );
-
-        const rawTranscript = transcriptEvent?.properties?.transcript;
-
-        if (!rawTranscript || !Array.isArray(rawTranscript)) {
-            console.log('Transcript not available. Tavus data keys:', Object.keys(tavusData || {}));
+        if (!transcript || !Array.isArray(transcript) || transcript.length === 0) {
+            console.log('Transcript not available for interview:', interviewId);
             return NextResponse.json(
                 {
-                    error: "Transcript not ready yet. Tavus needs a few minutes to process the conversation after it ends. Please try again in 2-3 minutes.",
-                    tavusStatus: tavusData?.status || 'unknown'
+                    error: "Transcript not found. Please ensure the interview ended correctly and the transcript was saved.",
                 },
                 { status: 422 }
             );
         }
 
-        // Map Tavus transcript format to our expected format
-        // Tavus: { content: string, role: 'user' | 'assistant' | 'system' }
-        // We need: { content: string, role: string } (filtering out system messages)
-        const transcript = rawTranscript
-            .filter((msg: any) => msg.role !== 'system') // Remove system prompts
-            .map((msg: any) => ({
-                role: msg.role === 'assistant' ? 'interviewer' : msg.role,
-                content: msg.content
-            }));
-
-        console.log(`Extracted ${transcript.length} messages from transcript`);
-
+        console.log(`Using ${transcript.length} messages from stored transcript`);
         console.log("Generating AI Score...");
 
         let resumeContent = undefined;
@@ -109,21 +95,15 @@ ${analysis.weaknesses.map(w => `- ${w}`).join('\n')}
         `.trim();
 
         // 4. Update Database
-        // Extract perception analysis from events
-        const perceptionEvent = tavusData?.events?.find(
-            (event: any) => event.event_type === 'application.perception_analysis'
-        );
-        const perceptionData = perceptionEvent?.properties || {};
-
         const updatedInterview = await prisma.interview.update({
             where: { id: interviewId },
             data: {
-                transcript: transcript as any, // Store the cleaned transcript
-                perceptionData: perceptionData,
+                // transcript is already stored, but we update status and score
+                perceptionData: {}, // Duix doesn't provide legacy perception events by default
                 analysisScore: analysis.score,
                 analysisFeedback: formattedFeedback,
                 analyzedAt: new Date(),
-                status: "ANALYZED" // Update status to ANALYZED
+                status: "ANALYZED"
             },
         });
 

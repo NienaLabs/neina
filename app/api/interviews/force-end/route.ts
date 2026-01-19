@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 import { forceEndInterview } from "@/lib/interviews";
-import { endTavusConversation } from "@/lib/tavus";
+import { closeDuixSession } from "@/lib/duix";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
@@ -30,11 +30,11 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Get interview data with conversation_id in a single query
-    const interview = await prisma.interview.findUnique({
+    // Get interview data
+    const interview = await prisma.interview.findFirst({
       where: {
         id: interview_id,
-        user_id: userId // Ensure the interview belongs to the user
+        user_id: userId
       },
       select: {
         id: true,
@@ -62,43 +62,25 @@ export async function POST(request: Request) {
       });
     }
 
-    // End Tavus conversation FIRST before updating database
-    let tavusEndResult: { success: boolean; alreadyEnded: boolean } | null = null;
+    // End Duix session FIRST before updating database
     if (interview.conversation_id) {
       try {
+        // End the Duix session on the server side to stop billing/resource usage
         if (DEBUG_LOGGING) {
-          const conversationIdShort = interview.conversation_id.substring(0, 8) + '...';
-          console.log(`[DEBUG] Force-end: Attempting to end Tavus conversation: ${conversationIdShort}`);
+          console.log(`[DEBUG] Force-end: Attempting to close Duix session: ${interview.conversation_id}`);
         }
 
-        // Only try to end the Tavus conversation if it's not already ended
-        if (!['ENDED', 'TIMEOUT', 'CANCELLED'].includes(interview.status)) {
-          tavusEndResult = await endTavusConversation(interview.conversation_id);
-          if (DEBUG_LOGGING) {
-            console.log('[DEBUG] Force-end: Tavus conversation ended:', tavusEndResult);
-          }
-        } else if (DEBUG_LOGGING) {
-          console.log('[DEBUG] Force-end: Skipping Tavus end - interview already in state:', interview.status);
+        // Close the session and wait for it
+        await closeDuixSession(interview.conversation_id);
+
+        if (DEBUG_LOGGING) {
+          console.log('[DEBUG] Force-end: Duix cleanup successfully triggered');
         }
       } catch (error: any) {
-        // If the error is because the conversation is already ended, continue
-        if (error.message?.includes('already ended') || error.message?.includes('not found')) {
-          if (DEBUG_LOGGING) {
-            console.log('[DEBUG] Force-end: Tavus conversation already ended, continuing...');
-          }
-        } else {
-          console.error('[ERROR] Force-end: Failed to end Tavus conversation:', error);
-          // CRITICAL: If Tavus fails, don't update database to prevent mismatch
-          return NextResponse.json({
-            error: "Failed to end Tavus conversation. Interview not marked as timeout to prevent state mismatch.",
-            code: "TAVUS_END_FAILED",
-            details: DEBUG_LOGGING ? error.message : undefined
-          }, { status: 500 });
+        if (DEBUG_LOGGING) {
+          console.log('[DEBUG] Force-end: Duix cleanup failed:', error.message);
         }
       }
-    } else if (DEBUG_LOGGING) {
-      const interviewIdShort = interview_id.substring(0, 8) + '...';
-      console.warn(`[DEBUG] Force-end: No conversation_id found for interview: ${interviewIdShort}`);
     }
 
     // Now end the interview in database

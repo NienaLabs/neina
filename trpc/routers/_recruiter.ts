@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
 import { sendRecruiterApplicationReceivedEmail } from '@/lib/email';
+import { inngest } from '@/inngest/client';
 
 export const recruiterRouter = createTRPCRouter({
     applyForRecruiter: protectedProcedure
@@ -183,6 +184,12 @@ export const recruiterRouter = createTRPCRouter({
                     jobId: job.id,
                     jobCertifications: jobCertifications || [],
                 },
+            });
+
+            // Trigger Inngest to process the job (embeddings, etc.)
+            await inngest.send({
+                name: 'recruiter/job.created',
+                data: { jobId: job.id },
             });
 
             return { success: true, job, recruiterJob };

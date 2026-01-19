@@ -30,7 +30,7 @@ export function NavMain({
   }, [pathname])
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="flex-1 justify-between gap-2 py-4">
       {items.map((item) => {
         // If user is recruiter and clicking Recruiter link, go to dashboard
         let url = item.url
@@ -40,7 +40,11 @@ export function NavMain({
 
         return (
           <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton asChild isActive={clientPathname === url}>
+            <SidebarMenuButton 
+                asChild 
+                isActive={clientPathname === url}
+                className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-bold transition-all duration-200"
+            >
               <Link href={url} className="ml-2">
                 <item.icon />
                 <span>{item.title}</span>

@@ -1,4 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import prisma from '@/lib/prisma'
 
 export const jobsRouter = createTRPCRouter({
@@ -80,6 +82,62 @@ export const jobsRouter = createTRPCRouter({
 `
 
   }),
+
+  getJob: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const job = await prisma.jobs.findUnique({
+        where: { id: input.id },
+        include: {
+          job_responsibilities: true,
+          job_skills: true,
+          recruiterJob: true,
+        },
+      });
+
+      if (!job) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Job not found' });
+      }
+      return job;
+    }),
+
+  applyToJob: protectedProcedure
+    .input(z.object({ jobId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { user } = ctx.session;
+      
+      const job = await prisma.jobs.findUnique({
+        where: { id: input.jobId },
+        include: { recruiterJob: true },
+      });
+
+      if (!job || !job.recruiterJob) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'This job does not support easy apply.' });
+      }
+
+      // Check for existing application by email
+      const existing = await prisma.candidatePipeline.findFirst({
+          where: {
+              recruiterJobId: job.recruiterJob.id,
+              candidateEmail: user.email,
+          }
+      });
+
+      if (existing) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'You have already applied to this job.' });
+      }
+
+      const application = await prisma.candidatePipeline.create({
+        data: {
+          recruiterJobId: job.recruiterJob.id,
+          candidateName: user.name || 'Candidate',
+          candidateEmail: user.email,
+          status: 'NEW',
+        },
+      });
+
+      return { success: true, application };
+    }),
 })
 
 export default jobsRouter

@@ -38,9 +38,19 @@ export default async function generateChunksAndEmbeddings(text: string) {
       }
     );
 
-    const {data} = await response.json();
-    console.log(data[0].embedding)
-    return data[0].embedding;
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`GitHub Embeddings API Error: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`GitHub Embeddings API Error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const json = await response.json();
+    if (!json.data || !json.data[0] || !json.data[0].embedding) {
+        console.error("Invalid embedding response format:", json);
+        throw new Error("Invalid embedding response format");
+    }
+    
+    return json.data[0].embedding;
   }
 
   // 4. Embed each chunk
@@ -56,6 +66,11 @@ export default async function generateChunksAndEmbeddings(text: string) {
 }
 
 export async function generateEmbedding(text: string) {
+  if (!text || !text.trim()) {
+      console.warn("generateEmbedding: received empty text, returning empty array");
+      return []; 
+  }
+
   const response = await fetch(
     "https://models.github.ai/inference/embeddings",
     {
@@ -72,7 +87,25 @@ export async function generateEmbedding(text: string) {
     }
   );
 
-  const {data} = await response.json();
-  return data[0].embedding as number[];
+  if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`GenerateEmbedding API Error: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`GenerateEmbedding API Error: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  const json = await response.json();
+  
+  if (json.error) { // Check for API-level error inside 200 OK (unlikely but possible) or if success=false structure
+      console.error("GenerateEmbedding API returned error object:", json.error);
+      throw new Error(`GenerateEmbedding API Error: ${JSON.stringify(json.error)}`);
+  }
+  console.log(json)
+
+  if (!json.data || !json.data[0] || !json.data[0].embedding) {
+      console.error("Invalid embedding response format. Full JSON:", JSON.stringify(json, null, 2));
+      throw new Error("Invalid embedding response format: Missing data[0].embedding. Check console for full response.");
+  }
+
+  return json.data[0].embedding as number[];
 }
 

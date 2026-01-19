@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback,useRef } from 'react';
 import {
   useRTCClient,
   useLocalMicrophoneTrack,
@@ -15,24 +15,31 @@ import {
 import { toast } from 'sonner';
 import { MicrophoneButton } from './MicrophoneButton'; // microphone button component
 import { AudioVisualizer } from './AudioVisualizer';
+import { EMessageEngineMode, EMessageStatus, IMessageListItem, MessageEngine } from '@/lib/message';
+import ConvoTextStream from './ConvoTextStream';
 
 interface ConversationComponentProps {
   agoraLocalUserInfo: AgoraLocalUserInfo;
   onTokenWillExpire: (uid: string) => Promise<string>;
   onEndConversation: () => void;
-  onTranscriptUpdate?: (text: string, uid: string) => void;
+  onMessagesUpdate?: (messages: IMessageListItem[]) => void;
 }
 
 export default function ConversationComponent({
   agoraLocalUserInfo,
   onTokenWillExpire,
   onEndConversation,
-  onTranscriptUpdate
+  onMessagesUpdate
 }: ConversationComponentProps) {
   // Access the client from the provider context
    const [joinedUID, setJoinedUID] = useState<UID>(0); // New: After joining the channel we'll store the uid for renewing the token
    const [isAgentConnected, setIsAgentConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  
+const [messageList, setMessageList] = useState<IMessageListItem[]>([]);
+const [currentInProgressMessage, setCurrentInProgressMessage] =
+  useState<IMessageListItem | null>(null);
+const messageEngineRef = useRef<MessageEngine | null>(null);
   const agentUID = process.env.NEXT_PUBLIC_AGENT_UID;
 
    const client = useRTCClient();
@@ -111,14 +118,7 @@ export default function ConversationComponent({
     console.log(`Connection state changed from ${prevState} to ${curState}`);
   });
 
-  // Capture Stream Messages (Captions/Transcript)
-  useClientEvent(client, 'stream-message', (uid, data) => {
-      const text = new TextDecoder().decode(data);
-      console.log('Stream Message (Transcript):', uid, text);
-      if (onTranscriptUpdate) {
-          onTranscriptUpdate(text, uid.toString());
-      }
-  });
+  // Capture Stream Messages (Captions/Transcript) handler removed - handled by MessageEngine now
 
   // Add token renewal handler to avoid disconnections
   const handleTokenWillExpire = useCallback(async () => {
@@ -178,6 +178,90 @@ export default function ConversationComponent({
       // But actually, in the LandingPage logic, invite-agent is called BEFORE mounting ConversationComponent.
       // So we are good.
   }, []);
+  useEffect(() => {
+  // Only initialize once the client exists and we haven't already started the engine
+  if (client && !messageEngineRef.current) {
+    console.log('Initializing MessageEngine...');
+
+    // Create the engine instance
+    const engine = new MessageEngine(
+      client,
+      EMessageEngineMode.AUTO, // Use AUTO mode for adaptive streaming
+      // This callback function is the critical link!
+      // It receives the updated message list whenever something changes.
+      (updatedMessages: IMessageListItem[]) => {
+        // 1. Always sort messages by turn_id to ensure chronological order
+        const sortedMessages = [...updatedMessages].sort(
+          (a, b) => a.turn_id - b.turn_id
+        );
+
+        // 2. Find the *latest* message that's still streaming (if any)
+        // We handle this separately for smoother UI updates during streaming.
+        const inProgressMsg = sortedMessages.findLast(
+          (msg) => msg.status === EMessageStatus.IN_PROGRESS
+        );
+
+        // CHECK FOR COMMANDS
+        // Check for specific closing phrase from the agent
+        const endCallCommand = sortedMessages.find(msg => {
+            if (!msg.text) return false;
+            const normalizedText = msg.text.toLowerCase().trim();
+            // Check for the exact phrase or key parts of it
+            return normalizedText.includes("i will now end the session");
+        });
+
+        if (endCallCommand) {
+            console.log("ConversationComponent: Received end_call phrase from Agent. Ending conversation in 5s.");
+            setTimeout(() => {
+                onEndConversation();
+            }, 5000); // 5 second delay to let the audio finish
+        }
+
+        const visibleMessages = sortedMessages.filter(
+            (msg) => {
+                // Filter out command objects (legacy)
+                if (msg.object === 'command') return false;
+                // We keep the closing phrase visible because it's natural language
+                return msg.status !== EMessageStatus.IN_PROGRESS;
+            }
+        );
+
+        // 3. Update component state:
+        //    - messageList gets all *completed* or *interrupted* messages.
+        //    - currentInProgressMessage gets the single *latest* streaming message.
+        if (onMessagesUpdate) {
+            onMessagesUpdate(visibleMessages); // Pass clean list to parent
+        }
+        
+        console.log('ConversationComponent: Message update received', { 
+            count: sortedMessages.length, 
+            lastMsg: sortedMessages[sortedMessages.length - 1],
+            agentUID 
+        });
+
+        setMessageList(visibleMessages);
+        setCurrentInProgressMessage(inProgressMsg || null);
+      }
+    );
+
+    // Store the engine instance in a ref
+    messageEngineRef.current = engine;
+
+    // Start the engine's processing loop
+    // legacyMode: false is recommended for newer setups
+    messageEngineRef.current.run({ legacyMode: false });
+    console.log('MessageEngine started.');
+  }
+
+  // Cleanup function: Stop the engine when the component unmounts
+  return () => {
+    if (messageEngineRef.current) {
+      console.log('Cleaning up MessageEngine...');
+      messageEngineRef.current.cleanup();
+      messageEngineRef.current = null;
+    }
+  };
+}, [client]); // Dependency array ensures this runs when the client is ready
 
   return (
     <div className="flex flex-col gap-6 p-4 h-full relative">
@@ -236,13 +320,18 @@ export default function ConversationComponent({
              <AudioVisualizer track={localMicrophoneTrack} width={50} height={15} />
         </div>
       )}
-
       <MicrophoneButton
         isEnabled={isEnabled}
         setIsEnabled={setIsEnabled}
         localMicrophoneTrack={localMicrophoneTrack}
       />
     </div>
+
+    <ConvoTextStream
+      messageList={messageList}
+      currentInProgressMessage={currentInProgressMessage}
+      agentUID={agentUID} // Pass the agent's UID
+    />
   </div>
   );
 }

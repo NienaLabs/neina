@@ -33,7 +33,7 @@ export const data = {
 
     {
       title: "Interview AI",
-      url: "/interview-ai",
+      url: "/interview",
       icon: Inbox
     },
     {

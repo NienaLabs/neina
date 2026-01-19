@@ -2,26 +2,8 @@
 import { inngest } from './client'
 import prisma from '../lib/prisma'
 import { fetchJobs } from '../lib/jsearchClient'
-import generateChunksAndEmbeddings, { generateEmbedding } from '../lib/embeddings'
-import { v4 as uuidv4 } from 'uuid';
-import { jobExtractorAgent } from './agents';
-import { createState, createNetwork } from '@inngest/agent-kit';
-
-// ... (existing imports)
-
-// Create a network to run the agent properly so that lifecycle hooks work
-const jobExtractionNetwork = createNetwork({
-  name: 'job-extraction-network',
-  agents: [jobExtractorAgent],
-  defaultState: createState<{ jobExtractorAgent: string }>({
-    jobExtractorAgent: ''
-  }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return jobExtractorAgent;
-  }
-});
-
+import { generateEmbedding } from '../lib/embeddings'
+import { extractJobDataWithLLM, safeInsertResponsibilityRows, safeInsertSkillRows, generateAndStoreJobEmbeddings as processJobEmbeddings } from '../lib/job-processing';
 
 type CategoryRow = {
   id: string
@@ -109,132 +91,30 @@ async function pickCategoryRow(categoryId?: string) : Promise<CategoryRow | null
 }
 
 /**********************
- * Helper: safeInsertResponsibilityRows
- * Inserts one DB row per chunk & vector; parameterized to avoid SQL injection.
- * Assumes table job_responsibilities(job_id, bullet_text, embedding)
- * and that `embedding` column is pgvector type and accepts a Postgres array literal.
+ * Process Recruiter Job
+ * Triggered when a recruiter posts a new job
  **********************/
-/**********************
- * Helper: safeInsertResponsibilityRows
- * Uses raw SQL to UPSERT text and embeddings in one go.
- * Handles vector(3072) casting.
- **********************/
-async function safeInsertResponsibilityRows(jobId: string, bullets: string[], vectors: (number[] | null)[]) {
-  if (!bullets || !bullets.length) return;
+export const processRecruiterJob = inngest.createFunction(
+  { id: 'recruiter-job-processing' },
+  { event: 'recruiter/job.created' },
+  async ({ event, step }) => {
+    const { jobId } = event.data;
+    if (!jobId) return { error: 'No Job ID provided' };
 
-  const vector = vectors[0];
-  if (!vector) return;
-
-  // FIX: format pgvector literal
-  const formattedVector = `[${vector.join(',')}]`;
-
-  try {
-
-    await prisma.$executeRaw`
-      INSERT INTO "job_responsibilities" ("id", "job_id", "bullet_text", "embedding")
-      VALUES (
-        ${uuidv4()}, 
-        ${jobId}, 
-        ${bullets}::text[], 
-        ${formattedVector}::vector
-      )
-      ON CONFLICT ("job_id") 
-      DO UPDATE SET 
-        "embedding" = EXCLUDED."embedding"
-    `;
-  } catch (err) {
-    console.error(`Failed to upsert responsibilities for job "${jobId}"`, err);
-  }
-}
-
-/**********************
- * Helper: safeInsertSkillRows
- **********************/
-async function safeInsertSkillRows(jobId: string, skills: string[], vectors: (number[] | null)[]) {
-  if (!skills || !skills.length) return
-
-  const vector = vectors[0]
-
-  if (!vector) {
-    console.log(`[ingest] No vector found for job ${jobId} skills`)
-    return
-  }
-  const formattedVector = `[${vector.join(',')}]`
-
-  try {
-
-    await prisma.$executeRaw`
-      INSERT INTO "job_skills" ("id", "job_id", "skill_text", "embedding")
-      VALUES (
-        ${uuidv4()}, 
-        ${jobId}, 
-        ${skills}::text[], 
-        ${formattedVector}::vector
-      )
-      ON CONFLICT ("job_id") 
-      DO UPDATE SET 
-        "embedding" = EXCLUDED."embedding"
-    `
-  } catch (err) {
-    console.error(`Failed to upsert skills for job "${jobId}"`, err)
-  }
-}
-/**********************
- * Helper: extractJobDataWithLLM
- * Combines all job sections and uses LLM to extract skills and responsibilities
- **********************/
-async function extractJobDataWithLLM(it: any): Promise<{ respBullets: string[]; skillBullets: string[] }> {
-  // Combine all job sections into one context
-  const jobTitle = it.job_title ?? it.position ?? it.title ?? '';
-  const jobDescription = it.job_description ?? it.description ?? '';
-  const qualifications = Array.isArray(it.job_highlights?.Qualifications)
-    ? it.job_highlights.Qualifications.join('\n')
-    : Array.isArray(it.qualifications)
-    ? it.qualifications.join('\n')
-    : '';
-  const responsibilities = Array.isArray(it.job_highlights?.Responsibilities)
-    ? it.job_highlights.Responsibilities.join('\n')
-    : Array.isArray(it.responsibilities)
-    ? it.responsibilities.join('\n')
-    : '';
-
-  const combinedText = `
-# Job Title
-${jobTitle}
-
-# Job Description
-${jobDescription}
-
-# Qualifications
-${qualifications}
-
-# Responsibilities
-${responsibilities}
-  `.trim();
-
-  // Use LLM to extract structured data
-  try {
-    const extractionState = createState<{ jobExtractorAgent: string }>({
-      jobExtractorAgent: ''
+    const job = await step.run('fetch-job', async () => {
+        return await prisma.jobs.findUnique({ where: { id: jobId } });
     });
-    
-    // Run via network to ensure lifecycle hooks populate the state
-    const result = await jobExtractionNetwork.run(combinedText, { state: extractionState });
-    
-    // safely access data
-    const rawState = result.state?.data?.jobExtractorAgent;
-    const extracted = typeof rawState === 'string' ? JSON.parse(rawState || '{}') : (rawState || {});
-    
-    return {
-      respBullets: extracted.responsibilities || [],
-      skillBullets: extracted.skills || []
-    };
-  } catch (err) {
-    console.error('[extractJobDataWithLLM] Error:', err);
-    // Fallback to empty arrays
-    return { respBullets: [], skillBullets: [] };
+
+    if (!job) return { error: 'Job not found' };
+
+    await step.run('generate-embeddings', async () => {
+       await processJobEmbeddings(jobId, job);
+    });
+
+    return { success: true, jobId };
   }
-}
+);
+
 
 /**********************
  * Worker: jsearchIngestCategory
@@ -306,12 +186,16 @@ export const jsearchIngestCategory = inngest.createFunction(
           // Generate full job embedding (Targeting Title + Description only for "Overall" score)
           const fullJobText = `${it.job_title ?? ''}\n\n${it.job_description ?? ''}`.trim();
           let fullJobEmbedding: number[] | null = null;
-          try {
-            fullJobEmbedding = await step.run?.(`embed-full-job-${page}-${idx}`, async () => {
-              return await generateEmbedding(fullJobText);
-            });
-          } catch (err: any) {
-            await stepLog(step, 'embed-full-job-error', String(err), { page, idx, title: jobForStore.job_title });
+          
+          if (fullJobText) {
+            try {
+              fullJobEmbedding = await step.run?.(`embed-full-job-${page}-${idx}`, async () => {
+                const vector = await generateEmbedding(fullJobText);
+                return (vector && vector.length > 0) ? vector : null;
+              });
+            } catch (err: any) {
+              await stepLog(step, 'embed-full-job-error', String(err), { page, idx, title: jobForStore.job_title });
+            }
           }
 
           // Save job row first

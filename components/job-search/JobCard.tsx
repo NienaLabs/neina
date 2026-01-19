@@ -2,8 +2,9 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Globe, Calendar, ExternalLink, Building2, CheckCircle2 } from "lucide-react";
+import { MapPin, Globe, Calendar, ExternalLink, Building2, CheckCircle2, ArrowRight as ArrowRightIcon } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import CircularProgress from "../progress-circle";
 import { formatDistanceToNow, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ interface JobCardProps {
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job }) => {
+  const router = useRouter();
   const postedDate = job.job_posted_at 
     ? job.job_posted_at
     : "Recently";
@@ -160,11 +162,10 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
             <Button 
                 className="w-full group-hover:bg-primary  hover:bg-primary group-hover:text-primary-foreground hover:text-primary-foreground transition-all shadow-sm" 
                 variant="outline"
-                onClick={() => job.job_apply_link && window.open(job.job_apply_link, "_blank", "noopener,noreferrer")}
-                disabled={!job.job_apply_link}
+                onClick={() => router.push(`/jobs/${job.id}`)}
             >
                 <span className="mr-2">View & Apply</span>
-                <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useInView, Variants } from 'framer-motion';
 import {  ExternalLink as ArrowTopRightOnSquareIcon } from 'lucide-react';
 import { 
@@ -61,6 +62,7 @@ const item: Variants = {
 };
 
 const JobOpenings: React.FC<JobOpeningsProps> = ({ jobs = [] }) => {
+  const router = useRouter();
   const [visibleJobs, setVisibleJobs] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
   const controlsRef = useRef(null);
@@ -233,6 +235,7 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ jobs = [] }) => {
                     <button
                       type="button"
                       className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm"
+                      onClick={() => router.push(`/jobs/${job.id}`)}
                     >
                       <span>View Details</span>
                     </button>

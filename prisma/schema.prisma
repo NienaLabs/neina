@@ -186,7 +186,7 @@ model interview {
   questions        Json?
   type             InterviewType?
   resume           Resume?         @relation(fields: [resume_id], references: [id])
-  user             User            @relation(fields: [user_id], references: [id])
+  user             User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, status])
   @@index([conversation_id])

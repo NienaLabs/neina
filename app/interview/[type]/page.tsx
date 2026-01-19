@@ -17,6 +17,7 @@ import {
   Timer as TimerIcon,
   Star
 } from 'lucide-react';
+import { IMessageListItem, EMessageStatus } from '@/lib/message';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -83,7 +84,7 @@ export default function InterviewPage() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const [transcript, setTranscript] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState<IMessageListItem[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [scoreResult, setScoreResult] = useState<any>(null);
 
@@ -199,7 +200,7 @@ export default function InterviewPage() {
            // Start Timer
            setStartTime(new Date());
            setElapsedSeconds(0);
-           setTranscript([]); // Reset
+           setMessages([]); // Reset messages
            setStep('active');
            
            if(timerRef.current) clearInterval(timerRef.current);
@@ -230,13 +231,8 @@ export default function InterviewPage() {
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleTranscriptUpdate = (text: string, uid: string) => {
-      // Simple heuristic: if uid matches agent (usually not us), assume agent.
-      // But we receive our own too? 
-      // For now, let's just push it.
-      // Ideally check uid vs local uid.
-      const isAgent = uid !== agoraLocalUserInfo?.uid.toString();
-      setTranscript(prev => [...prev, { role: isAgent ? 'interviewer' : 'candidate', content: text }]);
+  const handleMessagesUpdate = (msgs: IMessageListItem[]) => {
+      setMessages(msgs);
   };
 
   const handleEndSession = async () => {
@@ -245,10 +241,22 @@ export default function InterviewPage() {
       setStep('summary'); // Show loading state in summary step
 
       try {
+          const formattedTranscript = messages
+            .filter(msg => msg.status !== EMessageStatus.IN_PROGRESS) // Only include completed messages
+            .map(msg => {
+                const agentUID = process.env.NEXT_PUBLIC_AGENT_UID;
+                const isAgentMsg = msg.uid === 0 || msg.uid.toString() === agentUID;
+                
+                return {
+                    role: isAgentMsg ? 'interviewer' : 'candidate',
+                    content: msg.text
+                };
+            });
+
           const result = await endSessionMutation.mutateAsync({
               interviewId: createdInterviewId!,
               durationSeconds: elapsedSeconds,
-              transcript: transcript
+              transcript: formattedTranscript
           });
           
           if(result.feedback) {
@@ -312,7 +320,7 @@ export default function InterviewPage() {
                             agoraLocalUserInfo={agoraLocalUserInfo}
                             onTokenWillExpire={handleTokenWillExpire}
                             onEndConversation={handleEndSession} // Handle end here
-                            onTranscriptUpdate={handleTranscriptUpdate}
+                            onMessagesUpdate={handleMessagesUpdate}
                         />
                     </AgoraProvider>
                  </div>

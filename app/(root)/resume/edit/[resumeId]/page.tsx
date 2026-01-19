@@ -65,7 +65,17 @@ const Page = async ({ params }: Props) => {
     const skillsScore = score?.skillsScore ?? 0;
 
     // Calculate total issues for primary resumes
-    const totalIssues = Object.values(fixCount).reduce((acc, curr) => acc + (typeof curr === 'number' ? curr : 0), 0);
+    const totalIssues = Object.values(fixes).reduce((acc: number, curr: any) => {
+        if (Array.isArray(curr)) {
+            return acc + curr.length;
+        }
+        if (typeof curr === 'object' && curr !== null) {
+             return acc + Object.values(curr).reduce((subAcc: number, subCurr: any) => {
+                 return Array.isArray(subCurr) ? subAcc + subCurr.length : subAcc;
+             }, 0);
+        }
+        return acc;
+    }, 0);
 
     // Determine Star Rating
     let starRating = 0;

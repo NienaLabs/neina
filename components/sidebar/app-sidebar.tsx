@@ -5,6 +5,7 @@ import { NavMain } from "@/components/sidebar/nav-main"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
@@ -15,7 +16,7 @@ import SidebarUsage from "./sidebar-usage"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className="border-r-0 bg-linear-to-b from-sidebar via-indigo-200 to-sidebar" {...props}>
+    <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
         
         <Image src="/logo.png" width={100} height={30} alt="logo"/>
@@ -23,11 +24,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <div className="mt-auto">
-             <SidebarUsage />
-             <SideBarFooter/>
-        </div>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarUsage />
+        <SideBarFooter/>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   )

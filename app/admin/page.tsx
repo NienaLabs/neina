@@ -68,12 +68,11 @@ export default async function AdminPage() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-8">
                 {/* Recent Users Section */}
                 <AdminCard
                     title="Recent Registrations"
                     description="The latest users to join the platform."
-                    className="xl:col-span-2"
                     headerAction={
                         <button className="text-sm font-semibold text-primary hover:underline flex items-center gap-1 group">
                             View All <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -111,46 +110,9 @@ export default async function AdminPage() {
                         ))}
                     </div>
                 </AdminCard>
-
-                {/* Quick Actions / System Info */}
-                <div className="space-y-6">
-                    <AdminCard title="Quick Actions">
-                        <div className="grid gap-2">
-                            <button className="w-full text-left px-4 py-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
-                                    <Megaphone className="h-4 w-4" />
-                                </div>
-                                <span className="text-sm font-bold font-syne">New Announcement</span>
-                            </button>
-                            <button className="w-full text-left px-4 py-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
-                                    <Briefcase className="h-4 w-4" />
-                                </div>
-                                <span className="text-sm font-bold font-syne">Post New Job</span>
-                            </button>
-                            <button className="w-full text-left px-4 py-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
-                                    <Settings className="h-4 w-4" />
-                                </div>
-                                <span className="text-sm font-bold font-syne">Platform Settings</span>
-                            </button>
-                        </div>
-                    </AdminCard>
-
-                    <AdminCard title="Activity Pulse" className="bg-primary text-primary-foreground border-none shadow-xl shadow-primary/20 overflow-hidden relative">
-                        <div className="relative z-10 space-y-4">
-                            <p className="text-sm opacity-80">System traffic is up 15% today. Engagement on new job postings remains high.</p>
-                            <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
-                                <div className="h-full bg-white w-[65%] rounded-full shadow-[0_0_10px_white]"></div>
-                            </div>
-                        </div>
-                        <div className="absolute -right-8 -bottom-8 h-32 w-32 bg-white/10 rounded-full blur-2xl"></div>
-                    </AdminCard>
-                </div>
             </div>
         </div>
     );
 }
 
-// Internal icons needed for quick actions
-import { Megaphone, Settings } from "lucide-react";
+

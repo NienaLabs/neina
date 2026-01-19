@@ -15,6 +15,7 @@ interface ImageKitUploadProps {
     accept?: string;
     value?: string;
     onClear?: () => void;
+    helperText?: string;
 }
 
 const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "";
@@ -42,6 +43,7 @@ export function ImageKitUpload({
     accept = "application/pdf,image/*",
     value,
     onClear,
+    helperText = "PDF, JPG, PNG (Max 5MB)",
 }: ImageKitUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -137,7 +139,7 @@ export function ImageKitUpload({
                                 <Upload className="h-6 w-6 text-muted-foreground" />
                                 <span className="font-medium">{buttonText}</span>
                                 <span className="text-xs text-muted-foreground font-normal">
-                                    PDF, JPG, PNG (Max 5MB)
+                                    {helperText}
                                 </span>
                             </>
                         )}

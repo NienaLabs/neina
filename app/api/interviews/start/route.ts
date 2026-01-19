@@ -2,14 +2,27 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { startInterview } from "@/lib/interviews";
 import { auth } from "@/lib/auth";
-import { createTavusConversation } from "@/lib/tavus";
+import { generateDuixSign } from "@/lib/duix";
 
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    console.log('Request body:', body);
+    const rawBody = await request.text();
+
+    if (!rawBody) {
+      throw new Error('Empty request body');
+    }
+
+    const body = JSON.parse(rawBody);
     const { role, description, useResume } = body;
+
+    const DUIX_API_ID = process.env.DUIX_API_ID;
+    const DUIX_API_KEY = process.env.DUIX_API_KEY;
+    const DUIX_AVATAR_ID = process.env.DUIX_AVATAR_ID;
+
+    if (!DUIX_API_ID || !DUIX_API_KEY || !DUIX_AVATAR_ID) {
+      throw new Error("Duix configuration is missing (API_ID, API_KEY, or AVATAR_ID)");
+    }
 
 
     if (!role || typeof role !== 'string') {
@@ -79,12 +92,6 @@ export async function POST(request: Request) {
 
     // Double-check credits for existing interviews too
     if (existing && existing.user.interview_minutes < 0.1) {
-      console.log('Credit check failed for existing interview:', {
-        interview_minutes: existing.user.interview_minutes,
-        required: 0.1,
-        user_id: userId,
-        interview_id: existing.id
-      });
       return NextResponse.json({
         error: `No credits left. Please purchase more minutes to continue.`,
         remaining_seconds: Math.max(0, Math.floor(existing.user.interview_minutes * 60))
@@ -97,14 +104,15 @@ export async function POST(request: Request) {
           id: existing.id,
           start_time: existing.start_time,
           remaining_seconds: Math.max(0, Math.floor(existing.user.interview_minutes * 60)),
+          conversation_id: existing.conversation_id,
         },
         has_sufficient_time: true as const,
+        warning: undefined as string | undefined,
       }
       : await (async () => {
-        // Create Tavus conversation ONLY after credit checks pass
-        console.log('Creating Tavus conversation for user:', userId);
+        // Create Duix session metadata ONLY after credit checks pass
+        console.log('Preparing Duix session for user:', userId);
 
-        let resumeContent = "";
         let resumeId = undefined;
 
         if (useResume) {
@@ -112,34 +120,21 @@ export async function POST(request: Request) {
             where: { userId, isPrimary: true }
           });
           if (primaryResume) {
-            resumeContent = primaryResume.content;
             resumeId = primaryResume.id;
           }
         }
 
-        const tavusResult = await createTavusConversation(role, description || `Interview for ${role}`, resumeContent);
-
-        if (!tavusResult?.url || !tavusResult?.conversation_id) {
-          throw new Error('Failed to create Tavus conversation');
-        }
+        // We use the Avatar ID as the conversation ID for Duix initialization
+        const conversation_id = DUIX_AVATAR_ID;
 
         return startInterview({
           user_id: userId,
           role,
           description,
-          conversation_id: tavusResult.conversation_id,
-          conversation_url: tavusResult.url,
+          conversation_id: conversation_id,
           resume_id: resumeId
         });
       })();
-
-
-    console.log('Interview creation result:', {
-      success: !!result,
-      interview_id: result?.interview?.id,
-      has_sufficient_time: result?.has_sufficient_time,
-      warning: result?.warning
-    });
 
     if (!result.has_sufficient_time) {
       return NextResponse.json({
@@ -148,13 +143,28 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    // Generate the signature for Duix SDK
+    const sign = generateDuixSign(DUIX_API_ID, DUIX_API_KEY, userId);
+
+    // Fetch resume content if requested
+    let resumeContent = undefined;
+    if (useResume) {
+      const primaryResume = await prisma.resume.findFirst({
+        where: { userId, isPrimary: true },
+        select: { content: true }
+      });
+      resumeContent = primaryResume?.content;
+    }
+
     return NextResponse.json({
       interview_id: result.interview.id,
       start_time: result.interview.start_time,
       remaining_seconds: result.interview.remaining_seconds,
-      conversation_url: result.interview.conversation_url,
-      conversation_id: result.interview.conversation_id
-
+      conversation_id: result.interview.conversation_id,
+      duix_sign: sign,
+      duix_app_id: DUIX_API_ID,
+      duix_platform: "duix.com",
+      resume_content: resumeContent
     });
 
   } catch (err: any) {

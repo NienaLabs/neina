@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     }
 
     // Verify interview exists and belongs to the authenticated user
-    const interview = await prisma.interview.findUnique({
+    const interview = await prisma.interview.findFirst({
       where: {
         id: interview_id,
         user_id: userId
@@ -67,13 +67,13 @@ export async function GET(request: Request) {
   }
 }
 
-import { sendTavusMessage } from "@/lib/tavus";
+// Note: Tavus messages are no longer sent here as they are handled via duix.say() in the client.
 
 /**
  * POST /api/interviews/time
  * 
- * Triggers a time-based warning/message to the AI interviewer.
- * Used for 30s and 15s warnings.
+ * Triggers a time-based warning/message activation logic.
+ * Also activates the interview clock on first user join.
  */
 export async function POST(request: Request) {
   try {
@@ -87,23 +87,23 @@ export async function POST(request: Request) {
 
     const userId = session.user.id;
     const body = await request.json();
-    const { interview_id, message, type } = body;
+    const { interview_id, type } = body;
 
-    if (!interview_id || !message) {
-      return NextResponse.json({ error: "Missing interview_id or message" }, { status: 400 });
+    if (!interview_id) {
+      return NextResponse.json({ error: "Missing interview_id" }, { status: 400 });
     }
 
     // Verify interview ownership
-    const interview = await prisma.interview.findUnique({
+    const interview = await prisma.interview.findFirst({
       where: {
         id: interview_id,
         user_id: userId
       },
-      select: { conversation_id: true }
+      select: { id: true }
     });
 
-    if (!interview || !interview.conversation_id) {
-      return NextResponse.json({ error: "Interview not found or invalid" }, { status: 404 });
+    if (!interview) {
+      return NextResponse.json({ error: "Interview not found or access denied" }, { status: 404 });
     }
 
     // If this is the "start" message (User Joined), activate the interview clock
@@ -121,14 +121,8 @@ export async function POST(request: Request) {
 
       if (updateResult.count > 0) {
         console.log(`Successfully activated interview ${interview_id}`);
-      } else {
-        console.log(`Interview ${interview_id} already active or not found in SCHEDULED state, skipping activation.`);
       }
     }
-
-    // Send message to Tavus
-    console.log(`Sending time warning to interview ${interview_id}: ${message}`);
-    await sendTavusMessage(interview.conversation_id, message);
 
     return NextResponse.json({ success: true });
 

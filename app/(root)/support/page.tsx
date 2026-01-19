@@ -41,7 +41,7 @@ export default function SupportPage() {
     const sendAdminMessageMutation = trpc.user.sendAdminMessage.useMutation({
         onSuccess: (data) => {
             if (data.method === 'push') {
-                toast.success("Admins notified instantly via push notification! We'll be in touch.");
+                toast.success("Admins notified! We'll be in touch.");
             } else {
                 toast.success("Support ticket created. Our team will get back to you soon.");
             }
@@ -171,13 +171,6 @@ export default function SupportPage() {
                             </Button>
                         </form>
                     </Form>
-
-                    <div className="mt-6 p-4 bg-muted rounded-lg">
-                        <p className="text-sm text-muted-foreground">
-                            <strong>Note:</strong> Admins with push notifications enabled will receive this immediately.
-                            Otherwise, a support ticket will be created automatically.
-                        </p>
-                    </div>
                 </CardContent>
             </Card>
         </div>

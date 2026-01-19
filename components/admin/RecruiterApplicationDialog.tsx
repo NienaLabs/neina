@@ -87,195 +87,201 @@ export function RecruiterApplicationDialog({ application, onUpdate }: RecruiterA
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                    <Eye className="mr-2 h-3.5 w-3.5" /> View Details
+                    <Eye className="mr-2 h-3.5 w-3.5" /> Review
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <div className="flex items-center justify-between">
-                        <DialogTitle className="text-xl">Recruiter Application</DialogTitle>
-                        <StatusBadge status={application.status} />
-                    </div>
-                    <DialogDescription>
-                        Submitted on {new Date(application.createdAt).toLocaleDateString()}
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-                    {/* User Info */}
-                    <div className="space-y-4">
-                        <h3 className="font-semibold flex items-center gap-2 text-primary">
-                            <User className="h-4 w-4" /> Applicant Information
-                        </h3>
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg space-y-3">
-                            <div className="flex items-center gap-3 mb-2">
-                                <Avatar className="h-10 w-10">
-                                    <AvatarImage src={application.user.image || ""} />
-                                    <AvatarFallback>{application.user.name?.charAt(0) || "U"}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-medium">{application.user.name}</p>
-                                    <p className="text-xs text-muted-foreground">Applicant Account</p>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+                {/* Header Section */}
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-6 border-b">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                            <Avatar className="h-16 w-16 border-2 border-white shadow-sm">
+                                <AvatarImage src={application.user.image || ""} />
+                                <AvatarFallback className="text-lg">{application.user.name?.charAt(0) || "U"}</AvatarFallback>
+                            </Avatar>
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <DialogTitle className="text-xl font-bold">{application.user.name}</DialogTitle>
+                                    <StatusBadge status={application.status} />
+                                </div>
+                                <DialogDescription className="sr-only">
+                                    Review application details for {application.user.name} from {application.companyName}
+                                </DialogDescription>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span className="font-medium text-foreground">{application.position}</span>
+                                    <span>at</span>
+                                    <span className="font-medium text-foreground">{application.companyName}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs pt-1">
+                                    <a href={`mailto:${application.email}`} className="flex items-center gap-1 hover:underline text-muted-foreground hover:text-primary transition-colors">
+                                        <Mail className="h-3 w-3" /> {application.email}
+                                    </a>
+                                    {application.companyWebsite && (
+                                        <a href={application.companyWebsite} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:underline text-muted-foreground hover:text-primary transition-colors">
+                                            <Globe className="h-3 w-3" /> Website
+                                        </a>
+                                    )}
+                                    {application.linkedInProfile && (
+                                        <a href={application.linkedInProfile} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:underline text-muted-foreground hover:text-primary transition-colors">
+                                            <Linkedin className="h-3 w-3" /> LinkedIn
+                                        </a>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className="grid grid-cols-[20px_1fr] gap-2 text-sm">
-                                <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <span>{application.email}</span>
-
-                                <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <span>{application.phoneNumber}</span>
-
-                                <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <span>{application.position}</span>
-
-                                <Linkedin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                {application.linkedInProfile ? (
-                                    <a href={application.linkedInProfile} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline truncate">
-                                        LinkedIn Profile
-                                    </a>
-                                ) : (
-                                    <span className="text-muted-foreground italic">Not provided</span>
-                                )}
-                            </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground text-right space-y-1">
+                            <p>Submitted</p>
+                            <p className="font-medium">{new Date(application.createdAt).toLocaleDateString()}</p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Company Info */}
-                    <div className="space-y-4">
-                        <h3 className="font-semibold flex items-center gap-2 text-primary">
-                            <Building2 className="h-4 w-4" /> Company Information
-                        </h3>
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg space-y-3">
-                            <div className="grid grid-cols-[20px_1fr] gap-2 text-sm">
-                                <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <span className="font-medium">{application.companyName}</span>
-
-                                <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                {application.companyWebsite ? (
-                                    <a href={application.companyWebsite} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline truncate">
-                                        {application.companyWebsite}
+                <div className="p-6 space-y-8">
+                    {/* Verification Documents - Primary Content */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold flex items-center gap-2 text-lg">
+                                <FileText className="h-5 w-5 text-primary" /> Verification Document
+                            </h3>
+                            {application.verificationDocuments && (
+                                <Button variant="ghost" size="sm" asChild className="h-8 text-xs">
+                                    <a href={application.verificationDocuments} target="_blank" rel="noopener noreferrer">
+                                        Open Original <ExternalLink className="ml-2 h-3 w-3" />
                                     </a>
-                                ) : (
-                                    <span className="text-muted-foreground italic">Not provided</span>
-                                )}
-                            </div>
+                                </Button>
+                            )}
                         </div>
-                    </div>
 
-                    {/* Verification Documents */}
-                    <div className="md:col-span-2 space-y-2">
-                        <h3 className="font-semibold flex items-center gap-2 text-primary">
-                            <FileText className="h-4 w-4" /> Verification Documents
-                        </h3>
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg">
+                        <div className="bg-slate-50 dark:bg-slate-900/30 border rounded-xl overflow-hidden min-h-[200px] flex items-center justify-center relative group">
                             {application.verificationDocuments ? (
                                 <ImageKitProvider urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                            <FileText className="h-4 w-4" />
-                                            <span className="truncate max-w-md">{application.verificationDocuments.split('/').pop()}</span>
-                                            <a
-                                                href={application.verificationDocuments}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="ml-auto flex items-center gap-1 text-primary hover:underline"
-                                            >
-                                                Open Original <ExternalLink className="h-3 w-3" />
-                                            </a>
+                                    {application.verificationDocuments.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i) ? (
+                                        <img
+                                            src={application.verificationDocuments}
+                                            alt="Verification Document"
+                                            className="max-h-[400px] w-auto object-contain"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-3 text-muted-foreground p-8">
+                                            <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                                <FileText className="h-8 w-8 opacity-50" />
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="font-medium">Document Preview Unavailable</p>
+                                                <p className="text-sm opacity-70">{application.verificationDocuments.split('/').pop()}</p>
+                                            </div>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <a href={application.verificationDocuments} target="_blank" rel="noopener noreferrer">
+                                                    Download to View
+                                                </a>
+                                            </Button>
                                         </div>
-
-                                        {/* Image Preview */}
-                                        <div className="relative rounded-md overflow-hidden border bg-background/50 flex justify-center p-2">
-                                            {application.verificationDocuments.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i) ? (
-                                                <img
-                                                    src={application.verificationDocuments}
-                                                    width={600}
-                                                    height={400}
-                                                    alt="Verification Document"
-                                                    className="max-h-[300px] w-auto object-contain rounded-md"
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="h-32 flex flex-col items-center justify-center text-muted-foreground gap-2 w-full">
-                                                    <FileText className="h-10 w-10 opacity-50" />
-                                                    <span>Preview not available for this file type</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                    )}
                                 </ImageKitProvider>
                             ) : (
-                                <span className="text-muted-foreground italic text-sm">No verification documents provided</span>
+                                <div className="flex flex-col items-center gap-2 text-muted-foreground p-8">
+                                    <FileText className="h-10 w-10 opacity-20" />
+                                    <p>No verification documents uploaded</p>
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Message - Full Width */}
-                    <div className="md:col-span-2 space-y-2">
-                        <h3 className="font-semibold flex items-center gap-2 text-primary">
-                            <MessageSquare className="h-4 w-4" /> Application Message
-                        </h3>
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg text-sm whitespace-pre-wrap">
-                            {application.message}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* Application Message */}
+                        <div className="md:col-span-2 space-y-3">
+                            <h3 className="font-semibold flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4" /> Message from Applicant
+                            </h3>
+                            <div className="bg-muted/30 p-4 rounded-lg text-sm leading-relaxed border-l-4 border-primary/20">
+                                {application.message || <span className="text-muted-foreground italic">No message provided.</span>}
+                            </div>
+                        </div>
+
+                        {/* Additional Details */}
+                        <div className="space-y-3">
+                            <h3 className="font-semibold flex items-center gap-2">
+                                <User className="h-4 w-4" /> Contact Details
+                            </h3>
+                            <div className="space-y-3 text-sm">
+                                <div>
+                                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-0.5">Phone</p>
+                                    <p className="font-medium">{application.phoneNumber}</p>
+                                </div>
+                                <div className="pt-2 border-t">
+                                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-0.5">Verification Source</p>
+                                    <Badge variant="outline" className="mt-1">
+                                        {application.verificationType === 'MANUAL' ? 'Manual Assignment' : 'Application Form'}
+                                    </Badge>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Rejection Info (if applicable) */}
+                    {/* Rejection Reason Display */}
                     {application.status === 'REJECTED' && application.rejectionReason && (
-                        <div className="md:col-span-2 space-y-2">
-                            <h3 className="font-semibold flex items-center gap-2 text-red-500">
+                        <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 p-4 rounded-lg">
+                            <h4 className="font-semibold text-red-600 dark:text-red-400 flex items-center gap-2 mb-1">
                                 <X className="h-4 w-4" /> Rejection Reason
-                            </h3>
-                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 p-4 rounded-lg text-sm text-red-800 dark:text-red-200">
-                                {application.rejectionReason}
-                            </div>
+                            </h4>
+                            <p className="text-sm text-red-800 dark:text-red-200">{application.rejectionReason}</p>
                         </div>
                     )}
                 </div>
 
+                {/* Footer / Actions */}
                 {application.status === 'PENDING' && (
-                    <DialogFooter className="gap-2 sm:gap-0">
+                    <div className="p-6 bg-slate-50 dark:bg-slate-900/30 border-t flex flex-col sm:flex-row gap-4 justify-between items-center sticky bottom-0 z-10">
                         {showRejectForm ? (
-                            <div className="w-full space-y-3">
-                                <Label htmlFor="reason">Reason for rejection:</Label>
+                            <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="reason" className="text-red-600 font-medium">Reason for Rejection</Label>
+                                    <Button variant="ghost" size="sm" onClick={() => setShowRejectForm(false)} className="h-auto py-0 px-2">Cancel</Button>
+                                </div>
                                 <Textarea
                                     id="reason"
                                     placeholder="Please explain why the application is being rejected..."
                                     value={rejectionReason}
                                     onChange={(e) => setRejectionReason(e.target.value)}
+                                    className="min-h-[80px]"
+                                    autoFocus
                                 />
-                                <div className="flex justify-end gap-2">
-                                    <Button variant="ghost" onClick={() => setShowRejectForm(false)}>
-                                        Cancel
-                                    </Button>
+                                <div className="flex justify-end">
                                     <Button
                                         variant="destructive"
                                         onClick={handleReject}
                                         disabled={rejectMutation.isPending}
+                                        className="w-full sm:w-auto"
                                     >
-                                        {rejectMutation.isPending ? "Rejecting..." : "Confirm Rejection"}
+                                        {rejectMutation.isPending ? "Processing..." : "Confirm Rejection"}
                                     </Button>
                                 </div>
                             </div>
                         ) : (
                             <>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => setShowRejectForm(true)}
-                                >
-                                    <X className="mr-2 h-4 w-4" /> Reject Application
-                                </Button>
-                                <Button
-                                    onClick={handleApprove}
-                                    disabled={approveMutation.isPending}
-                                    className="bg-green-600 hover:bg-green-700"
-                                >
-                                    <Check className="mr-2 h-4 w-4" /> Verify & Approve
-                                </Button>
+                                <div className="text-sm text-muted-foreground hidden sm:block">
+                                    <span className="font-medium text-foreground">Action Required:</span> Review the documents above before verifying.
+                                </div>
+                                <div className="flex w-full sm:w-auto gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowRejectForm(true)}
+                                        className="flex-1 sm:flex-none border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:border-red-900/30 dark:hover:bg-red-900/20"
+                                    >
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        onClick={handleApprove}
+                                        disabled={approveMutation.isPending}
+                                        className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 w-[140px]"
+                                    >
+                                        <Check className="mr-2 h-4 w-4" /> Verify
+                                    </Button>
+                                </div>
                             </>
                         )}
-                    </DialogFooter>
+                    </div>
                 )}
             </DialogContent>
         </Dialog>

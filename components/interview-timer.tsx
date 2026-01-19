@@ -33,6 +33,15 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
   const [hasEnded, setHasEnded] = useState(false);
 
 
+  // Use refs for callbacks to avoid stale closures in the interval
+  const onTimeExpiredRef = React.useRef(onTimeExpired);
+  const onWarningRef = React.useRef(onWarning);
+
+  useEffect(() => {
+    onTimeExpiredRef.current = onTimeExpired;
+    onWarningRef.current = onWarning;
+  }, [onTimeExpired, onWarning]);
+
   useEffect(() => {
     if (hasEnded) return;
 
@@ -41,9 +50,6 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
 
     const checkTime = async () => {
       if (!isMounted || !interviewId || hasEnded) {
-        if (process.env.NODE_ENV === 'development' && !hasEnded && interviewId) {
-          console.log('[Timer] Polling cycle skipped:', { isMounted, hasInterviewId: !!interviewId, hasEnded });
-        }
         return;
       }
 
@@ -66,9 +72,9 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
           if (data.should_end && !hasTriggeredEndRef.current) {
             hasTriggeredEndRef.current = true;
             setHasEnded(true);
-            if (onTimeExpired) {
+            if (onTimeExpiredRef.current) {
               console.log("[Timer] Hit zero, triggering onTimeExpired handler");
-              onTimeExpired();
+              onTimeExpiredRef.current();
             } else {
               console.warn("[Timer] Hit zero but onTimeExpired handler is missing!");
             }
@@ -77,42 +83,34 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
 
           if (data.remaining_seconds > 0 && !data.should_end) {
             const currentSeconds = data.remaining_seconds;
-            // User requested range 12-9s. Triggering at <= 12 ensures we catch it early.
-            // User requested range 12-9s. Triggering at <= 12 ensures we catch it early.
             if (currentSeconds <= 12 && !warnedCriticalRef.current) {
               warnedCriticalRef.current = true;
-              if (onWarning) onWarning('critical');
+              if (onWarningRef.current) onWarningRef.current('critical');
             } else if (currentSeconds <= 30 && currentSeconds > 12 && !warnedLowRef.current) {
               warnedLowRef.current = true;
-              if (onWarning) onWarning('low');
+              if (onWarningRef.current) onWarningRef.current('low');
             }
           }
 
           if (data.warning_level !== warningLevel) {
             setWarningLevel(data.warning_level || null);
           }
-        } else {
-          console.error(`[Timer] API Error: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
         console.error('[Timer] Fetch error:', error);
       } finally {
-        // Schedule next check only after the current one completes
         if (isMounted && !hasEnded) {
           timerId = setTimeout(checkTime, 1000);
         }
       }
     };
 
-    // Initial check
     timerId = setTimeout(checkTime, 100);
 
     return () => {
       isMounted = false;
       if (timerId) clearTimeout(timerId);
     };
-    // Dependencies removed: dailyCall, onTimeExpired, onWarning to prevent infinite effect restart loops
-    // We access them via closure which is safe as they are expected to be stable or the effect re-runs if interviewId/hasEnded change
   }, [interviewId, hasEnded]);
 
 

@@ -72,7 +72,8 @@ export function NotificationBanner() {
         !!session &&
         subStatus !== undefined &&
         !subStatus.isSubscribed &&
-        (typeof window !== 'undefined' && window.Notification?.permission !== 'granted');
+        (typeof window !== 'undefined' && window.Notification?.permission !== 'granted') &&
+        !pathname?.startsWith('/account/settings');
 
     // Update CSS variable for layout offset
     useEffect(() => {

@@ -25,16 +25,16 @@ export default function RecruiterJobsPage() {
         <div className="space-y-10 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b pb-8">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-extrabold tracking-tight font-syne text-foreground">
+                    <h1 className="text-3xl font-extrabold tracking-tight font-syne bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         Job <span className="text-muted-foreground/40 font-normal">Management</span>
                     </h1>
                     <p className="text-sm text-muted-foreground font-medium">Manage your active postings and review recruitment performance.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" size="lg" className="rounded-xl font-bold h-12" onClick={() => refetch()}>
+                    <Button variant="outline" size="lg" className="rounded-xl font-bold h-12 border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => refetch()}>
                         <RefreshCw className="mr-2 h-4 w-4" /> Refresh
                     </Button>
-                    <Button asChild size="lg" className="rounded-xl font-bold font-syne h-12 px-6">
+                    <Button asChild size="lg" className="rounded-xl font-bold font-syne h-12 px-6 shadow-md hover:shadow-lg transition-all border-none bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
                         <Link href="/recruiters/jobs/new">
                             <Plus className="mr-2 h-5 w-5" /> Post New Job
                         </Link>

@@ -1,9 +1,7 @@
 "use client"
 import {
-  Dribbble,
-  Facebook,
-  Github,
   Instagram,
+  Linkedin,
   Mail,
   MapPin,
   Phone,
@@ -19,11 +17,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const data = {
-  facebookLink: 'https://facebook.com/mvpblocks',
-  instaLink: 'https://instagram.com/mvpblocks',
-  twitterLink: 'https://twitter.com/mvpblocks',
-  githubLink: 'https://github.com/mvpblocks',
-  dribbbleLink: 'https://dribbble.com/mvpblocks',
+  instaLink: 'https://instagram.com/nienalabs',
+  twitterLink: 'https://x.com/LabsNiena86233',
+  linkedinLink: 'https://www.linkedin.com/company/niena-labs/',
   services: {
     webdev: '/web-development',
     webdesign: '/web-design',
@@ -55,11 +51,9 @@ const data = {
 };
 
 const socialLinks = [
-  { icon: Facebook, label: 'Facebook', href: data.facebookLink },
-  { icon: Instagram, label: 'Instagram', href: data.instaLink },
+  { icon: Linkedin, label: 'LinkedIn', href: data.linkedinLink },
   { icon: Twitter, label: 'Twitter', href: data.twitterLink },
-  { icon: Github, label: 'GitHub', href: data.githubLink },
-  { icon: Dribbble, label: 'Dribbble', href: data.dribbbleLink },
+  { icon: Instagram, label: 'Instagram', href: data.instaLink },
 ];
 
 const aboutLinks = [
@@ -202,8 +196,8 @@ export default function Footer4Col() {
                     <a
                       href={href}
                       className={`${hasIndicator
-                          ? 'group flex justify-center gap-1.5 sm:justify-start'
-                          : 'text-secondary-foreground/70 transition'
+                        ? 'group flex justify-center gap-1.5 sm:justify-start'
+                        : 'text-secondary-foreground/70 transition'
                         }`}
                     >
                       <span className="text-secondary-foreground/70 transition">

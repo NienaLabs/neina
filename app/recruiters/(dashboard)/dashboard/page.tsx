@@ -70,7 +70,7 @@ export default function RecruiterDashboardPage() {
         )
         .sort((a, b) => {
             if (sortBy === "views") {
-                return b._count.jobViews - a._count.jobViews;
+                return b.job._count.jobViews - a.job._count.jobViews;
             }
             if (sortBy === "applications") {
                 return b._count.candidates - a._count.candidates;
@@ -394,7 +394,7 @@ export default function RecruiterDashboardPage() {
                                                 <td className="py-5">
                                                     <div className="flex items-center justify-center gap-6">
                                                         <div className="flex flex-col items-center">
-                                                            <span className="text-xs font-bold">{rj._count.jobViews}</span>
+                                                            <span className="text-xs font-bold">{rj.job._count.jobViews}</span>
                                                             <span className="text-[9px] font-medium text-muted-foreground">Views</span>
                                                         </div>
                                                         <div className="flex flex-col items-center border-l pl-6">

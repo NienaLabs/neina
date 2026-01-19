@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Globe, Calendar, ExternalLink, Building2, CheckCircle2, ArrowRight as ArrowRightIcon } from "lucide-react";
+import { MapPin, Globe, Calendar, ExternalLink, Building2, CheckCircle2, ArrowRight as ArrowRightIcon, Eye } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import CircularProgress from "../progress-circle";
@@ -23,6 +23,7 @@ export interface Job {
   responsibility_similarity: number;
   total_similarity: number;
   overall_similarity?: number;
+  viewCount?: number;
 }
 
 interface JobCardProps {
@@ -100,6 +101,10 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
           <Badge variant="outline" className="font-normal gap-1 text-muted-foreground">
             <Calendar className="w-3 h-3" />
             {postedDate}
+          </Badge>
+          <Badge variant="outline" className="font-normal gap-1 text-muted-foreground bg-violet-50/50 border-violet-100">
+             <Eye className="w-3 h-3 text-violet-400" />
+             {job.viewCount || 0} views
           </Badge>
         </div>
 

@@ -26,7 +26,7 @@ export type AggregateJobView = {
 
 export type JobViewMinAggregateOutputType = {
   id: string | null
-  recruiterJobId: string | null
+  jobId: string | null
   userId: string | null
   viewedAt: Date | null
   ipAddress: string | null
@@ -35,7 +35,7 @@ export type JobViewMinAggregateOutputType = {
 
 export type JobViewMaxAggregateOutputType = {
   id: string | null
-  recruiterJobId: string | null
+  jobId: string | null
   userId: string | null
   viewedAt: Date | null
   ipAddress: string | null
@@ -44,7 +44,7 @@ export type JobViewMaxAggregateOutputType = {
 
 export type JobViewCountAggregateOutputType = {
   id: number
-  recruiterJobId: number
+  jobId: number
   userId: number
   viewedAt: number
   ipAddress: number
@@ -55,7 +55,7 @@ export type JobViewCountAggregateOutputType = {
 
 export type JobViewMinAggregateInputType = {
   id?: true
-  recruiterJobId?: true
+  jobId?: true
   userId?: true
   viewedAt?: true
   ipAddress?: true
@@ -64,7 +64,7 @@ export type JobViewMinAggregateInputType = {
 
 export type JobViewMaxAggregateInputType = {
   id?: true
-  recruiterJobId?: true
+  jobId?: true
   userId?: true
   viewedAt?: true
   ipAddress?: true
@@ -73,7 +73,7 @@ export type JobViewMaxAggregateInputType = {
 
 export type JobViewCountAggregateInputType = {
   id?: true
-  recruiterJobId?: true
+  jobId?: true
   userId?: true
   viewedAt?: true
   ipAddress?: true
@@ -155,7 +155,7 @@ export type JobViewGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 
 export type JobViewGroupByOutputType = {
   id: string
-  recruiterJobId: string
+  jobId: string
   userId: string | null
   viewedAt: Date
   ipAddress: string | null
@@ -185,22 +185,22 @@ export type JobViewWhereInput = {
   OR?: Prisma.JobViewWhereInput[]
   NOT?: Prisma.JobViewWhereInput | Prisma.JobViewWhereInput[]
   id?: Prisma.StringFilter<"JobView"> | string
-  recruiterJobId?: Prisma.StringFilter<"JobView"> | string
+  jobId?: Prisma.StringFilter<"JobView"> | string
   userId?: Prisma.StringNullableFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"JobView"> | string | null
   userAgent?: Prisma.StringNullableFilter<"JobView"> | string | null
-  recruiterJob?: Prisma.XOR<Prisma.RecruiterJobScalarRelationFilter, Prisma.RecruiterJobWhereInput>
+  job?: Prisma.XOR<Prisma.JobsScalarRelationFilter, Prisma.jobsWhereInput>
 }
 
 export type JobViewOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  recruiterJobId?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
-  recruiterJob?: Prisma.RecruiterJobOrderByWithRelationInput
+  job?: Prisma.jobsOrderByWithRelationInput
 }
 
 export type JobViewWhereUniqueInput = Prisma.AtLeast<{
@@ -208,17 +208,17 @@ export type JobViewWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.JobViewWhereInput | Prisma.JobViewWhereInput[]
   OR?: Prisma.JobViewWhereInput[]
   NOT?: Prisma.JobViewWhereInput | Prisma.JobViewWhereInput[]
-  recruiterJobId?: Prisma.StringFilter<"JobView"> | string
+  jobId?: Prisma.StringFilter<"JobView"> | string
   userId?: Prisma.StringNullableFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"JobView"> | string | null
   userAgent?: Prisma.StringNullableFilter<"JobView"> | string | null
-  recruiterJob?: Prisma.XOR<Prisma.RecruiterJobScalarRelationFilter, Prisma.RecruiterJobWhereInput>
+  job?: Prisma.XOR<Prisma.JobsScalarRelationFilter, Prisma.jobsWhereInput>
 }, "id">
 
 export type JobViewOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  recruiterJobId?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -233,7 +233,7 @@ export type JobViewScalarWhereWithAggregatesInput = {
   OR?: Prisma.JobViewScalarWhereWithAggregatesInput[]
   NOT?: Prisma.JobViewScalarWhereWithAggregatesInput | Prisma.JobViewScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"JobView"> | string
-  recruiterJobId?: Prisma.StringWithAggregatesFilter<"JobView"> | string
+  jobId?: Prisma.StringWithAggregatesFilter<"JobView"> | string
   userId?: Prisma.StringNullableWithAggregatesFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeWithAggregatesFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableWithAggregatesFilter<"JobView"> | string | null
@@ -246,12 +246,12 @@ export type JobViewCreateInput = {
   viewedAt?: Date | string
   ipAddress?: string | null
   userAgent?: string | null
-  recruiterJob: Prisma.RecruiterJobCreateNestedOneWithoutJobViewsInput
+  job: Prisma.jobsCreateNestedOneWithoutJobViewsInput
 }
 
 export type JobViewUncheckedCreateInput = {
   id?: string
-  recruiterJobId: string
+  jobId: string
   userId?: string | null
   viewedAt?: Date | string
   ipAddress?: string | null
@@ -264,12 +264,12 @@ export type JobViewUpdateInput = {
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  recruiterJob?: Prisma.RecruiterJobUpdateOneRequiredWithoutJobViewsNestedInput
+  job?: Prisma.jobsUpdateOneRequiredWithoutJobViewsNestedInput
 }
 
 export type JobViewUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  recruiterJobId?: Prisma.StringFieldUpdateOperationsInput | string
+  jobId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -278,7 +278,7 @@ export type JobViewUncheckedUpdateInput = {
 
 export type JobViewCreateManyInput = {
   id?: string
-  recruiterJobId: string
+  jobId: string
   userId?: string | null
   viewedAt?: Date | string
   ipAddress?: string | null
@@ -295,7 +295,7 @@ export type JobViewUpdateManyMutationInput = {
 
 export type JobViewUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  recruiterJobId?: Prisma.StringFieldUpdateOperationsInput | string
+  jobId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -314,7 +314,7 @@ export type JobViewOrderByRelationAggregateInput = {
 
 export type JobViewCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  recruiterJobId?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
@@ -323,7 +323,7 @@ export type JobViewCountOrderByAggregateInput = {
 
 export type JobViewMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  recruiterJobId?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
@@ -332,56 +332,56 @@ export type JobViewMaxOrderByAggregateInput = {
 
 export type JobViewMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  recruiterJobId?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
 }
 
-export type JobViewCreateNestedManyWithoutRecruiterJobInput = {
-  create?: Prisma.XOR<Prisma.JobViewCreateWithoutRecruiterJobInput, Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput> | Prisma.JobViewCreateWithoutRecruiterJobInput[] | Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput[]
-  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput | Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput[]
-  createMany?: Prisma.JobViewCreateManyRecruiterJobInputEnvelope
+export type JobViewCreateNestedManyWithoutJobInput = {
+  create?: Prisma.XOR<Prisma.JobViewCreateWithoutJobInput, Prisma.JobViewUncheckedCreateWithoutJobInput> | Prisma.JobViewCreateWithoutJobInput[] | Prisma.JobViewUncheckedCreateWithoutJobInput[]
+  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutJobInput | Prisma.JobViewCreateOrConnectWithoutJobInput[]
+  createMany?: Prisma.JobViewCreateManyJobInputEnvelope
   connect?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
 }
 
-export type JobViewUncheckedCreateNestedManyWithoutRecruiterJobInput = {
-  create?: Prisma.XOR<Prisma.JobViewCreateWithoutRecruiterJobInput, Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput> | Prisma.JobViewCreateWithoutRecruiterJobInput[] | Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput[]
-  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput | Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput[]
-  createMany?: Prisma.JobViewCreateManyRecruiterJobInputEnvelope
+export type JobViewUncheckedCreateNestedManyWithoutJobInput = {
+  create?: Prisma.XOR<Prisma.JobViewCreateWithoutJobInput, Prisma.JobViewUncheckedCreateWithoutJobInput> | Prisma.JobViewCreateWithoutJobInput[] | Prisma.JobViewUncheckedCreateWithoutJobInput[]
+  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutJobInput | Prisma.JobViewCreateOrConnectWithoutJobInput[]
+  createMany?: Prisma.JobViewCreateManyJobInputEnvelope
   connect?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
 }
 
-export type JobViewUpdateManyWithoutRecruiterJobNestedInput = {
-  create?: Prisma.XOR<Prisma.JobViewCreateWithoutRecruiterJobInput, Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput> | Prisma.JobViewCreateWithoutRecruiterJobInput[] | Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput[]
-  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput | Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput[]
-  upsert?: Prisma.JobViewUpsertWithWhereUniqueWithoutRecruiterJobInput | Prisma.JobViewUpsertWithWhereUniqueWithoutRecruiterJobInput[]
-  createMany?: Prisma.JobViewCreateManyRecruiterJobInputEnvelope
+export type JobViewUpdateManyWithoutJobNestedInput = {
+  create?: Prisma.XOR<Prisma.JobViewCreateWithoutJobInput, Prisma.JobViewUncheckedCreateWithoutJobInput> | Prisma.JobViewCreateWithoutJobInput[] | Prisma.JobViewUncheckedCreateWithoutJobInput[]
+  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutJobInput | Prisma.JobViewCreateOrConnectWithoutJobInput[]
+  upsert?: Prisma.JobViewUpsertWithWhereUniqueWithoutJobInput | Prisma.JobViewUpsertWithWhereUniqueWithoutJobInput[]
+  createMany?: Prisma.JobViewCreateManyJobInputEnvelope
   set?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
   disconnect?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
   delete?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
   connect?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
-  update?: Prisma.JobViewUpdateWithWhereUniqueWithoutRecruiterJobInput | Prisma.JobViewUpdateWithWhereUniqueWithoutRecruiterJobInput[]
-  updateMany?: Prisma.JobViewUpdateManyWithWhereWithoutRecruiterJobInput | Prisma.JobViewUpdateManyWithWhereWithoutRecruiterJobInput[]
+  update?: Prisma.JobViewUpdateWithWhereUniqueWithoutJobInput | Prisma.JobViewUpdateWithWhereUniqueWithoutJobInput[]
+  updateMany?: Prisma.JobViewUpdateManyWithWhereWithoutJobInput | Prisma.JobViewUpdateManyWithWhereWithoutJobInput[]
   deleteMany?: Prisma.JobViewScalarWhereInput | Prisma.JobViewScalarWhereInput[]
 }
 
-export type JobViewUncheckedUpdateManyWithoutRecruiterJobNestedInput = {
-  create?: Prisma.XOR<Prisma.JobViewCreateWithoutRecruiterJobInput, Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput> | Prisma.JobViewCreateWithoutRecruiterJobInput[] | Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput[]
-  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput | Prisma.JobViewCreateOrConnectWithoutRecruiterJobInput[]
-  upsert?: Prisma.JobViewUpsertWithWhereUniqueWithoutRecruiterJobInput | Prisma.JobViewUpsertWithWhereUniqueWithoutRecruiterJobInput[]
-  createMany?: Prisma.JobViewCreateManyRecruiterJobInputEnvelope
+export type JobViewUncheckedUpdateManyWithoutJobNestedInput = {
+  create?: Prisma.XOR<Prisma.JobViewCreateWithoutJobInput, Prisma.JobViewUncheckedCreateWithoutJobInput> | Prisma.JobViewCreateWithoutJobInput[] | Prisma.JobViewUncheckedCreateWithoutJobInput[]
+  connectOrCreate?: Prisma.JobViewCreateOrConnectWithoutJobInput | Prisma.JobViewCreateOrConnectWithoutJobInput[]
+  upsert?: Prisma.JobViewUpsertWithWhereUniqueWithoutJobInput | Prisma.JobViewUpsertWithWhereUniqueWithoutJobInput[]
+  createMany?: Prisma.JobViewCreateManyJobInputEnvelope
   set?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
   disconnect?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
   delete?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
   connect?: Prisma.JobViewWhereUniqueInput | Prisma.JobViewWhereUniqueInput[]
-  update?: Prisma.JobViewUpdateWithWhereUniqueWithoutRecruiterJobInput | Prisma.JobViewUpdateWithWhereUniqueWithoutRecruiterJobInput[]
-  updateMany?: Prisma.JobViewUpdateManyWithWhereWithoutRecruiterJobInput | Prisma.JobViewUpdateManyWithWhereWithoutRecruiterJobInput[]
+  update?: Prisma.JobViewUpdateWithWhereUniqueWithoutJobInput | Prisma.JobViewUpdateWithWhereUniqueWithoutJobInput[]
+  updateMany?: Prisma.JobViewUpdateManyWithWhereWithoutJobInput | Prisma.JobViewUpdateManyWithWhereWithoutJobInput[]
   deleteMany?: Prisma.JobViewScalarWhereInput | Prisma.JobViewScalarWhereInput[]
 }
 
-export type JobViewCreateWithoutRecruiterJobInput = {
+export type JobViewCreateWithoutJobInput = {
   id?: string
   userId?: string | null
   viewedAt?: Date | string
@@ -389,7 +389,7 @@ export type JobViewCreateWithoutRecruiterJobInput = {
   userAgent?: string | null
 }
 
-export type JobViewUncheckedCreateWithoutRecruiterJobInput = {
+export type JobViewUncheckedCreateWithoutJobInput = {
   id?: string
   userId?: string | null
   viewedAt?: Date | string
@@ -397,30 +397,30 @@ export type JobViewUncheckedCreateWithoutRecruiterJobInput = {
   userAgent?: string | null
 }
 
-export type JobViewCreateOrConnectWithoutRecruiterJobInput = {
+export type JobViewCreateOrConnectWithoutJobInput = {
   where: Prisma.JobViewWhereUniqueInput
-  create: Prisma.XOR<Prisma.JobViewCreateWithoutRecruiterJobInput, Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput>
+  create: Prisma.XOR<Prisma.JobViewCreateWithoutJobInput, Prisma.JobViewUncheckedCreateWithoutJobInput>
 }
 
-export type JobViewCreateManyRecruiterJobInputEnvelope = {
-  data: Prisma.JobViewCreateManyRecruiterJobInput | Prisma.JobViewCreateManyRecruiterJobInput[]
+export type JobViewCreateManyJobInputEnvelope = {
+  data: Prisma.JobViewCreateManyJobInput | Prisma.JobViewCreateManyJobInput[]
   skipDuplicates?: boolean
 }
 
-export type JobViewUpsertWithWhereUniqueWithoutRecruiterJobInput = {
+export type JobViewUpsertWithWhereUniqueWithoutJobInput = {
   where: Prisma.JobViewWhereUniqueInput
-  update: Prisma.XOR<Prisma.JobViewUpdateWithoutRecruiterJobInput, Prisma.JobViewUncheckedUpdateWithoutRecruiterJobInput>
-  create: Prisma.XOR<Prisma.JobViewCreateWithoutRecruiterJobInput, Prisma.JobViewUncheckedCreateWithoutRecruiterJobInput>
+  update: Prisma.XOR<Prisma.JobViewUpdateWithoutJobInput, Prisma.JobViewUncheckedUpdateWithoutJobInput>
+  create: Prisma.XOR<Prisma.JobViewCreateWithoutJobInput, Prisma.JobViewUncheckedCreateWithoutJobInput>
 }
 
-export type JobViewUpdateWithWhereUniqueWithoutRecruiterJobInput = {
+export type JobViewUpdateWithWhereUniqueWithoutJobInput = {
   where: Prisma.JobViewWhereUniqueInput
-  data: Prisma.XOR<Prisma.JobViewUpdateWithoutRecruiterJobInput, Prisma.JobViewUncheckedUpdateWithoutRecruiterJobInput>
+  data: Prisma.XOR<Prisma.JobViewUpdateWithoutJobInput, Prisma.JobViewUncheckedUpdateWithoutJobInput>
 }
 
-export type JobViewUpdateManyWithWhereWithoutRecruiterJobInput = {
+export type JobViewUpdateManyWithWhereWithoutJobInput = {
   where: Prisma.JobViewScalarWhereInput
-  data: Prisma.XOR<Prisma.JobViewUpdateManyMutationInput, Prisma.JobViewUncheckedUpdateManyWithoutRecruiterJobInput>
+  data: Prisma.XOR<Prisma.JobViewUpdateManyMutationInput, Prisma.JobViewUncheckedUpdateManyWithoutJobInput>
 }
 
 export type JobViewScalarWhereInput = {
@@ -428,14 +428,14 @@ export type JobViewScalarWhereInput = {
   OR?: Prisma.JobViewScalarWhereInput[]
   NOT?: Prisma.JobViewScalarWhereInput | Prisma.JobViewScalarWhereInput[]
   id?: Prisma.StringFilter<"JobView"> | string
-  recruiterJobId?: Prisma.StringFilter<"JobView"> | string
+  jobId?: Prisma.StringFilter<"JobView"> | string
   userId?: Prisma.StringNullableFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"JobView"> | string | null
   userAgent?: Prisma.StringNullableFilter<"JobView"> | string | null
 }
 
-export type JobViewCreateManyRecruiterJobInput = {
+export type JobViewCreateManyJobInput = {
   id?: string
   userId?: string | null
   viewedAt?: Date | string
@@ -443,7 +443,7 @@ export type JobViewCreateManyRecruiterJobInput = {
   userAgent?: string | null
 }
 
-export type JobViewUpdateWithoutRecruiterJobInput = {
+export type JobViewUpdateWithoutJobInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -451,7 +451,7 @@ export type JobViewUpdateWithoutRecruiterJobInput = {
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type JobViewUncheckedUpdateWithoutRecruiterJobInput = {
+export type JobViewUncheckedUpdateWithoutJobInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -459,7 +459,7 @@ export type JobViewUncheckedUpdateWithoutRecruiterJobInput = {
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type JobViewUncheckedUpdateManyWithoutRecruiterJobInput = {
+export type JobViewUncheckedUpdateManyWithoutJobInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -471,62 +471,62 @@ export type JobViewUncheckedUpdateManyWithoutRecruiterJobInput = {
 
 export type JobViewSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  recruiterJobId?: boolean
+  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
-  recruiterJob?: boolean | Prisma.RecruiterJobDefaultArgs<ExtArgs>
+  job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["jobView"]>
 
 export type JobViewSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  recruiterJobId?: boolean
+  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
-  recruiterJob?: boolean | Prisma.RecruiterJobDefaultArgs<ExtArgs>
+  job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["jobView"]>
 
 export type JobViewSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  recruiterJobId?: boolean
+  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
-  recruiterJob?: boolean | Prisma.RecruiterJobDefaultArgs<ExtArgs>
+  job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["jobView"]>
 
 export type JobViewSelectScalar = {
   id?: boolean
-  recruiterJobId?: boolean
+  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
 }
 
-export type JobViewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "recruiterJobId" | "userId" | "viewedAt" | "ipAddress" | "userAgent", ExtArgs["result"]["jobView"]>
+export type JobViewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "jobId" | "userId" | "viewedAt" | "ipAddress" | "userAgent", ExtArgs["result"]["jobView"]>
 export type JobViewInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  recruiterJob?: boolean | Prisma.RecruiterJobDefaultArgs<ExtArgs>
+  job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }
 export type JobViewIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  recruiterJob?: boolean | Prisma.RecruiterJobDefaultArgs<ExtArgs>
+  job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }
 export type JobViewIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  recruiterJob?: boolean | Prisma.RecruiterJobDefaultArgs<ExtArgs>
+  job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }
 
 export type $JobViewPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "JobView"
   objects: {
-    recruiterJob: Prisma.$RecruiterJobPayload<ExtArgs>
+    job: Prisma.$jobsPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    recruiterJobId: string
+    jobId: string
     userId: string | null
     viewedAt: Date
     ipAddress: string | null
@@ -925,7 +925,7 @@ readonly fields: JobViewFieldRefs;
  */
 export interface Prisma__JobViewClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  recruiterJob<T extends Prisma.RecruiterJobDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RecruiterJobDefaultArgs<ExtArgs>>): Prisma.Prisma__RecruiterJobClient<runtime.Types.Result.GetResult<Prisma.$RecruiterJobPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  job<T extends Prisma.jobsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobsDefaultArgs<ExtArgs>>): Prisma.Prisma__jobsClient<runtime.Types.Result.GetResult<Prisma.$jobsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -956,7 +956,7 @@ export interface Prisma__JobViewClient<T, Null = never, ExtArgs extends runtime.
  */
 export interface JobViewFieldRefs {
   readonly id: Prisma.FieldRef<"JobView", 'String'>
-  readonly recruiterJobId: Prisma.FieldRef<"JobView", 'String'>
+  readonly jobId: Prisma.FieldRef<"JobView", 'String'>
   readonly userId: Prisma.FieldRef<"JobView", 'String'>
   readonly viewedAt: Prisma.FieldRef<"JobView", 'DateTime'>
   readonly ipAddress: Prisma.FieldRef<"JobView", 'String'>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React,{useEffect} from 'react';
 import { useParams } from 'next/navigation';
 import { trpc } from '@/trpc/client';
 import { Button } from '@/components/ui/button';
@@ -16,14 +16,22 @@ export default function JobDetailsPage() {
   const jobId = params.id as string;
 
   const { data: job, isLoading, error } = trpc.jobs.getJob.useQuery({ id: jobId });
-  const applyMutation = trpc.jobs.applyToJob.useMutation({
-      onSuccess: () => {
-          toast.success("Application submitted successfully!");
-      },
-      onError: (err) => {
-          toast.error(err.message || "Failed to submit application");
-      }
+  const { mutate: applyToJob, isPending: isApplying, isSuccess: isApplied } = trpc.jobs.applyToJob.useMutation({
+    onSuccess: (data) => {
+      toast.success('Successfully applied to job!');
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    }
   });
+
+  const { mutate: recordView } = trpc.jobs.recordView.useMutation();
+
+  useEffect(() => {
+     if (jobId) {
+         recordView({ jobId });
+     }
+  }, [jobId, recordView]);
 
   if (isLoading) {
     return (
@@ -54,7 +62,7 @@ export default function JobDetailsPage() {
           }
       } else {
           // Internal Apply
-          applyMutation.mutate({ jobId });
+          applyToJob({ jobId });
       }
   };
 
@@ -102,10 +110,10 @@ export default function JobDetailsPage() {
                     size="lg" 
                     className="h-14 w-full rounded-full bg-black px-10 text-base font-semibold text-white shadow-lg shadow-violet-500/20 transition-all hover:-translate-y-0.5 hover:bg-zinc-800 hover:shadow-xl hover:shadow-violet-500/30 dark:bg-white dark:text-black dark:shadow-violet-900/50 dark:hover:bg-zinc-200 md:w-auto"
                     onClick={handleApply}
-                    disabled={applyMutation.isPending || (isRecruiterJob && applyMutation.isSuccess)}
+                    disabled={isApplying || (isRecruiterJob && isApplied)}
                 >
-                    {applyMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isRecruiterJob ? (applyMutation.isSuccess ? 'Applied' : 'Easy Apply') : 'Apply Now'}
+                    {isApplying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isRecruiterJob ? (isApplied ? 'Applied' : 'Easy Apply') : 'Apply Now'}
                  </Button>
             </div>
         </div>

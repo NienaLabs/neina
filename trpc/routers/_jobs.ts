@@ -65,6 +65,7 @@ export const jobsRouter = createTRPCRouter({
     j.job_is_remote,
     j.job_description,
     j.job_posted_at,
+    COALESCE(j."viewCount", 0) as "viewCount",
     o.overall_similarity,
     s.skill_similarity,
     r.responsibility_similarity,
@@ -138,6 +139,47 @@ export const jobsRouter = createTRPCRouter({
 
       return { success: true, application };
     }),
+
+  recordView: protectedProcedure
+    .input(z.object({ jobId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+        const userId = ctx.session.user.id;
+        
+        // Use a simpler check: if job exists and user hasn't viewed it recently
+        const job = await prisma.jobs.findUnique({
+            where: { id: input.jobId },
+        });
+
+        if (!job) return { success: false };
+
+        // Check if user has viewed this job
+        const existingView = await prisma.jobView.findFirst({
+            where: {
+                jobId: input.jobId,
+                userId: userId,
+            },
+        });
+
+        if (!existingView) {
+            await prisma.$transaction([
+                prisma.jobView.create({
+                    data: {
+                        jobId: input.jobId,
+                        userId: userId,
+                    },
+                }),
+                prisma.jobs.update({
+                    where: { id: input.jobId },
+                    data: {
+                        viewCount: { increment: 1 },
+                    },
+                }),
+            ]);
+            return { success: true, viewed: true };
+        }
+
+        return { success: true, viewed: false };
+    })
 })
 
 export default jobsRouter

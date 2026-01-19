@@ -225,11 +225,16 @@ export const recruiterRouter = createTRPCRouter({
             const recruiterJobs = await prisma.recruiterJob.findMany({
                 where,
                 include: {
-                    job: true,
+                    job: {
+                        include: {
+                             _count: {
+                                select: { jobViews: true }
+                             }
+                        }
+                    },
                     _count: {
                         select: {
                             candidates: true,
-                            jobViews: true,
                         },
                     },
                 },
@@ -616,10 +621,16 @@ export const recruiterRouter = createTRPCRouter({
             const recruiterJob = await prisma.recruiterJob.findUnique({
                 where: { id: input.recruiterJobId },
                 include: {
+                    job: {
+                        include: {
+                             _count: {
+                                select: { jobViews: true }
+                             }
+                        }
+                    },
                     _count: {
                         select: {
                             candidates: true,
-                            jobViews: true,
                         },
                     },
                 },
@@ -640,25 +651,25 @@ export const recruiterRouter = createTRPCRouter({
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            const viewsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
-                SELECT DATE("viewedAt") as date, COUNT(*)::int as count
-                FROM "job_view"
-                WHERE "recruiterJobId" = ${input.recruiterJobId}
-                AND "viewedAt" >= ${thirtyDaysAgo}
-                GROUP BY DATE("viewedAt")
-                ORDER BY date ASC
-            `;
+            const viewsByDay = await prisma.jobView.groupBy({
+                by: ['viewedAt'],
+                where: {
+                    jobId: recruiterJob.jobId,
+                    viewedAt: { gte: thirtyDaysAgo }
+                },
+                _count: true
+            });
 
             return {
-                totalViews: recruiterJob._count.jobViews,
+                totalViews: recruiterJob.job._count.jobViews,
                 totalApplications: recruiterJob._count.candidates,
                 candidateFunnel: candidatesByStatus.map(stat => ({
                     status: stat.status,
                     count: stat._count,
                 })),
                 viewsOverTime: viewsByDay.map(row => ({
-                    date: row.date.toISOString().split('T')[0],
-                    count: Number(row.count),
+                    date: row.viewedAt.toISOString().split('T')[0],
+                    count: row._count,
                 })),
             };
         }),
@@ -698,9 +709,9 @@ export const recruiterRouter = createTRPCRouter({
         // Get total views
         const totalViews = await prisma.jobView.count({
             where: {
-                recruiterJob: {
-                    recruiterId: userId,
-                },
+                job: {
+                    recruiterJob: { recruiterId: userId }
+                }
             },
         });
 
@@ -755,7 +766,9 @@ export const recruiterRouter = createTRPCRouter({
 
         const totalViews = await prisma.jobView.count({
             where: {
-                recruiterJob: { recruiterId: userId },
+                job: {
+                    recruiterJob: { recruiterId: userId }
+                }
             },
         });
 
@@ -777,11 +790,16 @@ export const recruiterRouter = createTRPCRouter({
         const activeJobs = await prisma.recruiterJob.findMany({
             where: { recruiterId: userId, status: 'ACTIVE' },
             include: {
-                job: true,
+                job: {
+                    include: {
+                        _count: {
+                             select: { jobViews: true }
+                        }
+                    }
+                },
                 _count: {
                     select: {
                         candidates: true,
-                        jobViews: true,
                     },
                 },
             },
@@ -796,7 +814,8 @@ export const recruiterRouter = createTRPCRouter({
         const viewsByDay = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
             SELECT DATE("viewedAt") as date, COUNT(*)::int as count
             FROM "job_view"
-            JOIN "recruiter_job" ON "job_view"."recruiterJobId" = "recruiter_job"."id"
+            JOIN "jobs" ON "job_view"."jobId" = "jobs"."id"
+            JOIN "recruiter_job" ON "jobs"."id" = "recruiter_job"."jobId"
             WHERE "recruiter_job"."recruiterId" = ${userId}
             AND "viewedAt" >= ${thirtyDaysAgo}
             GROUP BY DATE("viewedAt")

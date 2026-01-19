@@ -327,7 +327,8 @@ export const JobsScalarFieldEnum = {
   created_at: 'created_at',
   updated_at: 'updated_at',
   jobCertifications: 'jobCertifications',
-  category: 'category'
+  category: 'category',
+  viewCount: 'viewCount'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -457,7 +458,7 @@ export type CandidatePipelineScalarFieldEnum = (typeof CandidatePipelineScalarFi
 
 export const JobViewScalarFieldEnum = {
   id: 'id',
-  recruiterJobId: 'recruiterJobId',
+  jobId: 'jobId',
   userId: 'userId',
   viewedAt: 'viewedAt',
   ipAddress: 'ipAddress',

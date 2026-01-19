@@ -260,6 +260,8 @@ model jobs {
   job_responsibilities job_responsibilities?
   job_skills           job_skills?
   recruiterJob         RecruiterJob?
+  jobViews             JobView[]
+  viewCount            Int                    @default(0)
 }
 
 model resume_experience {
@@ -371,7 +373,6 @@ model RecruiterJob {
   updatedAt         DateTime            @updatedAt
   jobCertifications String[]
   candidates        CandidatePipeline[]
-  jobViews          JobView[]
   job               jobs                @relation(fields: [jobId], references: [id], onDelete: Cascade)
   recruiter         User                @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
 
@@ -397,15 +398,15 @@ model CandidatePipeline {
 }
 
 model JobView {
-  id             String       @id @default(cuid())
-  recruiterJobId String
-  userId         String?
-  viewedAt       DateTime     @default(now())
-  ipAddress      String?
-  userAgent      String?
-  recruiterJob   RecruiterJob @relation(fields: [recruiterJobId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  jobId     String
+  userId    String?
+  viewedAt  DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+  job       jobs     @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  @@index([recruiterJobId])
+  @@index([jobId])
   @@index([viewedAt])
   @@map("job_view")
 }

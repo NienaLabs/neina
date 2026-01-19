@@ -106,7 +106,7 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
                                             <span className="text-[9px] font-medium text-muted-foreground">Applicants</span>
                                         </div>
                                         <div className="flex flex-col items-center border-l pl-6">
-                                            <span className="text-xs font-bold">{job._count.jobViews}</span>
+                                            <span className="text-xs font-bold">{job.job._count.jobViews}</span>
                                             <span className="text-[9px] font-medium text-muted-foreground">Reach</span>
                                         </div>
                                     </div>

@@ -2,7 +2,13 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { encoding_for_model } from "tiktoken";
 
 export default async function generateChunksAndEmbeddings(text: string) {
-  console.log("API KEY:", process.env.OPENAI_API_KEY ? "LOADED" : "MISSING");
+  const apiKey = process.env.OPENAI_API_KEY || "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";
+  console.log("API KEY:", process.env.OPENAI_API_KEY ? "LOADED" : "USING FALLBACK");
+  
+  const isOpenAI = apiKey.startsWith("sk-");
+  const endpoint = isOpenAI 
+    ? "https://api.openai.com/v1/embeddings" 
+    : "https://models.github.ai/inference/embeddings";
 
   // 1. Token encoder
   const encoder = encoding_for_model("text-embedding-3-small");
@@ -20,19 +26,19 @@ export default async function generateChunksAndEmbeddings(text: string) {
   // Free memory
   encoder.free();
 
-  // 3. GitHub embeddings fetcher
-  async function githubEmbed(text: string) {
+  // 3. Embeddings fetcher
+  async function fetchEmbedding(text: string) {
     const response = await fetch(
-      "https://models.github.ai/inference/embeddings",
+      endpoint,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY??"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"}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           input: text,
-          model: "openai/text-embedding-3-small",
+          model: "text-embedding-3-small",
           encoding_format: "float"
         }),
       }
@@ -40,8 +46,8 @@ export default async function generateChunksAndEmbeddings(text: string) {
 
     if (!response.ok) {
         const errorText = await response.text();
-        console.error(`GitHub Embeddings API Error: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`GitHub Embeddings API Error: ${response.status} ${response.statusText} - ${errorText}`);
+        console.error(`Embeddings API Error: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Embeddings API Error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const json = await response.json();
@@ -57,7 +63,7 @@ export default async function generateChunksAndEmbeddings(text: string) {
   const vectorStore = [];
 
   for (const chunk of chunks) {
-    const vector = await githubEmbed(chunk.pageContent);
+    const vector = await fetchEmbedding(chunk.pageContent);
     vectorStore.push(vector);
   }
 
@@ -71,17 +77,23 @@ export async function generateEmbedding(text: string) {
       return []; 
   }
 
+  const apiKey = process.env.OPENAI_API_KEY || "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";
+  const isOpenAI = apiKey.startsWith("sk-");
+  const endpoint = isOpenAI 
+    ? "https://api.openai.com/v1/embeddings" 
+    : "https://models.inference.ai.azure.com/embeddings";
+
   const response = await fetch(
-    "https://models.github.ai/inference/embeddings",
+    endpoint,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY??"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"}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         input: text,
-        model: "openai/text-embedding-3-small",
+        model: "text-embedding-3-small",
         encoding_format: "float"
       }),
     }
@@ -95,11 +107,10 @@ export async function generateEmbedding(text: string) {
 
   const json = await response.json();
   
-  if (json.error) { // Check for API-level error inside 200 OK (unlikely but possible) or if success=false structure
+  if (json.error) { 
       console.error("GenerateEmbedding API returned error object:", json.error);
       throw new Error(`GenerateEmbedding API Error: ${JSON.stringify(json.error)}`);
   }
-  console.log(json)
 
   if (!json.data || !json.data[0] || !json.data[0].embedding) {
       console.error("Invalid embedding response format. Full JSON:", JSON.stringify(json, null, 2));

@@ -184,7 +184,9 @@ export async function POST(request: Request) {
                      ${questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
                      
                      Start by introducing yourself using the exact greeting message provided.
-
+                     
+                     IMPORTANT:
+                     Don't restart a conversation when all the questions are done,because the interview is timed,once the questions are done,end the call.
                      IMPORTANT:
                      When you determine that the interview is over (e.g. you have asked all questions and the candidate has answered, or the candidate successfully ends the conversation), you MUST say exactly this phrase to end the call:
                      "Thank you for the interview. I will now end the session."

@@ -67,10 +67,10 @@ export default function JobDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50/50 via-purple-50/30 to-white pb-20 pt-12 dark:from-violet-950/20 dark:via-purple-950/10 dark:to-zinc-950">
+    <div className="min-h-screen bg-linear-to-br from-violet-50/50 via-purple-50/30 to-white pb-20 pt-12 dark:from-violet-950/20 dark:via-purple-950/10 dark:to-zinc-950">
       <div className="container mx-auto max-w-5xl px-4 md:px-6">
         {/* Header Section */}
-        <div className="mb-10 flex flex-col gap-8 rounded-3xl border border-white/40 bg-white/60 p-8 shadow-xl backdrop-blur-xl dark:border-zinc-800/50 dark:bg-zinc-900/60 md:flex-row md:items-start md:justify-between">
+        <div className="mb-6 flex flex-col gap-6 rounded-3xl border border-white/40 bg-white/60 p-5 shadow-xl backdrop-blur-xl dark:border-zinc-800/50 dark:bg-zinc-900/60 md:mb-10 md:gap-8 md:flex-row md:items-start md:justify-between md:p-8">
             <div className="flex items-start gap-6">
                 <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-violet-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                     {job.employer_logo ? (
@@ -80,7 +80,7 @@ export default function JobDetailsPage() {
                     )}
                 </div>
                 <div>
-                    <h1 className="bg-gradient-to-r from-black via-purple-600 to-indigo-600 bg-clip-text text-4xl font-bold tracking-tight text-transparent dark:from-violet-400 dark:via-purple-400 dark:to-indigo-400">
+                    <h1 className="bg-gradient-to-r from-black via-purple-600 to-indigo-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent dark:from-violet-400 dark:via-purple-400 dark:to-indigo-400 md:text-3xl lg:text-4xl">
                         {job.job_title}
                     </h1>
                     <div className="mt-4 flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -118,11 +118,11 @@ export default function JobDetailsPage() {
             </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
             {/* Main Content */}
             <div className="lg:col-span-2">
                  <Tabs defaultValue="description" className="w-full">
-                    <TabsList className="mb-6 w-full justify-start gap-2 bg-transparent p-0">
+                    <TabsList className="mb-6 w-full justify-start gap-2 overflow-x-auto bg-transparent p-0 pb-2 md:pb-0">
                         <TabsTrigger 
                             value="description" 
                             className="rounded-full border border-transparent bg-white/50 px-6 py-2.5 text-gray-600 shadow-sm transition-all hover:bg-white data-[state=active]:border-violet-100 data-[state=active]:bg-white data-[state=active]:text-violet-700 data-[state=active]:shadow-md dark:bg-zinc-900/50 dark:text-gray-400 dark:hover:bg-zinc-900 dark:data-[state=active]:border-violet-900/30 dark:data-[state=active]:bg-zinc-900 dark:data-[state=active]:text-violet-300"

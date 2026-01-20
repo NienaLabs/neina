@@ -155,18 +155,18 @@ export const tailoredResumeCreated = inngest.createFunction(
 
           // Fetch full resume embedding
           const fullResumeResult: { embedding: string }[] = await prisma.$queryRaw`
-            SELECT embedding FROM "resume" WHERE "id" = ${event.data.resumeId}
+            SELECT embedding FROM "resume" WHERE "id" = ${event.data.primaryResumeId}
           `;
           const fullResumeEmbedding = parseVectorString(fullResumeResult[0]?.embedding);
 
           // Fetch skills and experience embeddings from resume
           const skillsResult: { embedding: string }[] = await prisma.$queryRaw`
-            SELECT embedding FROM "resume_skills" WHERE "resume_id" = ${event.data.resumeId}
+            SELECT embedding FROM "resume_skills" WHERE "resume_id" = ${event.data.primaryResumeId}
           `;
           const skillsEmbedding = parseVectorString(skillsResult[0]?.embedding);
 
           const experienceResult: { embedding: string }[] = await prisma.$queryRaw`
-            SELECT embedding FROM "resume_experience" WHERE "resume_id" = ${event.data.resumeId}
+            SELECT embedding FROM "resume_experience" WHERE "resume_id" = ${event.data.primaryResumeId}
           `;
           const experienceEmbedding = parseVectorString(experienceResult[0]?.embedding);
 

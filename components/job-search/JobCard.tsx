@@ -24,6 +24,7 @@ export interface Job {
   total_similarity: number;
   overall_similarity?: number;
   viewCount?: number;
+  is_recruiter_job?: boolean;
 }
 
 interface JobCardProps {
@@ -72,9 +73,14 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
               <h3 className="font-bold text-lg leading-tight truncate group-hover:text-primary transition-colors" title={job.job_title || ""}>
                 {job.job_title || "Untitled Role"}
               </h3>
-              <p className="text-sm text-muted-foreground font-medium truncate">
-                {job.employer_name || "Unknown Company"}
-              </p>
+              <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground font-medium truncate">
+                    {job.employer_name || "Unknown Company"}
+                  </p>
+                  {job.is_recruiter_job && (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
+                  )}
+              </div>
             </div>
           </div>
           
@@ -86,6 +92,16 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
 
         {/* Meta Info */}
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+          {job.is_recruiter_job ? (
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 font-normal gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Verified
+                </Badge>
+          ) : (
+                <Badge variant="outline" className="font-normal gap-1 text-muted-foreground">
+                  External
+                </Badge>
+          )}
           {job.job_location && (
             <Badge variant="secondary" className="bg-muted/50 hover:bg-muted font-normal gap-1">
               <MapPin className="w-3 h-3" />

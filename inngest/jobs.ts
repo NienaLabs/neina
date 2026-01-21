@@ -107,9 +107,75 @@ export const processRecruiterJob = inngest.createFunction(
 
     if (!job) return { error: 'Job not found' };
 
-    await step.run('generate-embeddings', async () => {
-       await processJobEmbeddings(jobId, job);
-    });
+    // 1. Extract Data (outside/before step.run if it uses Agents/steps)
+    // We pass the job object which has job_title, job_description etc.
+    const { respBullets, skillBullets } = await extractJobDataWithLLM(job);
+
+    // 2. Update Job with extracted data if original was empty
+    if (respBullets.length > 0 || skillBullets.length > 0) {
+        await step.run('update-job-metadata', async () => {
+             // Fetch fresh job to check length inside step or just use what we have? 
+             // Using what we have is safer for idempotency if we assume job doesn't change wildly.
+             // But prisma update is atomic.
+             await prisma.jobs.update({
+                 where: { id: jobId },
+                 data: {
+                     responsibilities: job.responsibilities.length === 0 ? respBullets : undefined,
+                     // Map skillBullets to qualifications if empty, to follow JSearch pattern where derived skills might pop up there
+                     qualifications: job.qualifications.length === 0 ? skillBullets : undefined, 
+                 }
+             });
+        });
+    }
+
+    // 3. Generate Full Description Embedding
+    const fullJobText = `${job.job_title ?? ''}\n\n${job.job_description ?? ''}`.trim();
+    let fullJobEmbedding: number[] | null = null;
+    
+    if (fullJobText) {
+        fullJobEmbedding = await step.run('embed-full-job', async () => {
+            const vector = await generateEmbedding(fullJobText);
+            return (vector && vector.length > 0) ? vector : null;
+        });
+    }
+
+    // 4. Store Full Embedding
+    if (fullJobEmbedding) {
+        await step.run('store-job-embedding', async () => {
+            const formattedVector = `[${fullJobEmbedding!.join(',')}]`;
+            await prisma.$executeRaw`
+                UPDATE "jobs"
+                SET "embedding" = ${formattedVector}::vector
+                WHERE "id" = ${jobId}
+            `;
+        });
+    }
+
+    // 5. Generate & Store Responsibilities
+    if (respBullets.length) {
+        const respVectors = await step.run('embed-resp', async () => {
+             const text = respBullets.join('\n');
+             const vector = await generateEmbedding(text);
+             return [vector];
+        });
+
+        await step.run('store-resp', async () => {
+             await safeInsertResponsibilityRows(jobId, respBullets, respVectors);
+        });
+    }
+
+    // 6. Generate & Store Skills
+    if (skillBullets.length) {
+        const skillVectors = await step.run('embed-skill', async () => {
+             const text = skillBullets.join('\n');
+             const vector = await generateEmbedding(text);
+             return [vector];
+        });
+
+        await step.run('store-skill', async () => {
+             await safeInsertSkillRows(jobId, skillBullets, skillVectors);
+        });
+    }
 
     return { success: true, jobId };
   }

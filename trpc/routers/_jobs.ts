@@ -54,8 +54,8 @@ export const jobsRouter = createTRPCRouter({
     LEFT JOIN user_resp_embeddings ue ON TRUE
     GROUP BY j.id
   )
-
-  SELECT 
+  
+  SELECT
     j.id,
     j.job_title,
     j.employer_name,
@@ -69,11 +69,13 @@ export const jobsRouter = createTRPCRouter({
     o.overall_similarity,
     s.skill_similarity,
     r.responsibility_similarity,
-    ROUND((o.overall_similarity * 0.4 + s.skill_similarity * 0.3 + r.responsibility_similarity * 0.3 + ${OFFSET_VALUE})::NUMERIC, 3) AS total_similarity
+    ROUND((o.overall_similarity * 0.4 + s.skill_similarity * 0.3 + r.responsibility_similarity * 0.3 + ${OFFSET_VALUE})::NUMERIC, 3) AS total_similarity,
+    (rj.id IS NOT NULL) AS is_recruiter_job
   FROM jobs j
   JOIN job_overall_similarity o ON o.job_id = j.id
   JOIN job_skill_similarity s ON s.job_id = j.id
   JOIN job_resp_similarity r ON r.job_id = j.id
+  LEFT JOIN recruiter_job rj ON rj."jobId" = j.id
   WHERE EXISTS (SELECT 1 FROM user_resumes)
   AND (
     CARDINALITY(${selectedTopics}::text[]) = 0 
@@ -138,6 +140,67 @@ export const jobsRouter = createTRPCRouter({
       });
 
       return { success: true, application };
+    }),
+
+  submitApplication: protectedProcedure
+    .input(z.object({
+        jobId: z.string(),
+        fullName: z.string().min(1),
+        email: z.string().email(),
+        resumeId: z.string().optional(),
+        coverLetter: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+        const { user } = ctx.session;
+
+        const job = await prisma.jobs.findUnique({
+            where: { id: input.jobId },
+            include: { recruiterJob: true },
+        });
+
+        if (!job || !job.recruiterJob) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'This job does not support internal applications.' });
+        }
+
+        const existing = await prisma.candidatePipeline.findFirst({
+            where: {
+                recruiterJobId: job.recruiterJob.id,
+                candidateEmail: input.email, 
+            }
+        });
+
+        if (existing) {
+             throw new TRPCError({ code: 'CONFLICT', message: 'You have already applied to this job.' });
+        }
+        
+        // Verify resume belongs to user if provided
+        if (input.resumeId) {
+            const resume = await prisma.resume.findFirst({
+                where: { id: input.resumeId, userId: user.id }
+            });
+            if (!resume) {
+                throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid resume selected.' });
+            }
+        }
+
+        const application = await prisma.candidatePipeline.create({
+            data: {
+                recruiterJobId: job.recruiterJob.id,
+                candidateName: input.fullName,
+                candidateEmail: input.email,
+                resumeId: input.resumeId,
+                status: 'NEW',
+                notes: input.coverLetter, // storing cover letter in notes for now
+            }
+        });
+
+        // Increment application count
+        await prisma.recruiterJob.update({
+             where: { id: job.recruiterJob.id },
+             data: { applicationCount: { increment: 1 } }
+        });
+
+        return { success: true, applicationId: application.id };
     }),
 
   recordView: protectedProcedure

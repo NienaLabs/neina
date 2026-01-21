@@ -1,7 +1,7 @@
 'use client';
 
 import React,{useEffect} from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { trpc } from '@/trpc/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 
 export default function JobDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const jobId = params.id as string;
 
   const { data: job, isLoading, error } = trpc.jobs.getJob.useQuery({ id: jobId });
@@ -54,15 +55,16 @@ export default function JobDetailsPage() {
   const isJSearchJob = !isRecruiterJob;
 
   const handleApply = () => {
-      if (isJSearchJob) {
+      if (isRecruiterJob) {
+          // Internal Apply redirect
+          router.push(`/jobs/${jobId}/apply`);
+      } else {
+          // JSearch / External Job
           if (job.job_apply_link) {
               window.open(job.job_apply_link, '_blank');
           } else {
               toast.error("No application link available for this job.");
           }
-      } else {
-          // Internal Apply
-          applyToJob({ jobId });
       }
   };
 
@@ -100,6 +102,15 @@ export default function JobDetailsPage() {
                         )}
                         {job.job_is_remote && (
                              <Badge variant="secondary" className="bg-fuchsia-50 text-fuchsia-700 ring-1 ring-fuchsia-500/10 dark:bg-fuchsia-900/20 dark:text-fuchsia-300 dark:ring-fuchsia-500/30">Remote</Badge>
+                        )}
+                        {isRecruiterJob ? (
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 ring-1 ring-blue-500/10 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-500/30">
+                                Verified Position
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="text-gray-500 border-gray-200 dark:border-gray-800">
+                                External Source
+                            </Badge>
                         )}
                     </div>
                 </div>

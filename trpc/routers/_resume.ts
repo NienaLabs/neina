@@ -454,17 +454,27 @@ export const resumeRouter = createTRPCRouter({
     delete: protectedProcedure
     .input(
         z.object({
-            resumeId:z.string()
+            resumeId:z.string(),
+            isTailored: z.boolean().optional()
         })
     )
     .mutation(
         async({input,ctx})=>{
-            await prisma.resume.delete({
-                where:{
-                    id:input.resumeId,
-                    userId:ctx.session?.session.userId
-                }
-            })
+            if(input.isTailored){
+                await prisma.tailoredResume.delete({
+                    where:{
+                        id:input.resumeId,
+                        userId:ctx.session?.session.userId
+                    }
+                })
+            } else {
+                await prisma.resume.delete({
+                    where:{
+                        id:input.resumeId,
+                        userId:ctx.session?.session.userId
+                    }
+                })
+            }
         }
     )
 })

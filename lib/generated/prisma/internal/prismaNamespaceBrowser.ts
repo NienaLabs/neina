@@ -447,6 +447,7 @@ export const CandidatePipelineScalarFieldEnum = {
   recruiterJobId: 'recruiterJobId',
   candidateName: 'candidateName',
   candidateEmail: 'candidateEmail',
+  resumeId: 'resumeId',
   status: 'status',
   notes: 'notes',
   appliedAt: 'appliedAt',

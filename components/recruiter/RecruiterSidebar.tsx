@@ -133,14 +133,16 @@ export function RecruiterSidebar() {
                 )}
             >
                 {/* Logo Section */}
+                {/* Logo Section */}
                 <div className="p-6 h-[72px] flex items-center gap-3 border-b">
-                    <div className="h-8 w-8 min-w-[32px] flex items-center justify-center">
-                        <Image src="/niena.png" alt="Neina" width={32} height={32} className="object-contain" />
-                    </div>
-                    {!isCollapsed && (
-                        <span className="text-xl font-bold tracking-tight font-syne text-foreground">
-                            Neina
-                        </span>
+                    {isCollapsed ? (
+                        <div className="h-8 w-8 min-w-[32px] flex items-center justify-center">
+                            <Image src="/niena.png" alt="Neina" width={32} height={32} className="object-contain" />
+                        </div>
+                    ) : (
+                         <div className="h-10 w-full flex items-center justify-start">
+                            <Image src="/logo.png" alt="Neina" width={120} height={40} className="object-contain" />
+                        </div>
                     )}
                 </div>
 

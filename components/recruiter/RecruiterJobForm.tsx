@@ -16,6 +16,13 @@ import {
     FormMessage,
     FormDescription
 } from "@/components/ui/form";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -30,7 +37,8 @@ const jobSchema = z.object({
     employer_name: z.string().min(1, 'Employer name is required'),
     job_location: z.string(),
     job_description: z.string(),
-    job_apply_link: z.string().url('Invalid URL').min(1, 'Application link is required'),
+    job_apply_link: z.string().url('Invalid URL').optional().or(z.literal('')),
+    category: z.string().min(1, 'Category is required'),
     job_is_remote: z.boolean(),
     job_certifications: z.array(z.string()),
     qualifications: z.array(z.string()),
@@ -43,6 +51,21 @@ interface RecruiterJobFormProps {
     initialData?: any; // recruiterJob type
     recruiterJobId?: string;
 }
+
+const JOB_CATEGORIES = [
+    "Software Development",
+    "Design",
+    "Marketing",
+    "Sales",
+    "Customer Support",
+    "Product Management",
+    "Finance",
+    "Human Resources",
+    "Operations",
+    "Data Science",
+    "Legal",
+    "Other"
+];
 
 export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFormProps) {
     const router = useRouter();
@@ -75,6 +98,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
             job_description: "",
             job_certifications: [],
             job_apply_link: "",
+            category: "",
             job_is_remote: false,
             qualifications: [],
             responsibilities: [],
@@ -90,6 +114,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                 job_description: initialData.job.job_description || "",
                 job_certifications: initialData.job.job_certifications || [],
                 job_apply_link: initialData.job.job_apply_link || "",
+                category: initialData.job.category?.replace(' jobs', '') || "",
                 job_is_remote: initialData.job.job_is_remote || false,
                 qualifications: initialData.job.qualifications || [],
                 responsibilities: initialData.job.responsibilities || [],
@@ -97,28 +122,24 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
         }
     }, [initialData, form]);
 
-    // Re-evaluating field array for string[].
-    // Simplest approach: Textarea with line breaks? OR custom component.
-    // Let's use simple string inputs managed by local state or standard usage. 
-    // Actually, hook-form string array support is tricky. 
-    // Let's assume qualifications is just a long text field for now? No, schema says array.
-    // Let's change schema to accept string and split by newline? Easier for user.
-    // But backend expects array. Transform in submit.
-
     function onSubmit(values: JobFormValues) {
         if (isEditing && recruiterJobId) {
             updateMutation.mutate({
                 recruiterJobId,
                 ...values,
+                category: `${values.category} jobs`,
                 job_location: values.job_location || undefined,
                 job_description: values.job_description || undefined,
+                job_apply_link: values.job_apply_link || undefined,
                 jobCertifications: values.job_certifications,
             });
         } else {
             createMutation.mutate({
                 ...values,
+                category: `${values.category} jobs`,
                 job_location: values.job_location || undefined,
                 job_description: values.job_description || undefined,
+                job_apply_link: values.job_apply_link || undefined,
                 jobCertifications: values.job_certifications,
             });
         }
@@ -184,7 +205,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                 <CardHeader>
                     <CardTitle>{isEditing ? "Edit Job Posting" : "Post a New Job"}</CardTitle>
                     <CardDescription>
-                        Fill in the details for your job posting. Active jobs will be visible to candidates.
+                        Fill in the details for your job posting. Platform jobs allow candidates to apply directly here.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -220,6 +241,32 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                                             </FormItem>
                                         )}
                                     />
+                                    
+                                    <FormField
+                                        control={form.control}
+                                        name="category"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Category *</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select a job category" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {JOB_CATEGORIES.map((category) => (
+                                                            <SelectItem key={category} value={category}>
+                                                                {category}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
                                     <FormField
                                         control={form.control}
                                         name="job_location"
@@ -260,18 +307,19 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
 
                             {/* Application Link */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium border-b pb-2">Application</h3>
+                                <h3 className="text-lg font-medium border-b pb-2">Application Method</h3>
                                 <FormField
                                     control={form.control}
                                     name="job_apply_link"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>External Application Link *</FormLabel>
+                                            <FormLabel>External Application Link (Optional)</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="https://forms.google.com/..." {...field} />
+                                                <Input placeholder="https://..." {...field} />
                                             </FormControl>
                                             <FormDescription>
-                                                Candidates will be redirected to this URL to apply. We will track clicks.
+                                                Leave empty to accept applications directly on this platform (Recommended). 
+                                                If provided, candidates will be redirected to this URL.
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>
@@ -291,7 +339,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                                             <FormControl>
                                                 <Textarea
                                                     placeholder="Detailed description of the role..."
-                                                    className="min-h-[150px]"
+                                                    className="min-h-[300px] font-mono text-sm leading-relaxed"
                                                     {...field}
                                                 />
                                             </FormControl>

@@ -117,23 +117,24 @@ model Verification {
 }
 
 model Resume {
-  id                String                 @id @default(cuid())
-  createdAt         DateTime               @default(now())
-  updatedAt         DateTime               @updatedAt
-  content           String
-  name              String
-  isPrimary         Boolean                @default(false)
-  extractedData     Json?
-  analysisData      Json?
-  scoreData         Json?
-  userId            String
-  embedding         Unsupported("vector")?
-  status            ResumeStatus           @default(COMPLETED)
-  interviews        interview[]
-  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resume_experience resume_experience?
-  resume_skills     resume_skills?
-  tailoredResumes   TailoredResume[]
+  id                 String                 @id @default(cuid())
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  content            String
+  name               String
+  isPrimary          Boolean                @default(false)
+  extractedData      Json?
+  analysisData       Json?
+  scoreData          Json?
+  userId             String
+  embedding          Unsupported("vector")?
+  status             ResumeStatus           @default(COMPLETED)
+  interviews         interview[]
+  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume_experience  resume_experience?
+  resume_skills      resume_skills?
+  tailoredResumes    TailoredResume[]
+  candidatePipelines CandidatePipeline[]
 
   @@index([userId])
   @@map("resume")
@@ -386,11 +387,13 @@ model CandidatePipeline {
   recruiterJobId String
   candidateName  String
   candidateEmail String
+  resumeId       String?
   status         CandidateStatus @default(NEW)
   notes          String?
   appliedAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   recruiterJob   RecruiterJob    @relation(fields: [recruiterJobId], references: [id], onDelete: Cascade)
+  resume         Resume?         @relation(fields: [resumeId], references: [id])
 
   @@index([recruiterJobId])
   @@index([status])

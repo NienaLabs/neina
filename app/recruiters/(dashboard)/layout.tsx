@@ -41,7 +41,7 @@ export default function RecruiterDashboardLayout({
     }
 
     return (
-        <div className="flex h-screen overflow-hidden bg-gradient-to-br from-indigo-50/50 via-background to-purple-50/50">
+        <div className="flex h-screen overflow-hidden bg-gradient-to-br from-indigo-50/50 via-background to-purple-50/50 font-syne">
             <RecruiterSidebar />
 
             <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-16 lg:pt-0">

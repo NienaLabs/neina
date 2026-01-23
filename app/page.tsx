@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import LandingPage from "../components/landing/LandingPageClient";
 import { auth } from "@/lib/auth"; // or your server auth call
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,8 +14,11 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const session = await auth.api.getSession({ headers: await headers() });
+  const cookieStore = await cookies();
+  const cookieConsent = cookieStore.get('niena-cookie-consent')?.value;
 
-  if (session) redirect("/dashboard");
+  // Only auto-redirect if session exists AND they haven't explicitly declined persistent cookie auto-redirect
+  if (session && cookieConsent !== 'false') redirect("/dashboard");
   return (
     <>
       <script
@@ -70,7 +73,7 @@ export default async function Page() {
           })
         }}
       />
-      <LandingPage/>
+      <LandingPage />
     </>
   );
 }

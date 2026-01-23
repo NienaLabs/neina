@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import fs from 'fs';
 
-const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Neina/neina/email_debug.log';
+const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Niena/Niena/email_debug.log';
 function logEmailToFile(msg: string) {
   fs.appendFileSync(DEBUG_LOG_PATH, `[EMAIL_LIB][${new Date().toISOString()}] ${msg}\n`);
 }

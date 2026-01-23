@@ -2,7 +2,8 @@
 
 import { CandidatePipelineBoard } from "@/components/recruiter/CandidatePipelineBoard";
 import { trpc } from "@/trpc/client";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, ArrowLeft, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -38,12 +39,15 @@ export default function PipelinePage() {
     return (
         <div className="flex flex-col h-[calc(100vh-120px)] max-w-7xl mx-auto space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b pb-8">
-                <div className="flex items-center gap-4">
-                    <Link href="/recruiters/jobs" className="h-10 w-10 rounded-xl border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Link>
+                <div className="space-y-4">
+                    <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-primary transition-colors">
+                        <Link href="/recruiters/jobs" className="flex items-center gap-2">
+                            <ChevronLeft className="h-4 w-4" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Back to Jobs</span>
+                        </Link>
+                    </Button>
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-extrabold tracking-tight font-syne bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent line-clamp-1 max-w-xl">
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-syne bg-linear-to-r from-black via-indigo-600 to-purple-600 bg-clip-text text-transparent line-clamp-1 max-w-xl">
                             {job.job.job_title} <span className="text-muted-foreground/40 font-normal">Pipeline</span>
                         </h1>
                         <p className="text-sm text-muted-foreground font-medium">{job.job.job_location} &bull; Manage and track candidate progress.</p>

@@ -130,7 +130,7 @@ export function Sidebar() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-transparent overflow-hidden">
                             <Image
                                 src="/niena.png"
-                                alt="Neina Logo"
+                                alt="Niena Logo"
                                 width={40}
                                 height={40}
                                 className="object-contain"
@@ -138,7 +138,7 @@ export function Sidebar() {
                         </div>
                         {!isCollapsed && (
                             <span className="text-xl font-bold font-syne tracking-tight text-foreground whitespace-nowrap">
-                                Neina Admin
+                                Niena Admin
                             </span>
                         )}
                     </Link>

@@ -7,6 +7,7 @@ import { Toaster } from 'sonner'
 import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { NotificationBanner } from "@/components/notifications/NotificationBanner";
+import { CookiePrompt } from "@/components/shared/CookiePrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,6 +81,7 @@ export default function RootLayout({
             className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
           >
             <NotificationBanner />
+            <CookiePrompt />
             {/*<Header/>*/}
             <SuspensionGuard>
               {children}

@@ -70,9 +70,13 @@ export function SupportDashboard() {
         });
     }, [tickets, searchQuery, statusFilter]);
 
-    const handleReply = () => {
+    const handleReply = (shouldClose: boolean = false) => {
         if (!selectedTicketId || !replyMessage.trim()) return;
-        replyMutation.mutate({ ticketId: selectedTicketId, message: replyMessage });
+        replyMutation.mutate({
+            ticketId: selectedTicketId,
+            message: replyMessage,
+            shouldClose
+        });
     };
 
     const handleCloseTicket = () => {
@@ -317,9 +321,19 @@ export function SupportDashboard() {
                                             Ctrl + Enter to send
                                         </p>
                                         <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 gap-2 rounded-lg px-4 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                                            onClick={() => handleReply(true)}
+                                            disabled={!replyMessage.trim() || replyMutation.isPending}
+                                        >
+                                            {replyMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                                            Reply & Resolve
+                                        </Button>
+                                        <Button
                                             size="sm"
                                             className="h-8 gap-2 rounded-lg px-4"
-                                            onClick={handleReply}
+                                            onClick={() => handleReply(false)}
                                             disabled={!replyMessage.trim() || replyMutation.isPending}
                                         >
                                             {replyMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}

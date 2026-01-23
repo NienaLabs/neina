@@ -25,7 +25,7 @@ export default function AdminSettingsPage() {
 
     // Mock State
     const [settings, setSettings] = useState({
-        siteName: "Neina",
+        siteName: "Niena",
         supportEmail: "support@nienalabs.com",
         maintenanceMode: false,
         enableRegistrations: true,

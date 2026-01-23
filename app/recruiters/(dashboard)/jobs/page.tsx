@@ -25,7 +25,7 @@ export default function RecruiterJobsPage() {
         <div className="space-y-10 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b pb-8">
                 <div className="space-y-1">
-                    <h1 className="text-3xl  tracking-tight font-syne bg-linear-to-r from-black via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h1 className="text-2xl md:text-3xl tracking-tight font-syne bg-linear-to-r from-black via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         Job <span className="text-muted-foreground/40 font-normal">Management</span>
                     </h1>
                     <p className="text-sm text-muted-foreground font-medium">Manage your active postings and review recruitment performance.</p>

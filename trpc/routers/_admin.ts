@@ -12,7 +12,7 @@ import { sendPushNotification, sendMulticastPushNotification } from '@/lib/fireb
 import fs from 'fs';
 import path from 'path';
 
-const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Neina/neina/email_debug.log';
+const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Niena/Niena/email_debug.log';
 
 function logToFile(msg: string) {
     const timestamp = new Date().toISOString();
@@ -181,7 +181,11 @@ export const adminRouter = createTRPCRouter({
         }),
 
     replyToTicket: protectedProcedure
-        .input(z.object({ ticketId: z.string(), message: z.string() }))
+        .input(z.object({
+            ticketId: z.string(),
+            message: z.string(),
+            shouldClose: z.boolean().optional().default(false)
+        }))
         .mutation(async ({ ctx, input }) => {
             const user = await prisma.user.findUnique({ where: { id: ctx.session.user.id } });
             if (user?.role !== 'admin') throw new TRPCError({ code: 'UNAUTHORIZED' });
@@ -195,10 +199,24 @@ export const adminRouter = createTRPCRouter({
                 }
             });
 
-            // 2. Auto-close the ticket and fetch details
+            // 2. Conditionally update the ticket status
+            const updateData: any = {};
+            if (input.shouldClose) {
+                updateData.status = 'closed';
+            } else {
+                // If replying and it was open, move to in_progress
+                const currentTicket = await prisma.supportTicket.findUnique({
+                    where: { id: input.ticketId },
+                    select: { status: true }
+                });
+                if (currentTicket?.status === 'open') {
+                    updateData.status = 'in_progress';
+                }
+            }
+
             const ticket = await prisma.supportTicket.update({
                 where: { id: input.ticketId },
-                data: { status: 'closed' },
+                data: updateData,
                 include: { user: { select: { email: true, name: true } } }
             });
 

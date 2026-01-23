@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -30,19 +30,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { ImageKitUpload } from "@/components/ui/ImageKitUpload";
 
 const jobSchema = z.object({
     job_title: z.string().min(1, 'Job title is required'),
     employer_name: z.string().min(1, 'Employer name is required'),
-    job_location: z.string(),
-    job_description: z.string(),
-    job_apply_link: z.string().url('Invalid URL').optional().or(z.literal('')),
+    job_location: z.string().min(1, 'Job location is required'),
+    job_description: z.string().min(10, 'Job description must be at least 10 characters'),
     category: z.string().min(1, 'Category is required'),
     job_is_remote: z.boolean(),
-    job_certifications: z.array(z.string()),
-    qualifications: z.array(z.string()),
-    responsibilities: z.array(z.string()),
+    job_certifications: z.array(z.string()).optional(),
+    qualifications: z.array(z.string()).optional(),
+    responsibilities: z.array(z.string()).optional(),
 });
 
 type JobFormValues = z.infer<typeof jobSchema>;
@@ -66,6 +64,59 @@ const JOB_CATEGORIES = [
     "Legal",
     "Other"
 ];
+
+/**
+ * ArrayInput Component handles dynamic string lists like Qualifications and Responsibilities.
+ * Uses useFieldArray for stable input management and focus retention.
+ */
+const ArrayInput = ({ control, name, label, placeholder }: {
+    control: Control<JobFormValues>,
+    name: "qualifications" | "responsibilities" | "job_certifications",
+    label: string,
+    placeholder: string
+}) => {
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: name as never
+    });
+
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between">
+                <FormLabel className="flex items-center gap-1">
+                    {label}
+                </FormLabel>
+                <Button type="button" variant="outline" size="sm" onClick={() => (append as any)("")}>
+                    <Plus className="h-4 w-4 mr-2" /> Add
+                </Button>
+            </div>
+            {fields.map((field, index) => (
+                <div key={field.id} className="flex flex-col gap-1">
+                    <div className="flex gap-2">
+                        <FormField
+                            control={control}
+                            name={`${name}.${index}` as any}
+                            render={({ field: inputField }) => (
+                                <FormControl>
+                                    <Input
+                                        {...inputField}
+                                        placeholder={placeholder}
+                                    />
+                                </FormControl>
+                            )}
+                        />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                    </div>
+                </div>
+            ))}
+            {fields.length === 0 && (
+                <p className="text-sm text-muted-foreground italic">No {label.toLowerCase()} added yet. Click "Add" to include some.</p>
+            )}
+        </div>
+    );
+};
 
 export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFormProps) {
     const router = useRouter();
@@ -97,7 +148,6 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
             job_location: "",
             job_description: "",
             job_certifications: [],
-            job_apply_link: "",
             category: "",
             job_is_remote: false,
             qualifications: [],
@@ -113,7 +163,6 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                 job_location: initialData.job.job_location || "",
                 job_description: initialData.job.job_description || "",
                 job_certifications: initialData.job.job_certifications || [],
-                job_apply_link: initialData.job.job_apply_link || "",
                 category: initialData.job.category?.replace(' jobs', '') || "",
                 job_is_remote: initialData.job.job_is_remote || false,
                 qualifications: initialData.job.qualifications || [],
@@ -130,7 +179,6 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                 category: `${values.category} jobs`,
                 job_location: values.job_location || undefined,
                 job_description: values.job_description || undefined,
-                job_apply_link: values.job_apply_link || undefined,
                 jobCertifications: values.job_certifications,
             });
         } else {
@@ -139,59 +187,10 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                 category: `${values.category} jobs`,
                 job_location: values.job_location || undefined,
                 job_description: values.job_description || undefined,
-                job_apply_link: values.job_apply_link || undefined,
                 jobCertifications: values.job_certifications,
             });
         }
     }
-
-    // Helper to manage array fields
-    const ArrayInput = ({ name, label, placeholder }: { name: "qualifications" | "responsibilities", label: string, placeholder: string }) => {
-        const values = form.watch(name) || [];
-
-        const add = () => {
-            const current = form.getValues(name) || [];
-            form.setValue(name, [...current, ""]);
-        };
-
-        const remove = (index: number) => {
-            const current = form.getValues(name) || [];
-            form.setValue(name, current.filter((_, i) => i !== index));
-        };
-
-        const update = (index: number, val: string) => {
-            const current = form.getValues(name) || [];
-            const newArr = [...current];
-            newArr[index] = val;
-            form.setValue(name, newArr as any);
-        };
-
-        return (
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <FormLabel>{label}</FormLabel>
-                    <Button type="button" variant="outline" size="sm" onClick={add}>
-                        <Plus className="h-4 w-4 mr-2" /> Add
-                    </Button>
-                </div>
-                {values.map((val, index) => (
-                    <div key={index} className="flex gap-2">
-                        <Input
-                            value={val}
-                            onChange={(e) => update(index, e.target.value)}
-                            placeholder={placeholder}
-                        />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                    </div>
-                ))}
-                {values.length === 0 && (
-                    <p className="text-sm text-muted-foreground italic">No items added yet.</p>
-                )}
-            </div>
-        );
-    };
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -241,7 +240,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                                             </FormItem>
                                         )}
                                     />
-                                    
+
                                     <FormField
                                         control={form.control}
                                         name="category"
@@ -272,7 +271,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                                         name="job_location"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Location</FormLabel>
+                                                <FormLabel>Location *</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="e.g. San Francisco, CA" {...field} />
                                                 </FormControl>
@@ -305,28 +304,6 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                                 </div>
                             </div>
 
-                            {/* Application Link */}
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-medium border-b pb-2">Application Method</h3>
-                                <FormField
-                                    control={form.control}
-                                    name="job_apply_link"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>External Application Link (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="https://..." {...field} />
-                                            </FormControl>
-                                            <FormDescription>
-                                                Leave empty to accept applications directly on this platform (Recommended). 
-                                                If provided, candidates will be redirected to this URL.
-                                            </FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
                             {/* Details */}
                             <div className="space-y-4">
                                 <h3 className="text-lg font-medium border-b pb-2">Details</h3>
@@ -335,7 +312,7 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
                                     name="job_description"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Job Description</FormLabel>
+                                            <FormLabel>Job Description *</FormLabel>
                                             <FormControl>
                                                 <Textarea
                                                     placeholder="Detailed description of the role..."
@@ -350,14 +327,25 @@ export function RecruiterJobForm({ initialData, recruiterJobId }: RecruiterJobFo
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <ArrayInput
+                                        control={form.control}
                                         name="qualifications"
                                         label="Qualifications (Requirements)"
                                         placeholder="e.g. 5+ years React experience"
                                     />
                                     <ArrayInput
+                                        control={form.control}
                                         name="responsibilities"
                                         label="Responsibilities"
                                         placeholder="e.g. Lead frontend architecture"
+                                    />
+                                </div>
+
+                                <div className="mt-8">
+                                    <ArrayInput
+                                        control={form.control}
+                                        name="job_certifications"
+                                        label="Certifications"
+                                        placeholder="e.g. AWS Certified Solutions Architect"
                                     />
                                 </div>
                             </div>

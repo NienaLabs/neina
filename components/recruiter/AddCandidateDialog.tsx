@@ -14,16 +14,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { ImageKitUpload } from "@/components/ui/ImageKitUpload";
 
 const candidateSchema = z.object({
     candidateName: z.string().min(1, "Name is required"),
     candidateEmail: z.string().email("Invalid email"),
+    resumeId: z.string().optional().or(z.literal('')),
     notes: z.string().optional(),
 });
 
@@ -40,6 +42,7 @@ export function AddCandidateDialog({ recruiterJobId, onSuccess }: AddCandidateDi
         defaultValues: {
             candidateName: "",
             candidateEmail: "",
+            resumeId: "",
             notes: "",
         },
     });
@@ -58,6 +61,7 @@ export function AddCandidateDialog({ recruiterJobId, onSuccess }: AddCandidateDi
         createMutation.mutate({
             recruiterJobId,
             ...values,
+            resumeId: values.resumeId || undefined,
         });
     };
 
@@ -96,6 +100,28 @@ export function AddCandidateDialog({ recruiterJobId, onSuccess }: AddCandidateDi
                                     <FormControl>
                                         <Input placeholder="john@example.com" {...field} />
                                     </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="resumeId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Resume (Optional)</FormLabel>
+                                    <FormControl>
+                                        <ImageKitUpload
+                                            value={field.value}
+                                            onSuccess={(url) => field.onChange(url)}
+                                            onClear={() => field.onChange("")}
+                                            buttonText="Upload Resume"
+                                            folder="/manual-resumes"
+                                        />
+                                    </FormControl>
+                                    <FormDescription className="text-[10px]">
+                                        Upload the candidate's CV or resume.
+                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}

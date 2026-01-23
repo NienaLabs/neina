@@ -17,9 +17,9 @@ import {
     ArrowUpRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
     XAxis,
     YAxis,
@@ -137,13 +137,13 @@ export default function RecruiterDashboardPage() {
             {/* Professional Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b pb-8">
                 <motion.div variants={itemVariants} className="space-y-1">
-                    <h1 className="text-3xl  tracking-tight font-syne bg-linear-to-r from-black via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h1 className="text-2xl md:text-3xl  tracking-tight font-syne bg-linear-to-r from-black via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         {dashboard.user.companyName || "Organization"} <span className="text-muted-foreground/40 ml-1 font-normal">Dashboard</span>
                     </h1>
                     <p className="text-sm text-muted-foreground font-medium">Welcome back, {dashboard.user.name.split(" ")[0]} . Monitor your recruitment data and trends.</p>
                 </motion.div>
                 <motion.div variants={itemVariants} className="flex items-center gap-3">
-                        
+
                     <Button asChild size="lg" className="rounded-xl font-bold font-syne px-6 py-6 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all border-none  text-white">
                         <Link href="/recruiters/jobs/new">
                             <Plus className="mr-2 h-5 w-5" /> Post Job

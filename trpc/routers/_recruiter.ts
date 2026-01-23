@@ -15,6 +15,7 @@ export const recruiterRouter = createTRPCRouter({
                 position: z.string().min(1, 'Position is required'),
                 phoneNumber: z.string().min(1, 'Phone number is required'),
                 linkedInProfile: z.string().url('Invalid LinkedIn URL').optional(),
+                companyLogo: z.string().optional(),
                 verificationDocuments: z.string().min(1, 'Verification documents are required'),
                 message: z.string().min(10, 'Please provide a message (minimum 10 characters)'),
             })
@@ -168,10 +169,17 @@ export const recruiterRouter = createTRPCRouter({
 
             const { jobCertifications, ...jobData } = input;
 
+            // Fetch recruiter's company logo from application
+            const recruiterApp = await prisma.recruiterApplication.findUnique({
+                where: { userId },
+                select: { companyLogo: true }
+            });
+
             // Create job in jobs table
             const job = await prisma.jobs.create({
                 data: {
                     ...jobData,
+                    employer_logo: recruiterApp?.companyLogo || null,
                     qualifications: input.qualifications || [],
                     responsibilities: input.responsibilities || [],
                     category: input.category,
@@ -229,9 +237,9 @@ export const recruiterRouter = createTRPCRouter({
                 include: {
                     job: {
                         include: {
-                             _count: {
+                            _count: {
                                 select: { jobViews: true }
-                             }
+                            }
                         }
                     },
                     _count: {
@@ -279,10 +287,19 @@ export const recruiterRouter = createTRPCRouter({
                 throw new TRPCError({ code: 'FORBIDDEN' });
             }
 
+            // Fetch recruiter's company logo
+            const recruiterApp = await prisma.recruiterApplication.findUnique({
+                where: { userId },
+                select: { companyLogo: true }
+            });
+
             // Update job
             const updatedJob = await prisma.jobs.update({
                 where: { id: recruiterJob.jobId },
-                data: jobData,
+                data: {
+                    ...jobData,
+                    employer_logo: recruiterApp?.companyLogo || undefined,
+                },
             });
 
             // Update recruiter job (certifications)
@@ -374,6 +391,7 @@ export const recruiterRouter = createTRPCRouter({
                 recruiterJobId: z.string(),
                 candidateName: z.string().min(1, 'Candidate name is required'),
                 candidateEmail: z.string().email('Invalid email'),
+                resumeId: z.string().optional(),
                 notes: z.string().optional(),
             })
         )
@@ -434,6 +452,15 @@ export const recruiterRouter = createTRPCRouter({
 
             const candidates = await prisma.candidatePipeline.findMany({
                 where,
+                include: {
+                    resume: {
+                        select: {
+                            id: true,
+                            name: true,
+                            content: true
+                        }
+                    }
+                },
                 orderBy: { appliedAt: 'desc' },
             });
 
@@ -626,9 +653,9 @@ export const recruiterRouter = createTRPCRouter({
                 include: {
                     job: {
                         include: {
-                             _count: {
+                            _count: {
                                 select: { jobViews: true }
-                             }
+                            }
                         }
                     },
                     _count: {
@@ -796,7 +823,7 @@ export const recruiterRouter = createTRPCRouter({
                 job: {
                     include: {
                         _count: {
-                             select: { jobViews: true }
+                            select: { jobViews: true }
                         }
                     }
                 },
@@ -878,4 +905,47 @@ export const recruiterRouter = createTRPCRouter({
             trendData: sortedTrend,
         };
     }),
+
+    /**
+     * Get candidate resume for recruiter
+     * Verifies recruiter ownership and returns resume data
+     */
+    getResumeForCandidate: protectedProcedure
+        .input(z.object({ candidateId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id;
+
+            // 1. Get candidate and verify ownership via recruiterJobId
+            const candidate = await prisma.candidatePipeline.findUnique({
+                where: { id: input.candidateId },
+                include: {
+                    recruiterJob: {
+                        select: { recruiterId: true },
+                    },
+                    resume: {
+                        select: {
+                            id: true,
+                            name: true,
+                            extractedData: true,
+                        }
+                    }
+                },
+            });
+
+            if (!candidate || candidate.recruiterJob.recruiterId !== userId) {
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message: "You don't have permission to view this resume."
+                });
+            }
+
+            if (!candidate.resume) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: "Resume not found for this candidate."
+                });
+            }
+
+            return candidate.resume;
+        }),
 });

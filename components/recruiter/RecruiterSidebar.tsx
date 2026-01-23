@@ -54,8 +54,8 @@ export function RecruiterSidebar() {
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between border-b bg-background px-6 py-4">
                 <Link href="/recruiters/dashboard" className="flex items-center gap-2">
-                    <Image src="/niena.png" alt="Neina" width={32} height={32} className="object-contain" />
-                    <span className="text-xl font-bold tracking-tight font-syne text-foreground">Neina</span>
+                    <Image src="/niena.png" alt="Niena" width={32} height={32} className="object-contain" />
+                    <span className="text-xl font-bold tracking-tight font-syne text-foreground">Niena</span>
                 </Link>
                 <Button
                     variant="ghost"
@@ -84,13 +84,17 @@ export function RecruiterSidebar() {
                             className="fixed left-0 top-0 bottom-0 w-[260px] bg-gradient-to-b from-indigo-50/60 via-background to-purple-50/60 z-[80] border-r border-indigo-100/50 lg:hidden flex flex-col p-6"
                         >
                             <div className="flex items-center gap-2 mb-10">
-                                <Image src="/niena.png" alt="Neina" width={36} height={36} className="object-contain" />
-                                <span className="text-2xl font-bold font-syne text-foreground">Neina</span>
+                                <Image src="/niena.png" alt="Niena" width={36} height={36} className="object-contain" />
+                                <span className="text-2xl font-bold font-syne text-foreground">Niena</span>
                             </div>
 
                             <nav className="flex-1 space-y-1">
                                 {sidebarLinks.map((link) => {
-                                    const isActive = pathname === link.href || (link.href !== "/recruiters/dashboard" && pathname.startsWith(link.href));
+                                    const isActive = pathname === link.href || (
+                                        link.href !== "/recruiters/dashboard" &&
+                                        pathname.startsWith(link.href + "/") &&
+                                        !sidebarLinks.some(otherLink => otherLink.href !== link.href && pathname.startsWith(otherLink.href))
+                                    );
                                     const Icon = link.icon;
                                     return (
                                         <Link
@@ -135,21 +139,22 @@ export function RecruiterSidebar() {
                 {/* Logo Section */}
                 {/* Logo Section */}
                 <div className="p-6 h-[72px] flex items-center gap-3 border-b">
-                    {isCollapsed ? (
-                        <div className="h-8 w-8 min-w-[32px] flex items-center justify-center">
-                            <Image src="/niena.png" alt="Neina" width={32} height={32} className="object-contain" />
-                        </div>
-                    ) : (
-                         <div className="h-10 w-full flex items-center justify-start">
-                            <Image src="/logo.png" alt="Neina" width={120} height={40} className="object-contain" />
-                        </div>
-                    )}
+                    <Link href="/recruiters/dashboard" className="flex items-center gap-2">
+                        <Image src="/niena.png" alt="Niena" width={32} height={32} className="object-contain" />
+                        {!isCollapsed && (
+                            <span className="text-xl font-bold tracking-tight font-syne text-foreground">Niena</span>
+                        )}
+                    </Link>
                 </div>
 
                 {/* Navigation */}
                 <nav className="flex-1 px-3 py-6 space-y-1 overflow-x-hidden overflow-y-auto no-scrollbar">
                     {sidebarLinks.map((link) => {
-                        const isActive = pathname === link.href || (link.href !== "/recruiters/dashboard" && pathname.startsWith(link.href));
+                        const isActive = pathname === link.href || (
+                            link.href !== "/recruiters/dashboard" &&
+                            pathname.startsWith(link.href + "/") &&
+                            !sidebarLinks.some(otherLink => otherLink.href !== link.href && pathname.startsWith(otherLink.href))
+                        );
                         const Icon = link.icon;
 
                         const linkContent = (

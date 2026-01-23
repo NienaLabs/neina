@@ -29,6 +29,7 @@ const formSchema = z.object({
     position: z.string().min(1, 'Position is required'),
     phoneNumber: z.string().min(1, 'Phone number is required'),
     linkedInProfile: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
+    companyLogo: z.string().min(1, 'Company logo is required'),
     verificationDocuments: z.string().min(1, 'Verification documents are required'),
     message: z.string().min(10, 'Please provide a message (minimum 10 characters)'),
 });
@@ -55,6 +56,7 @@ export function RecruiterApplicationForm() {
             position: "",
             phoneNumber: "",
             linkedInProfile: "",
+            companyLogo: "",
             verificationDocuments: "",
             message: "",
         },
@@ -72,6 +74,7 @@ export function RecruiterApplicationForm() {
             ...values,
             companyWebsite: values.companyWebsite || undefined,
             linkedInProfile: values.linkedInProfile || undefined,
+            companyLogo: values.companyLogo || undefined,
         });
     }
 
@@ -119,6 +122,28 @@ export function RecruiterApplicationForm() {
                                                     <Input className="pl-9" placeholder="https://acme.com" {...field} />
                                                 </div>
                                             </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="companyLogo"
+                                    render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel>Company Logo *</FormLabel>
+                                            <FormControl>
+                                                <ImageKitUpload
+                                                    value={field.value}
+                                                    onSuccess={(url) => field.onChange(url)}
+                                                    onClear={() => field.onChange("")}
+                                                    buttonText="Upload Company Logo"
+                                                    folder="/company-logos"
+                                                />
+                                            </FormControl>
+                                            <FormDescription>
+                                                Upload your company logo to display on job postings.
+                                            </FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}

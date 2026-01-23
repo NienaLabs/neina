@@ -30,7 +30,7 @@ export default function RecruiterDashboardLayout({
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
-                    <p className="text-sm font-medium text-muted-foreground animate-pulse font-syne uppercase tracking-widest">Neina</p>
+                    <p className="text-sm font-medium text-muted-foreground animate-pulse font-syne uppercase tracking-widest">Niena</p>
                 </div>
             </div>
         );
@@ -57,7 +57,7 @@ export default function RecruiterDashboardLayout({
                 </main>
 
                 <footer className="px-10 py-6 border-t border-border/40 text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-                    <span>© 2026 Neina AI</span>
+                    <span>© 2026 Niena AI</span>
                 </footer>
             </div>
         </div>

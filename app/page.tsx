@@ -17,8 +17,8 @@ export default async function Page() {
   const cookieStore = await cookies();
   const cookieConsent = cookieStore.get('niena-cookie-consent')?.value;
 
-  // Only auto-redirect if session exists AND they haven't explicitly declined persistent cookie auto-redirect
-  if (session && cookieConsent !== 'false') redirect("/dashboard");
+  // Only auto-redirect if session exists AND they have explicitly accepted cookies
+  if (session && cookieConsent === 'true') redirect("/dashboard");
   return (
     <>
       <script

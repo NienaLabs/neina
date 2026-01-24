@@ -7,11 +7,13 @@ import { cn } from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { useScroll } from "@/hooks/use-scroll"
 import Image from 'next/image'
+import { useSession } from '@/auth-client'
 
 const Header = () => {
     const router = useRouter()
     const [isProductsOpen, setIsProductsOpen] = useState(false)
     const isScrolled = useScroll()
+    const { data: session } = useSession()
 
 
     const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
@@ -143,27 +145,41 @@ const Header = () => {
                     </Link>
                 </nav>
 
-                {/* Auth Buttons */}
+                {/* Auth Buttons / Dashboard */}
                 <div className="flex items-center ml-auto gap-4">
-                    <Link
-                        href="/auth/sign-in"
-                        className={cn(
-                            "relative text-sm font-medium text-black transition-all duration-200",
-                            "after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-indigo-500 after:to-purple-600 after:transition-all after:duration-300",
-                            "hover:after:w-full",
-                            isScrolled && "text-white"
-                        )}
-                    >
-                        Sign In
-                    </Link>
+                    {session ? (
+                        <Link
+                            href="/dashboard"
+                            className="relative px-6 py-2.5 rounded-full inline-block bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 translate-y-0"
+                        >
+                            <span className="relative z-10 flex items-center gap-2">
+                                Go to Dashboard
+                            </span>
+                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 opacity-0 hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                        </Link>
+                    ) : (
+                        <>
+                            <Link
+                                href="/auth/sign-in"
+                                className={cn(
+                                    "relative text-sm font-medium text-black transition-all duration-200",
+                                    "after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-indigo-500 after:to-purple-600 after:transition-all after:duration-300",
+                                    "hover:after:w-full",
+                                    isScrolled && "text-white"
+                                )}
+                            >
+                                Sign In
+                            </Link>
 
-                    <Link
-                        href="/auth/sign-up"
-                        className="relative px-5 py-2.5 rounded-full hidden md:inline-block bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95"
-                    >
-                        <span className="relative z-10">Get Started</span>
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 opacity-0 hover:opacity-100 transition-opacity duration-300 blur-sm" />
-                    </Link>
+                            <Link
+                                href="/auth/sign-up"
+                                className="relative px-5 py-2.5 rounded-full hidden md:inline-block bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium shadow-lg shadow-indigo-500/30 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95"
+                            >
+                                <span className="relative z-10">Get Started</span>
+                                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 opacity-0 hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
         </header>

@@ -6,6 +6,7 @@ import { Cookie, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession } from "@/auth-client"
 
 /**
  * CookiePrompt Component
@@ -15,36 +16,47 @@ import { usePathname } from "next/navigation"
 export const CookiePrompt = () => {
     const [isVisible, setIsVisible] = useState(false)
     const pathname = usePathname()
+    const { data: session } = useSession()
 
     // Hide prompt on auth screens
     const isAuthPage = pathname?.startsWith("/auth")
 
     useEffect(() => {
-        // Check if user has already accepted cookies
+        // Check if user has already made a choice (persistent or session-based)
         const hasAccepted = localStorage.getItem("cookie-consent")
-        if (!hasAccepted) {
+        const hasDeclined = sessionStorage.getItem("cookie-consent")
+
+        if (!hasAccepted && !hasDeclined) {
             // Small delay for better UX
             const timer = setTimeout(() => setIsVisible(true), 2000)
             return () => clearTimeout(timer)
         }
     }, [])
 
+    // Reset temporary decline status when the user logs out
+    useEffect(() => {
+        if (!session && sessionStorage.getItem("cookie-consent") === "false") {
+            sessionStorage.removeItem("cookie-consent")
+            document.cookie = "niena-cookie-consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+        }
+    }, [session])
+
     const handleAccept = () => {
         localStorage.setItem("cookie-consent", "true")
-        // Set a cookie for server-side detection (long expiration)
+        // Set a persistent cookie for server-side detection (1 year)
         document.cookie = "niena-cookie-consent=true; path=/; max-age=" + (60 * 60 * 24 * 365)
         setIsVisible(false)
     }
 
     const handleDecline = () => {
-        // 1. Mark as declined in localStorage so the prompt doesn't show again
-        localStorage.setItem("cookie-consent", "false")
+        // 1. Mark as declined in sessionStorage for THIS browser session only
+        sessionStorage.setItem("cookie-consent", "false")
 
-        // 2. Set a cookie for server-side detection (long expiration)
-        // This tells the landing page NOT to auto-redirect
-        document.cookie = "niena-cookie-consent=false; path=/; max-age=" + (60 * 60 * 24 * 365)
+        // 2. Set a session cookie for server-side detection (expires when browser closes)
+        // No max-age = session cookie
+        document.cookie = "niena-cookie-consent=false; path=/;"
 
-        // 3. Close the prompt without force logging out or reloading
+        // 3. Close the prompt
         setIsVisible(false)
     }
 

@@ -6,57 +6,34 @@ import { Cookie, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useSession } from "@/auth-client"
 
 /**
  * CookiePrompt Component
  * Displays a fixed bottom banner to notify users about cookie usage.
- * Persists user's acceptance in localStorage.
+ * Persists user's acknowledgement in localStorage.
  */
 export const CookiePrompt = () => {
     const [isVisible, setIsVisible] = useState(false)
     const pathname = usePathname()
-    const { data: session } = useSession()
 
     // Hide prompt on auth screens
     const isAuthPage = pathname?.startsWith("/auth")
 
     useEffect(() => {
-        // Check if user has already made a choice (persistent or session-based)
-        const hasAccepted = localStorage.getItem("cookie-consent")
-        const hasDeclined = sessionStorage.getItem("cookie-consent")
+        // Check if user has already acknowledged the cookie notice
+        const hasAcknowledged = localStorage.getItem("cookie-consent-acknowledged")
 
-        if (!hasAccepted && !hasDeclined) {
+        if (!hasAcknowledged) {
             // Small delay for better UX
             const timer = setTimeout(() => setIsVisible(true), 2000)
             return () => clearTimeout(timer)
         }
     }, [])
 
-    // Reset temporary decline status when the user logs out
-    useEffect(() => {
-        if (!session && sessionStorage.getItem("cookie-consent") === "false") {
-            sessionStorage.removeItem("cookie-consent")
-            document.cookie = "niena-cookie-consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-        }
-    }, [session])
-
-    const handleAccept = () => {
-        localStorage.setItem("cookie-consent", "true")
-        // Set a persistent cookie for server-side detection (1 year)
+    const handleAcknowledge = () => {
+        localStorage.setItem("cookie-consent-acknowledged", "true")
+        // Set a persistent cookie for server-side detection if needed (1 year)
         document.cookie = "niena-cookie-consent=true; path=/; max-age=" + (60 * 60 * 24 * 365)
-        setIsVisible(false)
-    }
-
-    const handleDecline = () => {
-        // 1. Mark as declined in sessionStorage for THIS browser session only
-        sessionStorage.setItem("cookie-consent", "false")
-
-        // 2. Set a session cookie for server-side detection (expires when browser closes)
-        // No max-age = session cookie
-        document.cookie = "niena-cookie-consent=false; path=/;"
-
-        // 3. Close the prompt
         setIsVisible(false)
     }
 
@@ -87,32 +64,24 @@ export const CookiePrompt = () => {
                                     We use cookies! 🍪
                                 </h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    We use cookies to enhance your experience, analyze site traffic, and serve better recommendations.
+                                    We use cookies to enhance your experience and analyze site traffic.
                                     Read our <Link href="/privacy" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Privacy Policy</Link> to learn more.
                                 </p>
                             </div>
 
                             <div className="flex items-center gap-3 flex-shrink-0">
                                 <Button
-                                    variant="ghost"
                                     size="sm"
-                                    onClick={handleDecline}
-                                    className="font-syne text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                    onClick={handleAcknowledge}
+                                    className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-black dark:hover:bg-gray-100 font-syne px-8 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95"
                                 >
-                                    Decline
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    onClick={handleAccept}
-                                    className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-black dark:hover:bg-gray-100 font-syne px-6 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95"
-                                >
-                                    Accept & Continue
+                                    Continue
                                 </Button>
                             </div>
                         </div>
 
                         <button
-                            onClick={() => setIsVisible(false)}
+                            onClick={handleAcknowledge}
                             className="absolute top-3 right-3 p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                         >
                             <X className="w-4 h-4" />

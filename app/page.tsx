@@ -14,11 +14,9 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const cookieStore = await cookies();
-  const cookieConsent = cookieStore.get('niena-cookie-consent')?.value;
 
-  // Only auto-redirect if session exists AND they have explicitly accepted cookies
-  if (session && cookieConsent === 'true') redirect("/dashboard");
+  // Only auto-redirect if session exists
+  if (session) redirect("/dashboard");
   return (
     <>
       <script

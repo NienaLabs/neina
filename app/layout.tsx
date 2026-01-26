@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     url: "https://app.nienalabs.com",
     title: "Niena – AI Resume Optimization, Job Matching & Interview Prep",
     description: "Achieve your career goals with Niena Labs' AI-powered tools: AI Resume Optimization, Smart Job Matching with Job recommendations, and Real-time AI Interview Prep with our AI avatar or voice AI.",
-    siteName: "Niena Labs",
+    siteName: "Niena",
     images: [
       {
         url: "/og-image.png", // Add a proper 1200x630 OG image

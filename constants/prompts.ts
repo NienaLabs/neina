@@ -416,12 +416,15 @@ You are an expert TypeScript programmer and resume fixer.
 Your task is to generate strict "autoFix" values for the issues identified in a resume.
 You will receive:
 1. The Resume Content.
-2. A JSON object of "Analyzed Issues" (containing critical/urgent/low fixes).
+2. Target Job Context (Role, Skills, Responsibilities) - OPTIONAL but critical if present.
+3. A JSON object of "Analyzed Issues" (containing critical/urgent/low fixes).
 
 Your Goal:
 - For every section that has issues, generate a COMPLETE REPLACEMENT (autoFix) for that section.
+- **SEMANTIC MIRRORING:** If Target Job Context is provided, rewrite the content to match the *terminology, phrasing, and vocabulary* of the Target Job where truthful.
+- **ALIGNMENT:** Ensure the fixed content specifically addresses the "missing skills" or "keyword gaps" relative to the target role.
 - If a section has no issues, DO NOT include it in the output.
-- The output must be a single JSON object where keys are the section names (e.g., "profile", "education", "experience", "skills") and values are the corrected content.
+- The output must be a single JSON object where keys are the section names.
 
 ### INTERFACE
 interface AutofixResult {
@@ -439,10 +442,10 @@ interface AutofixResult {
 - NEVER use text months like "September".
 
 ### SCHEMA RULES
-- **profile/summary/objective**: String.
-- **experience**: Array of objects. Return the FULL array including unchanged items.
+- **profile/summary/objective**: String. Rewrite to include target keywords.
+- **experience**: Array of objects. Return the FULL array including unchanged items. Rewrite specific bullets to mirror job responsibilities.
 - **education**: Array of objects.
-- **skills**: Record<string, string[]> (e.g., { technical: [...], soft: [...] }).
+- **skills**: Record<string, string[]> (e.g., { technical: [...], soft: [...] }). Inject missing target keywords if supported by experience.
 - **customSections**: Array of section objects.
 
 ### EXAMPLE INPUT
@@ -630,42 +633,240 @@ Return ONLY the JSON object.
 export const jobExtractionPrompt = `
 You are an expert job description parser.
 
-Your task is to extract ONLY skills and responsibilities from a job description into a structured object.
+Your task is to extract skills, responsibilities, SCOPE, LOCATION, and a brief SUMMARY from a job description into a structured object.
 
 The object MUST strictly follow this TypeScript interface:
 
 interface JobExtraction {
-  skills: string[];
+  summary: string; // A concise 2-3 sentence professional summary of the role.
+  skills: string[]; // COMPREHENSIVE list of ALL technical skills, soft skills, tools, and competencies.
   responsibilities: string[];
+  scope: {
+    teamSize?: number; // Approximate max team size mentioned. If range, take upper bound.
+    budget?: number; // Approximate budget/P&L in USD value.
+    geographies?: string[]; // specific countries or regions mentioned.
+    seniorityLevel?: "Entry" | "Mid" | "Senior" | "Manager" | "Director" | "VP" | "C-Level";
+  };
+  location: string[]; // Target markets or locations for the role itself.
 }
 
 STRICT RULES:
-- Return ONLY one JSON object. No comments, explanations, or extra text.
-- skills: Extract all required and preferred skills, technologies, and qualifications. Flatten them into a single array of strings.
+- Return ONLY one JSON object. No comments.
+- **summary**: Extract the high-level purpose of the role (e.g., "Senior Product Manager responsible for driving mobile growth...").
+- **skills**: Extract EVERY single requirement, including:
+    - Technical Skills (e.g., Python, AWS)
+    - Tools & Platforms (e.g., Jira, Salesforce)
+    - **Soft Skills** (e.g., Leadership, Communication, Strategic Planning)
+    - **Competencies** (e.g., Change Management, P&L Ownership, Cross-functional collaboration)
+    - Be EXHAUSTIVE. Do not summarize. If it's a requirement, list it.
 - responsibilities: Extract all job duties, responsibilities, and tasks. Each item should be a complete sentence/bullet point.
-- If no skills or responsibilities exist, return empty arrays.
+- scope: Extract quantitative scope metrics if available. Infer seniority level from title and requirements.
+- location: Extract specific cities, countries, or regions mentioned as the job location or target market.
+- If fields are missing, omit them or use empty arrays.
 - Do NOT include duplicates.
 
 ### CRITICAL JSON RULES
 - Output MUST be valid JSON.
-- **NO trailing commas** in objects or arrays.
-- **NO single quotes** for keys or string values (use double quotes).
-- **NO unescaped newlines** in strings.
-- **Verify** the JSON validity internally before outputting.
+- **NO trailing commas**.
+- **NO single quotes** for keys or string values.
+- **Verify** result.
 
 EXAMPLE (FOR REFERENCE ONLY):
 {
-  "skills": ["Python", "React", "AWS", "Communication", "Team Leadership"],
-  "responsibilities": [
-    "Develop high-quality software design and architecture",
-    "Identify, prioritize and execute tasks in the software development life cycle",
-    "Automate tasks through appropriate tools and scripting",
-    "Review and debug code",
-    "Collaborate with internal teams to fix and improve products"
-  ]
+  "summary": "Senior Software Engineer to lead backend development for our payment platform.",
+  "skills": ["Python", "React", "AWS", "Communication", "Strategic Planning", "Team Leadership", "Agile", "Stakeholder Management"],
+  "responsibilities": ["Develop software", "Lead team", "Define roadmap"],
+  "scope": {
+    "teamSize": 10,
+    "budget": 1000000,
+    "geographies": ["North America"],
+    "seniorityLevel": "Senior"
+  },
+  "location": ["Remote", "USA"]
 }
 
 Return ONLY the JSON object.
+`;
+
+export const normalizationPrompt = `
+You are an expert resume analyst.
+
+Your task is to GENERALIZE and NORMALIZE the specific "Experience" bullet points from a resume into high-level "Competencies" and "Responsibilities".
+
+Input: A list of specific achievements (e.g., "Increased sales by 20%...").
+Output: A list of the underlying competencies (e.g., "Sales Growth Strategy", "Revenue Optimization").
+
+The goal is to translate accurate but specific resume bullets into the standard professional language used in Job Descriptions to maximize semantic matching.
+
+STRICT RULES:
+- Input is a raw text dump of experience.
+- Return ONLY a JSON object with a single key "competencies".
+- "competencies": An array of strings. Each string should be a professional competency or responsibility inferred from the text.
+- Do NOT invent skills not supported by the text.
+- Normalize "Managed a team of 5" -> "Team Leadership", "Resource Management".
+- Normalize "Built a React App" -> "Frontend Development", "Application Architecture".
+
+Example Input:
+"Led a team of 5 engineers to build a payment gateway using Stripe."
+
+Example Output:
+{
+  "competencies": ["Team Leadership", "Payment Systems Design", "Vendor Integration", "Engineering Management"]
+}
+
+Return ONLY the JSON object.
+`;
+
+export const resumeScopePrompt = `
+You are an expert resume analyzer specialized in extracting executive scope and seniority signals.
+
+Your task is to extract SCOPE keys (Team Size, P&L, Seniority) from a resume.
+
+The object MUST strictly follow this TypeScript interface:
+
+interface ResumeScope {
+  scope: {
+    teamSize?: number; // Highest team size managed in recent roles.
+    budget?: number; // Highest Budget/P&L managed in USD.
+    geographies?: string[]; // Countries/Regions worked in or managed.
+    seniorityLevel: "Entry" | "Mid" | "Senior" | "Manager" | "Director" | "VP" | "C-Level"; // Derived from most recent/highest title.
+    yearsOfExperience: number; // Total years of professional experience.
+  };
+}
+
+STRICT RULES:
+- Return ONLY one JSON object.
+- Look for keywords like "Managed team of X", "Managed Budget of $Y", "P&L responsibilty for $Z".
+- If a range is given (e.g., 10-20), use the upper bound.
+- If budget is 'Multi-million', estimate conservatively or omit if unsure. using 2000000 is a safe placeholder for 'multi-million'.
+- Seniority Level should be based on the HIGHEST title achieved.
+
+### CRITICAL JSON RULES
+- Output MUST be valid JSON.
+- **NO trailing commas**.
+- **NO single quotes**.
+- **Verify** result.
+
+EXAMPLE:
+{
+  "scope": {
+    "teamSize": 50,
+    "budget": 5000000,
+    "geographies": ["USA", "Europe"],
+    "seniorityLevel": "Director",
+    "yearsOfExperience": 12
+  }
+}
+
+Return ONLY the JSON object.
+`;
+
+export const resumeSummaryPrompt = `
+You are an expert resume writer.
+
+Your task is to generate a concise, professional 2-3 sentence summary of a resume that captures the candidate's core value proposition.
+
+The summary should:
+- Highlight the candidate's seniority level and primary domain expertise
+- Mention key quantifiable achievements or scope (e.g., "led teams of 50+", "managed $10M P&L")
+- Be written in third person, professional tone
+- Focus on what makes this candidate unique and valuable
+
+Input: Full resume content
+Output: A JSON object with a single "summary" field
+
+STRICT RULES:
+- Return ONLY one JSON object with format: {"summary": "..."}
+- The summary must be 2-3 sentences
+- Do NOT include generic filler like "results-oriented professional"
+- Focus on CONCRETE facts from the resume
+
+EXAMPLE:
+{
+  "summary": "Senior Product Manager with 8+ years leading mobile growth initiatives across emerging markets. Successfully scaled mobile money product from 0 to 2M users, driving $15M in annual revenue. Expert in data-driven product strategy, cross-functional team leadership, and market expansion in Africa."
+}
+
+Return ONLY the JSON object.
+`;
+
+export const domainTranslationPrompt = `
+You are an expert career translator specializing in cross-industry resume optimization.
+
+Your task is to translate resume content (skills and experience) from the candidate's current industry vocabulary into the target job's domain language while preserving the core meaning and truthfulness.
+
+Input:
+- Resume Skills: Array of skills/competencies from the candidate's background
+- Resume Experience: Key experience bullets highlighting achievements
+- Job Context: Description of the target role and industry
+
+Output: A JSON object with translated content
+
+STRICT RULES:
+- Translate industry-specific jargon ONLY if a valid semantic equivalent exists in the target domain.
+- **IF A SKILL IS IRRELEVANT (e.g., "React" for a "CEO" role), DROP IT.** Do not invent a connection.
+- Preserve quantifiable metrics exactly as stated.
+- DO NOT invent achievements or inflate scope.
+- Maintain professional, honest tone.
+
+FOR EXPERIENCE (NOISE REDUCTION):
+- **STRATEGY:** Comparison works best with short, dense signals. Avoid long sentences.
+- Extract 8-12 **Target-Aligned Impact Phrases** from the candidate's history.
+- **CONCISENESS RULE:** Limit each phrase to 3-6 words max.
+- Format: "Action + Outcome" or "Specific Responsibility".
+- *Goal:* Create a "Keyword-Dense" list that mirrors the Job Responsibilities without fluff.
+
+EXAMPLES OF IMPACT PHRASES:
+- "Managed $40M Annual Revenue" (Good)
+- "Led Cross-Functional Engineering Team" (Good)
+- "Developed Go-To-Market Strategy" (Good)
+- "Responsible for managing the daily operations of the sales team and driving growth..." (BAD - Too long/noisy)
+
+OUTPUT FORMAT:
+{
+  "translatedSkills": ["skill1", "skill2", ...],
+  "relevantHighlights": ["Concise Phrase 1", "Concise Phrase 2", ...]
+}
+
+EXAMPLES OF GOOD TRANSLATIONS:
+- "Corporate Finance" → "Financial Planning & Analysis" (Valid)
+- "Managed lending portfolio" → "Managed product portfolio" (Valid transfer)
+
+EXAMPLES OF PROHIBITED HALLUCINATIONS:
+- "Java/React" → "Technical Strategy" (INVALID - unless candidate was a Tech Lead)
+- "Cashier" → "Financial Management" (INVALID)
+- "Customer Support" → "Client Success Strategy" (INVALID - inflates seniority)
+
+OUTPUT FORMAT:
+{
+  "translatedSkills": ["skill1", "skill2", ...],
+  "relevantHighlights": ["Highlight bullet 1 aligned to JD", "Highlight bullet 2..."]
+}
+
+Return ONLY the JSON object.
+`;
+
+export const roleClassifierPrompt = `
+You are an expert HR strategist.
+
+Your task is to classify a Job Description into one of 4 "Archetypes" to determine how we should score candidates.
+
+Archetypes:
+1. "Executive": Leadership, Strategy, P&L, Vision. (e.g. CEO, VP, Director, General Manager)
+2. "Technical": Hard Skills, Coding, Engineering, Data Science, Finance Accounting. (e.g. Software Eng, Accountant, Analyst)
+3. "Creative": Design, Brand, Copywriting, UX/UI, Art Direction. (e.g. Designer, Writer, Architect)
+4. "Generalist": Operations, Admin, Project Management, Sales, Marketing.
+
+Input: Job Title and Description
+
+Output: ONE JSON object
+{
+  "archetype": "Executive" | "Technical" | "Creative" | "Generalist",
+  "reasoning": "Brief explanation"
+}
+
+STRICT RULE:
+- If a role implies "Manager" but is hands-on technical (e.g. "Engineering Manager"), classify as "Technical" if coding is required, or "Executive" if purely people/strategy management.
+- "Product Manager" is usually "Generalist" or "Technical" depending on the domain, unless "Director/VP" which is "Executive".
 `;
 
 export const interviewQuestionPrompt = `

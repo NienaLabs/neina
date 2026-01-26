@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     default: "Niena - Achieve Career Goals with AI-powered Tools",
     template: "%s | Niena"
   },
-  description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
+  description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Real-time voice to voice and Avatar Interview Coaches, and Smart Job Reccommendations.",
   keywords: ["niena", "interview ai", "resume ai", "matcher", "jobs", "career", "ai job search", "interview coach"],
   authors: [{ name: "Niena Labs" }],
   creator: "Niena Labs",

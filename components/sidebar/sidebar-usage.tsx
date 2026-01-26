@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PLAN_PRICES: Record<string, number> = {
   SILVER: 2900,
@@ -31,7 +32,18 @@ export default function SidebarUsage() {
     },
   });
 
-  if (isLoading || !user) return null;
+  if (isLoading) {
+    return (
+      <div className="px-2 py-4 space-y-4">
+        <div className="border p-3 rounded-lg space-y-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const isPaid = user.plan !== "FREE";
   const now = new Date();

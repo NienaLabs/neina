@@ -37,19 +37,18 @@ export const metadata: Metadata = {
     siteName: "Niena Labs",
     images: [
       {
-        url: "/icon.png", // Needs to be added or ensure it exists
-        width: 48,
-        height: 48,
+        url: "/og-image.png", // Add a proper 1200x630 OG image
+        width: 1200,
+        height: 630,
         alt: "Niena - AI Career Platform",
       }
-    ],
-  },
+    ],  },
   twitter: {
     card: "summary_large_image",
     title: "Niena – AI Resume Optimization, Job Matching & AI Interview Prep",
     description: "Achieve your career goals with Niena Labs' AI-powered tools: AI Resume Optimization, Smart Job Matching with Job recommendations, and Real-time AI Interview Prep with our AI avatar or voice AI.",
     creator: "@LabsNiena86233", // Assuming handle or placeholder
-    images: ["/icon.png"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,

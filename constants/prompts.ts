@@ -736,8 +736,7 @@ interface ResumeScope {
 
 STRICT RULES:
 - Return ONLY one JSON object.
-- Look for keywords like "Managed team of X", "Managed Budget of $Y", "P&L responsibilty for $Z".
-- If a range is given (e.g., 10-20), use the upper bound.
+- Look for keywords like "Managed team of X", "Managed Budget of $Y", "P&L responsibility for $Z".- If a range is given (e.g., 10-20), use the upper bound.
 - If budget is 'Multi-million', estimate conservatively or omit if unsure. using 2000000 is a safe placeholder for 'multi-million'.
 - Seniority Level should be based on the HIGHEST title achieved.
 

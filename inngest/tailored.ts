@@ -659,7 +659,6 @@ export const tailoredResumeUpdated = inngest.createFunction(
         extractedResumeScope = scopeData.scope || {};
     } catch(err) {
         console.error('[tailoredResumeUpdated] Failed to extract resume scope:', err);
-        console.error('[tailoredResumeUpdated] Failed to extract resume scope:', err);
     }
     
         // 7. Domain Translation (Skills + Highlights)

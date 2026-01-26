@@ -22,35 +22,34 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://app.nienalabs.com'),
   title: {
-    default: "Niena - Achieve Career Goals with AI-powered Tools",
+    default: "Niena – AI Resume Optimization, Job Matching & Interview Prep",
     template: "%s | Niena"
   },
-  description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
-  keywords: ["niena", "interview ai", "resume ai", "matcher", "jobs", "career", "ai job search", "interview coach"],
+  description: "Achieve your career goals with Niena Labs' AI-powered tools: AI Resume Optimization, Smart Job Matching with Job recommendations, and Real-time AI Interview Prep with our AI avatar or voice AI.",
+  keywords: ["niena", "niena labs", "ai resume", "job matching", "interview prep", "career ai", "resume optimization"],
   authors: [{ name: "Niena Labs" }],
   creator: "Niena Labs",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://app.nienalabs.com",
-    title: "Niena - Achieve Career Goals with AI-powered Tools",
-    description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
-    siteName: "Niena",
+    title: "Niena – AI Resume Optimization, Job Matching & Interview Prep",
+    description: "Achieve your career goals with Niena Labs' AI-powered tools: AI Resume Optimization, Smart Job Matching with Job recommendations, and Real-time AI Interview Prep with our AI avatar or voice AI.",
+    siteName: "Niena Labs",
     images: [
       {
-        url: "/logo.png", // Needs to be added or ensure it exists
+        url: "/og-image.png", // Add a proper 1200x630 OG image
         width: 1200,
         height: 630,
         alt: "Niena - AI Career Platform",
       }
-    ],
-  },
+    ],  },
   twitter: {
     card: "summary_large_image",
-    title: "Niena - Achieve Career Goals with AI-powered Tools",
-    description: "Achieve your career goals with AI-powered tools like AI Resume Builder, Interview Coach, and Smart Job Matcher.",
-    creator: "@nienalabs", // Assuming handle or placeholder
-    images: ["/logo.png"],
+    title: "Niena – AI Resume Optimization, Job Matching & AI Interview Prep",
+    description: "Achieve your career goals with Niena Labs' AI-powered tools: AI Resume Optimization, Smart Job Matching with Job recommendations, and Real-time AI Interview Prep with our AI avatar or voice AI.",
+    creator: "@LabsNiena86233", // Assuming handle or placeholder
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -73,6 +72,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Niena Labs",
+    "url": "https://app.nienalabs.com",
+    "logo": "https://app.nienalabs.com/icon.png",
+    "description": "AI Resume Optimization, Job Matching & Interview Prep by Niena Labs.",
+    "sameAs": [
+      "https://twitter.com/LabsNiena86233",
+      "https://linkedin.com/company/niena-labs"
+    ]
+  };
+
   return (
     <TRPCProvider>
       <AuthProvider>
@@ -80,6 +92,10 @@ export default function RootLayout({
           <body
             className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
           >
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <NotificationBanner />
             <CookiePrompt />
             {/*<Header/>*/}

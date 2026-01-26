@@ -1,4 +1,4 @@
-import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt, autofixPrompt } from "@/constants/prompts";
+import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt, autofixPrompt, resumeScopePrompt, normalizationPrompt, resumeSummaryPrompt, domainTranslationPrompt, roleClassifierPrompt } from "@/constants/prompts";
 import { createAgent, openai } from "@inngest/agent-kit";
 import { lastAssistantTextMessageContent, validJson } from "@/lib/utils";
 
@@ -129,18 +129,116 @@ export const experienceExtractorAgent = createAgent({
   },
 });
 
+
+
 export const jobExtractorAgent = createAgent({
   name: "job-extractor-agent",
   system: jobExtractionPrompt,
   model: openai({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
+  defaultParameters: { temperature: 0 },
   }),
   lifecycle: {
     onResponse: async ({ result, network }) => {
       const assistantMessage = lastAssistantTextMessageContent(result);
       if (assistantMessage && network) {
         network.state.data.jobExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const resumeScopeExtractorAgent = createAgent({
+  name: "resume-scope-extractor-agent",
+  system: resumeScopePrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.resumeScopeExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const normalizationAgent = createAgent({
+  name: "normalization-agent",
+  system: normalizationPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.normalizationAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const resumeSummaryAgent = createAgent({
+  name: "resume-summary-agent",
+  system: resumeSummaryPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.resumeSummaryAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const domainTranslationAgent = createAgent({
+  name: "domain-translation-agent",
+  system: domainTranslationPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+  defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.domainTranslationAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const roleClassifierAgent = createAgent({
+  name: "role-classifier-agent",
+  system: roleClassifierPrompt,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.roleClassifierAgent = extractJson(assistantMessage);
       }
       return result;
     },

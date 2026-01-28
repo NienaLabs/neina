@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { startInterview } from "@/lib/interviews";
 import { auth } from "@/lib/auth";
-import { generateDuixSign } from "@/lib/duix";
+import { generateAnamSessionToken } from "@/lib/anam";
+import { interviewerSystemPrompt } from "@/constants/prompts";
 
 
 export async function POST(request: Request) {
@@ -16,14 +17,18 @@ export async function POST(request: Request) {
     const body = JSON.parse(rawBody);
     const { role, description, useResume } = body;
 
-    const DUIX_API_ID = process.env.DUIX_API_ID;
-    const DUIX_API_KEY = process.env.DUIX_API_KEY;
-    const DUIX_AVATAR_ID = process.env.DUIX_AVATAR_ID;
+    const ANAM_AVATAR_ID = process.env.ANAM_AVATAR_ID || process.env.ANAM_PERSONA_ID;
+    const ANAM_VOICE_ID = process.env.ANAM_VOICE_ID;
+    const ANAM_LLM_ID = process.env.ANAM_LLM_ID;
 
-    if (!DUIX_API_ID || !DUIX_API_KEY || !DUIX_AVATAR_ID) {
-      throw new Error("Duix configuration is missing (API_ID, API_KEY, or AVATAR_ID)");
+    if (!ANAM_AVATAR_ID || !ANAM_VOICE_ID || !ANAM_LLM_ID) {
+      console.error('[ANAM] Missing configuration component:', {
+        avatar: !!ANAM_AVATAR_ID,
+        voice: !!ANAM_VOICE_ID,
+        llm: !!ANAM_LLM_ID
+      });
+      throw new Error(`Anam configuration is missing. Required: AVATAR_ID, VOICE_ID, LLM_ID. (Found: AVATAR=${!!ANAM_AVATAR_ID}, VOICE=${!!ANAM_VOICE_ID}, LLM=${!!ANAM_LLM_ID})`);
     }
-
 
     if (!role || typeof role !== 'string') {
       console.log('Validation failed: role missing or invalid', { role, type: typeof role });
@@ -35,9 +40,6 @@ export async function POST(request: Request) {
       console.log('Validation failed: description invalid', { description, type: typeof description });
       return NextResponse.json({ error: "Description must be a string if provided" }, { status: 400 });
     }
-
-    // conversation_id is no longer required from client as we create it here
-
 
     // Get authenticated session
     const session = await auth.api.getSession({
@@ -110,8 +112,8 @@ export async function POST(request: Request) {
         warning: undefined as string | undefined,
       }
       : await (async () => {
-        // Create Duix session metadata ONLY after credit checks pass
-        console.log('Preparing Duix session for user:', userId);
+        // Create Anam session metadata ONLY after credit checks pass
+        console.log('Preparing Anam session for user:', userId);
 
         let resumeId = undefined;
 
@@ -124,8 +126,8 @@ export async function POST(request: Request) {
           }
         }
 
-        // We use the Avatar ID as the conversation ID for Duix initialization
-        const conversation_id = DUIX_AVATAR_ID;
+        // Use Avatar ID as default conversation ID for tracking if none exists
+        const conversation_id = ANAM_AVATAR_ID;
 
         return startInterview({
           user_id: userId,
@@ -143,9 +145,6 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Generate the signature for Duix SDK
-    const sign = generateDuixSign(DUIX_API_ID, DUIX_API_KEY, userId);
-
     // Fetch resume content if requested
     let resumeContent = undefined;
     if (useResume) {
@@ -156,14 +155,26 @@ export async function POST(request: Request) {
       resumeContent = primaryResume?.content;
     }
 
+    // Generate the dynamic interviewer prompt
+    console.log('[ANAM] Generating system prompt. Resume included:', !!resumeContent);
+    const systemPrompt = interviewerSystemPrompt(role, description, resumeContent);
+
+    // Generate the ephemeral session token for Anam AI SDK v4
+    const sessionToken = await generateAnamSessionToken({
+      personaId: process.env.ANAM_PERSONA_ID,
+      avatarId: process.env.ANAM_AVATAR_ID,
+      voiceId: process.env.ANAM_VOICE_ID,
+      llmId: process.env.ANAM_LLM_ID,
+      toolIds: process.env.TOOL_CALL_ID ? [process.env.TOOL_CALL_ID] : [],
+      systemPrompt
+    });
+
     return NextResponse.json({
       interview_id: result.interview.id,
       start_time: result.interview.start_time,
       remaining_seconds: result.interview.remaining_seconds,
       conversation_id: result.interview.conversation_id,
-      duix_sign: sign,
-      duix_app_id: DUIX_API_ID,
-      duix_platform: "duix.com",
+      anam_session_token: sessionToken,
       resume_content: resumeContent
     });
 

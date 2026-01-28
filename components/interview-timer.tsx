@@ -83,10 +83,10 @@ export const InterviewTimer: React.FC<InterviewTimerProps> = ({
 
           if (data.remaining_seconds > 0 && !data.should_end) {
             const currentSeconds = data.remaining_seconds;
-            if (currentSeconds <= 12 && !warnedCriticalRef.current) {
+            if (currentSeconds <= 10 && !warnedCriticalRef.current) {
               warnedCriticalRef.current = true;
               if (onWarningRef.current) onWarningRef.current('critical');
-            } else if (currentSeconds <= 30 && currentSeconds > 12 && !warnedLowRef.current) {
+            } else if (currentSeconds <= 15 && currentSeconds > 10 && !warnedLowRef.current) {
               warnedLowRef.current = true;
               if (onWarningRef.current) onWarningRef.current('low');
             }

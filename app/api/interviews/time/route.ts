@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   }
 }
 
-// Note: Tavus messages are no longer sent here as they are handled via duix.say() in the client.
+// Note: System messages are no longer sent here as they are handled via the client SDK.
 
 /**
  * POST /api/interviews/time

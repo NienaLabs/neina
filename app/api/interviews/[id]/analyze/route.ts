@@ -99,7 +99,7 @@ ${analysis.weaknesses.map(w => `- ${w}`).join('\n')}
             where: { id: interviewId },
             data: {
                 // transcript is already stored, but we update status and score
-                perceptionData: {}, // Duix doesn't provide legacy perception events by default
+                perceptionData: {}, // Placeholder for future perception events
                 analysisScore: analysis.score,
                 analysisFeedback: formattedFeedback,
                 analyzedAt: new Date(),

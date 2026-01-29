@@ -68,7 +68,7 @@ export async function POST(request: Request) {
             throw new Error("No LLM API key configured (Groq or OpenAI)");
         }
 
-        console.log(`[DUIX Chat] Calling LLM: ${LLM_MODEL} at ${LLM_URL}`);
+        console.log(`[Interview Chat] Calling LLM: ${LLM_MODEL} at ${LLM_URL}`);
 
         const response = await fetch(LLM_URL, {
             method: "POST",
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
 
             // Try OpenAI fallback if Groq failed
             if (LLM_URL.includes("groq") && process.env.OPENAI_API_KEY) {
-                console.log("[DUIX Chat] Groq failed, trying OpenAI fallback...");
+                console.log("[Interview Chat] Groq failed, trying OpenAI fallback...");
 
                 try {
                     const fallbackResponse = await fetch(
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
                         return NextResponse.json({ message: fallbackData.choices[0].message.content });
                     }
                 } catch (fallbackError) {
-                    console.error("[DUIX Chat] OpenAI fallback also failed:", fallbackError);
+                    console.error("[Interview Chat] OpenAI fallback also failed:", fallbackError);
                 }
             }
 

@@ -75,8 +75,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Anam session cleanup is handled client-side via stopStreaming() or via session timeout.
-    // We no longer need the server-side closeDuixSession logic.
+    // AI session cleanup is handled client-side via the SDK or via session timeout.
 
     // Now end the interview in database
     if (DEBUG_LOGGING) {

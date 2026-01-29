@@ -7577,17 +7577,7 @@ drizzle-orm@^0.33.0:
   resolved "https://registry.yarnpkg.com/drizzle-orm/-/drizzle-orm-0.33.0.tgz#ece81e3e85f7559b5f7c01fc09e654e9a2f087fe"
   integrity sha512-SHy72R2Rdkz0LEq0PSG/IdvnT3nGiWuRk+2tXZQ90GVq/XQhpCzu/EFT3V2rox+w8MlkBQxifF8pCStNYnERfA==
 
-duix-guiji-light@^0.3.2:
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/duix-guiji-light/-/duix-guiji-light-0.3.2.tgz#1e5dfe7700a70ac37f5f93d13ec2900c6ab11821"
-  integrity sha512-NO5ssZUn4+myChlyH3m3To9wQ4FNkpLaAilCW3yoa+DzALqBU98CdaSbQP1ajRxn8ICaDTj6x4wzFx88PfCXOA==
-  dependencies:
-    "@microsoft/fetch-event-source" "^2.0.1"
-    agora-rtc-sdk-ng "4.20.2"
-    gl-matrix "^3.4.3"
-    localforage "^1.10.0"
-    mqtt "^4.3.7"
-    webrtc-adapter "^8.1.0"
+
 
 dunder-proto@^1.0.0, dunder-proto@^1.0.1:
   version "1.0.1"

@@ -630,6 +630,8 @@ EXAMPLE (FOR REFERENCE ONLY):
 Return ONLY the JSON object.
 `;
 
+
+
 export const jobExtractionPrompt = `
 You are an expert job description parser.
 
@@ -640,7 +642,7 @@ The object MUST strictly follow this TypeScript interface:
 interface JobExtraction {
   summary: string; // A concise 2-3 sentence professional summary of the role.
   skills: string[]; // COMPREHENSIVE list of ALL technical skills, soft skills, tools, and competencies.
-  responsibilities: string[];
+  responsibilities: string[]; // EXTREMELY Concise, High-Level "Impact Phrases" (Max 3-6 words each).
   scope: {
     teamSize?: number; // Approximate max team size mentioned. If range, take upper bound.
     budget?: number; // Approximate budget/P&L in USD value.
@@ -659,7 +661,14 @@ STRICT RULES:
     - **Soft Skills** (e.g., Leadership, Communication, Strategic Planning)
     - **Competencies** (e.g., Change Management, P&L Ownership, Cross-functional collaboration)
     - Be EXHAUSTIVE. Do not summarize. If it's a requirement, list it.
-- responsibilities: Extract all job duties, responsibilities, and tasks. Each item should be a complete sentence/bullet point.
+- **responsibilities**: Extract the core "Impact Areas" or "Key Duties" as **EXTREMELY CONCISE** phrases.
+    - **CONCISENESS RULE:** Limit each bullet to **3-6 words MAX**. this is CRITICAL.
+    - **Style:** "Action + Outcome" or "Specific Responsibility". Remove all fluff.
+    - **Goal:** Create a "Keyword-Dense" list that mirrors a resume's core competencies.
+    - Example: "Design scalable REST APIs." (4 words) - GOOD
+    - Example: "Manage cross-functional engineering teams." (4 words) - GOOD
+    - Example: "Responsible for designing APIs." (4 words) - BAD (Remove "Responsible for")
+    - Example: "Design APIs." (2 words) - OK (but aim for 3-6)
 - scope: Extract quantitative scope metrics if available. Infer seniority level from title and requirements.
 - location: Extract specific cities, countries, or regions mentioned as the job location or target market.
 - If fields are missing, omit them or use empty arrays.
@@ -674,8 +683,8 @@ STRICT RULES:
 EXAMPLE (FOR REFERENCE ONLY):
 {
   "summary": "Senior Software Engineer to lead backend development for our payment platform.",
-  "skills": ["Python", "React", "AWS", "Communication", "Strategic Planning", "Team Leadership", "Agile", "Stakeholder Management"],
-  "responsibilities": ["Develop software", "Lead team", "Define roadmap"],
+  "skills": ["Python", "React", "AWS", "Communication", "Strategic Planning", "Team Leadership", "Agile"],
+  "responsibilities": ["Develop scalable backend services.", "Lead high-performing engineering team.", "Architect distributed payment systems.", "Optimize database performance."],
   "scope": {
     "teamSize": 10,
     "budget": 1000000,
@@ -687,6 +696,8 @@ EXAMPLE (FOR REFERENCE ONLY):
 
 Return ONLY the JSON object.
 `;
+
+
 
 export const normalizationPrompt = `
 You are an expert resume analyst.

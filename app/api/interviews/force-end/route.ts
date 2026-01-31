@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 import { forceEndInterview } from "@/lib/interviews";
-import { closeDuixSession } from "@/lib/duix";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
@@ -62,26 +61,8 @@ export async function POST(request: Request) {
       });
     }
 
-    // End Duix session FIRST before updating database
-    if (interview.conversation_id) {
-      try {
-        // End the Duix session on the server side to stop billing/resource usage
-        if (DEBUG_LOGGING) {
-          console.log(`[DEBUG] Force-end: Attempting to close Duix session: ${interview.conversation_id}`);
-        }
-
-        // Close the session and wait for it
-        await closeDuixSession(interview.conversation_id);
-
-        if (DEBUG_LOGGING) {
-          console.log('[DEBUG] Force-end: Duix cleanup successfully triggered');
-        }
-      } catch (error: any) {
-        if (DEBUG_LOGGING) {
-          console.log('[DEBUG] Force-end: Duix cleanup failed:', error.message);
-        }
-      }
-    }
+    // Anam session cleanup is typically handled client-side or via timeout.
+    // We no longer need the server-side closeDuixSession logic.
 
     // Now end the interview in database
     const result = await forceEndInterview(interview_id, userId);

@@ -18,10 +18,8 @@ export function NotificationListener() {
     const lastCountRef = useRef<number | null>(null);
     const isInitializedRef = useRef(false);
 
-    // Poll for unread count every 60 seconds
-    const { data: unreadCount } = trpc.notifications.getUnreadCount.useQuery(undefined, {
-        refetchInterval: 60000, // 60 seconds
-    });
+    // Get unread count on page load
+    const { data: unreadCount } = trpc.notifications.getUnreadCount.useQuery();
 
     useEffect(() => {
         // Initialize from localStorage on first render

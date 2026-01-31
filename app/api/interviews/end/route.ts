@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 import { endInterview } from "@/lib/interviews";
-import { closeDuixSession } from "@/lib/duix";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
@@ -17,11 +16,11 @@ export async function POST(request: Request) {
       throw new Error('Empty request body');
     }
 
-    const { interview_id, transcript } = JSON.parse(rawBody);
+    const { interview_id, transcript, source } = JSON.parse(rawBody);
 
     if (DEBUG_LOGGING) {
       const interviewIdShort = interview_id ? `${interview_id.substring(0, 8)}...` : 'none';
-      console.log(`[DEBUG] End interview request received: ${interviewIdShort}`);
+      console.log(`[DEBUG] End interview request received: ${interviewIdShort} from Source: ${source || 'unknown'}`);
     }
 
     // Get authenticated session
@@ -76,27 +75,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // End Duix session via REST API
-    // Note: Duix might need the runtime session ID, but if only conversation_id is used by SDK,
-    // we might need to store the session ID returned by duix.start() if we want REST cleanup.
-    // For now, we attempt to close using conversation_id or skip if it's just a bot ID.
-    if (interview.conversation_id) {
-      try {
-        // End the Duix session on the server side to stop billing/resource usage
-        if (DEBUG_LOGGING) {
-          console.log(`[DEBUG] End: Attempting to close Duix session: ${interview.conversation_id}`);
-        }
-
-        // Close the session and wait for it
-        await closeDuixSession(interview.conversation_id);
-
-        if (DEBUG_LOGGING) {
-          console.log('[DEBUG] End: Duix session cleanup successfully triggered');
-        }
-      } catch (error: any) {
-        if (DEBUG_LOGGING) console.log('[DEBUG] End: Duix cleanup failed (expected if ID is just avatar ID):', error.message);
-      }
-    }
+    // AI session cleanup is handled client-side via the SDK or via session timeout.
 
     // Now end the interview in database
     if (DEBUG_LOGGING) {

@@ -89,6 +89,44 @@ export async function POST(request: Request) {
 
     const result = await endInterview(interview_id, userId, transcript);
 
+    // 3. Trigger Analysis (Synchronous for now to match sequence)
+    console.log(`[DEBUG] Triggering analysis for ${interview_id}...`);
+    try {
+      if (transcript && Array.isArray(transcript) && transcript.length > 0) {
+        const { generateInterviewScore } = await import("@/lib/ai-scoring");
+
+        // Re-fetch interview to get role/description if needed for scoring
+        const interviewWithContext = await prisma.interview.findUnique({
+          where: { id: interview_id },
+          include: { resume: { select: { content: true } } }
+        });
+
+        if (interviewWithContext) {
+          const scoreResult = await generateInterviewScore(
+            transcript,
+            interviewWithContext.role || 'Candidate',
+            interviewWithContext.description || undefined,
+            interviewWithContext.resume?.content || undefined
+          );
+
+          // Update with analysis results
+          await prisma.interview.update({
+            where: { id: interview_id },
+            data: {
+              status: 'ANALYZED',
+              analysisScore: scoreResult.score || 0,
+              feedback: scoreResult as any,
+              analyzedAt: new Date()
+            }
+          });
+          console.log(`[DEBUG] Analysis completed for ${interview_id}`);
+        }
+      }
+    } catch (analysisErr) {
+      console.error(`[ERROR] Failed to generate analysis for ${interview_id}:`, analysisErr);
+      // We don't fail the whole request if analysis fails, as the interview is already ended.
+    }
+
     if (DEBUG_LOGGING) {
       console.log('[DEBUG] endInterview completed successfully:', {
         interview_id: result.interview.id,
@@ -101,9 +139,10 @@ export async function POST(request: Request) {
       interview_id: result.interview.id,
       duration_seconds: result.interview.duration_seconds,
       end_time: result.interview.end_time,
-      status: result.interview.status,
+      status: 'ANALYZED', // Signal that analysis was attempted/completed
       remaining_seconds: result.remaining_seconds
     });
+
 
   } catch (err: any) {
     console.error('[ERROR] End interview route critical failure:', err);

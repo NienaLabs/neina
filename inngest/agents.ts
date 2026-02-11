@@ -1,4 +1,4 @@
-import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt, autofixPrompt, resumeScopePrompt, normalizationPrompt, resumeSummaryPrompt, domainTranslationPrompt, roleClassifierPrompt } from "@/constants/prompts";
+import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt, autofixPrompt, resumeScopePrompt, normalizationPrompt, resumeSummaryPrompt, domainTranslationPrompt, roleClassifierPrompt, EXTRACT_KEYWORDS_PROMPT } from "@/constants/prompts";
 import { createAgent, openai } from "@inngest/agent-kit";
 import { lastAssistantTextMessageContent, validJson } from "@/lib/utils";
 
@@ -245,3 +245,135 @@ export const roleClassifierAgent = createAgent({
   },
 });
 
+export const keywordExtractorAgent = createAgent({
+  name: "keyword-extractor-agent",
+  system: EXTRACT_KEYWORDS_PROMPT,
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.keywordExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const improveResumeNudgeAgent = createAgent({
+  name: "improve-resume-nudge-agent",
+  system: "You are an expert resume tailoring agent. Follow the user's instructions strictly to nudge the resume content.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.improveResumeNudgeAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const improveResumeKeywordsAgent = createAgent({
+  name: "improve-resume-keywords-agent",
+  system: "You are an expert resume tailoring agent. Follow the user's instructions strictly to enhance the resume with keywords.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.improveResumeKeywordsAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const improveResumeFullAgent = createAgent({
+  name: "improve-resume-full-agent",
+  system: "You are an expert resume tailoring agent. Follow the user's instructions strictly to fully tailor the resume.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.improveResumeFullAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const improveResumeEnrichAgent = createAgent({
+  name: "improve-resume-enrich-agent",
+  system: "You are an expert resume tailoring agent. Follow the user's instructions strictly to enrich the resume content with better descriptions.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.improveResumeEnrichAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const improveResumeRefineAgent = createAgent({
+  name: "improve-resume-refine-agent",
+  system: "You are an expert resume tailoring agent. Follow the user's instructions strictly to refine and polish the resume content.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.improveResumeRefineAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const coverLetterAgent = createAgent({
+  name: "cover-letter-agent",
+  system: "You are an expert cover letter writer. Follow the instructions to generate a tailored cover letter.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0.7 }, // Higher temp for creativity
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.coverLetterAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});

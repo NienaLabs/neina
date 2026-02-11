@@ -6,6 +6,7 @@ import { polar, checkout, portal, usage, webhooks } from "@polar-sh/better-auth"
 import { Polar } from "@polar-sh/sdk";
 // If your Prisma file is located elsewhere, you can change the path
 import prisma from "@/lib/prisma";
+import { POLAR_PRODUCT_IDS } from "@/lib/plans";
 
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -123,7 +124,9 @@ export const auth = betterAuth({
                   plan: newPlan as any,
                   resume_credits: { increment: creditsToAdd },
                   interview_minutes: { increment: minutesToAdd },
-                  planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                  planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                  polarCustomerId: order.customer.id, 
+                  polarSubscriptionId: order.subscription_id
                 }
               });
             } else {
@@ -133,9 +136,92 @@ export const auth = betterAuth({
                 data: {
                   resume_credits: { increment: creditsToAdd },
                   interview_minutes: { increment: minutesToAdd },
+                  polarCustomerId: order.customer.id
                 }
               });
             }
+          },
+          onSubscriptionUpdated: async (payload) => {
+             console.log("Polar subscription updated", payload);
+             // @ts-ignore
+             const subscription = payload.data;
+             if (!subscription) return;
+             
+             // Find user (try by Subscription ID first, then Customer ID)
+             let user = await prisma.user.findFirst({
+                 where: { polarSubscriptionId: subscription.id }
+             });
+
+             if (!user) {
+                 user = await prisma.user.findFirst({
+                     where: { polarCustomerId: subscription.customerId }
+                 });
+             }
+
+             if (!user) {
+                 console.error(`User not found for subscription ${subscription.id}`);
+                 return;
+             }
+
+             // Determine Plan from Product ID
+             const productId = subscription.productId;
+             let newPlan = "FREE";
+             
+             if (productId === POLAR_PRODUCT_IDS.SILVER) newPlan = "SILVER";
+             else if (productId === POLAR_PRODUCT_IDS.GOLD) newPlan = "GOLD";
+             else if (productId === POLAR_PRODUCT_IDS.DIAMOND) newPlan = "DIAMOND";
+
+             if (subscription.status === 'active' && newPlan !== 'FREE') {
+                 await prisma.user.update({
+                     where: { id: user.id },
+                     data: {
+                         plan: newPlan as any,
+                         planExpiresAt: subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : undefined,
+                         polarCustomerId: subscription.customerId,
+                         polarSubscriptionId: subscription.id
+                     }
+                 });
+             } else if (subscription.status !== 'active') {
+                 // Handle cancellation/expiration? 
+                 // If canceled, maybe downgrade? relying on manual downgrade or expiration logic for now so we don't accidentally downgrade due to transient states.
+                 // But strictly speaking, if status is canceled, we should set to FREE effective immediately or at period end.
+                 // Polar handles 'cancel_at_period_end' separately.
+             }
+          },
+          onSubscriptionCreated: async (payload) => {
+             console.log("Polar subscription created", payload);
+             // @ts-ignore
+             const subscription = payload.data;
+             if (!subscription) return;
+
+             // Find user by customer ID (since sub ID might be new)
+             const user = await prisma.user.findFirst({
+                 where: { polarCustomerId: subscription.customerId}
+             });
+             
+             // If not found by ID, maybe try finding by email if available in payload?
+             // Subscription payload usually has customer_id, not email directly unless expanded.
+             // We rely on previous steps (create/checkout) to have linked the user.
+
+             if (user) {
+                 const productId = subscription.productId;
+                 let newPlan = "FREE";
+                 if (productId === POLAR_PRODUCT_IDS.SILVER) newPlan = "SILVER";
+                 else if (productId === POLAR_PRODUCT_IDS.GOLD) newPlan = "GOLD";
+                 else if (productId === POLAR_PRODUCT_IDS.DIAMOND) newPlan = "DIAMOND";
+
+                 if (newPlan !== 'FREE') {
+                      await prisma.user.update({
+                         where: { id: user.id },
+                         data: {
+                             plan: newPlan as any,
+                             planExpiresAt: subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : undefined,
+                             polarCustomerId: subscription.customerId,
+                             polarSubscriptionId: subscription.id
+                         }
+                     });
+                 }
+             }
           },
           onPayload: async (payload) => { console.log("Polar webhook payload", payload) },
         })

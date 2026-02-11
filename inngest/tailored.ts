@@ -1,509 +1,291 @@
 import { inngest } from "./client";
 import { createNetwork, createState } from "@inngest/agent-kit";
 import prisma from "@/lib/prisma";
-import { parserAgent, analysisAgent, jobExtractorAgent, autofixAgent, resumeScopeExtractorAgent, resumeSummaryAgent, domainTranslationAgent, roleClassifierAgent } from "./agents";
-import { generateEmbedding } from "@/lib/embeddings";
-import { cosineSimilarity, parseVectorString } from "@/lib/utils";
+import { keywordExtractorAgent, improveResumeNudgeAgent, improveResumeKeywordsAgent, improveResumeFullAgent, improveResumeRefineAgent, improveResumeEnrichAgent, coverLetterAgent } from "./agents";
+import { getTailoringPrompt, COVER_LETTER_PROMPT } from "@/constants/prompts";
+import { IMPROVE_RESUME_PROMPT_NUDGE, IMPROVE_RESUME_PROMPT_KEYWORDS, IMPROVE_RESUME_PROMPT_FULL, VALIDATION_POLISH_PROMPT, CRITICAL_TRUTHFULNESS_RULES_TEMPLATE, RESUME_SCHEMA_EXAMPLE } from "@/constants/prompts-backend";
 
-interface AgentState {
-  parserAgent:string;
-  analyserAgent:string;
-  autofixAgent:string;
-}
 
-// 1. Parser Network (Extraction Only) -> Runs on Raw Resume Content
-const parserNetwork = createNetwork({
-  name: 'tailored-resume-parser-network',
-  agents: [parserAgent],
-  defaultState: createState<AgentState>({
-    parserAgent:"",
-    analyserAgent:"",
-    autofixAgent:""
-  }),
+
+
+const keywordExtractionNetwork = createNetwork({
+  name: "tailored-keyword-extraction",
+  agents: [keywordExtractorAgent],
+  defaultState: createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" }),
   router: ({ callCount }) => {
     if (callCount > 0) return undefined;
-    return parserAgent;
-  },
-});
-
-// 2. Issue Analysis Network (Analysis Only) -> Runs on Full Context
-const issueNetwork = createNetwork({
-  name: 'tailored-resume-analysis-network',
-  defaultState: createState<AgentState>({
-    parserAgent:"",
-    analyserAgent:"",
-    autofixAgent:""
-  }),
-  agents: [analysisAgent],
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return analysisAgent;
-  },
-});
-
-// 3. Autofix Network
-const autofixNetwork = createNetwork({
-  name: 'tailored-resume-autofix-network',
-  agents: [autofixAgent],
-  defaultState: createState<AgentState>({
-    parserAgent:"",
-    analyserAgent:"",
-    autofixAgent:""
-  }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return autofixAgent;
-  },
-});
-
-const jobExtractionNetwork = createNetwork({
-  name: 'job-extraction-network',
-  agents: [jobExtractorAgent],
-  defaultState: createState<{ jobExtractorAgent: string }>({
-    jobExtractorAgent: ''
-  }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return jobExtractorAgent;
+    return keywordExtractorAgent;
   }
 });
 
-const resumeScopeNetwork = createNetwork({
-  name: 'resume-scope-network',
-  agents: [resumeScopeExtractorAgent],
-  defaultState: createState<{ resumeScopeExtractorAgent: string }>({
-    resumeScopeExtractorAgent: ''
-  }),
+const nudgeTailoringNetwork = createNetwork({
+  name: "tailored-nudge-network",
+  agents: [improveResumeNudgeAgent],
+  defaultState: createState<{ improveResumeNudgeAgent: string }>({ improveResumeNudgeAgent: "" }),
   router: ({ callCount }) => {
     if (callCount > 0) return undefined;
-    return resumeScopeExtractorAgent;
+    return improveResumeNudgeAgent;
   }
 });
 
+const keywordsTailoringNetwork = createNetwork({
+  name: "tailored-keywords-network",
+  agents: [improveResumeKeywordsAgent],
+  defaultState: createState<{ improveResumeKeywordsAgent: string }>({ improveResumeKeywordsAgent: "" }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return improveResumeKeywordsAgent;
+  }
+});
 
-function normalizeScope(scope: any) {
-  const seniorityMap: Record<string, number> = {
-    "Entry": 0, "Mid": 0.25, "Senior": 0.5, "Manager": 0.75, "Director": 0.85, "VP": 0.95, "C-Level": 1.0
-  };
+const fullTailoringNetwork = createNetwork({
+  name: "tailored-full-network",
+  agents: [improveResumeFullAgent],
+  defaultState: createState<{ improveResumeFullAgent: string }>({ improveResumeFullAgent: "" }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return improveResumeFullAgent;
+  }
+});
+
+const refineTailoringNetwork = createNetwork({
+    name: "tailored-refine-network",
+    agents: [improveResumeRefineAgent],
+    defaultState: createState<{ improveResumeRefineAgent: string }>({ improveResumeRefineAgent: "" }),
+    router: ({ callCount }) => {
+      if (callCount > 0) return undefined;
+      return improveResumeRefineAgent;
+    }
+  });
   
-  const normTeam = Math.min(Math.log10((scope.teamSize || 0) + 1) / 3, 1); // Max 1000 -> 1
-  const normBudget = Math.min(Math.log10((scope.budget || 0) + 1) / 8, 1); // Max 100M -> 1
-  const normGeo = Math.min((scope.geographies?.length || 0) / 5, 1); // Max 5 countries -> 1
-  const normSeniority = seniorityMap[scope.seniorityLevel as string] || 0.1; 
+  const enrichTailoringNetwork = createNetwork({
+    name: "tailored-enrich-network",
+    agents: [improveResumeEnrichAgent],
+    defaultState: createState<{ improveResumeEnrichAgent: string }>({ improveResumeEnrichAgent: "" }),
+    router: ({ callCount }) => {
+      if (callCount > 0) return undefined;
+      return improveResumeEnrichAgent;
+    }
+  });
 
-  return [normTeam, normBudget, normGeo, normSeniority];
-}
-
-const resumeSummaryNetwork = createNetwork({
-  name: 'resume-summary-network',
-  agents: [resumeSummaryAgent],
-  defaultState: createState<{ resumeSummaryAgent: string }>({
-    resumeSummaryAgent: ''
-  }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return resumeSummaryAgent;
-  }
-});
-
-const domainTranslationNetwork = createNetwork({
-  name: 'domain-translation-network',
-  agents: [domainTranslationAgent],
-  defaultState: createState<{ domainTranslationAgent: string }>({
-    domainTranslationAgent: ''
-  }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return domainTranslationAgent;
-  }
-});
-
-const roleClassifierNetwork = createNetwork({
-  name: 'role-classifier-network',
-  agents: [roleClassifierAgent],
-  defaultState: createState<{ roleClassifierAgent: string }>({
-    roleClassifierAgent: ''
-  }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return roleClassifierAgent;
-  }
-});
+  const coverLetterNetwork = createNetwork({
+    name: "cover-letter-network",
+    agents: [coverLetterAgent],
+    defaultState: createState<{ coverLetterAgent: string }>({ coverLetterAgent: "" }),
+    router: ({ callCount }) => {
+      if (callCount > 0) return undefined;
+      return coverLetterAgent;
+    }
+  });
 
 
 
 export const tailoredResumeCreated = inngest.createFunction(
   { id: "tailored-resume-AI-workflow" },
   { event: "app/tailored-resume.created" },
-  async ({step,event}) => {
+  async ({ step, event }) => {
     try {
-        const resumeText =`
-        #Resume
-        ${event.data.content}
+      // 1. Extract Job Keywords (Source of Truth for Scoring)
+      const jobText = event.data.description || "";
+      const keywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
+      // Execute Agent Network (Must be outside step.run)
+      const keywordResult = await keywordExtractionNetwork.run(jobText, { state: keywordState });
+
+      const jobContext = await step.run("process-job-keywords", async () => {
+        const data = JSON.parse(keywordResult.state.data.keywordExtractorAgent || "{}");
+        const keywords = [
+          ...(data.required_skills || []),
+          ...(data.preferred_skills || []),
+          ...(data.keywords || []),
+          ...(data.key_responsibilities || []) 
+        ].filter(Boolean);
+        const uniqueKeywords = Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
         
-        #Targetted Role
-        ${event.data.role}
-        #Job Description
-        ${event.data.description}
-        `
-        
-        // 1. Run Parser (Raw Content Only)
-        const parserResult = await parserNetwork.run(event.data.content);
-        const parserData = parserResult.state.data.parserAgent;
-        const parsedResume = JSON.parse(parserData || '{}');
+        return {
+          extractedData: data,
+          keywords: uniqueKeywords
+        };
+      });
 
-        // 2. Run Analysis (Full Context)
-        const analysisResult = await issueNetwork.run(resumeText);
-        const analysisDataRaw = analysisResult.state.data.analyserAgent;
+      // 2. Tailor Resume based on Mode
+      const mode = event.data.tailoringMode || "keywords";
+      let network;
+      let agentId;
 
-        // 3. Run Autofix (Using Issues from Analysis)
-        let mergedAnalysisData = analysisDataRaw;
+      if (mode === "nudge") {
+        network = nudgeTailoringNetwork;
+        agentId = "improveResumeNudgeAgent";
+      } else if (mode === "full") {
+        network = fullTailoringNetwork;
+        agentId = "improveResumeFullAgent";
+      } else if (mode === "refine") {
+        network = refineTailoringNetwork;
+        agentId = "improveResumeRefineAgent";
+      } else if (mode === "enrich") {
+         // Enrich acts like a "Full" tailor but with specific focus on adding detail
+         // For now, we'll map it to the Full agent but with a special note or prompt if needed
+         // Or strictly, use 'improveResumeEnrichAgent' if I defined it. I did.
+        network = enrichTailoringNetwork;
+        agentId = "improveResumeEnrichAgent";
+      } else {
+        network = keywordsTailoringNetwork;
+        agentId = "improveResumeKeywordsAgent";
+      }
 
-        if (analysisDataRaw) {
-            try {
-                const autofixInput = `
-                ${resumeText}
+      // Construct Prompt
+      let template = IMPROVE_RESUME_PROMPT_KEYWORDS;
+      if (mode === 'nudge') template = IMPROVE_RESUME_PROMPT_NUDGE;
+      if (mode === 'full') template = IMPROVE_RESUME_PROMPT_FULL;
+      if (mode === 'refine') template = VALIDATION_POLISH_PROMPT;
+      // For enrich, we might use FULL for now as a fallback if ENRICH prompt is too complex (interactive)
+      // But let's use FULL for enrich too as a "Stronger" tailor, or maybe Nudge but with "add detail" instruction?
+      // Actually, let's use IMPROVE_RESUME_PROMPT_FULL for Enrich for now, as the interactive Enrichment flow is not fully implemented.
+      if (mode === 'enrich') template = IMPROVE_RESUME_PROMPT_FULL; 
 
-                ---------------------------------------------------
-                # ANALYZED ISSUES
-                ${analysisDataRaw}
-                ---------------------------------------------------
-                `;
+      const truthfulnessRules = CRITICAL_TRUTHFULNESS_RULES_TEMPLATE.replace(
+          "{rule_7}",
+          "DO NOT fabricate any information."
+      );
 
-                const autofixResult = await autofixNetwork.run(autofixInput);
-                const autofixDataRaw = autofixResult.state.data.autofixAgent;
+      // Parse the content - it might be a JSON string (from retailor) or plain text
+      let resumeContent = event.data.content || "";
+      try {
+        // If it's a JSON string, parse it back to object then stringify it nicely
+        const parsed = JSON.parse(resumeContent);
+        resumeContent = JSON.stringify(parsed, null, 2);
+      } catch {
+        // If parsing fails, it's already text/markdown - use as is
+        // This handles the initial creation case where content is markdown
+      }
 
-                if (autofixDataRaw && analysisDataRaw) {
-                    const analysisJson = JSON.parse(analysisDataRaw);
-                    const autofixJson = JSON.parse(autofixDataRaw);
+      let filledPrompt = template
+        .replace("{critical_truthfulness_rules}", truthfulnessRules)
+        .replace("{job_description}", jobText) // Safe job text
+        .replace("{job_keywords}", (jobContext.keywords || []).join(", "))
+        .replace("{original_resume}", resumeContent)
+        .replace("{output_language}", "English")
+        .replace("{schema}", RESUME_SCHEMA_EXAMPLE);
 
-                    if (analysisJson.fixes) {
-                        for (const [sectionName, issues] of Object.entries(analysisJson.fixes)) {
-                           if (autofixJson[sectionName] && Array.isArray(issues)) {
-                               (issues as any[]).forEach(issue => {
-                                   issue.autoFix = autofixJson[sectionName];
-                               });
-                           }
-                        }
-                    }
-                    mergedAnalysisData = JSON.stringify(analysisJson);
-                }
-            } catch (e) {
-                console.error("Autofix generation failed:", e);
-            }
+      // Special handling for Refine/Polish (doesn't strictly need JD/Keywords but safe to include if prompt has placeholders)
+      // VALIDATION_POLISH_PROMPT defined in prompts-backend.ts:
+      // Review and polish... {critical_truthfulness_rules} ... {original_resume} ... {schema}
+      // It DOES NOT have {job_description} or {job_keywords}.
+      // So the replace calls above might be no-ops for those placeholders, which is fine.
+
+      const tailorState = createState<any>({ [agentId]: "" });
+      const tailorResult = await network.run(filledPrompt, { state: tailorState });
+
+      const tailoredContent = await step.run("process-tailored-content", async () => {
+        return JSON.parse(tailorResult.state.data[agentId] || "{}");
+      });
+
+      // 3. Extract Keywords from Tailored Resume (for Verification/Scoring)
+      const getSkillsList = (skills: any): string[] => {
+        if (!skills) return [];
+        if (Array.isArray(skills)) return skills;
+        if (typeof skills === 'object') {
+            return Object.values(skills).flat().map(s => String(s));
         }
+        return [];
+      };
 
-        // 0. Role Classification (Universal Scoring Step)
-        let roleArchetype = "Generalist";
-        try {
-            const classifierState = createState<{ roleClassifierAgent: string }>({ roleClassifierAgent: '' });
-            const classifierInput = `Title: ${event.data.role}\nDescription: ${event.data.description.substring(0, 1000)}`;
-            const classifierResult = await roleClassifierNetwork.run(classifierInput, { state: classifierState });
-            const classifierData = JSON.parse(classifierResult.state.data.roleClassifierAgent || '{}');
-            roleArchetype = classifierData.archetype || "Generalist";
-            console.log('[Universal Scoring] Role Archetype:', roleArchetype);
-        } catch(err) {
-            console.error('[Universal Scoring] Classification failed, defaulting to Generalist:', err);
-        }
+      const contentString = [
+            tailoredContent.summary || "",
+            getSkillsList(tailoredContent.skills).join(", "),
+            (Array.isArray(tailoredContent.experience) ? tailoredContent.experience : [])
+                .map((e: any) => e.description).join(" "),
+      ].join(" ");
+      
+      const tailoredKeywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
+      const tailoredKeywordResult = await keywordExtractionNetwork.run(contentString, { state: tailoredKeywordState });
 
-        // 4. Extract Job Data (Skills, Responsibilities, Scope, Location, Summary)
-        let extractedJob: any = {};
-        try {
-          const extractionState = createState<{ jobExtractorAgent: string }>({
-            jobExtractorAgent: ''
+      const tailoredResumeKeywords = await step.run("process-tailored-keywords", async () => {
+         const data = JSON.parse(tailoredKeywordResult.state.data.keywordExtractorAgent || "{}");
+         const keywords = [
+          ...(data.required_skills || []),
+          ...(data.preferred_skills || []),
+          ...(data.keywords || [])
+        ].filter(Boolean);
+        return Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
+      });
+
+      // 4. Calculate Word Match Score
+      const scoreData = await step.run("calculate-word-match-score", async () => {
+          const jobKeywords = new Set(jobContext.keywords);
+          const resumeKeywords = new Set(tailoredResumeKeywords);
+          
+          let matchCount = 0;
+          const matchedKeywords: string[] = [];
+          const missingKeywords: string[] = [];
+          
+          jobKeywords.forEach(k => {
+              if (resumeKeywords.has(k)) {
+                  matchCount++;
+                  matchedKeywords.push(k);
+              } else {
+                  missingKeywords.push(k);
+              }
           });
-          const extractionResult = await jobExtractionNetwork.run(event.data.description, { state: extractionState });
-          extractedJob = JSON.parse(extractionResult.state.data.jobExtractorAgent || '{}');
-        } catch (err) {
-          console.error('[tailoredResumeCreated] Failed to extract job data:', err);
-        }
-
-        // 5. Extract Resume Scope Data
-        let extractedResumeScope: any = {};
-        try {
-            const scopeState = createState<{ resumeScopeExtractorAgent: string }>({ resumeScopeExtractorAgent: '' });
-            const scopeResult = await resumeScopeNetwork.run(event.data.content, { state: scopeState });
-            const scopeData = JSON.parse(scopeResult.state.data.resumeScopeExtractorAgent || '{}');
-            extractedResumeScope = scopeData.scope || {};
-        } catch(err) {
-            console.error('[tailoredResumeCreated] Failed to extract resume scope:', err);
-        }
-
-        // 6. Generate Professional Resume Summary
-        let resumeSummary = "";
-        try {
-            const summaryState = createState<{ resumeSummaryAgent: string }>({ resumeSummaryAgent: '' });
-            const summaryResult = await resumeSummaryNetwork.run(event.data.content, { state: summaryState });
-            const summaryData = JSON.parse(summaryResult.state.data.resumeSummaryAgent || '{}');
-            resumeSummary = summaryData.summary || "";
-        } catch(err) {
-            console.error('[tailoredResumeCreated] Failed to generate resume summary:', err);
-        }
-
-        // 7. Domain Translation (Skills + Highlights)
-        let translatedSkills: string[] = [];
-        let relevantHighlights: string[] = [];
-        try {
-            // Fetch raw skills and experience from DB
-            const skillsResult: { skill_text: string }[] = await prisma.$queryRaw`
-                SELECT "skill_text" FROM "resume_skills" WHERE "resume_id" = ${event.data.primaryResumeId}
-            `;
-            const rawSkills = skillsResult[0]?.skill_text || "";
-
-            // FIXED: Fetch ALL experience bullets, not just the first one
-            const experienceResult: { bullet_text: string }[] = await prisma.$queryRaw`
-                SELECT "bullet_text" FROM "resume_experience" WHERE "resume_id" = ${event.data.primaryResumeId}
-            `;
-            // Concatenate all experience bullets
-            const rawExperience = experienceResult.map(row => row.bullet_text).join('\n\n') || "";
-
-            console.log('═════════════════════════════════════════════════');
-            console.log('[DEBUG EXPERIENCE] Fetched experience rows:', experienceResult.length);
-            console.log('[DEBUG EXPERIENCE] Total raw experience length:', rawExperience.length, 'chars');
-            console.log('[DEBUG EXPERIENCE] Raw experience preview:', rawExperience.substring(0, 300));
-            console.log('═════════════════════════════════════════════════');
-
-            // Prepare translation input (Use Extracted Data for precision)
-            const targetSkills = extractedJob.skills?.join(', ') || "";
-            const targetResponsibilities = extractedJob.responsibilities?.join('\n- ') || "";
-            
-            const translationInput = `
-Resume Skills: ${rawSkills}
-
-Resume Experience: ${rawExperience}
-
-Target Role: ${event.data.role}
-
-Target Job Skills (Vocabulary to align with):
-${targetSkills}
-
-Target Job Responsibilities (Key themes to highlight):
-- ${targetResponsibilities}
-            `;
-
-            // Call network directly (NOT inside step.run to avoid nesting)
-             const translationState = createState<{ domainTranslationAgent: string }>({ domainTranslationAgent: '' });
-             const translationResult = await domainTranslationNetwork.run(translationInput, { state: translationState });
-             const translationData = JSON.parse(translationResult.state.data.domainTranslationAgent || '{}');
-             
-             translatedSkills = translationData.translatedSkills || [];
-             relevantHighlights = translationData.relevantHighlights || [];
-             
-             console.log('[DEBUG] Domain Translation - Original Skills:', rawSkills.substring(0, 100));
-             console.log('[DEBUG] Domain Translation - Translated Skills Count:', translatedSkills.length);
-             console.log('═════════════════════════════════════════════════');
-             console.log('[DEBUG EXPERIENCE] Relevant Highlights Count:', relevantHighlights.length);
-             console.log('[DEBUG EXPERIENCE] Highlights Sample 1:', relevantHighlights[0] || 'NONE');
-             console.log('[DEBUG EXPERIENCE] Highlights Sample 2:', relevantHighlights[1] || 'NONE');
-             console.log('═════════════════════════════════════════════════');
-             
-         } catch(err) {
-             console.error('[tailoredResumeCreated] Failed to translate domain:', err);
-         }
-
-        const { jobDescriptionEmbedding, jobSkillsEmbedding, jobResponsibilitiesEmbedding, scores } = await step.run("generate-embedding-and-score", async () => {
-          // A. Generate Embeddings
           
-          // Job Embeddings
-          // Summary: Use extracted job summary if available, else raw description
-          const jobSummaryText = extractedJob.summary || event.data.description.substring(0, 500);
-          console.log('[DEBUG] Job Summary Text:', jobSummaryText);
-          const jobDescriptionEmbedding = await generateEmbedding(jobSummaryText);
-
-          // Job Skills: Augment with "Seniority Verbs" (Ensure Job side matches Resume side)
-          const jobSeniority = extractedJob.scope?.seniorityLevel || "Mid";
-          let jobSeniorityKeywords = "";
-          if (["Director", "VP", "C-Level"].includes(jobSeniority)) {
-             jobSeniorityKeywords = "Strategic Planning, Executive Leadership, P&L Management, Organizational Development, Board Relations, Change Management, Visionary Leadership";
-          } else if (["Manager", "Senior"].includes(jobSeniority)) {
-             jobSeniorityKeywords = "Team Leadership, Project Management, Stakeholder Management, Mentorship, Process Improvement";
-          }
-          const augmentedJobSkillsText = `${extractedJob.skills?.join('\n') || ''}\n${jobSeniorityKeywords}`.trim();
-          console.log('[DEBUG] Job Skills (Base):', extractedJob.skills?.join(', ') || 'NONE');
-          console.log('[DEBUG] Job Skills (Augmented Length):', augmentedJobSkillsText.length);
-          const jobSkillsEmbedding = augmentedJobSkillsText ? await generateEmbedding(augmentedJobSkillsText) : [];
-
-          const jobResponsibilitiesEmbedding = (extractedJob.responsibilities?.length > 0)
-            ? await generateEmbedding(extractedJob.responsibilities.join('\n')) : [];
+          const score = jobKeywords.size > 0 ? (matchCount / jobKeywords.size) : 0;
           
-          // Job Location (Semantic)
-          const jobLocationText = extractedJob.location?.join(", ") || "";
-          const jobLocationEmbedding = jobLocationText ? await generateEmbedding(jobLocationText) : [];
-
-          // Job Scope (Structured Vector)
-          const jobScopeVector = normalizeScope(extractedJob.scope || {});
-
-          // Resume Embeddings
-          // 1. Overall: Use AI-Generated Resume Summary for focused matching
-          console.log('[DEBUG] Resume Summary:', resumeSummary || 'FALLBACK TO SUBSTRING');
-          const fullResumeEmbedding = await generateEmbedding(resumeSummary || event.data.content.substring(0, 500)); 
-
-          // 2. Experience: Use RELEVANT HIGHLIGHTS matching (Single Vector - Cost Efficient)
-          // We embed the curated highlights block as a single vector.
-          const highlightsText = relevantHighlights.length > 0 ? relevantHighlights.join('\n') : '';
-          console.log('[DEBUG] Experience Embedding - Using highlights:', highlightsText.length > 0);
-          
-          // Generate ONE embedding for experience (Low Cost)
-          const experienceEmbedding = highlightsText ? await generateEmbedding(highlightsText) : [];
-          
-          // Calculate R score using standard cosine similarity
-          const R = (experienceEmbedding.length > 0 && jobResponsibilitiesEmbedding.length > 0)
-            ? cosineSimilarity(experienceEmbedding, jobResponsibilitiesEmbedding) : 0;
-
-          // 3. Augmented Skills Embedding (Use TRANSLATED skills + seniority keywords)
-          const translatedSkillsText = translatedSkills.length > 0 ? translatedSkills.join(', ') : '';
-          console.log('[DEBUG] Skills Embedding - Using translated:', translatedSkillsText.length > 0);
-
-          // Derive "Seniority Verbs" from Resume Scope
-          const seniorityLevel = extractedResumeScope.seniorityLevel;
-          let seniorityKeywords = "";
-          if (["Director", "VP", "C-Level"].includes(seniorityLevel)) {
-             seniorityKeywords = "Strategic Planning, Executive Leadership, P&L Management, Organizational Development, Board Relations, Change Management, Visionary Leadership";
-          } else if (["Manager", "Senior"].includes(seniorityLevel)) {
-             seniorityKeywords = "Team Leadership, Project Management, Stakeholder Management, Mentorship, Process Improvement";
-          }
-
-          // Combine for Augmented Embedding
-          const augmentedSkillsText = `${translatedSkillsText}\n${seniorityKeywords}`.trim();
-          console.log('[DEBUG] Resume Skills (Translated + Augmented):', translatedSkillsText.substring(0, 150));
-          console.log('[DEBUG] Resume Seniority Level:', seniorityLevel);
-          console.log('[DEBUG] Resume Skills (Final Augmented Length):', augmentedSkillsText.length);
-          const skillsEmbedding = await generateEmbedding(augmentedSkillsText);
-
-          // Resume Location (From Scoped Data geographies)
-          const resumeLocationText = extractedResumeScope.geographies?.join(", ") || "";
-          const resumeLocationEmbedding = resumeLocationText ? await generateEmbedding(resumeLocationText) : [];
-
-          // Resume Scope (Structured Vector)
-          const resumeScopeVector = normalizeScope(extractedResumeScope);
-
-          // C. Calculate Similarities
-          const S = (skillsEmbedding.length > 0 && jobSkillsEmbedding.length > 0) 
-            ? cosineSimilarity(skillsEmbedding, jobSkillsEmbedding) : 0;
-            
-          // R is already calculated above
-            
-          const C = cosineSimilarity(resumeScopeVector, jobScopeVector); // Scope
-          
-          const L = (resumeLocationEmbedding.length > 0 && jobLocationEmbedding.length > 0)
-            ? cosineSimilarity(resumeLocationEmbedding, jobLocationEmbedding) : 0;
-            
-          // Overall Score should now generally be higher due to focused summary matching
-          const O = (fullResumeEmbedding.length > 0 && jobDescriptionEmbedding.length > 0)
-            ? cosineSimilarity(fullResumeEmbedding, jobDescriptionEmbedding) : 0;
-
-          console.log('[DEBUG] Similarity Scores - S:', (S*100).toFixed(1) + '%', 'R:', (R*100).toFixed(1) + '%', 'C:', (C*100).toFixed(1) + '%', 'L:', (L*100).toFixed(1) + '%', 'O:', (O*100).toFixed(1) + '%');
-
-          // C. Weighted Score - DYNAMIC UNIVERSAL MATRIX
-          // Weights adapt to the Role Archetype
-          // S=Skills, R=Experience, C=Scope, L=Location, O=Overall
-          
-          let weights = { S: 0.40, R: 0.30, C: 0.15, L: 0.05, O: 0.10 }; // Default Generalist
-
-          if (roleArchetype === "Executive") {
-             // Executive: Balanced Scope (40%) + Verified Skills (30%)
-             // Skills are now translated/augmented, so we trust them more.
-             weights = { S: 0.30, R: 0.20, C: 0.40, L: 0.05, O: 0.05 };
-          } else if (roleArchetype === "Technical") {
-             // Technical: Skills are king (60%)
-             weights = { S: 0.60, R: 0.20, C: 0.05, L: 0.05, O: 0.10 };
-          } else if (roleArchetype === "Creative") {
-             // Creative: Overall/Portfolio matters (boosted O), Skills matter
-             weights = { S: 0.30, R: 0.20, C: 0.10, L: 0.05, O: 0.35 }; 
-          }
-          
-          console.log(`[Universal Scoring] Using ${roleArchetype} Weights:`, weights);
-
-          let finalScore = (weights.S * S) + (weights.R * R) + (weights.C * C) + (weights.L * L) + (weights.O * O);
-
-          // D. Seniority Boost (Optional implementation as per plan)
-          // Add 0.05 if Title >= GM/VP (approx mapped to >0.85 seniority)
-          if (resumeScopeVector[3] >= 0.85) finalScore += 0.05;
-          // Add 0.03 if P&L > $50M (normBudget > log10(50M)/8 ~= 7.7/8 =~ 0.96)
-          // Let's settle for > $10M for now which is log10(10M)=7 -> 7/8 = 0.875
-          if (resumeScopeVector[1] >= 0.875) finalScore += 0.03;
-
-          // Cap at 1.0
-          finalScore = Math.min(finalScore, 1.0);
-
           return {
-            jobDescriptionEmbedding,
-            jobSkillsEmbedding,
-            jobResponsibilitiesEmbedding,
-            scores: {
-              skillsScore: S,
-              experienceScore: R,
-              responsibilitiesScore: R,
-              scopeScore: C,
-              locationScore: L,
-              overallScore: O,
-              finalScore,
-            },
+              finalScore: score,
+              matchedKeywords,
+              missingKeywords,
+              totalKeywords: jobKeywords.size
           };
-        });
+      });
 
-        await step.run("save-tailored-resume", async () => {
-          // Update existing tailored resume
-          const tailoredResume = await prisma.tailoredResume.update({
+      // 5. Save to DB
+      await step.run("save-tailored-resume", async () => {
+          // Quick JSON-to-Markdown helper
+          const jsonToMarkdown = (data: any) => {
+              let md = `# ${data.name || "Tailored Resume"}\n\n`;
+              if (data.summary) md += `## Summary\n${data.summary}\n\n`;
+              if (data.skills && data.skills.length) md += `## Skills\n${data.skills.join(", ")}\n\n`;
+              if (data.experience) {
+                  md += `## Experience\n`;
+                  data.experience.forEach((exp: any) => {
+                      md += `### ${exp.role} at ${exp.company}\n${exp.date || ""}\n${exp.description}\n\n`;
+                  });
+              }
+              return md;
+          };
+          
+          const finalContent = jsonToMarkdown(tailoredContent);
+          
+          await prisma.tailoredResume.update({
             where: { id: event.data.resumeId },
             data: {
-              name: event.data.name,
-              content: event.data.content,
-              role: event.data.role,
-              jobDescription: event.data.description,
-              extractedData: parserData,
-              analysisData: mergedAnalysisData,
-              scores: {...scores },
+              content: finalContent, 
+              extractedData: tailoredContent, 
+              analysisData: JSON.stringify({
+                  matches: scoreData.matchedKeywords,
+                  missing: scoreData.missingKeywords
+              }),
+              scores: {
+                  finalScore: scoreData.finalScore,
+                  wordMatchScore: scoreData.finalScore,
+                  totalKeywords: scoreData.totalKeywords,
+                  matchedCount: scoreData.matchedKeywords.length
+              },
               status: "COMPLETED"
             }
           });
+      });
 
-          const formattedJobDescVector = `[${jobDescriptionEmbedding.join(',')}]`;
-          const formattedSkillsVector = jobSkillsEmbedding.length > 0 ? `[${jobSkillsEmbedding.join(',')}]` : null;
-          const formattedRespVector = jobResponsibilitiesEmbedding.length > 0 ? `[${jobResponsibilitiesEmbedding.join(',')}]` : null;
-          
-          if (formattedSkillsVector && formattedRespVector) {
-            await prisma.$executeRaw`
-              UPDATE "tailored_resume"
-              SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector,
-                  "jobSkillsEmbedding" = ${formattedSkillsVector}::vector,
-                  "jobResponsibilitiesEmbedding" = ${formattedRespVector}::vector
-              WHERE "id" = ${tailoredResume.id}
-            `;
-          } else if (formattedSkillsVector) {
-            await prisma.$executeRaw`
-              UPDATE "tailored_resume"
-              SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector,
-                  "jobSkillsEmbedding" = ${formattedSkillsVector}::vector
-              WHERE "id" = ${tailoredResume.id}
-            `;
-          } else if (formattedRespVector) {
-            await prisma.$executeRaw`
-              UPDATE "tailored_resume"
-              SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector,
-                  "jobResponsibilitiesEmbedding" = ${formattedRespVector}::vector
-              WHERE "id" = ${tailoredResume.id}
-            `;
-          } else {
-            await prisma.$executeRaw`
-              UPDATE "tailored_resume"
-              SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector
-              WHERE "id" = ${tailoredResume.id}
-            `;
-          }
-        })
+      return { success: true, score: scoreData.finalScore };
 
-        return { scores, analysisData: mergedAnalysisData }
     } catch (error) {
-        console.error("Error in tailoredResumeCreated workflow:", error);
-        // Delete the tailored resume since creation failed
-        await step.run("delete-failed-tailored-resume", async () => {
-            await prisma.tailoredResume.delete({
-                where: { id: event.data.resumeId }
-            });
+      console.error("Error in tailoredResumeCreated workflow:", error);
+      await step.run("delete-failed-tailored-resume", async () => {
+        await prisma.tailoredResume.delete({
+          where: { id: event.data.resumeId }
         });
-        throw error;
-    } 
+      });
+      throw error;
+    }
   }
 );
 
@@ -512,388 +294,152 @@ export const tailoredResumeUpdated = inngest.createFunction(
   { event: "app/tailored-resume.updated" },
   async ({step,event}) => {
     try {
-    let resumeText =`
-    #Resume
-    ${event.data.content}
-    
-    #Targetted Role
-    ${event.data.role}
-    #Job Description
-    ${event.data.description}
-    `
-    
-    if (event.data.previousAnalysis) {
-            let prevFixes = "";
-             try {
-                const prev = typeof event.data.previousAnalysis === 'string' 
-                    ? JSON.parse(event.data.previousAnalysis) 
-                    : event.data.previousAnalysis;
-                if (prev && prev.fixes) {
-                    // Sanitize prev.fixes to remove massive 'autoFix' content from legacy data
-                    const sanitizedFixes: any = {};
-                    for (const [section, issues] of Object.entries(prev.fixes)) {
-                        if (Array.isArray(issues)) {
-                            sanitizedFixes[section] = issues.map((issue: any) => {
-                                const { autoFix, ...rest } = issue; // Destructure to exclude autoFix
-                                return rest;
-                            });
-                        } else {
-                            sanitizedFixes[section] = issues;
-                        }
-                    }
-                    prevFixes = JSON.stringify(sanitizedFixes, null, 2);
-                }
-             } catch (e) {
-                console.error("Failed to parse previous analysis", e);
-             }
+       // 1. Extract Job Keywords
+      const jobText = event.data.description || "";
+      const keywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
+      const keywordResult = await keywordExtractionNetwork.run(jobText, { state: keywordState });
 
-             if (prevFixes) {
-                 resumeText += `
-        
-        ---------------------------------------------------
-        # PREVIOUS ISSUES CHECKLIST (META-DATA)
-        The following is a list of issues found in a PREVIOUS version of this resume.
-        YOUR GOAL: Check if these specific issues have been fixed in the CURRENT RESUME content above.
-        - If an issue is fixed, IGNORE it.
-        - If an issue is NOT fixed, Re-report it.
-        - DO NOT hallucinate that these issues exist if the current text shows they are fixed.
-        
-        ${prevFixes}
-        ---------------------------------------------------
-                 `
-             }
-    }
-    
-    // 1. Run Parser (Raw Content Only)
-    // Note: In an update, we usually want to re-parse the content to ensure extraction matches current text.
-    const parserResult = await parserNetwork.run(event.data.content);
-    const parserData = parserResult.state.data.parserAgent;
-
-    // 2. Run Analysis (Full Context)
-    const analysisResult = await issueNetwork.run(resumeText);
-    const analysisDataRaw = analysisResult.state.data.analyserAgent;
-
-            // 2. Run Autofix
-            let mergedAnalysisData = analysisDataRaw;
-        
-            if (analysisDataRaw) {
-                try {
-                    // Extract Job Content for Autofix Context
-                    // Note: ExtractedJob isn't fully ready yet at this line in the original flow order?
-                    // Ah, extraction happens at step 4 (line 609). We need to move Extraction EARLIER 
-                    // or extract it temporarily here. 
-                    // Workaround: We have event.data.role and description.
-                    
-                    const autofixInput = `
-                    ${resumeText}
-        
-                    ---------------------------------------------------
-                    # TARGET JOB CONTEXT (For Semantic Mirroring)
-                    Role: ${event.data.role}
-                    Job Description Preview: ${event.data.description.substring(0, 500)}...
-                    ---------------------------------------------------
-        
-                    ---------------------------------------------------
-                    # ANALYZED ISSUES
-                    ${analysisDataRaw}
-                    ---------------------------------------------------
-                    `;
-        
-                    const autofixResult = await autofixNetwork.run(autofixInput);
-            const autofixDataRaw = autofixResult.state.data.autofixAgent;
-
-            if (autofixDataRaw && analysisDataRaw) {
-                const analysisJson = JSON.parse(analysisDataRaw);
-                const autofixJson = JSON.parse(autofixDataRaw);
-
-                if (analysisJson.fixes) {
-                    for (const [sectionName, issues] of Object.entries(analysisJson.fixes)) {
-                       if (autofixJson[sectionName] && Array.isArray(issues)) {
-                           (issues as any[]).forEach(issue => {
-                               issue.autoFix = autofixJson[sectionName];
-                           });
-                       }
-                    }
-                }
-                mergedAnalysisData = JSON.stringify(analysisJson);
-            }
-        } catch (e) {
-            console.error("Autofix generation failed:", e);
-        }
-    }
-
-
-
-    // 0. Role Classification (Universal Scoring Step)
-    let roleArchetype = "Generalist";
-    try {
-        const classifierState = createState<{ roleClassifierAgent: string }>({ roleClassifierAgent: '' });
-        const classifierInput = `Title: ${event.data.role}\nDescription: ${event.data.description.substring(0, 1000)}`;
-        const classifierResult = await roleClassifierNetwork.run(classifierInput, { state: classifierState });
-        const classifierData = JSON.parse(classifierResult.state.data.roleClassifierAgent || '{}');
-        roleArchetype = classifierData.archetype || "Generalist";
-        console.log('[Universal Scoring] Role Archetype:', roleArchetype);
-    } catch(err) {
-        console.error('[Universal Scoring] Classification failed, defaulting to Generalist:', err);
-    }
-
-    // 4. Extract Job Data (Skills, Responsibilities, Scope, Location)
-    let extractedJob: any = {};
-    try {
-      const extractionState = createState<{ jobExtractorAgent: string }>({
-        jobExtractorAgent: ''
-      });
-      const extractionResult = await jobExtractionNetwork.run(event.data.description, { state: extractionState });
-      extractedJob = JSON.parse(extractionResult.state.data.jobExtractorAgent || '{}');
-    } catch (err) {
-      console.error('[tailoredResumeUpdated] Failed to extract job data:', err);
-    }
-
-
-    // 5. Extract Resume Scope Data
-    let extractedResumeScope: any = {};
-    try {
-        const scopeState = createState<{ resumeScopeExtractorAgent: string }>({ resumeScopeExtractorAgent: '' });
-        const scopeResult = await resumeScopeNetwork.run(event.data.content, { state: scopeState });
-        const scopeData = JSON.parse(scopeResult.state.data.resumeScopeExtractorAgent || '{}');
-        extractedResumeScope = scopeData.scope || {};
-    } catch(err) {
-        console.error('[tailoredResumeUpdated] Failed to extract resume scope:', err);
-    }
-    
-        // 7. Domain Translation (Skills + Highlights)
-        // Ensure Updates use the same advanced logic as creation
-        let translatedSkills: string[] = [];
-        let relevantHighlights: string[] = [];
-        try {
-            // Fetch raw skills and experience from DB
-            const skillsResult: { skill_text: string }[] = await prisma.$queryRaw`
-                SELECT "skill_text" FROM "resume_skills" WHERE "resume_id" = ${event.data.primaryResumeId}
-            `;
-            const rawSkills = skillsResult[0]?.skill_text || "";
-
-            // Fetch ALL experience bullets
-            const experienceResult: { bullet_text: string }[] = await prisma.$queryRaw`
-                SELECT "bullet_text" FROM "resume_experience" WHERE "resume_id" = ${event.data.primaryResumeId}
-            `;
-            const rawExperience = experienceResult.map(row => row.bullet_text).join('\n\n') || "";
-
-            // Prepare translation input (Use Extracted Data for precision)
-            const targetSkills = extractedJob.skills?.join(', ') || "";
-            const targetResponsibilities = extractedJob.responsibilities?.join('\n- ') || "";
-            
-            const translationInput = `
-Resume Skills: ${rawSkills}
-
-Resume Experience: ${rawExperience}
-
-Target Role: ${event.data.role}
-
-Target Job Skills (Vocabulary to align with):
-${targetSkills}
-
-Target Job Responsibilities (Key themes to highlight):
-- ${targetResponsibilities}
-            `;
-
-            // Call network directly
-             const translationState = createState<{ domainTranslationAgent: string }>({ domainTranslationAgent: '' });
-             const translationResult = await domainTranslationNetwork.run(translationInput, { state: translationState });
-             const translationData = JSON.parse(translationResult.state.data.domainTranslationAgent || '{}');
-             
-             translatedSkills = translationData.translatedSkills || [];
-             relevantHighlights = translationData.relevantHighlights || [];
-             
-             console.log('[Universal Scoring Update] Translated Skills Count:', translatedSkills.length);
-             console.log('[Universal Scoring Update] Relevant Highlights Count:', relevantHighlights.length);
-             
-         } catch(err) {
-             console.error('[tailoredResumeUpdated] Failed to translate domain:', err);
-         }
-
-    // 6. Generate Professional Resume Summary
-    let resumeSummary = "";
-    try {
-        const summaryState = createState<{ resumeSummaryAgent: string }>({ resumeSummaryAgent: '' });
-        const summaryResult = await resumeSummaryNetwork.run(event.data.content, { state: summaryState });
-        const summaryData = JSON.parse(summaryResult.state.data.resumeSummaryAgent || '{}');
-        resumeSummary = summaryData.summary || "";
-    } catch(err) {
-        console.error('[tailoredResumeUpdated] Failed to generate resume summary:', err);
-    }
-
-    const { jobDescriptionEmbedding, jobSkillsEmbedding, jobResponsibilitiesEmbedding, scores } = await step.run("generate-embedding-and-score", async () => {
-      // A. Generate Embeddings
-      
-      // Job Embeddings
-      const jobDescriptionEmbedding = await generateEmbedding(event.data.description);
-      const jobSkillsEmbedding = (extractedJob.skills?.length > 0)
-        ? await generateEmbedding(extractedJob.skills.join('\n')) : [];
-      const jobResponsibilitiesEmbedding = (extractedJob.responsibilities?.length > 0)
-        ? await generateEmbedding(extractedJob.responsibilities.join('\n')) : [];
-      
-      // Job Location (Semantic)
-      const jobLocationText = extractedJob.location?.join(", ") || "";
-      const jobLocationEmbedding = jobLocationText ? await generateEmbedding(jobLocationText) : [];
-
-      // Job Scope (Structured Vector)
-      const jobScopeVector = normalizeScope(extractedJob.scope || {});
-
-      // Resume Embeddings
-      // 1. Overall: Use AI-Generated Resume Summary for focused matching
-      const fullResumeEmbedding = await generateEmbedding(resumeSummary || event.data.content.substring(0, 500));
-      
-      // 2. Experience: Use RELEVANT HIGHLIGHTS matching (Single Vector - Cost Efficient)
-      const highlightsText = relevantHighlights.length > 0 ? relevantHighlights.join('\n') : "";
-      console.log('[DEBUG Update] Experience Embedding - Using highlights:', highlightsText.length > 0);
-      const experienceEmbedding = highlightsText ? await generateEmbedding(highlightsText) : [];
-
-      // 3. Augmented Skills Embedding (New Implementation)
-      // Fetch raw skill text from DB
-      const skillsTextResult: { skill_text: string }[] = await prisma.$queryRaw`
-        SELECT "skill_text" FROM "resume_skills" WHERE "resume_id" = ${event.data.primaryResumeId}
-      `;
-      let rawSkillsText = skillsTextResult[0]?.skill_text || "";
-
-      // Derive "Seniority Verbs" from Resume Scope
-      const seniorityLevel = extractedResumeScope.seniorityLevel;
-      let seniorityKeywords = "";
-      if (["Director", "VP", "C-Level"].includes(seniorityLevel)) {
-          seniorityKeywords = "Strategic Planning, Executive Leadership, P&L Management, Organizational Development, Board Relations, Change Management, Visionary Leadership";
-      } else if (["Manager", "Senior"].includes(seniorityLevel)) {
-          seniorityKeywords = "Team Leadership, Project Management, Stakeholder Management, Mentorship, Process Improvement";
-      }
-
-      // Combine for Augmented Embedding (Use Translated Skills)
-      const translatedSkillsText = translatedSkills.length > 0 ? translatedSkills.join(', ') : "";
-      const augmentedSkillsText = `${translatedSkillsText}\n${seniorityKeywords}`.trim();
-      const skillsEmbedding = await generateEmbedding(augmentedSkillsText);
-
-      // Resume Location (From Scoped Data geographies)
-      const resumeLocationText = extractedResumeScope.geographies?.join(", ") || "";
-      const resumeLocationEmbedding = resumeLocationText ? await generateEmbedding(resumeLocationText) : [];
-
-      // Resume Scope (Structured Vector)
-      const resumeScopeVector = normalizeScope(extractedResumeScope);
-
-      // B. Calculate Similarities (0-1)
-      const S = (skillsEmbedding.length > 0 && jobSkillsEmbedding.length > 0) 
-        ? cosineSimilarity(skillsEmbedding, jobSkillsEmbedding) : 0;
-        
-      const R = (experienceEmbedding.length > 0 && jobResponsibilitiesEmbedding.length > 0)
-        ? cosineSimilarity(experienceEmbedding, jobResponsibilitiesEmbedding) : 0;
-        
-      const C = cosineSimilarity(resumeScopeVector, jobScopeVector); // Scope
-      
-      const L = (resumeLocationEmbedding.length > 0 && jobLocationEmbedding.length > 0)
-        ? cosineSimilarity(resumeLocationEmbedding, jobLocationEmbedding) : 0;
-        
-      const O = (fullResumeEmbedding.length > 0 && jobDescriptionEmbedding.length > 0)
-        ? cosineSimilarity(fullResumeEmbedding, jobDescriptionEmbedding) : 0;
-
-      // C. Weighted Score - DYNAMIC UNIVERSAL MATRIX
-      // Weights adapt to the Role Archetype
-      let weights = { S: 0.40, R: 0.30, C: 0.15, L: 0.05, O: 0.10 }; // Default Generalist
-
-      if (roleArchetype === "Executive") {
-         weights = { S: 0.30, R: 0.20, C: 0.40, L: 0.05, O: 0.05 };
-      } else if (roleArchetype === "Technical") {
-         weights = { S: 0.60, R: 0.20, C: 0.05, L: 0.05, O: 0.10 };
-      } else if (roleArchetype === "Creative") {
-         weights = { S: 0.30, R: 0.20, C: 0.10, L: 0.05, O: 0.35 }; 
-      }
-      
-      console.log(`[Universal Scoring] Using ${roleArchetype} Weights:`, weights);
-
-      let finalScore = (weights.S * S) + (weights.R * R) + (weights.C * C) + (weights.L * L) + (weights.O * O);
-
-      // D. Seniority Boost
-      if (resumeScopeVector[3] >= 0.85) finalScore += 0.05;
-      if (resumeScopeVector[1] >= 0.875) finalScore += 0.03;
-
-      // Cap at 1.0
-      finalScore = Math.min(finalScore, 1.0);
-
-      return {
-        jobDescriptionEmbedding,
-        jobSkillsEmbedding,
-        jobResponsibilitiesEmbedding,
-        scores: {
-          skillsScore: S,
-          experienceScore: R,
-          responsibilitiesScore: R,
-          scopeScore: C,
-          locationScore: L,
-          overallScore: O,
-          finalScore,
-        },
-      };
-    });
-
-    await step.run("update-tailored-resume", async () => {
-      await prisma.tailoredResume.update({
-        where: {
-            id: event.data.resumeId,
-            userId: event.data.userId
-        },
-        data: {
-          name: event.data.name,
-          content: event.data.content,
-          role: event.data.role,
-          jobDescription: event.data.description,
-          extractedData: parserData,
-          analysisData: mergedAnalysisData,
-          scores: {...scores },
-          status: "COMPLETED"
-        }
+      const jobContext = await step.run("extract-job-keywords-update", async () => {
+        const data = JSON.parse(keywordResult.state.data.keywordExtractorAgent || "{}");
+        const keywords = [
+          ...(data.required_skills || []),
+          ...(data.preferred_skills || []),
+          ...(data.keywords || [])
+        ].filter(Boolean);
+        const uniqueKeywords = Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
+        return { extractedData: data, keywords: uniqueKeywords };
       });
 
-      const formattedJobDescVector = `[${jobDescriptionEmbedding.join(',')}]`;
-      const formattedSkillsVector = jobSkillsEmbedding.length > 0 ? `[${jobSkillsEmbedding.join(',')}]` : null;
-      const formattedRespVector = jobResponsibilitiesEmbedding.length > 0 ? `[${jobResponsibilitiesEmbedding.join(',')}]` : null;
+      // 2. Tailoring is NOT re-run on simple update unless explicitly requested?
+      // The `tailoredResumeUpdated` event usually implies the USER edited the content manually or requested a re-generation.
+      // We assume the content in `event.data.content` is the Latest.
       
-      if (formattedSkillsVector && formattedRespVector) {
-        await prisma.$executeRaw`
-          UPDATE "tailored_resume"
-          SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector,
-              "jobSkillsEmbedding" = ${formattedSkillsVector}::vector,
-              "jobResponsibilitiesEmbedding" = ${formattedRespVector}::vector
-          WHERE "id" = ${event.data.resumeId}
-        `;
-      } else if (formattedSkillsVector) {
-        await prisma.$executeRaw`
-          UPDATE "tailored_resume"
-          SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector,
-              "jobSkillsEmbedding" = ${formattedSkillsVector}::vector
-          WHERE "id" = ${event.data.resumeId}
-        `;
-      } else if (formattedRespVector) {
-        await prisma.$executeRaw`
-          UPDATE "tailored_resume"
-          SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector,
-              "jobResponsibilitiesEmbedding" = ${formattedRespVector}::vector
-          WHERE "id" = ${event.data.resumeId}
-        `;
-      } else {
-        await prisma.$executeRaw`
-          UPDATE "tailored_resume"
-          SET "jobDescriptionEmbedding" = ${formattedJobDescVector}::vector
-          WHERE "id" = ${event.data.resumeId}
-        `;
-      }
-    })
+      const tailoredContentString = event.data.content;
 
-    return { scores, analysisData: mergedAnalysisData } 
-  } catch (error) {
-      console.error("Error in tailoredResumeUpdated workflow:", error);
-      // Reset status to COMPLETED to preserve old analysis data
-      await step.run("reset-tailored-resume-status", async () => {
+      // 3. Extract Keywords from Current Content (for Scoring)
+      const tailoredKeywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
+      const tailoredKeywordResult = await keywordExtractionNetwork.run(tailoredContentString, { state: tailoredKeywordState });
+
+      const tailoredResumeKeywords = await step.run("extract-tailored-keywords-update", async () => {
+         const data = JSON.parse(tailoredKeywordResult.state.data.keywordExtractorAgent || "{}");
+         const keywords = [
+          ...(data.required_skills || []),
+          ...(data.preferred_skills || []),
+          ...(data.keywords || [])
+        ].filter(Boolean);
+        
+        return Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
+      });
+
+      // 4. Calculate Word Match Score
+      const scoreData = await step.run("calculate-word-match-score-update", async () => {
+          const jobKeywords = new Set(jobContext.keywords);
+          const resumeKeywords = new Set(tailoredResumeKeywords);
+          
+          let matchCount = 0;
+          const matchedKeywords: string[] = [];
+          const missingKeywords: string[] = [];
+          
+          jobKeywords.forEach(k => {
+              if (resumeKeywords.has(k)) {
+                  matchCount++;
+                  matchedKeywords.push(k);
+              } else {
+                  missingKeywords.push(k);
+              }
+          });
+          
+          const score = jobKeywords.size > 0 ? (matchCount / jobKeywords.size) : 0;
+          
+          return {
+              finalScore: score,
+              matchedKeywords,
+              missingKeywords,
+              totalKeywords: jobKeywords.size
+          };
+      });
+
+      // 5. Save to DB
+      await step.run("save-tailored-resume-update", async () => {
           await prisma.tailoredResume.update({
-              where: { id: event.data.resumeId },
-              data: { status: "COMPLETED" }
+            where: { id: event.data.resumeId },
+            data: {
+              content: tailoredContentString,
+              analysisData: JSON.stringify({
+                  matches: scoreData.matchedKeywords,
+                  missing: scoreData.missingKeywords
+              }),
+              scores: {
+                  finalScore: scoreData.finalScore,
+                  wordMatchScore: scoreData.finalScore,
+                  totalKeywords: scoreData.totalKeywords,
+                  matchedCount: scoreData.matchedKeywords.length
+              },
+              status: "COMPLETED"
+            }
           });
       });
+
+      return { success: true, score: scoreData.finalScore };
+
+    } catch (error) {
+      console.error("Error in tailoredResumeUpdated workflow:", error);
+       await step.run("reset-resume-status", async () => {
+            await prisma.tailoredResume.update({
+                where: { id: event.data.resumeId },
+                data: { status: "COMPLETED" } 
+            });
+        });
       throw error;
+    }
   }
-  }
+);
+
+export const coverLetterGenerated = inngest.createFunction(
+    { id: "cover-letter-generation-workflow" },
+    { event: "app/cover-letter.generation-requested" },
+    async ({ step, event }) => {
+      try {
+          const { resumeId, content, jobDescription } = event.data;
+  
+          // Run Agent
+          const state = createState<{ coverLetterAgent: string }>({ coverLetterAgent: "" });
+          
+          const filledPrompt = `
+  ${COVER_LETTER_PROMPT}
+  
+  RESUME CONTENT:
+  ${content}
+  
+  JOB DESCRIPTION:
+  ${jobDescription}
+  `;
+  
+          const result = await coverLetterNetwork.run(filledPrompt, { state });
+          
+          const data = JSON.parse(result.state.data.coverLetterAgent || "{}");
+          
+          await step.run("save-cover-letter", async () => {
+               await prisma.tailoredResume.update({
+                   where: { id: resumeId },
+                   data: {
+                       coverLetter: data.coverLetter || "", // Fallback
+                       status: "COMPLETED"
+                   }
+               });
+          });
+  
+          return { success: true };
+  
+      } catch (error) {
+          console.error("Cover letter generation failed", error);
+          await step.run("revert-status", async () => {
+               await prisma.tailoredResume.update({
+                   where: { id: event.data.resumeId },
+                   data: { status: "COMPLETED" } 
+               });
+          });
+          throw error;
+      }
+    }
 );

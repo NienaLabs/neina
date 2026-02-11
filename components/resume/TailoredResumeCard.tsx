@@ -23,7 +23,10 @@ interface TailoredResumeCardProps {
 
 const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPrimary, onDelete }) => {
   const scoreData = resume.scores;
-  const matchScore = scoreData ? Math.round(scoreData.finalScore * 100) : 0;
+  // Use wordMatchScore if available (new format), otherwise fall back to finalScore (or 0)
+  const isWordMatch = scoreData?.wordMatchScore !== undefined;
+  const rawScore = isWordMatch ? scoreData.wordMatchScore : scoreData?.finalScore;
+  const matchScore = rawScore ? Math.round(rawScore * 100) : 0;
   
   const isProcessing = resume.status === 'PENDING' || resume.status === 'PROCESSING';
 
@@ -56,7 +59,7 @@ const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPr
                <Briefcase className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <Link href={`/resume/edit/${resume.id}`} className="block">
+              <Link href={`/resume/tailored/${resume.id}`} className="block">
                 <h3 className="font-bold text-lg leading-tight truncate group-hover:text-primary transition-colors hover:underline decoration-primary/50 underline-offset-4" title={resume.name}>
                     {resume.name}
                 </h3>
@@ -74,19 +77,22 @@ const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPr
         </div>
 
         {/* Score Breakdown */}
+        {/* Score Breakdown (Word Match Info) */}
         {scoreData && (
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col items-center p-2 bg-muted/30 rounded-md border border-border/30">
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">Content</span>
-              <span className="text-sm font-bold text-foreground">{Math.round(scoreData.overallScore * 100)}%</span>
-            </div>
-            <div className="flex flex-col items-center p-2 bg-muted/30 rounded-md border border-border/30">
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">Skills</span>
-              <span className="text-sm font-bold text-foreground">{Math.round(scoreData.skillsScore * 100)}%</span>
-            </div>
-            <div className="flex flex-col items-center p-2 bg-muted/30 rounded-md border border-border/30">
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">Exp</span>
-              <span className="text-sm font-bold text-foreground">{Math.round(scoreData.experienceScore * 100)}%</span>
+          <div className="grid grid-cols-1 gap-2">
+            <div className="flex items-center justify-between p-2 bg-muted/30 rounded-md border border-border/30">
+               <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-primary/70" />
+                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Keywords Matched</span>
+               </div>
+               <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-bold text-foreground">
+                    {scoreData.matchedCount !== undefined ? scoreData.matchedCount : '-'}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    / {scoreData.totalKeywords !== undefined ? scoreData.totalKeywords : '-'}
+                  </span>
+               </div>
             </div>
           </div>
         )}
@@ -105,7 +111,7 @@ const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPr
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                        <Link href={`/resume/edit/${resume.id}`}>
+                        <Link href={`/resume/tailored/${resume.id}`}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                         </Link>

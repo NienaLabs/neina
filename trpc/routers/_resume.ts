@@ -106,7 +106,8 @@ export const resumeRouter = createTRPCRouter({
             primaryResumeId:z.string(),
             role:z.string(),
             description:z.string(),
-            name:z.string()
+            name:z.string(),
+            tailoringMode: z.enum(["nudge", "keywords", "full", "enrich", "refine"]).optional().default("keywords")
         })
     )
     .mutation(
@@ -160,9 +161,94 @@ export const resumeRouter = createTRPCRouter({
             name:input.name,
             primaryResumeId:input.primaryResumeId,
             userId:ctx.session?.session.userId,
-            resumeId: tailoredResume.id // Pass the new ID
+            resumeId: tailoredResume.id, // Pass the new ID
+            tailoringMode: input.tailoringMode
            }
         })
+        }
+    ),
+    retailor: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string(),
+            jobDescription: z.string(),
+            tailoringMode: z.enum(["nudge", "keywords", "full", "enrich", "refine"]).optional().default("keywords")
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+            const user = await prisma.user.findUnique({
+                where: { id: ctx.session?.session.userId },
+                select: { resume_credits: true }
+            });
+
+            if (!user || user.resume_credits <= 0) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Insufficient credits. Please upgrade your plan or purchase credits."
+                });
+            }
+
+            const tailoredResume = await prisma.tailoredResume.findUnique({
+                where: { 
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId 
+                }
+            });
+
+            if (!tailoredResume) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Tailored resume not found"
+                });
+            }
+
+            // Ensure extractedData exists for regeneration
+            if (!tailoredResume.extractedData) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Resume data is missing. Please create a new tailored resume instead of regenerating."
+                });
+            }
+
+            // Deduct credit
+            await prisma.user.update({
+                where: { id: ctx.session?.session.userId },
+                data: { resume_credits: { decrement: 1 } }
+            });
+
+            // Update the existing tailored resume status and description
+            await prisma.tailoredResume.update({
+                where: { id: input.resumeId },
+                data: {
+                    jobDescription: input.jobDescription,
+                    status: "PENDING",
+                    // We don't overwrite content here, the AI worker will do that based on the new JD
+                }
+            });
+
+            // Prepare the resume data for the AI agent
+            // The AI expects JSON string matching the schema in prompts-backend.ts
+            const resumeDataForAI = typeof tailoredResume.extractedData === 'string' 
+                ? tailoredResume.extractedData 
+                : JSON.stringify(tailoredResume.extractedData);
+
+            // Trigger the tailoring process (same event as creation)
+            await inngest.send({
+                name: "app/tailored-resume.created", 
+                data: {
+                    content: resumeDataForAI, // Pass structured JSON data instead of Markdown
+                    role: tailoredResume.role || "Tailored Role",
+                    description: input.jobDescription,
+                    name: tailoredResume.name,
+                    primaryResumeId: tailoredResume.primaryResumeId,
+                    userId: ctx.session?.session.userId,
+                    resumeId: tailoredResume.id,
+                    tailoringMode: input.tailoringMode
+                }
+            });
+
+            return { success: true };
         }
     ),
     getPrimaryResumes: protectedProcedure
@@ -449,6 +535,109 @@ export const resumeRouter = createTRPCRouter({
                     }
                 });
             }
+        }
+    ),
+    /**
+     * Update cover letter for a tailored resume
+     */
+    updateCoverLetter: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string(),
+            coverLetter: z.string()
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+            const tailoredResume = await prisma.tailoredResume.findUnique({
+                where: {
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId
+                }
+            });
+
+            if (!tailoredResume) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Tailored resume not found"
+                });
+            }
+
+            await prisma.tailoredResume.update({
+                where: {
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId
+                },
+                data: {
+                    coverLetter: input.coverLetter
+                }
+            });
+
+            return { success: true };
+        }
+    ),
+    /**
+     * Generate AI cover letter for a tailored resume
+     */
+    generateCoverLetter: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string()
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+            const tailoredResume = await prisma.tailoredResume.findUnique({
+                where: {
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId
+                },
+                select: {
+                    id: true,
+                    jobDescription: true,
+                    role: true,
+                    extractedData: true,
+                    content: true
+                }
+            });
+
+            if (!tailoredResume) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Tailored resume not found"
+                });
+            }
+
+            if (!tailoredResume.jobDescription) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Job description is required to generate a cover letter"
+                });
+            }
+
+            // Set status to PENDING
+            await prisma.tailoredResume.update({
+                where: {
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId
+                },
+                data: {
+                    status: "PENDING"
+                }
+            });
+
+            // Trigger Inngest function
+            await inngest.send({
+                name: "app/cover-letter.generation-requested",
+                data: {
+                    resumeId: tailoredResume.id,
+                    userId: ctx.session?.session.userId,
+                    content: tailoredResume.content,
+                    jobDescription: tailoredResume.jobDescription
+                }
+            });
+
+            return { success: true, status: "PENDING" };
         }
     ),
     delete: protectedProcedure

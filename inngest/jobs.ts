@@ -4,6 +4,20 @@ import prisma from '../lib/prisma'
 import { fetchJobs } from '../lib/jsearchClient'
 import { generateEmbedding } from '../lib/embeddings'
 import { extractJobDataWithLLM, safeInsertResponsibilityRows, safeInsertSkillRows, generateAndStoreJobEmbeddings as processJobEmbeddings } from '../lib/job-processing';
+import { createNetwork, createState } from "@inngest/agent-kit";
+import { keywordExtractorAgent } from "./agents";
+
+const keywordNetwork = createNetwork({
+  name: "job-keyword-extraction",
+  agents: [keywordExtractorAgent],
+  defaultState: createState<{ keywordExtractorAgent: string }>({
+    keywordExtractorAgent: ""
+  }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return keywordExtractorAgent;
+  }
+});
 
 type CategoryRow = {
   id: string
@@ -128,12 +142,29 @@ export const processRecruiterJob = inngest.createFunction(
         });
     }
 
-    // 3. Generate Full Description Embedding
-    const fullJobText = `${job.job_title ?? ''}\n\n${job.job_description ?? ''}`.trim();
+    // 3. Generate Keyword-Focused Embedding
     let fullJobEmbedding: number[] | null = null;
     
-    if (fullJobText) {
-        fullJobEmbedding = await step.run('embed-full-job', async () => {
+    // Run Keyword Extraction Agent
+    const keywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
+    const keywordResult = await keywordNetwork.run(fullJobText, { state: keywordState });
+    const extractedData = JSON.parse(keywordResult.state.data.keywordExtractorAgent || "{}");
+    
+    // Construct text for embedding (Keywords + Skills)
+    const keywordsToEmbed = [
+        ...(extractedData.required_skills || []),
+        ...(extractedData.preferred_skills || []),
+        ...(extractedData.keywords || [])
+    ].join(" ");
+
+    if (keywordsToEmbed) {
+        fullJobEmbedding = await step.run('embed-job-keywords', async () => {
+            const vector = await generateEmbedding(keywordsToEmbed);
+            return (vector && vector.length > 0) ? vector : null;
+        });
+    } else if (fullJobText) {
+        // Fallback to full text if no keywords extracted
+         fullJobEmbedding = await step.run('embed-full-job-fallback', async () => {
             const vector = await generateEmbedding(fullJobText);
             return (vector && vector.length > 0) ? vector : null;
         });
@@ -249,18 +280,37 @@ export const jsearchIngestCategory = inngest.createFunction(
             responsibilities: it.job_highlights?.Responsibilities ?? it.responsibilities ?? [],
           }
 
-          // Generate full job embedding (Targeting Title + Description only for "Overall" score)
+          // Generate Keyword-Focused Embedding
           const fullJobText = `${it.job_title ?? ''}\n\n${it.job_description ?? ''}`.trim();
           let fullJobEmbedding: number[] | null = null;
           
           if (fullJobText) {
             try {
-              fullJobEmbedding = await step.run?.(`embed-full-job-${page}-${idx}`, async () => {
-                const vector = await generateEmbedding(fullJobText);
-                return (vector && vector.length > 0) ? vector : null;
+               fullJobEmbedding = await step.run?.(`embed-job-keywords-${page}-${idx}`, async () => {
+                  // Run Keyword Agent
+                  const keywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
+                  // Note: We might want to optimize this to not run for EVERY job if it's too expensive/slow.
+                  // But for now, we follow the requirement.
+                  // We can't easily use the network inside the step.run callback if it uses inngest state internally in a way that conflicts?
+                  // Actually, step.run can return the vector. We should run the network OUTSIDE step.run if possible, 
+                  // but we are inside a loop inside a function.
+                  // The agent-kit `run` is async.
+                  
+                  const keywordResult = await keywordNetwork.run(fullJobText, { state: keywordState });
+                  const extractedData = JSON.parse(keywordResult.state.data.keywordExtractorAgent || "{}");
+                  
+                  const keywordsToEmbed = [
+                      ...(extractedData.required_skills || []),
+                      ...(extractedData.preferred_skills || []),
+                      ...(extractedData.keywords || [])
+                  ].join(" ");
+                  
+                  const textToEmbed = keywordsToEmbed || fullJobText;
+                  const vector = await generateEmbedding(textToEmbed);
+                  return (vector && vector.length > 0) ? vector : null;
               });
             } catch (err: any) {
-              await stepLog(step, 'embed-full-job-error', String(err), { page, idx, title: jobForStore.job_title });
+              await stepLog(step, 'embed-job-keywords-error', String(err), { page, idx, title: jobForStore.job_title });
             }
           }
 

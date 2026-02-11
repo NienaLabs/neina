@@ -30,6 +30,7 @@ const CreateTailoredResumeDialog = ({
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
   const [description, setDescription] = useState('')
+  const [tailoringMode, setTailoringMode] = useState<"nudge" | "keywords" | "full">("keywords")
 
   const utils = trpc.useUtils()
 
@@ -43,6 +44,7 @@ const CreateTailoredResumeDialog = ({
       setName('')
       setRole('')
       setDescription('')
+      setTailoringMode("keywords")
     },
     onError: (error) => {
       toast.error(error.message)
@@ -59,6 +61,7 @@ const CreateTailoredResumeDialog = ({
       name,
       role,
       description,
+      tailoringMode
     })
   }
 
@@ -110,6 +113,45 @@ const CreateTailoredResumeDialog = ({
           </div>
 
           <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-purple-500" />
+                Tailoring Intensity
+            </Label>
+            <div className="grid grid-cols-3 gap-3">
+                <div 
+                    onClick={() => setTailoringMode("nudge")}
+                    className={cn(
+                        "cursor-pointer rounded-lg border p-3 flex flex-col items-center justify-center gap-2 transition-all hover:bg-muted/50",
+                        tailoringMode === "nudge" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/50 bg-background"
+                    )}
+                >
+                    <span className="text-sm font-semibold">Nudge</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Minimal changes, authentic tone.</span>
+                </div>
+                <div 
+                    onClick={() => setTailoringMode("keywords")}
+                    className={cn(
+                        "cursor-pointer rounded-lg border p-3 flex flex-col items-center justify-center gap-2 transition-all hover:bg-muted/50",
+                        tailoringMode === "keywords" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/50 bg-background"
+                    )}
+                >
+                    <span className="text-sm font-semibold">Keywords</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Injects key skills & terms.</span>
+                </div>
+                <div 
+                    onClick={() => setTailoringMode("full")}
+                    className={cn(
+                        "cursor-pointer rounded-lg border p-3 flex flex-col items-center justify-center gap-2 transition-all hover:bg-muted/50",
+                        tailoringMode === "full" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/50 bg-background"
+                    )}
+                >
+                    <span className="text-sm font-semibold">Full Rewrite</span>
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">Aggressive optimization for ATS.</span>
+                </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-yellow-500/70" />
                 Job Description
@@ -142,7 +184,7 @@ const CreateTailoredResumeDialog = ({
             <Button 
                 onClick={handleSubmit} 
                 disabled={createTailoredResumeMutation.isPending}
-                className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg shadow-primary/20"
+                className="w-full sm:w-auto bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg shadow-primary/20"
             >
                 {createTailoredResumeMutation.isPending ? (
                     <>

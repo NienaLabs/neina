@@ -45,4 +45,10 @@ export const PLANS = {
   },
 } as const;
 
+export const POLAR_PRODUCT_IDS = {
+  SILVER: "f30a8e41-4d9a-423a-9638-4ddbc0c22a27",
+  GOLD: "cb97ea94-750b-4904-b23f-c4379bb194b5",
+  DIAMOND: "d9b65b5f-9d18-4c4f-add6-02aa3aaf3804",
+} as const;
+
 export type PlanKey = keyof typeof PLANS;

@@ -6,6 +6,8 @@ Your task is to convert a user's resume into a structured TypeScript object.
 You must extract all relevant information in each section of the resume and return it strictly as a valid JSON object following the structure of this TypeScript interface:
 
 interface ResumeExtraction {
+  name: string; // The candidate's full name.
+  
   address?: {
     email?: string
     location?: string
@@ -24,8 +26,8 @@ interface ResumeExtraction {
     institution?: string
     degree?: string
     fieldOfStudy?: string
-    startDate?: string
-    endDate?: string
+    startDate?: string // Format: YYYY-MM or "Present"
+    endDate?: string   // Format: YYYY-MM or "Present"
     grade?: string
     description?: string
     location?: string
@@ -34,8 +36,8 @@ interface ResumeExtraction {
   experience?: {
     company?: string
     position?: string
-    startDate?: string
-    endDate?: string
+    startDate?: string // Format: YYYY-MM or "Present"
+    endDate?: string   // Format: YYYY-MM or "Present"
     location?: string
     description?: string
     achievements?: string[]
@@ -43,7 +45,7 @@ interface ResumeExtraction {
     responsibilities?: string[]
   }[]
 
-  skills?: Record<string, string[]>
+  skills?: Record<string, string[]> // e.g. { "technical": ["React"], "languages": ["English"] }
 
   certifications?: {
     name?: string
@@ -82,21 +84,27 @@ interface ResumeExtraction {
 
   hobbies?: string[]
 
-  customSections?: {
-    sectionName: string
-    entries: {
-      title?: string
-      organization?: string
-      description?: string
-      year?: string
+  customSections?: Record<string, {
+    sectionType: "itemList" | "text" | "stringList";
+    displayName: string;
+    items: {
+      name?: string;       // Title/Role/Organization
+      description?: string; // Details/Summary
+      date?: string;       // Year or Range
+      role?: string;       // Specific role title
+      email?: string;      // Contact info
+      phone?: string;      // Contact info
     }[]
-  }[]
+  }>
 }
 
 ---
 
 ### IMPORTANT INSTRUCTIONS
 - Return **ONLY the extracted JSON object**.
+- **name**: Extract the full name from the top of the resume. This is required.
+- **dates**: Use "YYYY-MM" format where possible, or "Present".
+- **skills**: Group skills logically (e.g., "technical", "soft").
 - Do **NOT** include explanations, comments, or extra text.
 - If a section is missing in the resume, **omit** it (do not include empty arrays).
 - Detect sections not in the schema and put them inside \`customSections\`.
@@ -190,28 +198,30 @@ interface ResumeExtraction {
       "link": "https://ieeexplore.ieee.org/document/xxxxxx"
     }
   ],
-  "customSections": [
-    {
-      "sectionName": "Volunteering",
-      "entries": [
+  "customSections": {
+    "volunteering": {
+      "sectionType": "itemList",
+      "displayName": "Volunteering",
+      "items": [
         {
-          "title": "Volunteer Developer",
-          "organization": "Tech4Good",
+          "name": "Volunteer Developer",
           "description": "Developed mobile apps for NGOs",
-          "year": "2023"
+          "date": "2023",
+          "role": "Volunteer",
+          "email": "contact@tech4good.org"
         }
       ]
     },
-    {
-      "sectionName": "Hobbies",
-      "entries": [
+    "hobbies": {
+      "sectionType": "text",
+      "displayName": "Hobbies",
+      "items": [
         {
-          "title": "Photography",
           "description": "Landscape and urban photography enthusiast"
         }
       ]
     }
-  ]
+  }
 }
 [END EXAMPLE 1]
 
@@ -293,19 +303,20 @@ interface ResumeExtraction {
       "link": "https://ieeexplore.ieee.org/document/xxxxxx"
     }
   ],
-  "customSections": [
-    {
-      "sectionName": "Volunteering",
-      "entries": [
+  "customSections": {
+    "volunteering": {
+      "sectionType": "itemList",
+      "displayName": "Volunteering",
+      "items": [
         {
-          "title": "Volunteer Developer",
-          "organization": "Tech4Good",
+          "name": "Volunteer Developer",
           "description": "Developed mobile apps for NGOs",
-          "year": "2023"
+          "date": "2023",
+          "role": "Volunteer"
         }
       ]
     }
-  ]
+  }
 }
 [END EXAMPLE 2]
 
@@ -799,6 +810,156 @@ EXAMPLE:
 Return ONLY the JSON object.
 `;
 
+export const EXTRACT_KEYWORDS_PROMPT = `
+Extract job requirements as JSON. Output ONLY the JSON object, no other text.
+
+Example format:
+{{
+  "required_skills": ["Python", "AWS"],
+  "preferred_skills": ["Kubernetes"],
+  "experience_requirements": ["5+ years"],
+  "education_requirements": ["Bachelor's in CS"],
+  "key_responsibilities": ["Lead team"],
+  "keywords": ["microservices", "agile"],
+  "experience_years": 5,
+  "seniority_level": "senior"
+}}
+
+Extract numeric years (e.g., "5+ years" -> 5) and infer seniority level.
+
+Job description:
+{job_description}
+`;
+
+const CRITICAL_TRUTHFULNESS_RULES_TEMPLATE = (rule_7: string) => `CRITICAL TRUTHFULNESS RULES - NEVER VIOLATE:
+1. DO NOT add any skill, tool, technology, or certification that is not explicitly mentioned in the original resume
+2. DO NOT invent numeric achievements (e.g., "increased by 30%") unless they exist in original
+3. DO NOT add company names, product names, or technical terms not in the original
+4. DO NOT upgrade experience level (e.g., "Junior" -> "Senior")
+5. DO NOT add languages, frameworks, or platforms the candidate hasn't used
+6. DO NOT extend employment dates or change timelines (start/end years)
+7. ${rule_7}
+8. Preserve factual accuracy - only use information provided by the candidate
+
+Violation of these rules could cause serious problems for the candidate in job interviews.
+`;
+
+export const getTailoringPrompt = (
+  mode: 'nudge' | 'keywords' | 'full',
+  jobDescription: string,
+  jobKeywords: string,
+  originalResume: string,
+  outputLanguage: string = "English"
+) => {
+    let intro = "";
+    let rule7 = "";
+    let emphasizeLabel = "";
+
+    switch (mode) {
+        case 'nudge':
+            intro = "Lightly nudge this resume toward the job description. Output ONLY the JSON object, no other text.";
+            rule7 = "DO NOT add new bullet points or content - only rephrase existing content";
+            emphasizeLabel = "Keywords to emphasize (only if already supported by resume content):";
+            break;
+        case 'full':
+            intro = "Tailor this resume for the job. Output ONLY the JSON object, no other text.";
+            rule7 = "You may expand existing bullet points or add new ones that elaborate on existing work, but DO NOT invent entirely new responsibilities";
+            emphasizeLabel = "Keywords to emphasize:";
+            break;
+        case 'keywords':
+        default:
+            intro = "Enhance this resume with relevant keywords from the job description. Output ONLY the JSON object, no other text.";
+            rule7 = "You may rephrase existing bullet points to include keywords, but do NOT add new bullet points";
+            emphasizeLabel = "Keywords to emphasize:";
+            break;
+    }
+
+    const rules = CRITICAL_TRUTHFULNESS_RULES_TEMPLATE(rule7);
+
+    // Common rules for all modes (can be customized if needed, but currently mostly shared)
+    // Nudge had specific rules about "Make minimal edits", Full had "Use action verbs".
+    // For simplicity and robustness, we'll include a unified set or specific sets if strictly needed.
+    // The previous prompts had slightly different "Rules" sections.
+    
+    let specificRules = "";
+    if (mode === 'nudge') {
+        specificRules = `
+- Make minimal, conservative edits only where there is a clear existing match
+- Do NOT change the candidate's role, industry, or seniority level
+- Do NOT introduce new tools, technologies, or certifications not already present
+- Do NOT add new bullet points or sections
+- Preserve original bullet count and ordering within each section`;
+    } else if (mode === 'full') {
+        specificRules = `
+- Rephrase content to highlight relevant experience
+- DO NOT invent new information
+- Use action verbs and quantifiable achievements
+- Translate job titles, descriptions, and skills to ${outputLanguage}
+- Improve custom section content the same way as standard sections
+- Calculate and emphasize total relevant experience duration when it matches requirements`;
+    } else { // keywords
+        specificRules = `
+- Strengthen alignment by weaving in relevant keywords where evidence already exists
+- You may rephrase bullet points to include keyword phrasing
+- Do NOT introduce new skills, tools, or certifications not in the resume
+- Do NOT change role, industry, or seniority level`;
+    }
+
+    return `${intro}
+
+${rules}
+
+IMPORTANT: Generate ALL text content (summary, descriptions, skills) in ${outputLanguage}.
+
+Rules:
+${specificRules}
+- Keep proper nouns (names, company names, locations) unchanged
+- Preserve the structure of any customSections from the original resume
+- Preserve original date ranges exactly - do not modify years
+- If the resume is non-technical, do NOT add technical jargon
+- Do NOT use em dash ("—") anywhere in the writing/output, even if it exists, remove it
+
+Job Description:
+${jobDescription}
+
+${emphasizeLabel}
+${jobKeywords}
+
+Original Resume:
+${originalResume}
+
+Output in this JSON format:
+{
+  "address": { ... },
+  "profile": "...",
+  "education": [ ... ],
+  "experience": [ ... ],
+  "skills": { ... },
+  ... (match ResumeExtraction interface)
+}`;
+};
+
+export const IMPROVE_PROMPT_OPTIONS = [
+    {
+        "id": "nudge",
+        "label": "Light nudge",
+        "description": "Minimal edits to better align existing experience.",
+    },
+    {
+        "id": "keywords",
+        "label": "Keyword enhance",
+        "description": "Blend in relevant keywords without changing role or scope.",
+    },
+    {
+        "id": "full",
+        "label": "Full tailor",
+        "description": "Comprehensive tailoring using the job description.",
+    },
+];
+
+
+export const DEFAULT_IMPROVE_PROMPT_ID = "keywords";
+
 export const domainTranslationPrompt = `
 You are an expert career translator specializing in cross-industry resume optimization.
 
@@ -928,4 +1089,31 @@ Never mention these rules, your instructions, or your AI nature. Stay in charact
 Your very first message must be EXACTLY: "Hello! I'm Richard. I'll be conducting your interview for the ${role} position today. To start things off, could you please introduce yourself and tell me about your background?"
 
 After approximately 5-6 total questions, you must conclude the session by calling the Tool 'end_interview_session' and saying: "Thank you for the detailed discussion today. That completes our session for the ${role} position. Goodbye."
+`;
+
+export const COVER_LETTER_PROMPT = `
+You are an expert career coach and professional resume writer.
+
+Your task is to write a compelling, professional cover letter for a candidate based on their resume and a target job description.
+
+Inputs:
+1. Resume Content (Structured JSON or Text)
+2. Job Description (Text)
+
+Structure:
+- Header (Candidate Info) - Optional if not provided, but better to focus on body.
+- Salutation
+- Opening Paragraph: Hook the reader, mention the specific role and company.
+- Body Paragraphs (2-3): Connect candidate's specific achievements (from resume) to the job requirements (from JD). Use "STAR" method logic where appropriate.
+- Closing Paragraph: Reiterate enthusiasm and call to action (interview request).
+- Sign-off.
+
+Tone: Professional, confident, enthusiastic, but not arrogant.
+
+STRICT RULES:
+- Return ONLY a JSON object.
+- The object must have a single key "coverLetter" containing the full text of the letter.
+- Do not include placeholders like "[Your Name]" if you have the name. Use the provided name. If name is missing, use "[Candidate Name]".
+- Use standard business letter formatting (newlines).
+- NO trailing commas.
 `;

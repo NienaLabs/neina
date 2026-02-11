@@ -33,10 +33,13 @@ export type PrimaryResumeScoreData = {
 };
 
 export type TailoredResumeScoreData = {
-  overallScore: number;
-  skillsScore: number;
-  experienceScore: number;
-  finalScore: number; // Add finalScore
+  overallScore?: number;
+  skillsScore?: number;
+  experienceScore?: number;
+  finalScore: number; 
+  wordMatchScore?: number;
+  totalKeywords?: number;
+  matchedCount?: number;
 };
 
 export type TailoredResume = Resume & {
@@ -163,7 +166,7 @@ const ResumePageClient = () => {
         <div>
             <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                     Resume AI
                 </h1>
                 <FeatureGuide 

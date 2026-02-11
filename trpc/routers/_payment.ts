@@ -6,7 +6,8 @@ import { rateLimit } from "@/lib/rate-limit"; // Usage depends on how we impleme
 import { TRPCError } from "@trpc/server";
 
 // Plan Data
-import { PLANS, PlanKey } from "@/lib/plans";
+import { PLANS, PlanKey, POLAR_PRODUCT_IDS } from "@/lib/plans";
+import { Polar } from "@polar-sh/sdk";
 
 export const paymentRouter = createTRPCRouter({
   getPlans: baseProcedure.query(() => {
@@ -129,18 +130,75 @@ export const paymentRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Payment failed verification" });
       }
     }),
-  cancelSubscription: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      // Downgrade user to FREE plan
-      await prisma.user.update({
-        where: { id: ctx.session.user.id },
-        data: {
-          plan: "FREE",
-          planExpiresAt: null, // Clear expiration or should we let it expire? 
-          // If cancelling means "I don't want this anymore", usually for one-time sub it means effectively nothing unless we refund.
-          // But user asked for "ability to cancel". I'll reset to FREE.
-        },
+  managePolarSubscription: protectedProcedure
+    .input(z.object({ plan: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { user } = ctx.session;
+      const polar = new Polar({
+        accessToken: process.env.POLAR_ACCESS_TOKEN!,
+        server: "sandbox", // TODO: Switch based on env
       });
-      return { success: true };
+
+      // 1. Ensure we have the user's Polar Customer ID
+      let customerId = user.polarCustomerId;
+
+      if (!customerId) {
+        // Try to find customer by email
+        const customers = await polar.customers.list({
+          email: user.email,
+          limit: 1,
+        });
+
+        if (customers.result.items.length > 0) {
+            customerId = customers.result.items[0].id;
+            // Update user asynchronously (or await if critical)
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { polarCustomerId: customerId },
+            });
+        }
+      }
+
+      // 2. Check for active subscriptions if we have a customer ID
+      let hasActiveSubscription = false;
+      if (customerId) {
+        const subscriptions = await polar.subscriptions.list({
+          customerId: customerId,
+          active: true, // Only active ones
+          limit: 1,
+        });
+        
+        // Check if any returned subscription is actually active (status check usually implied by list parameters but good to be safe)
+        hasActiveSubscription = subscriptions.result.items.some(sub => sub.status === 'active');
+      }
+
+      // 3. Logic Branch
+      if (hasActiveSubscription) {
+        // Redirect to Customer Portal
+        const portalSession = await polar.customerSessions.create({
+            customerId: customerId!,
+        });
+        return { type: "portal", url: portalSession.customerPortalUrl };
+      } else {
+        // Create Checkout Session for the requested plan
+        const planKey = input.plan as keyof typeof POLAR_PRODUCT_IDS;
+        const productId = POLAR_PRODUCT_IDS[planKey];
+
+        if (!productId) {
+             throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid plan selected for international payment" });
+        }
+
+        const checkout = await polar.checkouts.create({
+            productId: productId,
+            customerEmail: user.email,
+            successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing/verify?checkout_id={CHECKOUT_ID}`, // We can verify later
+            // We can implicitly link user by email or if we had customerId pass it?
+            // checking SDK types or docs... usually customerId is optional if email is passed or vice versa.
+            // If we have customerId, passing it is better.
+            customerId: customerId || undefined,
+        });
+        
+        return { type: "checkout", url: checkout.url };
+      }
     }),
 });

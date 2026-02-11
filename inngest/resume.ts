@@ -289,10 +289,18 @@ export const resumeCreated = inngest.createFunction(
           }
         });
 
-        // Generate and save full resume embedding
-        await step.run("save-full-resume-embedding", async () => {
+        // Generate and save resume embedding (Keywords Only)
+        await step.run("save-keyword-resume-embedding", async () => {
           try {
-            const fullResumeEmbedding = await generateEmbedding(event.data.content);
+            const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
+            const skills = skillsData.skills || [];
+            const certifications = skillsData.certifications || [];
+            
+            // Embed only skills and certifications for the main vector
+            const textToEmbed = [...skills, ...certifications].join(" ");
+            const finalEmbedText = textToEmbed || event.data.content; // Fallback
+
+            const fullResumeEmbedding = await generateEmbedding(finalEmbedText);
             const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
             await prisma.$executeRaw`
               UPDATE "resume"
@@ -300,7 +308,7 @@ export const resumeCreated = inngest.createFunction(
               WHERE "id" = ${savedResumeId}
             `;
           } catch (err) {
-            console.error("[resumeCreated] Failed to generate/save full resume embedding:", err);
+            console.error("[resumeCreated] Failed to generate/save keyword resume embedding:", err);
           }
         });
 
@@ -472,10 +480,17 @@ export const resumeUpdated = inngest.createFunction(
           }
         });
 
-        // Generate and save full resume embedding
-        await step.run("update-full-resume-embedding", async () => {
+        // Generate and save resume embedding (Keywords Only)
+        await step.run("update-keyword-resume-embedding", async () => {
           try {
-            const fullResumeEmbedding = await generateEmbedding(event.data.content);
+            const skillsData = JSON.parse(extractionResult.state.data.skillsExtractorAgent || '{}');
+            const skills = skillsData.skills || [];
+            const certifications = skillsData.certifications || [];
+
+            const textToEmbed = [...skills, ...certifications].join(" ");
+            const finalEmbedText = textToEmbed || event.data.content;
+
+            const fullResumeEmbedding = await generateEmbedding(finalEmbedText);
             const formattedVector = `[${fullResumeEmbedding.join(',')}]`;
             await prisma.$executeRaw`
               UPDATE "resume"
@@ -483,7 +498,7 @@ export const resumeUpdated = inngest.createFunction(
               WHERE "id" = ${event.data.resumeId}
             `;
           } catch (err) {
-            console.error("[resumeUpdated] Failed to generate/save full resume embedding:", err);
+            console.error("[resumeUpdated] Failed to generate/save keyword resume embedding:", err);
           }
         });
 

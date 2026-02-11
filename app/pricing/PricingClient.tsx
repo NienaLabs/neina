@@ -123,6 +123,21 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
     },
   });
 
+  const managePolarSubscription = trpc.payment.managePolarSubscription.useMutation({
+    onSuccess: (data) => {
+      if (data.type === 'portal') {
+        toast.info("Redirecting to subscription settings...");
+      } else {
+        toast.info("Redirecting to secure checkout...");
+      }
+      window.location.href = data.url;
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to manage subscription");
+      setLoadingKey(null);
+    },
+  });
+
    const onSubscribe = async (plan: typeof PLANS[0]) => {
       if (!user) return toast.error("Please login to subscribe");
       if (plan.key === user.plan) return; 
@@ -130,23 +145,16 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
       setLoadingKey(plan.key);
 
       if (showInternational) {
-          try {
-             toast.info("Redirecting to secure checkout...");
-             window.location.href = "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_fBWrJLYZACQJtUkpeNWi6IEJqQubKetHMSiHc0F4oYx/redirect";
-             setLoadingKey(null);
-          } catch (e) {
-             toast.error("Failed to start checkout");
-             setLoadingKey(null);
-          }
-      } else {
-          initiateTransaction.mutate({
-              email: user.email,
-              amount: plan.priceVal * 100, 
-              type: "SUBSCRIPTION",
-              plan: plan.key as any,
-              callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`, 
-          });
+        managePolarSubscription.mutate({ plan: plan.key });
+        return;
       }
+      initiateTransaction.mutate({
+          email: user.email,
+          amount: plan.priceVal * 100, 
+          type: "SUBSCRIPTION",
+          plan: plan.key as any,
+          callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`, 
+      });
    }
    
    const onCancelPlan = () => {

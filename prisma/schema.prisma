@@ -157,6 +157,7 @@ model TailoredResume {
   jobResponsibilitiesEmbedding Unsupported("vector")?
   jobSkillsEmbedding           Unsupported("vector")?
   status                       ResumeStatus           @default(COMPLETED)
+  coverLetter                  String?                @db.Text
   primaryResume                Resume                 @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
   user                         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 

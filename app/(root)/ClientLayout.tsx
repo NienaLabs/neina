@@ -45,7 +45,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
               >
                 <Shield_Check className="h-4 w-4" />
-                Visit Admin Dashboard
+                Admin Dashboard
               </Link>
             )}
 
@@ -55,7 +55,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <NotificationBell />
           </div>
         </header>
-        <main>
+        <main className="w-full overflow-x-hidden">
           {children}
         </main>
       </SidebarInset>

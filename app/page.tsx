@@ -13,7 +13,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  let session = null;
+  try {
+     session = await auth.api.getSession({ headers: await headers() });
+  } catch (error) {
+    console.error("Failed to retrieve session:", error);
+    // Continue as if not logged in
+  }
 
   // Only auto-redirect if session exists
   if (session) redirect("/dashboard");

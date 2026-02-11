@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../init";
 import { inngest } from "@/inngest/client";
 import prisma from '@/lib/prisma';
@@ -87,10 +88,18 @@ export const interviewRouter = createTRPCRouter({
   getInterview: protectedProcedure
     .input(z.object({ interviewId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const interview = await prisma.interview.findUnique({
-        where: { id: input.interviewId },
+      const interview = await prisma.interview.findFirst({
+        where: {
+          id: input.interviewId,
+          user_id: ctx.session.user.id
+        },
       });
-      if (!interview) throw new Error("Interview not found");
+      if (!interview) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Interview not found or unauthorized',
+        });
+      }
       return interview;
     }),
   endSession: protectedProcedure
@@ -102,13 +111,21 @@ export const interviewRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { interviewId, durationSeconds, transcript } = input;
 
-      // 1. Get Interview Details (for context)
-      const interview = await prisma.interview.findUnique({
-        where: { id: interviewId },
+      // 1. Get Interview Details (for context) and verify ownership
+      const interview = await prisma.interview.findFirst({
+        where: {
+          id: interviewId,
+          user_id: ctx.session.user.id
+        },
         include: { resume: { select: { content: true } } }
       });
 
-      if (!interview) throw new Error("Interview not found");
+      if (!interview) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Interview not found or unauthorized',
+        });
+      }
 
       // 2. Generate Score (Synchronous for now)
       let scoreResult = null;

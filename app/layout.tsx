@@ -8,6 +8,7 @@ import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { NotificationBanner } from "@/components/notifications/NotificationBanner";
 import { CookiePrompt } from "@/components/shared/CookiePrompt";
+import { NotificationSSEProvider } from "@/components/notifications/NotificationSSEProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -93,18 +94,20 @@ export default function RootLayout({
           <body
             className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
           >
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            <NotificationBanner />
-            <CookiePrompt />
-            {/*<Header/>*/}
-            <SuspensionGuard>
-              {children}
-            </SuspensionGuard>
-            <ServiceWorkerRegister />
-            <Toaster position="top-right" />
+            <NotificationSSEProvider>
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+              />
+              <NotificationBanner />
+              <CookiePrompt />
+              {/*<Header/>*/}
+              <SuspensionGuard>
+                {children}
+              </SuspensionGuard>
+              <ServiceWorkerRegister />
+              <Toaster position="top-right" />
+            </NotificationSSEProvider>
           </body>
         </html>
       </AuthProvider>

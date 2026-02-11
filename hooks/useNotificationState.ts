@@ -1,14 +1,15 @@
 "use client";
 
 /**
- * Hook to manage notification state via SSE with Jotai for global state
- * Ensures Bell and List are always in sync
+ * Hook to manage notification state via Jotai atoms
+ * Provides optimistic update helpers and a syncFromQuery method
+ * for refreshing atom state from TRPC query results.
+ * Ensures Bell and List are always in sync.
  */
 
 import { useAtom } from 'jotai';
 import { atom } from 'jotai';
-import { useServerEvents } from './useServerEvents';
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 
 export interface Notification {
     id: string;
@@ -28,65 +29,6 @@ export function useNotificationState() {
     const [latest, setLatest] = useAtom(notificationsAtom);
     const [unreadCount, setUnreadCount] = useAtom(unreadCountAtom);
     const [isLoading, setIsLoading] = useAtom(isLoadingAtom);
-
-    useServerEvents((event) => {
-        if (event.type === 'INITIAL_STATE') {
-            console.log('📊 [SSE] Received initial notification state');
-            setUnreadCount(event.data.notifications.unreadCount);
-            setLatest(event.data.notifications.latest);
-            setIsLoading(false);
-        }
-
-        if (event.type === 'NEW_NOTIFICATION') {
-            console.log('🔔 [SSE] New notification, updating state');
-            setUnreadCount((prev) => event.data.unreadCount ?? (prev + 1));
-            if (event.data.notification) {
-                setLatest((prev) => [event.data.notification, ...prev].slice(0, 50));
-            }
-            setIsLoading(false);
-        }
-
-        if (event.type === 'NOTIFICATION_READ') {
-            console.log('✅ [SSE] Notification marked as read');
-            // Only decrement if we actually found an unread one locally
-            let wasUnread = false;
-            setLatest((prev) => prev.map(n => {
-                if (n.id === event.data.notificationId) {
-                    if (!n.isRead) wasUnread = true;
-                    return { ...n, isRead: true, readAt: new Date() };
-                }
-                return n;
-            }));
-
-            if (wasUnread) {
-                setUnreadCount((prev) => Math.max(0, prev - 1));
-            }
-        }
-
-        if (event.type === 'NOTIFICATION_DELETED') {
-            console.log('🗑️ [SSE] Notification deleted');
-            let wasUnread = false;
-
-            // Remove from list
-            setLatest((prev) => {
-                const target = prev.find(n => n.id === event.data.notificationId);
-                if (target && !target.isRead) wasUnread = true;
-                return prev.filter(n => n.id !== event.data.notificationId);
-            });
-
-            // Decrement count ONLY if it was unread
-            if (wasUnread) {
-                setUnreadCount((prev) => Math.max(0, prev - 1));
-            }
-        }
-
-        if (event.type === 'ALL_NOTIFICATIONS_READ') {
-            console.log('✅ [SSE] All notifications marked as read');
-            setUnreadCount(0);
-            setLatest((prev) => prev.map(n => ({ ...n, isRead: true, readAt: new Date() })));
-            setIsLoading(false);
-        }
-    });
 
     // Optimistic Actions
     const markAsReadOptimistic = (id: string) => {
@@ -120,12 +62,26 @@ export function useNotificationState() {
         setLatest((prev) => prev.map(n => ({ ...n, isRead: true, readAt: new Date() })));
     };
 
+    /**
+     * Sync atom state from TRPC query results (used by NotificationBell on popover open).
+     * Replaces atom contents with fresh data from the database.
+     */
+    const syncFromQuery = useCallback((notifications: Notification[], unread?: number) => {
+        setLatest(notifications);
+        if (typeof unread === 'number') {
+            setUnreadCount(unread);
+        }
+        setIsLoading(false);
+    }, [setLatest, setUnreadCount, setIsLoading]);
+
     return {
         unreadCount,
         latest,
         isLoading,
         markAsReadOptimistic,
         deleteOptimistic,
-        markAllAsReadOptimistic
+        markAllAsReadOptimistic,
+        syncFromQuery
     };
 }
+

@@ -18,18 +18,27 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
     useEffect(() => {
         let eventSource: EventSource | null = null;
         let retryCount = 0;
+        let retryTimeoutId: NodeJS.Timeout | null = null;
+        let isMounted = true;
         const maxRetries = 5;
 
         function connect() {
+            if (!isMounted) return;
+
             console.log("🔗 Attempting to connect to SSE...");
             eventSource = new EventSource('/api/events');
 
             eventSource.onopen = () => {
+                if (!isMounted) {
+                    eventSource?.close();
+                    return;
+                }
                 console.log("✅ SSE Connection established");
                 retryCount = 0;
             };
 
             eventSource.onmessage = (message) => {
+                if (!isMounted) return;
                 try {
                     const payload = JSON.parse(message.data) as SSEEvent;
 
@@ -44,6 +53,8 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
             };
 
             eventSource.onerror = (error) => {
+                if (!isMounted) return;
+
                 console.error("⚠️ SSE Connection Error:", {
                     readyState: eventSource?.readyState,
                     url: eventSource?.url,
@@ -56,7 +67,7 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
                     const delay = Math.pow(2, retryCount) * 1000;
                     retryCount++;
                     console.log(`🔄 Retrying SSE connection in ${delay}ms... (Attempt ${retryCount}/${maxRetries})`);
-                    setTimeout(connect, delay);
+                    retryTimeoutId = setTimeout(connect, delay);
                 } else {
                     console.error("🛑 Max SSE retries reached. Real-time updates disabled.");
                 }
@@ -66,6 +77,10 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
         connect();
 
         return () => {
+            isMounted = false;
+            if (retryTimeoutId) {
+                clearTimeout(retryTimeoutId);
+            }
             console.log("🔌 Closing SSE connection");
             eventSource?.close();
         };

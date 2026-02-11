@@ -1,21 +1,30 @@
 /**
  * NotificationBell component
- * Displays a bell icon with unread count badge and opens a popover with notifications
+ * Displays a bell icon with unread count badge and opens a popover with notifications.
+ * Refetches fresh notification data from the DB when the popover is opened,
+ * ensuring data is always current even if SSE events were missed.
  */
 "use client";
 
+import { useState, useCallback } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationList } from "./NotificationList";
 import { useNotificationState } from "@/hooks/useNotificationState";
+import { trpc } from "@/trpc/client";
 
 export function NotificationBell() {
     const { unreadCount } = useNotificationState();
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleOpenChange = useCallback((open: boolean) => {
+        setIsOpen(open);
+    }, []);
 
     return (
-        <Popover>
+        <Popover open={isOpen} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative" data-notification-bell>
                     <Bell className="h-5 w-5" />
@@ -36,3 +45,4 @@ export function NotificationBell() {
         </Popover>
     );
 }
+

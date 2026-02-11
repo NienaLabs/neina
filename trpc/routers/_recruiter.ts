@@ -68,7 +68,7 @@ export const recruiterRouter = createTRPCRouter({
                     await sendRecruiterApplicationReceivedEmail(user.email, user.name || 'User');
 
                     // Create in-app notification
-                    await prisma.announcement.create({
+                    const announcement = await prisma.announcement.create({
                         data: {
                             title: 'Application Received',
                             content: 'We have received your recruiter application and will get back to you shortly.',
@@ -79,7 +79,19 @@ export const recruiterRouter = createTRPCRouter({
                     });
 
                     // Emit SSE Event
-                    emitUserEvent(userId, { type: 'NEW_NOTIFICATION', data: {} });
+                    emitUserEvent(userId, {
+                        type: 'NEW_NOTIFICATION',
+                        data: {
+                            notification: {
+                                id: announcement.id,
+                                title: announcement.title,
+                                content: announcement.content,
+                                sentAt: announcement.sentAt,
+                                isRead: false,
+                                readAt: null,
+                            }
+                        }
+                    });
                 }
 
                 return { success: true, application };
@@ -108,7 +120,7 @@ export const recruiterRouter = createTRPCRouter({
             await sendRecruiterApplicationReceivedEmail(user.email, user.name || 'User');
 
             // Create in-app notification
-            await prisma.announcement.create({
+            const announcement = await prisma.announcement.create({
                 data: {
                     title: 'Application Received',
                     content: 'We have received your recruiter application and will get back to you shortly.',
@@ -119,7 +131,19 @@ export const recruiterRouter = createTRPCRouter({
             });
 
             // Emit SSE Event
-            emitUserEvent(userId, { type: 'NEW_NOTIFICATION', data: {} });
+            emitUserEvent(userId, {
+                type: 'NEW_NOTIFICATION',
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
+            });
 
             return { success: true, application };
         }),

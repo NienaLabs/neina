@@ -76,7 +76,8 @@ export const ModelName = {
   CandidatePipeline: 'CandidatePipeline',
   JobView: 'JobView',
   blog_post: 'blog_post',
-  PushSubscription: 'PushSubscription'
+  PushSubscription: 'PushSubscription',
+  SSEEventSignal: 'SSEEventSignal'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -223,7 +224,8 @@ export const TailoredResumeScalarFieldEnum = {
   primaryResumeId: 'primaryResumeId',
   userId: 'userId',
   scores: 'scores',
-  status: 'status'
+  status: 'status',
+  coverLetter: 'coverLetter'
 } as const
 
 export type TailoredResumeScalarFieldEnum = (typeof TailoredResumeScalarFieldEnum)[keyof typeof TailoredResumeScalarFieldEnum]
@@ -500,6 +502,17 @@ export const PushSubscriptionScalarFieldEnum = {
 } as const
 
 export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
+
+
+export const SSEEventSignalScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  payload: 'payload',
+  createdAt: 'createdAt'
+} as const
+
+export type SSEEventSignalScalarFieldEnum = (typeof SSEEventSignalScalarFieldEnum)[keyof typeof SSEEventSignalScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -77,7 +77,7 @@ export const userRouter = createTRPCRouter({
                 });
 
                 // 2. Always create an in-app notification (announcement) for admins
-                await prisma.announcement.create({
+                const announcement = await prisma.announcement.create({
                     data: {
                         title: `New Support Ticket: ${input.subject}`,
                         content: `From: ${user.name || user.email}\n\n${input.message.substring(0, 200)}...`,
@@ -87,7 +87,19 @@ export const userRouter = createTRPCRouter({
                 });
 
                 // Emit SSE broadcast event (all admins are listening)
-                broadcastEvent({ type: 'NEW_NOTIFICATION', data: {} });
+                broadcastEvent({
+                    type: 'NEW_NOTIFICATION',
+                    data: {
+                        notification: {
+                            id: announcement.id,
+                            title: announcement.title,
+                            content: announcement.content,
+                            sentAt: announcement.sentAt,
+                            isRead: false,
+                            readAt: null,
+                        }
+                    }
+                });
 
                 // 3. Try to send push notifications to admins
                 const admins = await prisma.user.findMany({

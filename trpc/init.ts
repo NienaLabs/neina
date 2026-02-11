@@ -64,16 +64,55 @@ const isAuthed = t.middleware(async ({ next, ctx }) => {
       });
       console.log(`User ${user.id} subscription expired. Downgraded to FREE.`);
 
+      // Create a persistent notification in the DB
+      const announcement = await prisma.announcement.create({
+        data: {
+          title: 'Subscription Expired',
+          content: 'Your subscription has expired and your account has been downgraded to the FREE plan.',
+          type: 'in-app',
+          targetUserIds: [user.id],
+        },
+      });
+
+      // Calculate new unread count for this user
+      const unreadCount = await prisma.announcement.count({
+        where: {
+          type: { in: ['in-app', 'both'] },
+          sentAt: { gte: new Date(user.createdAt) },
+          announcement_read: {
+            none: { userId: user.id },
+          },
+          AND: [
+            {
+              OR: [
+                { targetUserIds: { has: user.id } },
+                { targetUserIds: { equals: [] } },
+              ]
+            },
+            {
+              OR: [
+                { targetRoles: { has: user.role || 'user' } },
+                { targetRoles: { equals: [] } },
+              ]
+            }
+          ]
+        },
+      });
+
       // Notify user via SSE (if they are online)
       const { emitUserEvent } = await import('@/lib/events');
       emitUserEvent(user.id, {
         type: 'NEW_NOTIFICATION',
         data: {
           notification: {
-            title: 'Subscription Expired',
-            content: 'Your subscription has expired and your account has been downgraded to the FREE plan.',
-            sentAt: new Date(),
-          }
+            id: announcement.id,
+            title: announcement.title,
+            content: announcement.content,
+            sentAt: announcement.sentAt,
+            isRead: false,
+            readAt: null,
+          },
+          unreadCount
         }
       });
 

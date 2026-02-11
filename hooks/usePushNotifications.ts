@@ -10,14 +10,18 @@ import { requestNotificationPermission, onMessageListener } from '@/lib/firebase
 import { trpc } from '@/trpc/client';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { useServerEvents } from './useServerEvents';
+import { useAtom, atom } from 'jotai';
+
+// Global Atoms for Push Notification Status
+export const pushSubscribedAtom = atom<boolean>(false);
+export const pushCheckingStatusAtom = atom<boolean>(true);
 
 export function usePushNotifications() {
     const router = useRouter();
     const [permission, setPermission] = useState<NotificationPermission>('default');
-    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [isSubscribed, setIsSubscribed] = useAtom(pushSubscribedAtom);
     const [isLoading, setIsLoading] = useState(false);
-    const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+    const [isCheckingStatus, setIsCheckingStatus] = useAtom(pushCheckingStatusAtom);
 
     const subscribeMutation = trpc.notifications.subscribeToPush.useMutation();
     const unsubscribeMutation = trpc.notifications.unsubscribeFromPush.useMutation();
@@ -29,33 +33,17 @@ export function usePushNotifications() {
         }
     }, []);
 
-    // Listen for SSE updates
-    useServerEvents((event) => {
-        if (event.type === 'INITIAL_STATE') {
-            // Initialize subscription status from SSE initial state
-            console.log('📊 [SSE] Initializing push subscription status');
-            setIsSubscribed(event.data.pushSubscription.isSubscribed);
-            setIsCheckingStatus(false);
-        }
-
-        if (event.type === 'PUSH_SUBSCRIPTION_UPDATE') {
-            console.log('🔄 [SSE] Push Subscription Update:', event.data);
-            setIsSubscribed(event.data.isSubscribed);
-            setIsCheckingStatus(false);
-        }
-    });
-
-    // Fallback: Stop checking status after 5 seconds if SSE doesn't respond
+    // Fallback: Stop checking status after 10 seconds if SSE doesn't respond
     useEffect(() => {
         const timeout = setTimeout(() => {
             if (isCheckingStatus) {
-                console.warn('⚠️ SSE timeout - stopping status check');
+                console.warn('⚠️ SSE timeout - stopping push status check');
                 setIsCheckingStatus(false);
             }
-        }, 5000);
+        }, 10000);
 
         return () => clearTimeout(timeout);
-    }, [isCheckingStatus]);
+    }, [isCheckingStatus, setIsCheckingStatus]);
 
     // Sync local state with server status (Removed TRPC query in favor of SSE)
 

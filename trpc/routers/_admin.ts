@@ -10,10 +10,11 @@ import {
     sendAccountReactivatedEmail
 } from '@/lib/email';
 import { sendPushNotification, sendMulticastPushNotification } from '@/lib/firebase-admin';
+import os from 'os';
 import fs from 'fs';
 import path from 'path';
 
-const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Niena/Niena/email_debug.log';
+const DEBUG_LOG_PATH = process.env.DEBUG_LOG_PATH || path.join(os.tmpdir(), 'niena-email-debug.log');
 
 // Simple in-memory cache for analytics
 let analyticsCache: { data: any; timestamp: number } | null = null;
@@ -741,12 +742,26 @@ export const adminRouter = createTRPCRouter({
             }
 
             // Emit SSE Event
+            const ssePayload = {
+                type: 'NEW_NOTIFICATION' as const,
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
+            };
+
             if (input.targetUserIds && input.targetUserIds.length > 0) {
                 input.targetUserIds.forEach(targetId => {
-                    emitUserEvent(targetId, { type: 'NEW_NOTIFICATION', data: {} });
+                    emitUserEvent(targetId, ssePayload);
                 });
             } else {
-                broadcastEvent({ type: 'NEW_NOTIFICATION', data: {} });
+                broadcastEvent(ssePayload);
             }
 
             return announcement;
@@ -907,7 +922,7 @@ export const adminRouter = createTRPCRouter({
             });
 
             // Send in-app notification
-            await prisma.announcement.create({
+            const announcement = await prisma.announcement.create({
                 data: {
                     title: 'Recruiter Application Approved',
                     content: 'Congratulations! Your application to become a recruiter has been approved. You can now post jobs and manage candidates 🎉.',
@@ -918,7 +933,19 @@ export const adminRouter = createTRPCRouter({
             });
 
             // Notify user via SSE
-            emitUserEvent(application.userId, { type: 'NEW_NOTIFICATION', data: {} });
+            emitUserEvent(application.userId, {
+                type: 'NEW_NOTIFICATION',
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
+            });
 
             // Send email notification
             const applicantUser = await prisma.user.findUnique({
@@ -962,7 +989,7 @@ export const adminRouter = createTRPCRouter({
             });
 
             // Send in-app notification
-            await prisma.announcement.create({
+            const announcement = await prisma.announcement.create({
                 data: {
                     title: 'Recruiter Application Update',
                     content: `Your recruiter application has been rejected. Reason: ${input.reason}`,
@@ -973,7 +1000,19 @@ export const adminRouter = createTRPCRouter({
             });
 
             // Notify user via SSE
-            emitUserEvent(application.userId, { type: 'NEW_NOTIFICATION', data: {} });
+            emitUserEvent(application.userId, {
+                type: 'NEW_NOTIFICATION',
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
+            });
 
             // Send email notification
             const applicantUser = await prisma.user.findUnique({

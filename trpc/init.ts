@@ -6,11 +6,14 @@ import { headers } from 'next/headers'
 import prisma from "@/lib/prisma";
 
 export const createTRPCContext = cache(async () => {
-  /**
-   * @see: https://trpc.io/docs/server/context
-   */
-  const session = await auth.api.getSession({ headers: await headers() });
-  return { session };
+  try {
+    const h = await headers();
+    const session = await auth.api.getSession({ headers: h });
+    return { session };
+  } catch (error) {
+    console.error("❌ [tRPC Context] Failed to get session:", error);
+    return { session: null };
+  }
 });
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
@@ -61,6 +64,19 @@ const isAuthed = t.middleware(async ({ next, ctx }) => {
       });
       console.log(`User ${user.id} subscription expired. Downgraded to FREE.`);
 
+      // Notify user via SSE (if they are online)
+      const { emitUserEvent } = await import('@/lib/events');
+      emitUserEvent(user.id, {
+        type: 'NEW_NOTIFICATION',
+        data: {
+          notification: {
+            title: 'Subscription Expired',
+            content: 'Your subscription has expired and your account has been downgraded to the FREE plan.',
+            sentAt: new Date(),
+          }
+        }
+      });
+
       // Update session user object explicitly so downstream procedures see FREE
       user.plan = "FREE";
       user.planExpiresAt = null;
@@ -84,4 +100,5 @@ const isAuthed = t.middleware(async ({ next, ctx }) => {
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
 export const baseProcedure = t.procedure;
+export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(isAuthed);

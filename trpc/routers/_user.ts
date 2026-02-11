@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../init";
 import prisma from "@/lib/prisma";
+import { broadcastEvent } from '@/lib/events';
 
 export const userRouter = createTRPCRouter({
     getMe: protectedProcedure.query(async ({ ctx }) => {
@@ -84,6 +85,9 @@ export const userRouter = createTRPCRouter({
                         targetRoles: ['admin'],
                     }
                 });
+
+                // Emit SSE broadcast event (all admins are listening)
+                broadcastEvent({ type: 'NEW_NOTIFICATION', data: {} });
 
                 // 3. Try to send push notifications to admins
                 const admins = await prisma.user.findMany({

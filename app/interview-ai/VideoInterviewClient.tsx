@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '@/auth-client';
 import { trpc } from '@/trpc/client';
 import { toast } from 'sonner';
@@ -15,7 +15,12 @@ import {
   Mic,
   MicOff,
   PhoneOff,
-  User
+  User,
+  Sparkles,
+  ArrowLeft,
+  Info,
+  ExternalLink,
+  Expand
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -27,6 +32,7 @@ import { FeatureGuide } from '@/components/FeatureGuide';
 import { InterviewTimer } from '@/components/interview-timer';
 import { interviewerSystemPrompt } from '@/constants/prompts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useServerEvents } from "@/hooks/useServerEvents";
 
 // Dynamic import for Anam to avoid SSR issues
 import { createClient, type AnamClient, AnamEvent } from '@anam-ai/js-sdk';
@@ -64,6 +70,8 @@ const VideoInterview = () => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [questions, setQuestions] = useState<string[]>([]);
   const isAiSpeakingRef = useRef(false);
   const [transcript, setTranscript] = useState<{ role: string, content: string }[]>([]);
   const transcriptRef = useRef<{ role: string, content: string }[]>([]);
@@ -95,9 +103,92 @@ const VideoInterview = () => {
   const { data: resumes } = trpc.resume.getPrimaryResumes.useQuery();
   const hasResume = resumes && resumes.length > 0;
 
+  const { data: userData } = trpc.user.getMe.useQuery();
+
   useEffect(() => {
     if (hasResume) setUseResume(true);
   }, [hasResume]);
+
+  const searchParams = useSearchParams();
+  const urlInterviewId = searchParams.get('interviewId');
+  const [isPolling, setIsPolling] = useState(false);
+  const [currentInterviewId, setCurrentInterviewId] = useState<string | null>(urlInterviewId);
+
+  // Extract from URL if creating new session via redirect
+  const urlRole = searchParams.get('role');
+  const urlDescription = searchParams.get('description');
+  const urlType = searchParams.get('type');
+  const urlCount = searchParams.get('count');
+  const urlResumeId = searchParams.get('resumeId');
+
+  // Mutations/Queries
+  const createSessionMutation = trpc.interview.createSession.useMutation();
+  const { data: interviewData, isLoading: isLoadingInterview, refetch: refetchInterview } = trpc.interview.getInterview.useQuery(
+    { interviewId: currentInterviewId! },
+    {
+      enabled: !!currentInterviewId,
+      // refetchInterval: isPolling ? 3000 : false, // Removed in favor of SSE
+    }
+  );
+
+  // Real-time update when questions are generated
+  useServerEvents((event) => {
+    if (event.type === 'INTERVIEW_READY' && event.data.interviewId === currentInterviewId) {
+      console.log("🚀 [SSE] Interview is ready! Refreshing...");
+      refetchInterview();
+    }
+  });
+
+  useEffect(() => {
+    // If we have URL params but no interviewId, we are in "New Session Redirect" mode
+    if (!urlInterviewId && urlRole && urlDescription && isInitialLoad) {
+      setUserRole(decodeURIComponent(urlRole));
+      setUserDescription(decodeURIComponent(urlDescription));
+      setUseResume(!!urlResumeId);
+      setIsInitialLoad(false);
+    } else if (interviewData && isInitialLoad) {
+      setUserRole(interviewData.role || 'Position');
+      setUserDescription(interviewData.description || '');
+      setUseResume(!!interviewData.resume_id);
+      if (interviewData.questions && Array.isArray(interviewData.questions)) {
+        setQuestions(interviewData.questions as string[]);
+      }
+      setIsInitialLoad(false);
+    }
+  }, [interviewData, urlInterviewId, urlRole, urlDescription, urlResumeId, isInitialLoad]);
+
+  // Handle Polling Completion
+  useEffect(() => {
+    if (interviewData && interviewData.questions && (interviewData.questions as any[]).length > 0 && isPolling) {
+      setQuestions(interviewData.questions as string[]);
+      setIsPolling(false);
+      // After questions are ready, we can actually start the AI conversation
+      startAiConversation(interviewData.id);
+    }
+  }, [interviewData, isPolling]);
+
+  // Auto-open preview dialog when URL params are present
+  useEffect(() => {
+    if ((urlInterviewId || urlRole) && !showRoleDialog && !isPolling && !isConnecting && conversationState === 'idle') {
+      setShowRoleDialog(true);
+    }
+  }, [urlInterviewId, urlRole, showRoleDialog, isPolling, isConnecting, conversationState]);
+
+  // PROTECTION & REDIRECTION LOGIC
+  useEffect(() => {
+    // Only redirect if NOT loading and NO interview ID or Config Params are present
+    if (!isPending && !isLoadingInterview && !urlInterviewId && !urlRole && isInitialLoad) {
+      toast.error("Access Denied: Please select an interview role first.");
+      router.push('/interview');
+    }
+  }, [urlInterviewId, urlRole, isPending, isLoadingInterview, router, isInitialLoad]);
+
+  useEffect(() => {
+    if (userData && userData.plan !== 'DIAMOND' && userData.role !== 'admin') {
+      toast.error("Premium access required. Please upgrade to the Diamond plan.");
+      router.push('/pricing');
+    }
+  }, [userData, router]);
 
   // Connection timeout monitor
   useEffect(() => {
@@ -237,8 +328,7 @@ const VideoInterview = () => {
     endConversation('Timer (Expired)');
   }, [endConversation]);
 
-
-  // Anam Initialization
+  // 1. Initialization useEffect
   useEffect(() => {
     if (conversationState === 'active' && sessionData?.anamSessionToken && !anamRef.current) {
       console.log('[Anam] Initializing new session');
@@ -260,7 +350,6 @@ const VideoInterview = () => {
 
       client.addListener(AnamEvent.SESSION_READY, () => {
         console.log('[Anam] Session Ready (Event)');
-        toast.success("AI Interviewer is ready!");
         setIsConnecting(false);
         setIsMicOn(true);
 
@@ -303,7 +392,6 @@ const VideoInterview = () => {
       });
 
       // --- TRANSCRIPT COLLECTION ---
-      // Listen for the full conversation history to keep our state in sync
       const historyEvent = (AnamEvent as any).MESSAGE_HISTORY_UPDATED || 'MESSAGE_HISTORY_UPDATED';
       client.addListener(historyEvent, (history: any[]) => {
         console.log('[Anam] History Updated:', history);
@@ -316,17 +404,12 @@ const VideoInterview = () => {
         }
       });
 
-      // Optionally listen for individual messages for immediate feedback
       client.addListener(AnamEvent.MESSAGE_STREAM_EVENT_RECEIVED, (message: any) => {
         console.log('[Anam] Message Stream Received:', message);
         if (message && message.content && message.endOfSpeech) {
           setTranscript(prev => {
-            // Check if this specific message ID is already in the transcript
             if (prev.some((m: any) => m.id === message.id)) return prev;
-
-            // Also deduplicate by content if needed
             if (prev.some(m => m.content === message.content)) return prev;
-
             return [...prev, {
               id: message.id,
               role: message.role === 'human' || message.role === 'user' ? 'user' : 'assistant',
@@ -337,18 +420,10 @@ const VideoInterview = () => {
       });
 
       // --- AI TOOL CALLS ---
-      // Listen for tool calls defined in the Anam Dashboard
       client.addListener(AnamEvent.CLIENT_TOOL_EVENT_RECEIVED, (toolCall: any) => {
         console.log('[Anam] Tool Call Received (Raw):', toolCall);
-
-        // Map the eventName to what we expect
         if (toolCall?.eventName === 'end_interview_session') {
           console.log('[Anam] AI requested to end session. Reason:', toolCall.eventData?.reason);
-
-          // Note: respondToToolCall does not exist on this SDK version. 
-          // The AI ending the call usually triggers a immediate disconnection logic.
-
-          // Delay slightly to ensure any final processing is done
           setTimeout(() => {
             endConversation('AI Tool Trigger');
           }, 300);
@@ -371,27 +446,14 @@ const VideoInterview = () => {
         isAiSpeakingRef.current = false;
       });
 
-      // Start streaming - this initiates the connection
-      client.streamToVideoElement('anam-video-element');
-
       client.addListener(AnamEvent.CONNECTION_CLOSED, () => {
         console.log('[Anam] Connection Closed (Event)');
-        if (conversationStateRef.current === 'active') {
-          endConversation('Connection Closed (Event)');
+        if (isMountedRef.current && conversationStateRef.current === 'active') {
+          endConversation('Connection Closed');
         }
       });
 
-      // Use string literal for error to avoid TS enum mismatch if it exists elsewhere
-      client.addListener('error' as any, (error: any) => {
-        console.error('[Anam] SDK Error Listener:', error);
-        toast.error('Anima AI encountered an error. Please try restarting.');
-        setIsConnecting(false);
-        // Don't automatically end here, let's see why it's failing
-      });
-
       return () => {
-        // Only stop streaming if we are actually ending or the component is truly unmounting.
-        // We avoid calling endConversation and stopping if it's just a routine re-render.
         if (anamRef.current && (isEndingRef.current || !isMountedRef.current)) {
           console.log('[Anam] Cleanup: Stopping streaming');
           try {
@@ -401,11 +463,51 @@ const VideoInterview = () => {
         }
       };
     }
-  }, [conversationState, sessionData?.conversationId, sessionData?.anamSessionToken]);
+  }, [conversationState, sessionData?.anamSessionToken, endConversation]);
 
-  const createConversation = async (role: string, description?: string) => {
-    if (isConnecting || conversationState === 'connecting' || conversationState === 'active') return;
+  // 2. Start streaming when video element is ready
+  useEffect(() => {
+    if (anamRef.current && anamVideoRef.current && conversationState === 'active' && !isConnecting) {
+      console.log('[Anam] Video element ready, starting stream');
+      try {
+        anamRef.current.streamToVideoElement('anam-video-element');
+      } catch (err) {
+        console.error('[Anam] streamToVideoElement failed:', err);
+      }
+    }
+  }, [conversationState, isConnecting]);
 
+  // 3. Initialize user's camera when interview becomes active
+  useEffect(() => {
+    if (conversationState === 'active' && !localStreamRef.current) {
+      console.log('[Camera] Requesting user camera access');
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          console.log('[Camera] Camera access granted');
+          localStreamRef.current = stream;
+          setLocalStream(stream);
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+        })
+        .catch(err => {
+          console.warn('[Camera] Failed to get camera access:', err);
+          // Don't show error toast - camera is optional for the interview
+        });
+    }
+
+    // Cleanup camera when conversation ends
+    return () => {
+      if (conversationState !== 'active' && localStreamRef.current) {
+        console.log('[Camera] Cleaning up camera stream');
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+        setLocalStream(null);
+      }
+    };
+  }, [conversationState]);
+
+  const startAiConversation = async (interviewId: string) => {
     setIsConnecting(true);
     setConversationState('connecting');
     setConnectionStartTime(Date.now());
@@ -416,7 +518,12 @@ const VideoInterview = () => {
       const response = await fetch('/api/interviews/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, description, useResume: hasResume ? useResume : false }),
+        body: JSON.stringify({
+          role: userRole,
+          description: userDescription,
+          useResume: hasResume ? useResume : false,
+          interviewId: interviewId
+        }),
       });
 
       const startData = await response.json();
@@ -428,7 +535,6 @@ const VideoInterview = () => {
             console.warn('[Fullscreen] Exit failed:', err);
           });
         }
-        router.push('/interview-ai');
         return;
       }
 
@@ -449,25 +555,60 @@ const VideoInterview = () => {
           console.warn('[Fullscreen] Exit failed:', err);
         });
       }
-      router.push('/interview-ai');
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const handleRoleSubmit = async () => {
-    if (userRole.trim()) {
-      setShowRoleDialog(false);
+  const createConversation = async (role: string, description?: string) => {
+    if (isConnecting || conversationState === 'connecting' || conversationState === 'active') return;
 
-      // Request native browser fullscreen for the "YouTube-like" experience
-      if (containerRef.current && containerRef.current.requestFullscreen) {
-        containerRef.current.requestFullscreen().catch(err => {
-          console.warn('[Fullscreen] Request blocked or failed:', err);
+    // Handle session creation if it doesn't exist yet
+    if (!currentInterviewId) {
+      setIsPolling(true);
+      try {
+        const session = await createSessionMutation.mutateAsync({
+          role: role,
+          description: description || '',
+          type: (urlType as any) || 'screening',
+          questionCount: parseInt(urlCount || '10'),
+          resumeId: urlResumeId || undefined,
+          mode: 'AVATAR'
         });
+        setCurrentInterviewId(session.interviewId);
+        interviewIdRef.current = session.interviewId;
+      } catch (err) {
+        toast.error('Failed to initialize session');
+        setIsPolling(false);
       }
-
-      await createConversation(userRole.trim(), userDescription.trim());
+      return;
     }
+
+    // If ID exists but no questions, start polling
+    if (questions.length === 0) {
+      setIsPolling(true);
+      return;
+    }
+
+    await startAiConversation(currentInterviewId);
+  };
+
+  const handleRoleSubmit = () => {
+    if (!userRole || !userDescription) {
+      toast.error('Position and description are required');
+      return;
+    }
+
+    setShowRoleDialog(false);
+
+    // Request native browser fullscreen
+    if (containerRef.current && containerRef.current.requestFullscreen) {
+      containerRef.current.requestFullscreen().catch(err => {
+        console.warn('[Fullscreen] Request blocked or failed:', err);
+      });
+    }
+
+    createConversation(userRole, userDescription);
   };
 
   const handleGenerateReport = async () => {
@@ -492,165 +633,177 @@ const VideoInterview = () => {
   return (
     <div
       ref={containerRef}
-      className={`transition-all duration-500 overflow-hidden flex flex-col relative ${sessionData?.conversationId
-        ? 'fixed inset-0 z-[100] bg-transparent'
-        : 'h-full bg-transparent flex-1'
-        } ${warningLevel === 'critical' ? 'ring-inset ring-8 ring-red-600 animate-pulse' : ''} ${warningLevel === 'low' ? 'ring-inset ring-4 ring-yellow-500' : ''}`}>
-      {/* Configuration Header - Only shown when NOT in an active call */}
-      {!sessionData?.conversationId && (
-        <div className="bg-black/10 backdrop-blur-md border-b border-white/5 p-4 shrink-0">
-          <div className="max-w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Video Interview</h1>
-                <FeatureGuide title="Anam AI Interview" description="Practice with an Anam AI avatar." />
+      className={`min-h-screen flex flex-col relative bg-transparent transition-colors duration-500 font-sans ${warningLevel === 'critical' ? 'ring-inset ring-8 ring-red-600 animate-pulse' : ''
+        } ${warningLevel === 'low' ? 'ring-inset ring-4 ring-yellow-500' : ''}`}
+    >
+
+
+
+      <div className="relative flex-1 flex flex-col overflow-hidden bg-transparent">
+        {/* Tailoring Overlay - Shown while creating session or generating questions */}
+        {isPolling && (
+          <div className="absolute inset-0 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl z-[100] flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
+            <div className="relative w-32 h-32 mb-10">
+              <div className="absolute inset-0 rounded-full border-4 border-purple-500/10 animate-pulse" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-purple-500 animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-purple-600 dark:text-purple-400 animate-bounce" />
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Connect for a face-to-face conversation</p>
             </div>
-            <Button variant="default" size="sm" onClick={() => setShowRoleDialog(true)} disabled={isConnecting}>
-              {isConnecting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Connecting...</> : <><Video className="h-4 w-4 mr-2" />Start Interview</>}
-            </Button>
+
+            <div className="text-center space-y-4 max-w-sm">
+              <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Crafting Your Interview</h3>
+              <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                Analyzing requirements to optimize your AI Interviewer...
+              </p>
+
+              <div className="flex items-center justify-center gap-1.5 pt-4">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                    className="w-2 h-2 rounded-full bg-purple-500"
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main Content Area */}
-      <div className={`relative flex-1 bg-transparent overflow-hidden ${sessionData?.conversationId ? 'm-0 h-full w-full' : 'h-full w-full'}`}>
-        {sessionData?.conversationId ? (
-          <div className="w-full h-full relative">
-            <div id="anam-container" className="w-full h-full bg-black min-h-[400px] flex items-center justify-center">
-              <video ref={anamVideoRef} id="anam-video-element" className="w-full h-full object-cover" autoPlay playsInline />
+        {(conversationState === 'active' || conversationState === 'connecting') && sessionData ? (
+          /* ACTIVE INTERVIEW UI - Integrated into Studio */
+          <div className="flex-1 w-full relative flex flex-col">
+            <div
+              id="anam-container"
+              className="flex-1 w-full bg-slate-950 relative group"
+            >
+              <video
+                ref={anamVideoRef}
+                id="anam-video-element"
+                className="w-full h-full object-cover"
+                autoPlay
+                playsInline
+              />
+
+              {/* Internal Studio Label */}
+              <div className="absolute top-6 left-6 z-50 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                <span className="text-[10px] font-bold text-white tracking-widest">LIVE STUDIO</span>
+              </div>
             </div>
 
-            <div className="absolute top-24 right-6 w-40 h-52 sm:w-48 sm:h-64 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl z-40 bg-gray-950">
+            {/* PIP (User Video) */}
+            <div className="absolute top-20 right-6 w-44 h-56 sm:w-52 sm:h-72 rounded-3xl overflow-hidden border-2 border-white/30 shadow-2xl z-40 bg-gray-950">
               {localStream ? (
                 <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover mirror-mode" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-500">
-                  <User className="h-10 w-10 mb-2 opacity-20" />
-                  <p className="text-[10px] uppercase tracking-wider font-semibold opacity-30">No Camera</p>
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-950 text-gray-500">
+                  <User className="h-12 w-12 mb-3 opacity-20" />
+                  <p className="text-[11px] uppercase tracking-wider font-semibold opacity-40">No Camera</p>
                 </div>
               )}
-              <div className="absolute bottom-2 left-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] text-white/80 font-medium">You</div>
+              <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg text-[11px] text-white font-semibold">You</div>
             </div>
 
+            {/* Header Overlays */}
             <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-50 pointer-events-none">
-              <div className="bg-gray-900/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 pointer-events-auto">
+              <div className="bg-gray-900/50 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/20 shadow-lg pointer-events-auto">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center"><User className="h-4 w-4 text-blue-500" /></div>
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center"><User className="h-5 w-5 text-blue-400" /></div>
                   <div>
-                    <p className="text-sm font-semibold text-white leading-tight">{userRole || "Practice Session"}</p>
-                    <p className="text-[10px] text-gray-400">Live AI Interview</p>
+                    <p className="text-sm font-bold text-white leading-tight">{userRole || "Practice Session"}</p>
+                    <p className="text-[11px] text-gray-300 font-medium">Live AI Interview</p>
                   </div>
                 </div>
               </div>
 
               {sessionData?.interviewId && (
-                <div className="bg-gray-900/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 pointer-events-auto">
+                <div className="bg-gray-900/50 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/20 shadow-lg pointer-events-auto">
                   {isAvatarVisible ? (
                     <InterviewTimer interviewId={sessionData.interviewId} initialSeconds={sessionData.remainingSeconds} onTimeExpired={handleTimeExpired} onWarning={handleTimeWarning} />
                   ) : (
-                    <div className="flex items-center space-x-2 text-white/60"><Loader2 className="h-4 w-4 animate-spin" /><span className="text-xs font-medium">Initializing...</span></div>
+                    <div className="flex items-center space-x-2 text-white/70"><Loader2 className="h-4 w-4 animate-spin" /><span className="text-xs font-semibold">Initializing...</span></div>
                   )}
                 </div>
               )}
             </div>
 
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-6 w-full max-w-2xl px-6">
-              {/* Audio Reactive Visualizer (AI) */}
-              <div className="flex items-center gap-1 h-8">
+            {/* Bottom Controls */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-5 w-full max-w-2xl px-6">
+              <div className="flex items-center gap-1.5 h-10">
                 {[...Array(12)].map((_, i) => (
                   <motion.div
                     key={i}
-                    animate={isAiSpeaking ? { height: [4, 20, 8, 24, 6] } : { height: 4 }}
+                    animate={isAiSpeaking ? { height: [6, 24, 10, 28, 8] } : { height: 6 }}
                     transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.05 }}
-                    className="w-1 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full"
+                    className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full shadow-lg"
                   />
                 ))}
               </div>
 
-              {/* Studio Control Bar */}
-              <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full px-8 py-4 flex items-center justify-between gap-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-                <div className="flex items-center gap-6">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isMicOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500/20 text-red-500'}`}
+              <div className="bg-black/50 backdrop-blur-2xl border border-white/20 rounded-full px-10 py-5 flex items-center justify-between gap-14 shadow-2xl">
+                <div className="flex items-center gap-7">
+                  <button
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${isMicOn ? 'bg-white/10 text-white hover:bg-white/20 hover:scale-105' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`}
                     onClick={toggleMic}
                   >
-                    {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-                  </motion.button>
-
-                  <div className="h-6 w-[1px] bg-white/10" />
-
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-12 h-12 rounded-full bg-red-500/80 hover:bg-red-600 text-white flex items-center justify-center shadow-lg shadow-red-500/20"
+                    {isMicOn ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
+                  </button>
+                  <div className="h-8 w-[1px] bg-white/20" />
+                  <button
+                    className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-xl hover:scale-105 transition-all"
                     onClick={() => endConversation('User Hangup')}
                   >
-                    <PhoneOff className="h-5 w-5" />
-                  </motion.button>
+                    <PhoneOff className="h-6 w-6" />
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-6">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                <div className="flex items-center gap-7">
+                  <button
                     onClick={() => setShowTranscript(!showTranscript)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${showTranscript ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
+                    className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full transition-all shadow-lg ${showTranscript ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80'}`}
                   >
-                    <Clock className="h-4 w-4 text-white" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white">History</span>
-                  </motion.button>
-                  <div className="h-6 w-[1px] bg-white/10" />
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 animate-pulse" />
-                    <span className="text-[10px] uppercase font-black tracking-widest text-white/40">Studio Master</span>
+                    <Clock className="h-4 w-4" />
+                    <span className="text-[11px] font-bold uppercase tracking-widest">History</span>
+                  </button>
+                  <div className="h-8 w-[1px] bg-white/20" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse shadow-lg shadow-purple-500/50" />
+                    <span className="text-[11px] uppercase font-black tracking-widest text-white/50">Studio</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Sliding Transcript Drawer */}
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {showTranscript && (
                 <motion.div
                   initial={{ x: '100%' }}
                   animate={{ x: 0 }}
                   exit={{ x: '100%' }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="absolute top-0 right-0 bottom-0 w-80 z-[60] bg-white/80 backdrop-blur-3xl border-l border-purple-500/10 flex flex-col pt-24 pb-32 shadow-[-20px_0_50px_rgba(168,85,247,0.05)]"
+                  className="absolute top-0 right-0 bottom-0 w-80 z-[60] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-slate-200 dark:border-white/10 flex flex-col pt-24 pb-32"
                 >
                   <div className="px-6 mb-6 flex items-center justify-between">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Session Logs</h3>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setShowTranscript(false)}
-                      className="text-slate-400 hover:text-slate-900"
-                    >
-                      <Minimize2 className="h-4 w-4" />
-                    </motion.button>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">History</h3>
+                    <button onClick={() => setShowTranscript(false)}><Minimize2 className="h-4 w-4" /></button>
                   </div>
-                  <div className="flex-1 overflow-y-auto px-6 space-y-6 scrollbar-hide">
+                  <div className="flex-1 overflow-y-auto px-6 space-y-6">
                     {transcript.length === 0 ? (
-                      <div className="h-full flex items-center justify-center text-slate-300 italic text-xs text-center px-4 font-medium">Waiting for conversation...</div>
+                      <div className="h-full flex items-center justify-center text-slate-400 italic text-sm">No messages yet...</div>
                     ) : (
                       transcript.map((msg, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`space-y-1 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
-                        >
-                          <p className={`text-[9px] font-black uppercase tracking-widest transition-colors ${msg.role === 'user' ? 'text-blue-500' : 'text-purple-500'}`}>
-                            {msg.role === 'user' ? 'Candidate' : 'Richard'}
+                        <div key={i} className={`space-y-1 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                          <p className={`text-[10px] font-bold uppercase tracking-widest ${msg.role === 'user' ? 'text-blue-500' : 'text-purple-500'}`}>
+                            {msg.role === 'user' ? 'You' : 'Rich'}
                           </p>
-                          <p className="text-sm text-slate-700 leading-relaxed font-semibold">
+                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
                             {msg.content}
                           </p>
-                        </motion.div>
+                        </div>
                       ))
                     )}
                   </div>
@@ -658,158 +811,180 @@ const VideoInterview = () => {
               )}
             </AnimatePresence>
 
-            {/* REC Status Tag */}
-            <div className="absolute top-24 left-8 z-50 flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-purple-500/10 shadow-sm">
+            <div className="absolute top-24 left-8 z-50 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-700">REC</span>
-              <div className="h-3 w-[1px] bg-slate-200 mx-1" />
-              <span className="text-[10px] font-mono text-slate-400">STUDIO_STREAM</span>
+              <span className="text-[10px] font-bold text-white tracking-widest">LIVE STUDIO</span>
             </div>
           </div>
-        ) : (conversationState === 'ended' || conversationState === 'ending') ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-transparent">
-            <div className="max-w-md w-full mx-auto p-8 rounded-3xl bg-gray-800/50 backdrop-blur-xl border border-white/10 text-center shadow-2xl">
-              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><Clock className="h-10 w-10 text-green-500" /></div>
-              <h2 className="text-2xl font-bold text-white mb-2">Interview Completed!</h2>
-              <p className="text-gray-400 mb-8">Great job on completing your practice session.</p>
+        ) : conversationState === 'ended' || conversationState === 'ending' ? (
+          /* ENDED UI */
+          <div className="flex-1 flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-lg w-full p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-center shadow-2xl"
+            >
+              <div className="w-24 h-24 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-green-500/20">
+                <Clock className="h-12 w-12 text-green-500" />
+              </div>
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Interview Completed!</h2>
+              <p className="text-slate-500 dark:text-slate-400 mb-10 text-base">Your performance is being analyzed.</p>
               {analysisError && <Alert variant="destructive" className="mb-6"><AlertCircle className="h-4 w-4" /><AlertDescription>{analysisError}</AlertDescription></Alert>}
               <div className="flex flex-col gap-3">
-                <Button onClick={handleGenerateReport} disabled={isAnalyzing} className="w-full bg-blue-600 h-12 rounded-2xl">{isAnalyzing ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Generate AI Report'}</Button>
-                <Button variant="ghost" onClick={() => router.push('/dashboard')} disabled={isAnalyzing} className="w-full text-gray-400">Return to Dashboard</Button>
+                <Button onClick={handleGenerateReport} disabled={isAnalyzing} className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-base shadow-lg">
+                  {isAnalyzing ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Analyzing...</> : 'Generate Full Analysis'}
+                </Button>
+                <Button variant="ghost" onClick={() => router.push('/dashboard')} disabled={isAnalyzing} className="w-full h-12 rounded-2xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-semibold">
+                  Return to Dashboard
+                </Button>
               </div>
-            </div>
+            </motion.div>
           </div>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-transparent">
-            <div className="text-center w-full max-w-xl mx-auto">
+          /* IDLE / READY TO START UI */
+          <div className="flex-1 flex items-center justify-center p-6 relative">
+            <AnimatePresence mode="wait">
               {isConnecting ? (
+                /* Connecting State Overlay inside the Ready/Idle view */
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center"
+                  key="connecting"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center gap-6"
                 >
-                  <div className="relative w-32 h-32 mb-8">
+                  <div className="relative w-24 h-24">
                     <div className="absolute inset-0 rounded-full border-4 border-purple-500/10 animate-[spin_3s_linear_infinite]" />
-                    <div className="absolute inset-2 rounded-full border-4 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+                    <div className="absolute inset-0 rounded-full border-4 border-t-purple-500 animate-spin" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Loader2 className="h-10 w-10 text-purple-600 animate-spin" />
                     </div>
                   </div>
-                  <p className="text-purple-600/60 text-sm font-black uppercase tracking-[0.3em] font-mono">Establishing Link...</p>
+                  <p className="text-purple-600 text-sm font-bold uppercase tracking-[0.2em]">Establishing Link...</p>
                 </motion.div>
-              ) : (
+              ) : (urlInterviewId || urlRole) ? (
+                /* Ready to Start / Entry Page - Just show preview message */
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  key="entry"
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center justify-center text-center space-y-8 max-w-2xl px-6"
                 >
-                  {/* Simple Icon */}
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mb-8 border border-purple-500/20">
-                    <Video className="h-12 w-12 text-purple-600" />
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center shadow-inner">
+                      <Video className="h-12 w-12 text-purple-600 dark:text-purple-400 stroke-[1.5]" />
+                    </div>
+                    {/* Subtle pulse ring */}
+                    <div className="absolute inset-0 rounded-full border border-purple-500/10 animate-pulse scale-150" />
                   </div>
 
-                  <h2 className="text-4xl font-bold text-slate-900 mb-3">
+                  <div className="space-y-3">
+                    <h2 className="text-5xl font-bold text-[#4F46E5] dark:text-purple-400 tracking-tight">
+                      AI Avatar Interview
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">
+                      Professional AI Assessment Environment
+                    </p>
+                  </div>
+                </motion.div>
+              ) : (
+                /* Welcome Screen (No Params) */
+                <motion.div
+                  key="welcome"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col items-center text-center max-w-lg"
+                >
+                  <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center mb-8 border border-purple-500/20 shadow-inner">
+                    <Video className="h-12 w-12 text-purple-600" />
+                  </div>
+                  <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
                     Niena <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Studio</span>
                   </h2>
-                  <p className="text-slate-600 text-sm mb-10">Professional AI Assessment Environment</p>
-
+                  <p className="text-slate-500 dark:text-slate-400 mb-10 leading-relaxed font-medium">
+                    Experience the future of interview preparation in our immersive, AI-powered assessment environment.
+                  </p>
                   <Button
                     onClick={() => setShowRoleDialog(true)}
-                    className="h-12 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold shadow-lg shadow-purple-500/25 transition-all"
+                    className="h-14 px-10 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold shadow-xl shadow-purple-500/25 transition-all"
                   >
-                    <span className="flex items-center gap-2">
-                      Start Interview
-                      <Maximize2 className="h-4 w-4" />
-                    </span>
+                    Configure Your Session
                   </Button>
                 </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
         )}
       </div>
 
+      {/* Preview Dialog - Shows interview details before starting */}
       <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
-        <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-2xl border border-purple-500/10 p-0 overflow-hidden rounded-3xl shadow-[0_20px_60px_rgba(168,85,247,0.12)]">
-          <div className="relative p-6">
-            <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
-
-            <DialogHeader className="mb-5 items-center text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-2xl flex items-center justify-center mb-3 border border-purple-500/10">
-                <Video className="h-6 w-6 text-purple-600" />
+        <DialogContent
+          className="w-[92vw] sm:max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 p-0 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden fixed top-24 left-[50%] -translate-x-1/2 translate-y-0 bottom-auto sm:top-24"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <div className="relative p-6 sm:p-8 max-h-[75vh] overflow-y-auto scrollbar-hide">
+            <DialogHeader className="mb-8 items-center text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mb-4 border border-purple-500/20 shrink-0">
+                <Video className="h-8 w-8 text-purple-600" />
               </div>
-              <DialogTitle className="text-xl font-bold tracking-tight text-slate-900 mb-1">Studio Setup</DialogTitle>
-              <DialogDescription className="text-slate-600 text-xs">Configure your interview session</DialogDescription>
+              <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-white">Interview Preview</DialogTitle>
+              <DialogDescription className="text-slate-500 text-sm mt-1 font-medium">Review your details before entering the studio</DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="role" className="text-xs font-semibold text-slate-700">Position</Label>
-                <Input
-                  id="role"
-                  value={userRole}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserRole(e.target.value)}
-                  className="h-11 bg-slate-50 border-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 rounded-xl text-slate-900 text-sm px-3.5 transition-all"
-                  placeholder="e.g. Frontend Engineer"
-                />
+            <div className="space-y-5">
+              <div className="p-5 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Target Position</p>
+                <p className="font-bold text-lg text-slate-900 dark:text-white truncate">{userRole}</p>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="description" className="text-xs font-semibold text-slate-700">Context <span className="text-slate-400 font-normal">(Optional)</span></Label>
-                <textarea
-                  id="description"
-                  value={userDescription}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setUserDescription(e.target.value)}
-                  className="w-full min-h-[90px] bg-slate-50 border border-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 rounded-xl p-3.5 text-sm text-slate-900 transition-all outline-none resize-none"
-                  placeholder="Skills to test or job details..."
-                />
+              <div className="p-5 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Briefing</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-4">
+                  {userDescription}
+                </p>
               </div>
 
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-100">
-                    <User className="h-4 w-4 text-slate-500" />
+              <div className="flex items-center justify-between p-5 px-6 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-purple-500/10 flex items-center justify-center">
+                    <User className="h-5 w-5 text-purple-600" />
                   </div>
-                  <Label htmlFor="use-resume" className="text-sm font-semibold text-slate-800">Use Resume</Label>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Use Active Resume</span>
                 </div>
-                <Switch id="use-resume" checked={useResume} onCheckedChange={setUseResume} disabled={!hasResume} className="data-[state=checked]:bg-purple-600" />
+                <Switch checked={useResume} onCheckedChange={setUseResume} disabled={!hasResume} className="data-[state=checked]:bg-purple-600" />
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowRoleDialog(false)}
-                  className="flex-1 h-11 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-semibold text-sm"
-                >
-                  Cancel
-                </Button>
+              <div className="flex flex-col gap-4 pt-6">
                 <Button
                   onClick={handleRoleSubmit}
-                  disabled={!userRole.trim() || isConnecting}
-                  className="flex-[1.8] h-11 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25 transition-all text-sm"
+                  disabled={isConnecting || isPolling}
+                  className="w-full h-14 rounded-3xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold shadow-xl shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] text-base"
                 >
-                  {isConnecting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      Start Session
-                      <Maximize2 className="h-4 w-4" />
-                    </span>
-                  )}
+                  {isConnecting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Enter Studio"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/interview')}
+                  className="w-full h-10 rounded-2xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-sm transition-colors"
+                >
+                  Cancel
                 </Button>
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
       <style dangerouslySetInnerHTML={{
         __html: `
         #anam-container video { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
         .mirror-mode { transform: scaleX(-1); }
       `}} />
+
     </div>
   );
 };

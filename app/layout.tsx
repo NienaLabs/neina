@@ -43,7 +43,8 @@ export const metadata: Metadata = {
         height: 630,
         alt: "Niena - AI Career Platform",
       }
-    ],  },
+    ],
+  },
   twitter: {
     card: "summary_large_image",
     title: "Niena – AI Resume Optimization, Job Matching & AI Interview Prep",
@@ -103,7 +104,7 @@ export default function RootLayout({
               {children}
             </SuspensionGuard>
             <ServiceWorkerRegister />
-            <Toaster />
+            <Toaster position="top-right" />
           </body>
         </html>
       </AuthProvider>

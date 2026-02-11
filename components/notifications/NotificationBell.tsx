@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationList } from "./NotificationList";
-import { trpc } from "@/trpc/client";
+import { useNotificationState } from "@/hooks/useNotificationState";
 
 export function NotificationBell() {
-    const { data: unreadCount = 0 } = trpc.notifications.getUnreadCount.useQuery();
+    const { unreadCount } = useNotificationState();
 
     return (
         <Popover>

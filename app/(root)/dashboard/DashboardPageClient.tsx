@@ -205,7 +205,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild className="gap-2">
-              <Link href="/interview-ai">
+              <Link href="/interview">
                 <Video className="h-4 w-4" />
                 Practice Interview
               </Link>

@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
 import { sendRecruiterApplicationReceivedEmail, sendCandidateStatusUpdateEmail } from '@/lib/email';
+import { emitUserEvent } from '@/lib/events';
 import { inngest } from '@/inngest/client';
 
 export const recruiterRouter = createTRPCRouter({
@@ -76,6 +77,9 @@ export const recruiterRouter = createTRPCRouter({
                             createdBy: 'system',
                         },
                     });
+
+                    // Emit SSE Event
+                    emitUserEvent(userId, { type: 'NEW_NOTIFICATION', data: {} });
                 }
 
                 return { success: true, application };
@@ -113,6 +117,9 @@ export const recruiterRouter = createTRPCRouter({
                     createdBy: 'system',
                 },
             });
+
+            // Emit SSE Event
+            emitUserEvent(userId, { type: 'NEW_NOTIFICATION', data: {} });
 
             return { success: true, application };
         }),
@@ -558,6 +565,9 @@ export const recruiterRouter = createTRPCRouter({
                                 createdBy: 'system',
                             },
                         });
+
+                        // Emit SSE Event
+                        emitUserEvent(userAccount.id, { type: 'NEW_NOTIFICATION', data: {} });
                     }
                 } catch (error) {
                     console.error('Failed to create in-app notification:', error);

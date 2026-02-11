@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
+import { broadcastEvent, emitUserEvent } from '@/lib/events';
 import {
     sendRecruiterApprovalEmail,
     sendRecruiterRejectionEmail,
@@ -13,6 +14,10 @@ import fs from 'fs';
 import path from 'path';
 
 const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Niena/Niena/email_debug.log';
+
+// Simple in-memory cache for analytics
+let analyticsCache: { data: any; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function logToFile(msg: string) {
     const timestamp = new Date().toISOString();
@@ -435,15 +440,23 @@ export const adminRouter = createTRPCRouter({
             throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Admin access required' });
         }
 
+        // Check cache
         const now = new Date();
+        if (analyticsCache && (now.getTime() - analyticsCache.timestamp < CACHE_TTL)) {
+            console.log('📊 [Admin] Returning cached analytics');
+            return analyticsCache.data;
+        }
+
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
         // Total counts
-        const totalUsers = await prisma.user.count();
-        const totalResumes = await prisma.resume.count();
-        const totalInterviews = await prisma.interview.count();
-        const totalJobs = await prisma.jobs.count();
+        const [totalUsers, totalResumes, totalInterviews, totalJobs] = await Promise.all([
+            prisma.user.count(),
+            prisma.resume.count(),
+            prisma.interview.count(),
+            prisma.jobs.count(),
+        ]);
 
         // Active users (users with sessions in last 30 days)
         const activeUsers = await prisma.session.groupBy({
@@ -460,7 +473,7 @@ export const adminRouter = createTRPCRouter({
             },
         });
 
-        return {
+        const data = {
             totalUsers,
             totalResumes,
             totalInterviews,
@@ -468,6 +481,11 @@ export const adminRouter = createTRPCRouter({
             activeUsers: activeUsers.length,
             newUsers,
         };
+
+        // Update cache
+        analyticsCache = { data, timestamp: now.getTime() };
+
+        return data;
     }),
 
     getUserGrowth: protectedProcedure
@@ -722,6 +740,15 @@ export const adminRouter = createTRPCRouter({
                 }
             }
 
+            // Emit SSE Event
+            if (input.targetUserIds && input.targetUserIds.length > 0) {
+                input.targetUserIds.forEach(targetId => {
+                    emitUserEvent(targetId, { type: 'NEW_NOTIFICATION', data: {} });
+                });
+            } else {
+                broadcastEvent({ type: 'NEW_NOTIFICATION', data: {} });
+            }
+
             return announcement;
         }),
 
@@ -890,6 +917,9 @@ export const adminRouter = createTRPCRouter({
                 },
             });
 
+            // Notify user via SSE
+            emitUserEvent(application.userId, { type: 'NEW_NOTIFICATION', data: {} });
+
             // Send email notification
             const applicantUser = await prisma.user.findUnique({
                 where: { id: application.userId },
@@ -941,6 +971,9 @@ export const adminRouter = createTRPCRouter({
                     createdBy: user.id,
                 },
             });
+
+            // Notify user via SSE
+            emitUserEvent(application.userId, { type: 'NEW_NOTIFICATION', data: {} });
 
             // Send email notification
             const applicantUser = await prisma.user.findUnique({

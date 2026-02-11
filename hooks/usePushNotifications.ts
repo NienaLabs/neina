@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Custom hook for managing web push notifications
  * Handles permission requests, subscription, and foreground message listening
@@ -8,12 +10,14 @@ import { requestNotificationPermission, onMessageListener } from '@/lib/firebase
 import { trpc } from '@/trpc/client';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useServerEvents } from './useServerEvents';
 
 export function usePushNotifications() {
     const router = useRouter();
     const [permission, setPermission] = useState<NotificationPermission>('default');
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
     const subscribeMutation = trpc.notifications.subscribeToPush.useMutation();
     const unsubscribeMutation = trpc.notifications.unsubscribeFromPush.useMutation();
@@ -25,21 +29,35 @@ export function usePushNotifications() {
         }
     }, []);
 
-    // Check server-side subscription status
-    const { data: subscriptionStatus, isLoading: isCheckingStatus } = trpc.notifications.getSubscriptionStatus.useQuery(
-        undefined,
-        {
-            enabled: typeof window !== 'undefined' && permission === 'granted',
-            retry: false,
+    // Listen for SSE updates
+    useServerEvents((event) => {
+        if (event.type === 'INITIAL_STATE') {
+            // Initialize subscription status from SSE initial state
+            console.log('📊 [SSE] Initializing push subscription status');
+            setIsSubscribed(event.data.pushSubscription.isSubscribed);
+            setIsCheckingStatus(false);
         }
-    );
 
-    // Sync local state with server status
-    useEffect(() => {
-        if (subscriptionStatus) {
-            setIsSubscribed(subscriptionStatus.isSubscribed);
+        if (event.type === 'PUSH_SUBSCRIPTION_UPDATE') {
+            console.log('🔄 [SSE] Push Subscription Update:', event.data);
+            setIsSubscribed(event.data.isSubscribed);
+            setIsCheckingStatus(false);
         }
-    }, [subscriptionStatus]);
+    });
+
+    // Fallback: Stop checking status after 5 seconds if SSE doesn't respond
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (isCheckingStatus) {
+                console.warn('⚠️ SSE timeout - stopping status check');
+                setIsCheckingStatus(false);
+            }
+        }, 5000);
+
+        return () => clearTimeout(timeout);
+    }, [isCheckingStatus]);
+
+    // Sync local state with server status (Removed TRPC query in favor of SSE)
 
     // Listen for foreground messages
     useEffect(() => {
@@ -82,57 +100,23 @@ export function usePushNotifications() {
 
             playNotificationSound();
 
-            // 2. Show native browser notification immediately (Direct API)
-            console.log('🔔 [usePushNotifications] Permission Status:', Notification.permission);
-            if (Notification.permission === 'granted') {
-                try {
-                    const tag = payload.data?.tag || 'job-alert';
-                    const icon = payload.data?.icon || '/niena.png';
-
-                    console.log('🔍 [usePushNotifications] Attempting Window Notification with tag:', tag);
-                    const n = new Notification(title, {
-                        body,
-                        icon: icon,
-                        tag: tag,
-                        renotify: true,
-                        silent: true,
-                        requireInteraction: true
-                    } as any);
-
-                    console.log('✅ [usePushNotifications] Window Notification object created');
-
-                    n.onclick = (e) => {
-                        e.preventDefault();
-                        window.focus();
-                        router.push(url);
-                        n.close();
-                    };
-                } catch (err) {
-                    console.warn('⚠️ [usePushNotifications] Window Notification failed, trying SW...', err);
-                    if ('serviceWorker' in navigator) {
-                        navigator.serviceWorker.ready.then((reg) => {
-                            const tag = payload.data?.tag || 'job-alert';
-                            const icon = payload.data?.icon || '/niena.png';
-                            reg.showNotification(title, { body, tag: tag, icon: icon, silent: true });
-                        });
-                    }
-                }
-            } else {
-                console.warn('❌ [usePushNotifications] Notification blocked by settings');
-                toast.error("Notifications are blocked in your browser.");
-            }
-
-            // 3. Show toast notification for foreground messages (UI feedback)
+            // 2. Show toast notification for foreground messages (UI feedback)
             // Skip toast for job alerts as per user request (they only want native notification for job alerts)
+            // For job alerts, the service worker will handle the notification display
             if (payload.data?.type !== 'job_alert') {
                 toast.info(title, {
                     description: body,
                     action: {
                         label: 'View',
-                        onClick: () => router.push(url),
+                        onClick: () => {
+                            // Find and click the notification bell to open popover
+                            const bell = document.querySelector('[data-notification-bell]') as HTMLButtonElement;
+                            if (bell) bell.click();
+                        },
                     },
                 });
             }
+
         });
 
         return () => {

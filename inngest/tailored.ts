@@ -84,6 +84,7 @@ export const tailoredResumeCreated = inngest.createFunction(
   { id: "tailored-resume-AI-workflow" },
   { event: "app/tailored-resume.created" },
   async ({ step, event }) => {
+  async ({ step, event }) => {
     try {
       // 1. Extract Job Keywords (Source of Truth for Scoring)
       const jobText = event.data.description || "";

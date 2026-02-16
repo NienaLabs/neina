@@ -7,25 +7,44 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
+import { unstable_cache } from "next/cache";
+
+// Cache dashboard stats for 60 seconds to reduce DB load
+const getDashboardStats = unstable_cache(
+    async () => {
+        console.log("📊 [AdminPage] Fetching dashboard stats from DB...");
+        return await Promise.all([
+            prisma.user.count(),
+            prisma.jobs.count(),
+            prisma.interview.count(),
+            prisma.resume.count(),
+            prisma.user.findMany({
+                take: 6,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    createdAt: true,
+                    role: true,
+                    image: true
+                }
+            })
+        ]);
+    },
+    ["admin-dashboard-stats"],
+    { revalidate: 60, tags: ["admin-stats"] }
+);
+
 export default async function AdminPage() {
-    const [userCount, jobCount, interviewCount, resumeCount, recentUsers] = await Promise.all([
-        prisma.user.count(),
-        prisma.jobs.count(),
-        prisma.interview.count(),
-        prisma.resume.count(),
-        prisma.user.findMany({
-            take: 6,
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                createdAt: true,
-                role: true,
-                image: true
-            }
-        })
-    ]);
+    let userCount = 0, jobCount = 0, interviewCount = 0, resumeCount = 0, recentUsers: any[] = [];
+
+    try {
+        const results = await getDashboardStats();
+        [userCount, jobCount, interviewCount, resumeCount, recentUsers] = results;
+    } catch (error) {
+        console.error("❌ [AdminPage] Error fetching dashboard stats:", error);
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">

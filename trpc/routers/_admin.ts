@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
+import { broadcastEvent, emitUserEvent } from '@/lib/events';
 import {
     sendRecruiterApprovalEmail,
     sendRecruiterRejectionEmail,
@@ -9,10 +10,15 @@ import {
     sendAccountReactivatedEmail
 } from '@/lib/email';
 import { sendPushNotification, sendMulticastPushNotification } from '@/lib/firebase-admin';
+import os from 'os';
 import fs from 'fs';
 import path from 'path';
 
-const DEBUG_LOG_PATH = 'c:/Users/adoma/OneDrive/Documents/Niena/Niena/email_debug.log';
+const DEBUG_LOG_PATH = process.env.DEBUG_LOG_PATH || path.join(os.tmpdir(), 'niena-email-debug.log');
+
+// Simple in-memory cache for analytics
+let analyticsCache: { data: any; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function logToFile(msg: string) {
     const timestamp = new Date().toISOString();
@@ -421,7 +427,7 @@ export const adminRouter = createTRPCRouter({
 
         // Trigger the daily job feed event
         await inngest.send({
-            name: 'jobs/daily.feed',
+            name: 'admin/trigger.job.feed',
             data: {},
         });
 
@@ -435,15 +441,23 @@ export const adminRouter = createTRPCRouter({
             throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Admin access required' });
         }
 
+        // Check cache
         const now = new Date();
+        if (analyticsCache && (now.getTime() - analyticsCache.timestamp < CACHE_TTL)) {
+            console.log('📊 [Admin] Returning cached analytics');
+            return analyticsCache.data;
+        }
+
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
         // Total counts
-        const totalUsers = await prisma.user.count();
-        const totalResumes = await prisma.resume.count();
-        const totalInterviews = await prisma.interview.count();
-        const totalJobs = await prisma.jobs.count();
+        const [totalUsers, totalResumes, totalInterviews, totalJobs] = await Promise.all([
+            prisma.user.count(),
+            prisma.resume.count(),
+            prisma.interview.count(),
+            prisma.jobs.count(),
+        ]);
 
         // Active users (users with sessions in last 30 days)
         const activeUsers = await prisma.session.groupBy({
@@ -460,7 +474,7 @@ export const adminRouter = createTRPCRouter({
             },
         });
 
-        return {
+        const data = {
             totalUsers,
             totalResumes,
             totalInterviews,
@@ -468,6 +482,11 @@ export const adminRouter = createTRPCRouter({
             activeUsers: activeUsers.length,
             newUsers,
         };
+
+        // Update cache
+        analyticsCache = { data, timestamp: now.getTime() };
+
+        return data;
     }),
 
     getUserGrowth: protectedProcedure
@@ -722,6 +741,29 @@ export const adminRouter = createTRPCRouter({
                 }
             }
 
+            // Emit SSE Event
+            const ssePayload = {
+                type: 'NEW_NOTIFICATION' as const,
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
+            };
+
+            if (input.targetUserIds && input.targetUserIds.length > 0) {
+                input.targetUserIds.forEach(targetId => {
+                    emitUserEvent(targetId, ssePayload);
+                });
+            } else {
+                broadcastEvent(ssePayload);
+            }
+
             return announcement;
         }),
 
@@ -880,7 +922,7 @@ export const adminRouter = createTRPCRouter({
             });
 
             // Send in-app notification
-            await prisma.announcement.create({
+            const announcement = await prisma.announcement.create({
                 data: {
                     title: 'Recruiter Application Approved',
                     content: 'Congratulations! Your application to become a recruiter has been approved. You can now post jobs and manage candidates 🎉.',
@@ -888,6 +930,21 @@ export const adminRouter = createTRPCRouter({
                     targetUserIds: [application.userId],
                     createdBy: user.id,
                 },
+            });
+
+            // Notify user via SSE
+            emitUserEvent(application.userId, {
+                type: 'NEW_NOTIFICATION',
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
             });
 
             // Send email notification
@@ -932,7 +989,7 @@ export const adminRouter = createTRPCRouter({
             });
 
             // Send in-app notification
-            await prisma.announcement.create({
+            const announcement = await prisma.announcement.create({
                 data: {
                     title: 'Recruiter Application Update',
                     content: `Your recruiter application has been rejected. Reason: ${input.reason}`,
@@ -940,6 +997,21 @@ export const adminRouter = createTRPCRouter({
                     targetUserIds: [application.userId],
                     createdBy: user.id,
                 },
+            });
+
+            // Notify user via SSE
+            emitUserEvent(application.userId, {
+                type: 'NEW_NOTIFICATION',
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
             });
 
             // Send email notification

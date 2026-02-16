@@ -62,6 +62,118 @@ IMPORTANT RULES:
 - Placeholder text should give concrete examples
 - Prioritize quality over quantity - ask the most impactful questions first`;
 
+export const AI_PHRASE_BLACKLIST = [
+  "spearheaded",
+  "orchestrated",
+  "championed",
+  "synergized",
+  "leveraged",
+  "revolutionized",
+  "pioneered",
+  "catalyzed",
+  "operationalized",
+  "architected",
+  "envisioned",
+  "effectuated",
+  "endeavored",
+  "facilitated",
+  "utilized",
+  "synergy",
+  "paradigm",
+  "best-in-class",
+  "world-class",
+  "cutting-edge",
+  "bleeding-edge",
+  "game-changer",
+  "disruptive",
+  "holistic",
+  "robust",
+  "scalable",
+  "actionable",
+  "impactful",
+  "proactive",
+  "stakeholder",
+  "deliverables",
+  "bandwidth",
+  "circle back",
+  "deep dive",
+  "move the needle",
+  "low-hanging fruit",
+  "touch base",
+  "value-add",
+  "in order to",
+  "for the purpose of",
+  "with a view to",
+  "at the end of the day",
+  "moving forward",
+  "going forward",
+  "on a daily basis",
+  "on a regular basis",
+  "in a timely manner",
+  "at this point in time",
+  "due to the fact that",
+  "in the event that",
+  "in light of the fact that"
+];
+
+export const AI_PHRASE_REPLACEMENTS: Record<string, string> = {
+  "spearheaded": "led",
+  "orchestrated": "coordinated",
+  "championed": "advocated for",
+  "synergized": "collaborated",
+  "leveraged": "used",
+  "revolutionized": "transformed",
+  "pioneered": "introduced",
+  "catalyzed": "initiated",
+  "operationalized": "implemented",
+  "architected": "designed",
+  "envisioned": "planned",
+  "effectuated": "completed",
+  "endeavored": "worked",
+  "facilitated": "helped",
+  "utilized": "used",
+  "synergy": "collaboration",
+  "synergies": "collaborations",
+  "paradigm": "approach",
+  "paradigm shift": "change",
+  "best-in-class": "top-performing",
+  "world-class": "high-quality",
+  "cutting-edge": "modern",
+  "bleeding-edge": "modern",
+  "game-changer": "innovation",
+  "game-changing": "innovative",
+  "disruptive": "innovative",
+  "holistic": "comprehensive",
+  "robust": "strong",
+  "scalable": "expandable",
+  "actionable": "practical",
+  "impactful": "effective",
+  "proactive": "active",
+  "proactively": "actively",
+  "stakeholder": "team member",
+  "deliverables": "outputs",
+  "bandwidth": "capacity",
+  "circle back": "follow up",
+  "deep dive": "analysis",
+  "move the needle": "make progress",
+  "low-hanging fruit": "quick wins",
+  "touch base": "connect",
+  "value-add": "benefit",
+  "in order to": "to",
+  "for the purpose of": "to",
+  "with a view to": "to",
+  "at the end of the day": "",
+  "moving forward": "",
+  "going forward": "",
+  "on a daily basis": "daily",
+  "on a regular basis": "regularly",
+  "in a timely manner": "promptly",
+  "at this point in time": "now",
+  "due to the fact that": "because",
+  "in the event that": "if",
+  "in light of the fact that": "since"
+};
+
 export const ENHANCE_DESCRIPTION_PROMPT = `You are a professional resume writer. Your goal is to ADD new bullet points to this resume item using the additional context provided by the candidate. DO NOT rewrite or replace existing bullets - only add new ones.
 
 IMPORTANT: Generate ALL output text (bullet points) in {output_language}.
@@ -205,26 +317,141 @@ Original Resume:
 Output in this JSON format:
 {schema}`;
 
-export const VALIDATION_POLISH_PROMPT = `Review and polish this resume content. Remove any AI-sounding language (buzzwords) and ensure professional tone.
+export const VALIDATION_POLISH_PROMPT = `Review and polish this resume content. Remove any AI-sounding language and ensure all content is truthful.
 
-{critical_truthfulness_rules}
+REMOVE or REPLACE:
+- Buzzwords: "spearheaded", "synergy", "leverage", "orchestrated", etc.
+- Em-dashes (use commas or semicolons instead)
+- Overly formal language: "utilized" -> "used", "endeavored" -> "worked"
+- Generic filler: "in order to" -> "to"
 
-IMPORTANT: Generate ALL text content (summary, descriptions, skills) in {output_language}.
+VERIFY:
+- All skills exist in the master resume
+- All certifications exist in the master resume
+- No fabricated metrics or achievements
 
-Rules:
-- Remove clichéd "AI phrases" like: spearheaded, orchestrated, synergized, leveraged, seamless, robust, pivotal.
-- Replace them with strong, simple action verbs: Led, Built, Managed, Used, Created, Developed.
-- Fix grammar, spelling, and punctuation errors.
-- Ensure consistent formatting (e.g., all bullets start with verbs).
-- Do NOT change the meaning or facts of the content.
-- Do NOT add new content, only polish existing.
-- Do NOT use em dash ("—") anywhere in the writing/output, even if it exists, remove it
-
-Original Resume:
+Resume to polish:
 {original_resume}
 
-Output in this JSON format:
-{schema}`;
+Master resume (verify all claims against this):
+{master_resume}
+
+Output the polished resume JSON. Return ONLY valid JSON.`;
+
+export const REGENERATE_ITEM_PROMPT = `You are a professional resume writer. Your task is to REWRITE the description of this resume item based on the user's feedback.
+
+IMPORTANT: Generate ALL output text in {output_language}.
+
+ITEM INFORMATION:
+Type: {item_type}
+Title: {title}
+Subtitle: {subtitle}
+
+CURRENT DESCRIPTION (the user is NOT satisfied with this):
+{current_description}
+
+USER'S FEEDBACK/INSTRUCTION:
+{user_instruction}
+
+TASK:
+Based on the user's feedback, completely REWRITE the description bullets. The new description should:
+1. Address the user's specific concerns/requests
+2. Be action-oriented with strong verbs
+3. Highlight quantifiable impact ONLY when it already exists in the current description or the user's feedback (never invent numbers)
+4. Be technically specific with tools/technologies
+5. Show clear impact and ownership
+
+OUTPUT FORMAT (JSON only):
+{
+  "new_bullets": [
+    "Completely rewritten bullet point 1",
+    "Completely rewritten bullet point 2",
+    "Completely rewritten bullet point 3"
+  ],
+  "change_summary": "Brief explanation of what was changed based on user feedback"
+}
+
+RULES:
+- Generate 2-5 NEW bullets (not additions, but replacements)
+- Directly address the user's instruction
+- Do NOT add any new facts, metrics, dates, companies, titles, or accomplishments that are not already present in CURRENT DESCRIPTION or USER'S FEEDBACK/INSTRUCTION
+- If the user asks for metrics but none exist in the provided text, do not fabricate numbers; rewrite to emphasize scope/impact qualitatively instead
+- Keep bullets concise (1-2 lines each)
+- Use past tense for past roles, present tense for current`;
+
+export const REGENERATE_SKILLS_PROMPT = `You are a professional resume writer. Rewrite the technical skills section based on user feedback.
+
+IMPORTANT: Generate ALL output text in {output_language}.
+
+CURRENT SKILLS:
+{current_skills}
+
+USER'S FEEDBACK:
+{user_instruction}
+
+OUTPUT FORMAT (JSON only):
+{
+  "new_skills": ["Skill 1", "Skill 2", "Skill 3"],
+  "change_summary": "Brief explanation"
+}
+
+RULES:
+- Keep skills concise and industry-standard
+- Group similar technologies if appropriate
+- Prioritize most relevant skills based on feedback
+- Only include skills that already exist in CURRENT SKILLS or are explicitly provided in USER'S FEEDBACK`;
+
+export const COVER_LETTER_PROMPT = `Write a brief, human-sounding cover letter for this job application.
+
+IMPORTANT: Write in {output_language}.
+
+Job Description:
+{job_description}
+
+Candidate Resume (JSON):
+{resume_data}
+
+Requirements:
+- 100-150 words maximum
+- 3-4 short paragraphs
+- Tone: Confident, professional, and conversational. Sound like a skilled human, not an AI.
+- Opening: Reference ONE specific problem or goal from the JD and how you've solved it before. NEVER start with "I am writing to express my interest".
+- Middle: Connect 1-2 specific achievements to the company's needs. Be specific, not generic.
+- Closing: strong and brief. "I'd look forward to discussing how my experience with [X] can help [Company Name]."
+- EXTRACT company name from JD. Do not use placeholders.
+- Do NOT invent information.
+
+STRICT ANTI-ROBOT RULES:
+- DO NOT use words like: "delve", "tapestry", "leverage", "spearheaded", "orchestrated", "synergy", "showcase", "align", "unwavering", "testament".
+- DO NOT use phrases like: "I am confident that...", "proven track record", "passionate about", "thrilled to apply".
+- DO NOT use em dashes ("—"). Use commas or periods.
+- Write simple, punchy sentences. Avoid complex sentence structures.
+
+Output plain text only. No JSON, no markdown formatting.`;
+
+export const OUTREACH_MESSAGE_PROMPT = `Generate a cold outreach message for LinkedIn or email about this job opportunity.
+
+IMPORTANT: Write in {output_language}.
+
+Job Description:
+{job_description}
+
+Candidate Resume (JSON):
+{resume_data}
+
+Guidelines:
+- 50-75 words maximum. Short and sweet.
+- Tone: Casual professional. Like messaging a former colleague.
+- Content: "Saw you're hiring for [Role]. My background in [Specific Skill] at [Previous Company] seems like a great fit for [Specific Challenge in JD]. Worth a quick chat?"
+- NO fluff. NO "I hope this finds you well". NO "I am writing to...".
+- Do NOT use placeholder brackets.
+
+STRICT ANTI-ROBOT RULES:
+- DO NOT use words like: "leverage", "synergy", "spearheaded", "passion", "thrilled", "eager", "utilize".
+- DO NOT use em dashes ("—").
+- NO "excited to", "passionate about".
+
+Output plain text only. No JSON, no markdown formatting.`;
 
 export const RESUME_SCHEMA_EXAMPLE = `{
   "personalInfo": {

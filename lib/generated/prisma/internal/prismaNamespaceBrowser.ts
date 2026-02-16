@@ -62,11 +62,7 @@ export const ModelName = {
   RateLimiterFlexible: 'RateLimiterFlexible',
   job_categories: 'job_categories',
   job_ingest_runs: 'job_ingest_runs',
-  job_responsibilities: 'job_responsibilities',
-  job_skills: 'job_skills',
   jobs: 'jobs',
-  resume_experience: 'resume_experience',
-  resume_skills: 'resume_skills',
   SupportTicket: 'SupportTicket',
   TicketMessage: 'TicketMessage',
   Announcement: 'Announcement',
@@ -293,25 +289,6 @@ export const Job_ingest_runsScalarFieldEnum = {
 export type Job_ingest_runsScalarFieldEnum = (typeof Job_ingest_runsScalarFieldEnum)[keyof typeof Job_ingest_runsScalarFieldEnum]
 
 
-export const Job_responsibilitiesScalarFieldEnum = {
-  id: 'id',
-  job_id: 'job_id',
-  bullet_text: 'bullet_text'
-} as const
-
-export type Job_responsibilitiesScalarFieldEnum = (typeof Job_responsibilitiesScalarFieldEnum)[keyof typeof Job_responsibilitiesScalarFieldEnum]
-
-
-export const Job_skillsScalarFieldEnum = {
-  id: 'id',
-  job_id: 'job_id',
-  skill_text: 'skill_text',
-  is_required: 'is_required'
-} as const
-
-export type Job_skillsScalarFieldEnum = (typeof Job_skillsScalarFieldEnum)[keyof typeof Job_skillsScalarFieldEnum]
-
-
 export const JobsScalarFieldEnum = {
   id: 'id',
   job_publisher: 'job_publisher',
@@ -333,24 +310,6 @@ export const JobsScalarFieldEnum = {
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
-
-
-export const Resume_experienceScalarFieldEnum = {
-  id: 'id',
-  resume_id: 'resume_id',
-  bullet_text: 'bullet_text'
-} as const
-
-export type Resume_experienceScalarFieldEnum = (typeof Resume_experienceScalarFieldEnum)[keyof typeof Resume_experienceScalarFieldEnum]
-
-
-export const Resume_skillsScalarFieldEnum = {
-  id: 'id',
-  resume_id: 'resume_id',
-  skill_text: 'skill_text'
-} as const
-
-export type Resume_skillsScalarFieldEnum = (typeof Resume_skillsScalarFieldEnum)[keyof typeof Resume_skillsScalarFieldEnum]
 
 
 export const SupportTicketScalarFieldEnum = {

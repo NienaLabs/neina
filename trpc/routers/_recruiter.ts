@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init';
 import { TRPCError } from '@trpc/server';
 import prisma from '@/lib/prisma';
 import { sendRecruiterApplicationReceivedEmail, sendCandidateStatusUpdateEmail } from '@/lib/email';
+import { emitUserEvent } from '@/lib/events';
 import { inngest } from '@/inngest/client';
 
 export const recruiterRouter = createTRPCRouter({
@@ -67,7 +68,7 @@ export const recruiterRouter = createTRPCRouter({
                     await sendRecruiterApplicationReceivedEmail(user.email, user.name || 'User');
 
                     // Create in-app notification
-                    await prisma.announcement.create({
+                    const announcement = await prisma.announcement.create({
                         data: {
                             title: 'Application Received',
                             content: 'We have received your recruiter application and will get back to you shortly.',
@@ -75,6 +76,21 @@ export const recruiterRouter = createTRPCRouter({
                             targetUserIds: [userId],
                             createdBy: 'system',
                         },
+                    });
+
+                    // Emit SSE Event
+                    emitUserEvent(userId, {
+                        type: 'NEW_NOTIFICATION',
+                        data: {
+                            notification: {
+                                id: announcement.id,
+                                title: announcement.title,
+                                content: announcement.content,
+                                sentAt: announcement.sentAt,
+                                isRead: false,
+                                readAt: null,
+                            }
+                        }
                     });
                 }
 
@@ -104,7 +120,7 @@ export const recruiterRouter = createTRPCRouter({
             await sendRecruiterApplicationReceivedEmail(user.email, user.name || 'User');
 
             // Create in-app notification
-            await prisma.announcement.create({
+            const announcement = await prisma.announcement.create({
                 data: {
                     title: 'Application Received',
                     content: 'We have received your recruiter application and will get back to you shortly.',
@@ -112,6 +128,21 @@ export const recruiterRouter = createTRPCRouter({
                     targetUserIds: [userId],
                     createdBy: 'system',
                 },
+            });
+
+            // Emit SSE Event
+            emitUserEvent(userId, {
+                type: 'NEW_NOTIFICATION',
+                data: {
+                    notification: {
+                        id: announcement.id,
+                        title: announcement.title,
+                        content: announcement.content,
+                        sentAt: announcement.sentAt,
+                        isRead: false,
+                        readAt: null,
+                    }
+                }
             });
 
             return { success: true, application };
@@ -558,6 +589,9 @@ export const recruiterRouter = createTRPCRouter({
                                 createdBy: 'system',
                             },
                         });
+
+                        // Emit SSE Event
+                        emitUserEvent(userAccount.id, { type: 'NEW_NOTIFICATION', data: {} });
                     }
                 } catch (error) {
                     console.error('Failed to create in-app notification:', error);

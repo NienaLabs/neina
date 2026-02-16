@@ -17,69 +17,9 @@ const jobExtractionNetwork = createNetwork({
   }
 });
 
-/**********************
- * Helper: safeInsertResponsibilityRows
- * Uses raw SQL to UPSERT text and embeddings in one go.
- * Handles vector(3072) casting.
- **********************/
-export async function safeInsertResponsibilityRows(jobId: string, bullets: string[], vectors: (number[] | null)[]) {
-  if (!bullets || !bullets.length) return;
 
-  const vector = vectors[0];
-  if (!vector) return;
 
-  // FIX: format pgvector literal
-  const formattedVector = `[${vector.join(',')}]`;
 
-  try {
-    await prisma.$executeRaw`
-      INSERT INTO "job_responsibilities" ("id", "job_id", "bullet_text", "embedding")
-      VALUES (
-        ${uuidv4()}, 
-        ${jobId}, 
-        ${bullets}::text[], 
-        ${formattedVector}::vector
-      )
-      ON CONFLICT ("job_id") 
-      DO UPDATE SET 
-        "embedding" = EXCLUDED."embedding"
-    `;
-  } catch (err) {
-    console.error(`Failed to upsert responsibilities for job "${jobId}"`, err);
-  }
-}
-
-/**********************
- * Helper: safeInsertSkillRows
- **********************/
-export async function safeInsertSkillRows(jobId: string, skills: string[], vectors: (number[] | null)[]) {
-  if (!skills || !skills.length) return;
-
-  const vector = vectors[0];
-
-  if (!vector) {
-    console.log(`[ingest] No vector found for job ${jobId} skills`);
-    return;
-  }
-  const formattedVector = `[${vector.join(',')}]`;
-
-  try {
-    await prisma.$executeRaw`
-      INSERT INTO "job_skills" ("id", "job_id", "skill_text", "embedding")
-      VALUES (
-        ${uuidv4()}, 
-        ${jobId}, 
-        ${skills}::text[], 
-        ${formattedVector}::vector
-      )
-      ON CONFLICT ("job_id") 
-      DO UPDATE SET 
-        "embedding" = EXCLUDED."embedding"
-    `;
-  } catch (err) {
-    console.error(`Failed to upsert skills for job "${jobId}"`, err);
-  }
-}
 
 /**********************
  * Helper: extractJobDataWithLLM
@@ -161,23 +101,7 @@ export async function generateAndStoreJobEmbeddings(jobId: string, jobData: any)
             `;
         }
 
-        // 4. Generate & Store Responsibilities Embedding
-        let respVectors: number[][] = [];
-        if (respBullets.length) {
-             const text = respBullets.join('\n');
-             const vector = await generateEmbedding(text);
-             respVectors = [vector];
-             await safeInsertResponsibilityRows(jobId, respBullets, respVectors);
-        }
 
-        // 5. Generate & Store Skills Embedding
-         let skillVectors: number[][] = [];
-         if (skillBullets.length) {
-             const text = skillBullets.join('\n');
-             const vector = await generateEmbedding(text);
-             skillVectors = [vector];
-             await safeInsertSkillRows(jobId, skillBullets, skillVectors);
-         }
          
          return { success: true };
 

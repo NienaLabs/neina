@@ -6,7 +6,7 @@ const JobSearch = () => {
     <FeatureSection
       featureName="Job Search"
       catchPhrase="Find Your Perfect Role"
-      description="Discover job opportunities that align with your skills and career goals. Our intelligent matching algorithm finds positions where you'll thrive."
+      description="Tired of finding jobs?, say no more discover job opportunities that align with your skills and career goals. Our intelligent matching algorithm finds positions where you'll thrive."
       bullets={[
         "AI-powered job matching based on your profile and skills",
         "Real-time job recommendations tailored to you",

@@ -48,7 +48,8 @@ export async function GET(req: Request) {
                     name: true,
                     updatedAt: true,
                     scoreData: true,
-                    analysisData: true, // Fetch analysis data for score calculation
+                    analysisData: true,
+                    extractedData: true, // Fetch extracted data for skills
                 }
             }),
 
@@ -86,11 +87,7 @@ export async function GET(req: Request) {
                     job_is_remote: true,
                     created_at: true,
                     employer_logo: true,
-                    job_skills: {
-                        select: {
-                            skill_text: true
-                        }
-                    }
+
                 }
             }),
 
@@ -115,18 +112,23 @@ export async function GET(req: Request) {
         // 1. Get User Skills from latest resume
         let userSkills = new Set<string>();
         if (resumes.length > 0) {
-            const latestResumeId = resumes[0].id;
-            const resumeSkillsData = await prisma.resume_skills.findUnique({
-                where: { resume_id: latestResumeId }
-            });
-
-            if (resumeSkillsData?.skill_text) {
-                // Split by common delimiters and normalize
-                resumeSkillsData.skill_text
-                    .split(/[,;\n]+/)
-                    .map(s => s.trim().toLowerCase())
-                    .filter(s => s.length > 0)
-                    .forEach(s => userSkills.add(s));
+            const latestResume = resumes[0];
+            try {
+                if (latestResume.extractedData) {
+                   const parsed = typeof latestResume.extractedData === 'string' 
+                        ? JSON.parse(latestResume.extractedData) 
+                        : latestResume.extractedData;
+                   
+                   // Extract skills from additional.technicalSkills and certifications
+                   if (parsed.additional?.technicalSkills && Array.isArray(parsed.additional.technicalSkills)) {
+                       parsed.additional.technicalSkills.forEach((s: string) => userSkills.add(s.toLowerCase().trim()));
+                   }
+                   if (parsed.additional?.certificationsTraining && Array.isArray(parsed.additional.certificationsTraining)) {
+                       parsed.additional.certificationsTraining.forEach((s: string) => userSkills.add(s.toLowerCase().trim()));
+                   }
+                }
+            } catch (e) {
+                console.error("Failed to parse extractedData for dashboard skills:", e);
             }
         }
 

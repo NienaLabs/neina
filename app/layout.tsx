@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 import { AuthProvider } from "@/providers/AuthUIProvider";
@@ -8,6 +8,7 @@ import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { NotificationBanner } from "@/components/notifications/NotificationBanner";
 import { CookiePrompt } from "@/components/shared/CookiePrompt";
+import { NotificationSSEProvider } from "@/components/notifications/NotificationSSEProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,11 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
 });
 
@@ -43,7 +49,8 @@ export const metadata: Metadata = {
         height: 630,
         alt: "Niena - AI Career Platform",
       }
-    ],  },
+    ],
+  },
   twitter: {
     card: "summary_large_image",
     title: "Niena – AI Resume Optimization, Job Matching & AI Interview Prep",
@@ -90,20 +97,22 @@ export default function RootLayout({
       <AuthProvider>
         <html lang="en" suppressHydrationWarning>
           <body
-            className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
+            className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
           >
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            <NotificationBanner />
-            <CookiePrompt />
-            {/*<Header/>*/}
-            <SuspensionGuard>
-              {children}
-            </SuspensionGuard>
-            <ServiceWorkerRegister />
-            <Toaster />
+            <NotificationSSEProvider>
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+              />
+              <NotificationBanner />
+              <CookiePrompt />
+              {/*<Header/>*/}
+              <SuspensionGuard>
+                {children}
+              </SuspensionGuard>
+              <ServiceWorkerRegister />
+              <Toaster position="top-right" />
+            </NotificationSSEProvider>
           </body>
         </html>
       </AuthProvider>

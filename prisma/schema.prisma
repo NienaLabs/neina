@@ -131,8 +131,7 @@ model Resume {
   status             ResumeStatus           @default(COMPLETED)
   interviews         interview[]
   user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resume_experience  resume_experience?
-  resume_skills      resume_skills?
+
   tailoredResumes    TailoredResume[]
   candidatePipelines CandidatePipeline[]
 
@@ -224,22 +223,7 @@ model job_ingest_runs {
   notes        String?
 }
 
-model job_responsibilities {
-  id          String                 @id @default(cuid())
-  job_id      String?                @unique
-  bullet_text String[]
-  embedding   Unsupported("vector")?
-  jobs        jobs?                  @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
 
-model job_skills {
-  id          String                 @id @default(cuid())
-  job_id      String?                @unique
-  skill_text  String[]
-  embedding   Unsupported("vector")?
-  is_required Boolean?               @default(true)
-  jobs        jobs?                  @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
 
 model jobs {
   id                   String                 @id @default(cuid())
@@ -259,28 +243,13 @@ model jobs {
   embedding            Unsupported("vector")?
   jobCertifications    String[]
   category             String?
-  job_responsibilities job_responsibilities?
-  job_skills           job_skills?
+
   recruiterJob         RecruiterJob?
   jobViews             JobView[]
   viewCount            Int                    @default(0)
 }
 
-model resume_experience {
-  id          String                 @id @default(cuid())
-  resume_id   String?                @unique
-  bullet_text String
-  embedding   Unsupported("vector")?
-  resume      Resume?                @relation(fields: [resume_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
 
-model resume_skills {
-  id         String                 @id @default(cuid())
-  resume_id  String?                @unique
-  skill_text String
-  embedding  Unsupported("vector")?
-  resume     Resume?                @relation(fields: [resume_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
 
 model SupportTicket {
   id        String          @id @default(cuid())

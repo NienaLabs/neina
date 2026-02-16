@@ -53,32 +53,30 @@ export const PublicationsSection = ({
 }: PublicationsSectionProps) => {
   return (
     <section>
-      <div className="text-xl font-semibold mb-3 flex items-center justify-between">
-        <div className="flex flex-row gap-2 items-center">
-          <h2 className="text-xl font-semibold mb-3">Publications</h2>
-          <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay
-              fixes={fixes}
-              section="publications"
-              onApplyFix={(fix) => onUpdate(fix.autoFix)}
-            />
-          </div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Publications</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleArrayAdd('publications', {
+                title: '',
+                publisher: '',
+                date: '',
+                link: '',
+                customFields: [],
+              })
+            }
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Publication
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleArrayAdd('publications', {
-              title: '',
-              publisher: '',
-              date: '',
-              link: '',
-              customFields: [],
-            })
-          }
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Publication
-        </Button>
+        <FixesDisplay
+          fixes={fixes}
+          section="publications"
+          onApplyFix={(fix) => onUpdate(fix.autoFix)}
+        />
       </div>
 
       <div className="flex flex-col gap-6">

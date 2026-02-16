@@ -226,9 +226,9 @@ export default function JobDetailsPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
-                                    {/* Try to get skills from AI extracted bullets if structured, otherwise fallback */}
-                                    {job.job_skills?.skill_text && (job.job_skills.skill_text as string[]).length > 0 ? (
-                                        (job.job_skills.skill_text as string[]).map((skill, i) => (
+                                    {/* Try to get skills from qualifications if structured, otherwise fallback */}
+                                    {job.qualifications && job.qualifications.length > 0 ? (
+                                        job.qualifications.map((skill, i) => (
                                             <Badge key={i} variant="outline" className="border-violet-200 bg-violet-50 px-3 py-1 text-sm font-medium text-violet-700 hover:bg-violet-100 dark:border-violet-800/50 dark:bg-violet-900/20 dark:text-violet-300 dark:hover:bg-violet-900/30">
                                                 {skill}
                                             </Badge>

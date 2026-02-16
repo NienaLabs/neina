@@ -22,7 +22,9 @@ import { FixesDisplay } from './FixesDisplay';
 
 interface AddressSectionProps {
   address: NonNullable<ResumeExtraction['address']>;
+  personalInfo: NonNullable<ResumeExtraction['personalInfo']>;
   handleAddressChange: (key: keyof NonNullable<ResumeExtraction['address']>, value: string) => void;
+  handlePersonalInfoChange: (key: keyof NonNullable<ResumeExtraction['personalInfo']>, value: string) => void;
   handleOtherLinksChange: (index: number, value: string) => void;
   addNewOtherLink: () => void;
   fixes: Fixes;
@@ -40,7 +42,9 @@ interface AddressSectionProps {
  */
 export const AddressSection = ({
   address,
+  personalInfo,
   handleAddressChange,
+  handlePersonalInfoChange,
   handleOtherLinksChange,
   addNewOtherLink,
   fixes,
@@ -89,6 +93,28 @@ export const AddressSection = ({
           />
         </div>
       </div>
+      
+      <div className="grid grid-cols-2 gap-3 mb-4 p-4 border rounded-lg bg-white/50">
+           <div className="col-span-1">
+              <p className="font-medium mb-1 text-sm">Full Name</p>
+              <Input 
+                  value={personalInfo.name || ''} 
+                  onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
+                  placeholder="Your Full Name"
+                  className="bg-white"
+              />
+           </div>
+           <div className="col-span-1">
+              <p className="font-medium mb-1 text-sm">Job Title</p>
+              <Input 
+                  value={personalInfo.title || ''} 
+                  onChange={(e) => handlePersonalInfoChange('title', e.target.value)}
+                  placeholder="Professional Title"
+                  className="bg-white"
+              />
+           </div>
+      </div>
+
       <div className="grid grid-cols-3 gap-3">
         {Object.keys(address).map((key) => {
           if (key === 'otherLinks') {

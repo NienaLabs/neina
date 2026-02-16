@@ -132,8 +132,8 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
 
   if (activeTab === 'jd-match' && !isPrinting) {
        return (
-            <div ref={ref} className="w-full h-full overflow-hidden flex justify-center items-start bg-gray-100/50 py-8 px-4">
-                <div className="w-full max-w-4xl h-full bg-white shadow-xl border-2 border-black flex flex-col overflow-hidden">
+            <div ref={ref} className="w-full h-full overflow-hidden flex justify-center items-start bg-transparent py-8 px-4">
+                <div className="w-full max-w-4xl h-full bg-white soft-glow border-none rounded-2xl flex flex-col overflow-hidden">
                     <HighlightedResumeView 
                         resumeData={data} 
                         keywords={new Set(matchedKeywords.map(k => k.toLowerCase()))} 
@@ -145,14 +145,14 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
 
   if (activeTab === 'cover-letter' && !isPrinting) {
        return (
-            <div className="w-full h-full overflow-auto flex justify-center items-start bg-gray-100 py-8">
+            <div className="w-full h-full overflow-auto flex justify-center items-start bg-transparent py-8">
                 <div style={{ width: `calc(210mm * ${scale})`, overflow: 'visible' }}>
                     <div 
                         ref={ref}
                         className="flex flex-col gap-8"
                         style={{ 
                             transform: `scale(${scale})`,
-                            transformOrigin: 'top center'
+                            transformOrigin: 'top left'
                         }}
                     >
                         <CoverLetterPreview
@@ -169,7 +169,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
   // MODE: SCREEN (Interactive, ZOOMABLE preview)
   // ----------------------------------------------------------------------
   return (
-    <div className="min-w-full w-fit flex justify-center items-start bg-gray-100 py-8 relative">
+    <div className="min-w-full min-h-full w-fit flex justify-center items-center bg-transparent py-8 relative">
         {/* 
             MEASUREMENT CONTAINER (Hidden) 
             Must remain unscaled 1:1 for accurate pagination
@@ -200,13 +200,13 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                 className="resume-preview-container flex flex-col gap-8"
                 style={{ 
                     transform: `scale(${scale})`,
-                    transformOrigin: 'top center'
+                    transformOrigin: 'top left'
                 }}
             >
                 {pages.map((pageItems, pageIndex) => (
                     <div 
                         key={pageIndex}
-                        className="resume-page bg-white shadow-xl relative"
+                        className="resume-page bg-white soft-glow ring-1 ring-black/10 relative"
                         style={{
                             width: '210mm',
                             height: '297mm',
@@ -261,7 +261,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                 
                 {pages.length === 0 && (
                     <div 
-                        className="bg-white shadow-xl flex items-center justify-center text-gray-400"
+                        className="bg-white soft-glow flex items-center justify-center text-gray-400"
                         style={{ width: '210mm', height: '297mm' }}
                     >
                         <div className="flex flex-col items-center gap-2">

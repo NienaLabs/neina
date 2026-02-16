@@ -22,7 +22,7 @@ interface SaveChangesPopupProps {
  */
 export const SaveChangesPopup = ({ save, onSave, onCancel, isLoading, onUndo, canUndo }: SaveChangesPopupProps) => {
   return (
-    <div className={cn("hidden flex-row gap-2 fixed transition-all bg-background bottom-5 place-self-center p-2 rounded-lg z-10 items-center", save ? "flex" : "")}>
+    <div className={cn("hidden flex-row gap-2 fixed transition-all bg-white soft-glow border-none bottom-8 place-self-center p-4 rounded-2xl z-50 items-center", save ? "flex" : "")}>
       Do you want to save the changes?
       <ButtonGroup>
         <Button 

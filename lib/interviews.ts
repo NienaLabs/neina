@@ -61,16 +61,16 @@ export async function startInterview(data: InterviewData): Promise<InterviewStar
     };
   }
 
-  // Check for existing active interview
+  // Check for existing active or scheduled interview
   const existingInterview = await prisma.interview.findFirst({
     where: {
       user_id: data.user_id,
-      status: 'ACTIVE'
+      status: { in: ['ACTIVE', 'SCHEDULED'] }
     }
   });
 
   if (existingInterview) {
-    throw new Error('User already has an active interview');
+    throw new Error('User already has an active or scheduled interview');
   }
 
   // Create interview record

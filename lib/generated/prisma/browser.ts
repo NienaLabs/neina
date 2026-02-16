@@ -73,30 +73,10 @@ export type job_categories = Prisma.job_categoriesModel
  */
 export type job_ingest_runs = Prisma.job_ingest_runsModel
 /**
- * Model job_responsibilities
- * 
- */
-export type job_responsibilities = Prisma.job_responsibilitiesModel
-/**
- * Model job_skills
- * 
- */
-export type job_skills = Prisma.job_skillsModel
-/**
  * Model jobs
  * 
  */
 export type jobs = Prisma.jobsModel
-/**
- * Model resume_experience
- * 
- */
-export type resume_experience = Prisma.resume_experienceModel
-/**
- * Model resume_skills
- * 
- */
-export type resume_skills = Prisma.resume_skillsModel
 /**
  * Model SupportTicket
  * 

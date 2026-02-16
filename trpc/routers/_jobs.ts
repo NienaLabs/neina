@@ -48,36 +48,12 @@ export const jobsRouter = createTRPCRouter({
         user_full_embeddings AS (
           SELECT embedding FROM resume WHERE id IN (SELECT id FROM user_resumes) AND embedding IS NOT NULL
         ),
-        user_skill_embeddings AS (
-          SELECT embedding FROM resume_skills WHERE resume_id IN (SELECT id FROM user_resumes) AND embedding IS NOT NULL
-        ),
-        user_resp_embeddings AS (
-          SELECT embedding FROM resume_experience WHERE resume_id IN (SELECT id FROM user_resumes) AND embedding IS NOT NULL
-        ),
         job_overall_similarity AS (
           SELECT 
             j.id AS job_id,
             COALESCE(ROUND(AVG(1 - (j.embedding <=> uf.embedding))::NUMERIC, 3), 0) AS overall_similarity
           FROM jobs j
           LEFT JOIN user_full_embeddings uf ON TRUE
-          GROUP BY j.id
-        ),
-        job_skill_similarity AS (
-          SELECT 
-            j.id AS job_id,
-            COALESCE(ROUND(AVG(1 - (js.embedding <=> us.embedding))::NUMERIC, 3), 0) AS skill_similarity
-          FROM jobs j
-          LEFT JOIN job_skills js ON js.job_id = j.id AND js.embedding IS NOT NULL
-          LEFT JOIN user_skill_embeddings us ON TRUE
-          GROUP BY j.id
-        ),
-        job_resp_similarity AS (
-          SELECT 
-            j.id AS job_id,
-            COALESCE(ROUND(AVG(1 - (jr.embedding <=> ue.embedding))::NUMERIC, 3), 0) AS responsibility_similarity
-          FROM jobs j
-          LEFT JOIN job_responsibilities jr ON jr.job_id = j.id AND jr.embedding IS NOT NULL
-          LEFT JOIN user_resp_embeddings ue ON TRUE
           GROUP BY j.id
         )
         
@@ -93,15 +69,11 @@ export const jobsRouter = createTRPCRouter({
           j.job_posted_at,
           COALESCE(j."viewCount", 0) as "viewCount",
           o.overall_similarity,
-          s.skill_similarity,
-          r.responsibility_similarity,
-          ROUND((o.overall_similarity * 0.4 + s.skill_similarity * 0.3 + r.responsibility_similarity * 0.3 + ${OFFSET_VALUE})::NUMERIC, 3) AS total_similarity,
+          ROUND((o.overall_similarity + ${OFFSET_VALUE})::NUMERIC, 3) AS total_similarity,
           (rj.id IS NOT NULL) AS is_recruiter_job,
           COUNT(*) OVER() as total_count
         FROM jobs j
         JOIN job_overall_similarity o ON o.job_id = j.id
-        JOIN job_skill_similarity s ON s.job_id = j.id
-        JOIN job_resp_similarity r ON r.job_id = j.id
         LEFT JOIN recruiter_job rj ON rj."jobId" = j.id
         LEFT JOIN recruiter_application ra ON ra."userId" = rj."recruiterId"
         WHERE EXISTS (SELECT 1 FROM user_resumes)
@@ -125,8 +97,6 @@ export const jobsRouter = createTRPCRouter({
       const job = await prisma.jobs.findUnique({
         where: { id: input.id },
         include: {
-          job_responsibilities: true,
-          job_skills: true,
           recruiterJob: {
             include: {
               recruiter: {

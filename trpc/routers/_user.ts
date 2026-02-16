@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../init";
 import prisma from "@/lib/prisma";
+import { broadcastEvent } from '@/lib/events';
 
 export const userRouter = createTRPCRouter({
     getMe: protectedProcedure.query(async ({ ctx }) => {
@@ -76,12 +77,27 @@ export const userRouter = createTRPCRouter({
                 });
 
                 // 2. Always create an in-app notification (announcement) for admins
-                await prisma.announcement.create({
+                const announcement = await prisma.announcement.create({
                     data: {
                         title: `New Support Ticket: ${input.subject}`,
                         content: `From: ${user.name || user.email}\n\n${input.message.substring(0, 200)}...`,
                         type: 'in-app',
                         targetRoles: ['admin'],
+                    }
+                });
+
+                // Emit SSE broadcast event (all admins are listening)
+                broadcastEvent({
+                    type: 'NEW_NOTIFICATION',
+                    data: {
+                        notification: {
+                            id: announcement.id,
+                            title: announcement.title,
+                            content: announcement.content,
+                            sentAt: announcement.sentAt,
+                            isRead: false,
+                            readAt: null,
+                        }
                     }
                 });
 

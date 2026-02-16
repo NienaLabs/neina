@@ -5,6 +5,7 @@ import { X, Bell, ArrowRight } from "lucide-react";
 import { useSession } from "@/auth-client";
 import { usePathname, useRouter } from "next/navigation";
 import { trpc } from "@/trpc/client";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 /**
  * Notification banner component that prompts users to enable push notifications
@@ -18,11 +19,10 @@ export function NotificationBanner() {
 
     const [isVisible, setIsVisible] = useState(true);
     const [isAppLoaded, setIsAppLoaded] = useState(false);
+    const [isSubscribing, setIsSubscribing] = useState(false);
 
-    // Check server subscription status (single source of truth)
-    const { data: subStatus } = trpc.notifications.getSubscriptionStatus.useQuery(undefined, {
-        enabled: !!session,
-    });
+    // Get status from our optimized hook (which uses SSE)
+    const { isSubscribed, isLoading: isCheckingStatus, subscribe } = usePushNotifications();
 
     // Check dismissal and add delay
     useEffect(() => {
@@ -57,22 +57,28 @@ export function NotificationBanner() {
         return () => window.removeEventListener("load", checkLoad);
     }, []);
 
-    // Auto-hide when user becomes subscribed
+    // Auto-hide when user becomes subscribed, re-show when unsubscribed
     useEffect(() => {
-        if (subStatus?.isSubscribed) {
+        if (isSubscribed) {
             setIsVisible(false);
             // Clear any dismissal tracking since they're now subscribed
             localStorage.removeItem("notification-banner-dismissed-time");
+        } else {
+            // Re-show banner when user unsubscribes (unless manually dismissed recently)
+            const dismissedTime = localStorage.getItem("notification-banner-dismissed-time");
+            if (!dismissedTime) {
+                setIsVisible(true);
+            }
         }
-    }, [subStatus?.isSubscribed]);
+    }, [isSubscribed]);
 
     // Calculate final visibility
+    // Show banner when user is NOT subscribed (regardless of browser permission)
     const actuallyVisible = isVisible &&
         isAppLoaded &&
         !!session &&
-        subStatus !== undefined &&
-        !subStatus.isSubscribed &&
-        (typeof window !== 'undefined' && window.Notification?.permission !== 'granted') &&
+        !isCheckingStatus &&
+        !isSubscribed &&
         !pathname?.startsWith('/account/settings');
 
     // Update CSS variable for layout offset
@@ -85,9 +91,14 @@ export function NotificationBanner() {
         }
     }, [actuallyVisible]);
 
-    const handleEnable = () => {
-        // Navigate to account settings where user can manage notifications
-        router.push('/account/settings');
+    const handleEnable = async () => {
+        setIsSubscribing(true);
+        const success = await subscribe();
+        setIsSubscribing(false);
+
+        if (success) {
+            // Banner will auto-hide via the isSubscribed effect
+        }
     };
 
     const handleDismiss = () => {
@@ -124,9 +135,10 @@ export function NotificationBanner() {
                                 </p>
                                 <button
                                     onClick={handleEnable}
-                                    className="flex-none rounded-full bg-slate-900 px-3.5 py-1 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 transition-all duration-200"
+                                    disabled={isSubscribing}
+                                    className="flex-none rounded-full bg-slate-900 px-3.5 py-1 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Enable Now <ArrowRight className="inline-block ml-1 h-3 w-3" />
+                                    {isSubscribing ? 'Subscribing...' : 'Enable Now'} <ArrowRight className="inline-block ml-1 h-3 w-3" />
                                 </button>
                             </div>
 
@@ -145,9 +157,10 @@ export function NotificationBanner() {
                                 </div>
                                 <button
                                     onClick={handleEnable}
-                                    className="flex-shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-bold text-emerald-600 shadow-sm active:bg-emerald-50 transition-colors"
+                                    disabled={isSubscribing}
+                                    className="flex-shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-bold text-emerald-600 shadow-sm active:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Enable
+                                    {isSubscribing ? 'Loading...' : 'Enable'}
                                 </button>
                             </div>
 

@@ -50,11 +50,11 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ value, size = 'md' 
   const strokeDashoffset = circumference - (displayedValue / 100) * circumference;
 
   // Define color range for text highlight
-  const textColor = displayedValue > 80
-    ? 'text-green-600' // High
-    : displayedValue < 20
-    ? 'text-red-500' // Low
-    : 'text-blue-500'; // Normal
+  const colorClass = displayedValue >= 80
+    ? 'text-green-500' // High
+    : displayedValue >= 50
+    ? 'text-yellow-400' // Medium
+    : 'text-red-500'; // Low
 
   // Determine the size class for the container
   const sizeClass = SIZE_MAP[size] || SIZE_MAP.md;
@@ -72,20 +72,11 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ value, size = 'md' 
     <div className={cn("relative font-sans aspect-square", sizeClass)}>
       {/* 1. SVG for the Circular Progress Bar */}
       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-        {/* Define the Gradient */}
-        <defs>
-          {/* Gradient matching the text color logic: Red (Low) -> Blue (Mid) -> Green (High) */}
-          <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: 'hsl(0 84% 60%)', stopOpacity: 1 }} /> {/* Red for low progress */}
-            <stop offset="50%" style={{ stopColor: 'hsl(217 91% 60%)', stopOpacity: 1 }} /> {/* Blue for mid progress */}
-            <stop offset="100%" style={{ stopColor: 'hsl(142 71% 45%)', stopOpacity: 1 }} /> {/* Green for high progress */}
-          </linearGradient>
-
+        
          {/* Define a drop shadow filter for aesthetic effect */}
           {/*<filter id="progress-shadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="rgba(22, 163, 74, 0.5)" />
           </filter>*/}
-        </defs>
 
         {/* Track (The background ring) */}
         <circle
@@ -104,8 +95,9 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ value, size = 'md' 
           cy="50"
           r={radius}
           fill="none"
-          stroke="url(#progress-gradient)" // Use the defined gradient
+          stroke="currentColor" // Use current color which will be set by class
           strokeWidth={strokeWidth}
+          className={cn("transition-colors duration-500", colorClass)} // Apply dynamic color here
           strokeLinecap="round" // Gives the ends a rounded appearance
           style={{
             strokeDasharray: circumference,
@@ -121,7 +113,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({ value, size = 'md' 
       <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
         <span className={cn(
             'font-extrabold transition-colors duration-500',
-            textColor,
+            colorClass, // Apply dynamic color here
             textSize, // Dynamic text size
           )}
         >

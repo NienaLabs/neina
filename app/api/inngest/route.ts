@@ -3,8 +3,10 @@ import { inngest } from "@/inngest/client";
 import { resumeCreated,resumeUpdated } from "@/inngest/resume";
 import { tailoredResumeCreated, tailoredResumeUpdated, coverLetterGenerated } from "@/inngest/tailored";
 import { interviewCreated } from "@/inngest/interview";
-import  {dailyJobFeed,jsearchIngestCategory,scheduledIngestProcessor, processRecruiterJob}  from "@/inngest/jobs";
+import  {dailyJobFeed,jsearchIngestCategory, processRecruiterJob}  from "@/inngest/jobs";
 
+
+import { itemRegenerated, skillsRegenerated, outreachMessageGenerated } from "@/inngest/generators";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -14,11 +16,12 @@ export const { GET, POST, PUT } = serve({
     tailoredResumeCreated,
     dailyJobFeed,
     jsearchIngestCategory,
-    scheduledIngestProcessor,
     processRecruiterJob,
     tailoredResumeUpdated,
     coverLetterGenerated,
-    interviewCreated
-    /* your functions will be passed here later! */
+    interviewCreated,
+    itemRegenerated,
+    skillsRegenerated,
+    outreachMessageGenerated
   ],
 });

@@ -53,31 +53,29 @@ export const AwardsSection = ({
 }: AwardsSectionProps) => {
   return (
     <section>
-      <div className="text-xl font-semibold mb-3 flex items-center justify-between">
-        <div className="flex flex-row gap-2 items-center">
-          <h2 className="text-xl font-semibold mb-3">Awards</h2>
-          <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay
-              fixes={fixes}
-              section="awards"
-              onApplyFix={(fix) => onUpdate(fix.autoFix)}
-            />
-          </div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Awards</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleArrayAdd('awards', {
+                title: '',
+                issuer: '',
+                year: '',
+                customFields: [],
+              })
+            }
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Award
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleArrayAdd('awards', {
-              title: '',
-              issuer: '',
-              year: '',
-              customFields: [],
-            })
-          }
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Award
-        </Button>
+        <FixesDisplay
+          fixes={fixes}
+          section="awards"
+          onApplyFix={(fix) => onUpdate(fix.autoFix)}
+        />
       </div>
 
       <div className="flex flex-col gap-6">

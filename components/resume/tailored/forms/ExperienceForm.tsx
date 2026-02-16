@@ -13,13 +13,62 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, Sparkles } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { trpc } from '@/trpc/client';
 
 interface ExperienceFormProps {
   data: WorkExperience[];
   onChange: (data: WorkExperience[]) => void;
+  resumeId: string;
+  onRegenerateStart?: (type: string) => void;
 }
 
-export const ExperienceForm = ({ data, onChange }: ExperienceFormProps) => {
+export const ExperienceForm = ({ data, onChange, resumeId, onRegenerateStart }: ExperienceFormProps) => {
+  const [isRegenerateOpen, setIsRegenerateOpen] = React.useState(false);
+  const [selectedItemId, setSelectedItemId] = React.useState<string | null>(null);
+  const [userInstruction, setUserInstruction] = React.useState('Rewrite this to be more impactful and use strong action verbs.');
+  
+  const { mutate: regenerateItem, isPending: isRegenerating } = trpc.resume.regenerateItem.useMutation({
+      onSuccess: () => {
+          setIsRegenerateOpen(false);
+          toast.success("Regeneration started. AI is rewriting...");
+      },
+      onError: (err) => {
+          toast.error(`Regeneration failed: ${err.message}`);
+      }
+  });
+
+  const handleOpenRegenerate = (id: string) => {
+      setSelectedItemId(id);
+      setIsRegenerateOpen(true);
+  };
+
+  const handleConfirmRegenerate = () => {
+      if (!selectedItemId || !resumeId) return;
+      const item = data.find(i => i.id === selectedItemId);
+      if (!item) return;
+
+      onRegenerateStart?.('regenerating_item');
+      regenerateItem({
+          resumeId: resumeId,
+          itemId: selectedItemId,
+          itemType: 'work_experience',
+          title: item.title,
+          subtitle: item.company,
+          currentDescription: item.description,
+          userInstruction: userInstruction
+      });
+  };
+
   const handleAdd = () => {
     const newItem: WorkExperience = {
       id: crypto.randomUUID(),
@@ -59,6 +108,7 @@ export const ExperienceForm = ({ data, onChange }: ExperienceFormProps) => {
               index={index} 
               onChange={(field, value) => handleChange(item.id, field, value)}
               onDelete={() => handleDelete(item.id)}
+              onRegenerate={() => handleOpenRegenerate(item.id)}
            />
         ))}
         {data.length === 0 && (
@@ -67,11 +117,39 @@ export const ExperienceForm = ({ data, onChange }: ExperienceFormProps) => {
             </div>
         )}
       </div>
+
+        <Dialog open={isRegenerateOpen} onOpenChange={setIsRegenerateOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Regenerate with AI</DialogTitle>
+                    <DialogDescription>
+                        Give instructions to the AI on how to improve this experience description.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                        <Label>Instructions</Label>
+                        <Textarea 
+                            value={userInstruction}
+                            onChange={(e) => setUserInstruction(e.target.value)}
+                            placeholder="e.g. Highlight leadership skills, quantify achievements..."
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsRegenerateOpen(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmRegenerate} disabled={isRegenerating}>
+                        {isRegenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                        {isRegenerating ? 'Starting...' : 'Regenerate'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 };
 
-const ExperienceItem = ({ item, index, onChange, onDelete }: { item: WorkExperience, index: number, onChange: (field: keyof WorkExperience, value: any) => void, onDelete: () => void }) => {
+const ExperienceItem = ({ item, index, onChange, onDelete, onRegenerate }: { item: WorkExperience, index: number, onChange: (field: keyof WorkExperience, value: any) => void, onDelete: () => void, onRegenerate: () => void }) => {
     const [isOpen, setIsOpen] = React.useState(index === 0);
 
     return (
@@ -142,7 +220,13 @@ const ExperienceItem = ({ item, index, onChange, onDelete }: { item: WorkExperie
                             placeholder="• Developed new features for...&#10;• Improved performance by 50%..."
                             className="min-h-[120px] font-normal"
                         />
-                        <p className="text-xs text-gray-400">Enter each bullet point on a new line.</p>
+                         <p className="text-xs text-gray-400">Enter each bullet point on a new line.</p>
+                     </div>
+                     <div className="flex justify-end">
+                        <Button variant="outline" size="sm" onClick={onRegenerate} className="text-purple-600 border-purple-200 hover:bg-purple-50">
+                            <Sparkles className="w-3.5 h-3.5 mr-2" />
+                            Regenerate with AI
+                        </Button>
                      </div>
                 </div>
             </CollapsibleContent>

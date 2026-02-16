@@ -640,6 +640,165 @@ export const resumeRouter = createTRPCRouter({
             return { success: true, status: "PENDING" };
         }
     ),
+    /**
+     * Regenerate a specific resume item
+     */
+    regenerateItem: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string(),
+            itemType: z.string(),
+            itemId: z.string(),
+            title: z.string(),
+            subtitle: z.string(),
+            currentDescription: z.union([z.string(), z.array(z.string())]),
+            userInstruction: z.string()
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+            const tailoredResume = await prisma.tailoredResume.findUnique({
+                where: {
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId
+                }
+            });
+
+            if (!tailoredResume) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Tailored resume not found"
+                });
+            }
+
+            // Deduct credit? Or free? Let's assume free for tweaks for now, or lightweight.
+            // If credit needed:
+            /*
+            const user = await prisma.user.findUnique({ ... });
+            if (user.resume_credits <= 0) throw ...
+            await prisma.user.update({ ... decrement ... });
+            */
+
+             await inngest.send({
+                name: "app/item.regenerated",
+                data: {
+                    resumeId: tailoredResume.id,
+                    userId: ctx.session?.session.userId,
+                    itemType: input.itemType,
+                    itemId: input.itemId,
+                    title: input.title,
+                    subtitle: input.subtitle,
+                    currentDescription: input.currentDescription,
+                    userInstruction: input.userInstruction
+                }
+            });
+
+            return { success: true };
+        }
+    ),
+    /**
+     * Regenerate skills section
+     */
+    regenerateSkills: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string(),
+            currentSkills: z.union([z.string(), z.array(z.string())]),
+            userInstruction: z.string()
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+             const tailoredResume = await prisma.tailoredResume.findUnique({
+                where: {
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId
+                }
+            });
+
+            if (!tailoredResume) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Tailored resume not found"
+                });
+            }
+
+             await inngest.send({
+                name: "app/skills.regenerated",
+                data: {
+                    resumeId: tailoredResume.id,
+                    userId: ctx.session?.session.userId,
+                    currentSkills: input.currentSkills,
+                    userInstruction: input.userInstruction
+                }
+            });
+
+            return { success: true };
+        }
+    ),
+    /**
+     * Generate outreach message
+     */
+    generateOutreachMessage: protectedProcedure
+    .input(
+        z.object({
+            resumeId: z.string()
+        })
+    )
+    .mutation(
+        async({input, ctx}) => {
+            const tailoredResume = await prisma.tailoredResume.findUnique({
+                where: {
+                    id: input.resumeId,
+                    userId: ctx.session?.session.userId
+                }
+            });
+
+            if (!tailoredResume) {
+                 throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Tailored resume not found"
+                });
+            }
+            
+            if (!tailoredResume.jobDescription) {
+                 throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Job description is missing"
+                });
+            }
+            
+            // Deduct credit? 
+             const user = await prisma.user.findUnique({
+                where: { id: ctx.session?.session.userId },
+                select: { resume_credits: true }
+            });
+
+            if (!user || user.resume_credits <= 0) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Insufficient credits"
+                });
+            }
+
+            await prisma.user.update({
+                where: { id: ctx.session?.session.userId },
+                data: { resume_credits: { decrement: 1 } }
+            });
+
+             await inngest.send({
+                name: "app/outreach-message.generated",
+                data: {
+                    resumeId: tailoredResume.id,
+                    userId: ctx.session?.session.userId,
+                    jobDescription: tailoredResume.jobDescription,
+                    resumeData: tailoredResume.extractedData || tailoredResume.content // Pass best available data
+                }
+            });
+
+            return { success: true };
+        }
+    ),
     delete: protectedProcedure
     .input(
         z.object({

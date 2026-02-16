@@ -3,7 +3,9 @@
 import { useEffect } from 'react'
 import { trpc } from '@/trpc/client'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { ResumeControlProvider, useResumeControl } from './ResumeControlContext'
+import { useServerEvents } from "@/hooks/useServerEvents"
 
 import { useRouter } from 'next/navigation'
 
@@ -26,14 +28,24 @@ function ResumeStatusLogic({ resumeId, children }: ResumeStatusWrapperProps) {
   const isPending = resume?.status === 'PENDING' || resume?.status === 'PROCESSING'
 
   useEffect(() => {
-    // Poll manually if pending
+    // SSE Listener for real-time resume status
     if (isPending) {
-        const interval = setInterval(() => {
-          utils.resume.getUnique.invalidate({ resumeId })
-        }, 2000)
-        return () => clearInterval(interval)
+      console.log(`📡 [SSE] Listening for resume ${resumeId} updates...`);
     }
-  }, [isPending, utils, resumeId])
+  }, [isPending, resumeId]);
+
+  useServerEvents((event) => {
+    if (event.type === 'RESUME_READY' && event.data.resumeId === resumeId && isPending) {
+      console.log("🚀 [SSE] Resume is ready! Refreshing...");
+      utils.resume.getUnique.invalidate({ resumeId });
+    }
+
+    if (event.type === 'RESUME_FAILED' && event.data.resumeId === resumeId && isPending) {
+      console.error("❌ [SSE] Resume processing failed!");
+      toast.error('Resume processing failed. Please try again.');
+      utils.resume.getUnique.invalidate({ resumeId });
+    }
+  });
 
   useEffect(() => {
     // Sync context state
@@ -59,14 +71,14 @@ function ResumeStatusLogic({ resumeId, children }: ResumeStatusWrapperProps) {
           </div>
         </div>
       )}
-      
+
       {children}
     </div>
   )
 }
 
 /**
- * Wrapper component that provides context and polling logic.
+ * Wrapper component that provides context and SSE-driven status updates.
  */
 export function ResumeStatusWrapper(props: ResumeStatusWrapperProps) {
   return (

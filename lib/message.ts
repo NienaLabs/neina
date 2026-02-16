@@ -67,6 +67,7 @@ export enum ETranscriptionObjectType {
   AGENT_TRANSCRIPTION = 'assistant.transcription',
   MSG_INTERRUPTED = 'message.interrupt',
   COMMAND = 'command',
+  MESSAGE_STATE = 'message.state',
 }
 
 /**
@@ -124,6 +125,12 @@ export interface ICommandMessage {
   object: ETranscriptionObjectType.COMMAND;
   action: string;
   value?: string;
+  turn_id: number;
+}
+
+export interface IMessageState {
+  object: ETranscriptionObjectType.MESSAGE_STATE;
+  state: 'speaking' | 'thinking' | 'listening';
   turn_id: number;
 }
 
@@ -268,21 +275,21 @@ export class MessageEngine {
       return;
     }
     const chunk = this.streamMessage2Chunk(stream);
-    
+
     // Fallback: Check if message is direct JSON (not chunked)
     if (chunk.trim().startsWith('{')) {
-        try {
-            const directMessage = JSON.parse(chunk);
-            // Verify if it has minimum expected fields to be safely handled
-            if (this._legacyMode) {
-                 this.handleMessageLegacy(directMessage);
-            } else {
-                 this.handleMessage(directMessage);
-            }
-            return;
-        } catch (e) {
-            logger.debug(CONSOLE_LOG_PREFIX, "Failed to parse direct JSON, trying chunk mode", e);
+      try {
+        const directMessage = JSON.parse(chunk);
+        // Verify if it has minimum expected fields to be safely handled
+        if (this._legacyMode) {
+          this.handleMessageLegacy(directMessage);
+        } else {
+          this.handleMessage(directMessage);
         }
+        return;
+      } catch (e) {
+        logger.debug(CONSOLE_LOG_PREFIX, "Failed to parse direct JSON, trying chunk mode", e);
+      }
     }
 
     if (this._legacyMode) {
@@ -290,7 +297,7 @@ export class MessageEngine {
       return;
     }
     this.handleChunk<
-      IUserTranscription | IAgentTranscription | IMessageInterrupt
+      IUserTranscription | IAgentTranscription | IMessageInterrupt | ICommandMessage | IMessageState
     >(chunk, this.handleMessage.bind(this));
   }
 
@@ -390,7 +397,7 @@ export class MessageEngine {
   }
 
   public handleMessage(
-    message: IUserTranscription | IAgentTranscription | IMessageInterrupt | ICommandMessage
+    message: IUserTranscription | IAgentTranscription | IMessageInterrupt | ICommandMessage | IMessageState
   ) {
     // check if message is transcription
     const isAgentMessage =
@@ -399,16 +406,23 @@ export class MessageEngine {
       message.object === ETranscriptionObjectType.USER_TRANSCRIPTION;
     const isMessageInterrupt =
       message.object === ETranscriptionObjectType.MSG_INTERRUPTED;
-    const isCommand = 
+    const isCommand =
       message.object === ETranscriptionObjectType.COMMAND;
+    const isMessageState =
+      message.object === ETranscriptionObjectType.MESSAGE_STATE;
 
-    console.log('[MessageEngine] handleMessage:', { 
-        object: message.object, 
-        isAgent: isAgentMessage, 
-        isUser: isUserMessage, 
-        isCommand,
-        content: (message as any).text || (message as any).content || (message as any).action
+    console.log('[MessageEngine] handleMessage:', {
+      object: message.object,
+      isAgent: isAgentMessage,
+      isUser: isUserMessage,
+      isCommand,
+      content: (message as any).text || (message as any).content || (message as any).action || (message as any).state
     });
+
+    if (isMessageState) {
+      // Just ignore state changes (speaking/listening/thinking) for transcript purposes
+      return;
+    }
 
     if (!isAgentMessage && !isUserMessage && !isMessageInterrupt && !isCommand) {
       logger.debug(CONSOLE_LOG_PREFIX, 'Unknown message type', message);
@@ -416,8 +430,8 @@ export class MessageEngine {
     }
 
     if (isCommand) {
-        this.handleCommandMessage(message);
-        return;
+      this.handleCommandMessage(message);
+      return;
     }
     // set mode (only once)
     if (isAgentMessage && this._mode === EMessageEngineMode.AUTO) {
@@ -446,7 +460,7 @@ export class MessageEngine {
     // unknown mode
     console.error(CONSOLE_LOG_PREFIX, 'Unknown mode', message);
   }
-  
+
 
 
   public handleTextMessage(message: IUserTranscription) {
@@ -489,19 +503,19 @@ export class MessageEngine {
   }
 
   public handleCommandMessage(message: ICommandMessage) {
-      const turn_id = message.turn_id || Date.now();
-      // We append it to history so it flows to the UI, 
-      // but UI will filter it out of display and act on it.
-      this._appendChatHistory({
-          turn_id,
-          uid: 0, // Agent
-          _time: Date.now(),
-          text: `COMMAND: ${message.action}`,
-          status: EMessageStatus.END,
-          metadata: message as any,
-      });
-      // Force update immediately
-       this._mutateChatHistory();
+    const turn_id = message.turn_id || Date.now();
+    // We append it to history so it flows to the UI, 
+    // but UI will filter it out of display and act on it.
+    this._appendChatHistory({
+      turn_id,
+      uid: 0, // Agent
+      _time: Date.now(),
+      text: `COMMAND: ${message.action}`,
+      status: EMessageStatus.END,
+      metadata: message as any,
+    });
+    // Force update immediately
+    this._mutateChatHistory();
   }
 
   public handleWordAgentMessage(message: IAgentTranscription) {
@@ -618,7 +632,7 @@ export class MessageEngine {
     this.messageList = [];
     // cleanup mode
     this._mode = EMessageEngineMode.AUTO;
-    
+
     // remove event listeners
     if (this._rtcEngine) {
       if (this._onAudioMetadata) {
@@ -648,10 +662,12 @@ export class MessageEngine {
    */
   public handleChunk<
     T extends
-      | TDataChunkMessageV1
-      | IUserTranscription
-      | IAgentTranscription
-      | IMessageInterrupt
+    | TDataChunkMessageV1
+    | IUserTranscription
+    | IAgentTranscription
+    | IMessageInterrupt
+    | ICommandMessage
+    | IMessageState
   >(chunk: string, callback?: (message: T) => void): void {
     try {
       // split chunk by '|'

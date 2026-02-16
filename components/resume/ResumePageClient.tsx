@@ -5,12 +5,13 @@ import PrimaryResumeSection from '@/components/resume/PrimaryResumeSection'
 import TailoredResumesSection from '@/components/resume/TailoredResumesSection'
 import { trpc } from '@/trpc/client'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Resume } from '@/lib/generated/prisma/client'
+import { Resume, TailoredResume as PrismaTailoredResume } from '@/lib/generated/prisma/client'
 import { Button } from '../ui/button'
 import { SquarePen, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { FeatureGuide } from '@/components/FeatureGuide'
 import { ResumePageSkeleton } from './ResumePageSkeleton'
+import { useServerEvents } from "@/hooks/useServerEvents"
 
 // Define the types for the resume data
 export type PrimaryResumeScoreData = {
@@ -42,16 +43,14 @@ export type TailoredResumeScoreData = {
   matchedCount?: number;
 };
 
-export type TailoredResume = Resume & {
+export type TailoredResume = PrismaTailoredResume & {
   scores: TailoredResumeScoreData | null;
-  role: string;
-  scoreData: TailoredResumeScoreData | null;
+  role?: string | null;
 }
 
 export type ResumeWithTailored = Resume & {
-  scores: PrimaryResumeScoreData | null
+  scoreData: PrimaryResumeScoreData | null;
   tailoredResumes: TailoredResume[]
-  scoreData: PrimaryResumeScoreData | null // Include scoreData in type definition
 }
 
 const ResumePageClient = () => {
@@ -62,32 +61,43 @@ const ResumePageClient = () => {
   const [loading, setLoading] = useState(false);
   const utils = trpc.useUtils()
 
+  // SSE Listener for real-time resume status updates
+  useServerEvents((event) => {
+    if (event.type === 'RESUME_READY' || event.type === 'TAILORED_RESUME_READY' || event.type === 'COVER_LETTER_READY') {
+      console.log(`🚀 [SSE] ${event.type} received! Refreshing resumes list...`);
+      utils.resume.getPrimaryResumes.invalidate();
+    }
+
+    if (event.type === 'RESUME_FAILED' || event.type === 'TAILORED_RESUME_FAILED') {
+      console.error(`❌ [SSE] ${event.type} received for resume ${event.data.resumeId}`);
+      toast.error('Resume processing failed. Please try again.');
+      utils.resume.getPrimaryResumes.invalidate();
+    }
+  });
+
   useEffect(() => {
     if (primaryResumes) {
-      // Check if any resume or tailored resume is pending/processing
-      const hasPending = primaryResumes.some(resume => 
-        resume?.status === 'PENDING' || 
+      // Log if there are pending resumes to monitor SSE effectiveness
+      const hasPending = primaryResumes.some(resume =>
+        resume?.status === 'PENDING' ||
         resume?.status === 'PROCESSING' ||
         (Array.isArray(resume?.tailoredResumes) && resume.tailoredResumes.some(tr => tr?.status === 'PENDING' || tr?.status === 'PROCESSING'))
       );
 
       if (hasPending) {
-        const interval = setInterval(() => {
-          utils.resume.getPrimaryResumes.invalidate();
-        }, 2000);
-        return () => clearInterval(interval);
+        console.log("⏳ [ResumePage] Pending resumes detected. Waiting for SSE update...");
       }
     }
-  }, [primaryResumes, utils]);
+  }, [primaryResumes]);
 
   useEffect(() => {
     if (primaryResumes && primaryResumes.length > 0) {
       // If selectedResume is not set, set it to the first one
       // If it is set, find the updated version of it in the new data
       setSelectedResume(prev => {
-          if (!prev) return primaryResumes[0] as ResumeWithTailored;
-          const updated = primaryResumes.find(r => r.id === prev.id);
-          return (updated || primaryResumes[0]) as ResumeWithTailored;
+        if (!prev) return primaryResumes[0] as ResumeWithTailored;
+        const updated = primaryResumes.find(r => r.id === prev.id);
+        return (updated || primaryResumes[0]) as ResumeWithTailored;
       })
     }
   }, [primaryResumes])
@@ -135,7 +145,7 @@ const ResumePageClient = () => {
       setLoading(false);
     }
   };
-     
+
   if (isLoading) {
     return <ResumePageSkeleton />
   }
@@ -160,7 +170,7 @@ const ResumePageClient = () => {
         className="hidden"
         onChange={handleFileUpload}
       />
-      
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-border/40 pb-6">
         <div>
@@ -179,15 +189,15 @@ const ResumePageClient = () => {
                 Manage your primary resumes and create tailored versions to perfectly match your dream jobs.
             </p>
         </div>
-        <Button 
-            size="lg"
-            className="shadow-lg hover:shadow-primary/25 transition-all"
-            onClick={() => fileInputRef.current?.click()} 
-            disabled={loading}
+        <Button
+          size="lg"
+          className="shadow-lg hover:shadow-primary/25 transition-all"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={loading}
         >
           <SquarePen className="mr-2 h-4 w-4" />
           {loading ? "Parsing..." : "Upload New Resume"}
-        </Button>        
+        </Button>
       </div>
 
       <div className="space-y-12">
@@ -196,17 +206,17 @@ const ResumePageClient = () => {
             isLoading={isLoading}
             isError={isError}
             error={error}
-            resumes={primaryResumes as ResumeWithTailored[]}
+            resumes={primaryResumes as unknown as ResumeWithTailored[]}
             onSelectResume={setSelectedResume}
           />
         </div>
-        
+
         {selectedResume && (
-             <div className="animate-in slide-in-from-bottom-4 duration-700 delay-200">
-                <TailoredResumesSection
-                    tailoredResumes={selectedResume?.tailoredResumes}
-                />
-            </div>
+          <div className="animate-in slide-in-from-bottom-4 duration-700 delay-200">
+            <TailoredResumesSection
+              tailoredResumes={selectedResume?.tailoredResumes}
+            />
+          </div>
         )}
       </div>
     </div>

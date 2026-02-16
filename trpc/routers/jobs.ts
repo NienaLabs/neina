@@ -1,21 +1,23 @@
 import { z } from 'zod';
-import { createTRPCRouter, publicProcedure } from '../init';
+import { createTRPCRouter, baseProcedure, type Context } from '../init';
 import prisma from '@/lib/prisma';
 import { TRPCError } from '@trpc/server';
+import { headers } from 'next/headers';
 
 export const jobsRouter = createTRPCRouter({
     /**
      * Record a view for a job
      * Tracks unique views by user ID or IP address
      */
-    recordView: publicProcedure
+    recordView: baseProcedure
         .input(z.object({
             jobId: z.string(),
         }))
-        .mutation(async ({ ctx, input }) => {
+        .mutation(async ({ ctx, input }: { ctx: Context, input: { jobId: string } }) => {
+            const h = await headers();
             const userId = ctx.session?.user?.id;
-            const ipAddress = ctx.headers?.get('x-forwarded-for') || 'unknown';
-            const userAgent = ctx.headers?.get('user-agent') || 'unknown';
+            const ipAddress = h.get('x-forwarded-for') || 'unknown';
+            const userAgent = h.get('user-agent') || 'unknown';
 
             // Check if job exists
             const job = await prisma.jobs.findUnique({
@@ -63,21 +65,21 @@ export const jobsRouter = createTRPCRouter({
             return { success: true, viewed: false };
         }),
 
-     getJob: publicProcedure
+    getJob: baseProcedure
         .input(z.object({ id: z.string() }))
-        .query(async ({ input }) => {
-          const job = await prisma.jobs.findUnique({
-            where: { id: input.id },
-            include: {
-                recruiterJob: {
-                    select: {
-                        id: true,
-                        recruiterId: true,
-                        postedAt: true,
+        .query(async ({ input }: { input: { id: string } }) => {
+            const job = await prisma.jobs.findUnique({
+                where: { id: input.id },
+                include: {
+                    recruiterJob: {
+                        select: {
+                            id: true,
+                            recruiterId: true,
+                            postedAt: true,
+                        }
                     }
                 }
-            }
-          });
-          return job;
+            });
+            return job;
         }),
 });

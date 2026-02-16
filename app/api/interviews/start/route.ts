@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     const body = JSON.parse(rawBody);
-    const { role, description, useResume } = body;
+    const { role, description, useResume, interviewId } = body;
 
     const ANAM_AVATAR_ID = process.env.ANAM_AVATAR_ID || process.env.ANAM_PERSONA_ID;
     const ANAM_VOICE_ID = process.env.ANAM_VOICE_ID;
@@ -53,7 +53,6 @@ export async function POST(request: Request) {
     const userId = session.user.id;
     console.log('Starting interview for user:', userId);
 
-
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { interview_minutes: true }
@@ -79,34 +78,29 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Idempotency: ensure only one ACTIVE interview per user
-    // If an active interview exists, reuse it instead of creating a new one
-    const existing = await prisma.interview.findFirst({
-      where: { user_id: userId, status: 'ACTIVE' },
-      include: {
-        user: {
-          select: { interview_minutes: true }
-        }
-      }
-    });
-
-    console.log('Existing interview check:', { existing: existing?.id, hasExisting: !!existing });
-
-    // Double-check credits for existing interviews too
-    if (existing && existing.user.interview_minutes < 0.1) {
-      return NextResponse.json({
-        error: `No credits left. Please purchase more minutes to continue.`,
-        remaining_seconds: Math.max(0, Math.floor(existing.user.interview_minutes * 60))
-      }, { status: 400 });
+    // Capture existing interview if interviewId is provided
+    let existingInterview = null;
+    if (interviewId) {
+      existingInterview = await prisma.interview.findFirst({
+        where: { id: interviewId, user_id: userId },
+      });
     }
 
-    const result = existing
+    // Idempotency: ensure only one ACTIVE or SCHEDULED interview per user
+    // If an active/scheduled interview exists, reuse it instead of creating a new one
+    const activeSession = existingInterview || await prisma.interview.findFirst({
+      where: { user_id: userId, status: { in: ['ACTIVE', 'SCHEDULED'] } },
+    });
+
+    console.log('Interview check:', { id: activeSession?.id, hasExisting: !!activeSession });
+
+    const result = activeSession
       ? {
         interview: {
-          id: existing.id,
-          start_time: existing.start_time,
-          remaining_seconds: Math.max(0, Math.floor(existing.user.interview_minutes * 60)),
-          conversation_id: existing.conversation_id,
+          id: activeSession.id,
+          start_time: activeSession.start_time,
+          remaining_seconds: Math.max(0, Math.floor(user.interview_minutes * 60)),
+          conversation_id: activeSession.conversation_id,
         },
         has_sufficient_time: true as const,
         warning: undefined as string | undefined,
@@ -155,9 +149,20 @@ export async function POST(request: Request) {
       resumeContent = primaryResume?.content;
     }
 
+    // Get questions from interview record if they exist
+    let preGeneratedQuestions: string[] | undefined = undefined;
+    const interviewRecord = await prisma.interview.findUnique({
+      where: { id: result.interview.id! },
+      select: { questions: true }
+    });
+
+    if (interviewRecord?.questions && Array.isArray(interviewRecord.questions)) {
+      preGeneratedQuestions = interviewRecord.questions as string[];
+    }
+
     // Generate the dynamic interviewer prompt
-    console.log('[ANAM] Generating system prompt. Resume included:', !!resumeContent);
-    const systemPrompt = interviewerSystemPrompt(role, description, resumeContent);
+    console.log('[ANAM] Generating system prompt. Questions included:', !!preGeneratedQuestions);
+    const systemPrompt = interviewerSystemPrompt(role, description, resumeContent, preGeneratedQuestions);
 
     // Generate the ephemeral session token for Anam AI SDK v4
     const sessionToken = await generateAnamSessionToken({
@@ -177,6 +182,7 @@ export async function POST(request: Request) {
       anam_session_token: sessionToken,
       resume_content: resumeContent
     });
+
 
   } catch (err: any) {
     console.error('Start interview error:', err);

@@ -5,6 +5,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
 import prisma from '@/lib/prisma';
+import { emitUserEvent } from '@/lib/events';
 
 export const notificationsRouter = createTRPCRouter({
     /**
@@ -145,6 +146,12 @@ export const notificationsRouter = createTRPCRouter({
                 },
             });
 
+            // Emit SSE event for real-time UI update
+            emitUserEvent(userId, {
+                type: 'NOTIFICATION_READ',
+                data: { notificationId: input.announcementId }
+            });
+
             return { success: true };
         }),
 
@@ -174,6 +181,12 @@ export const notificationsRouter = createTRPCRouter({
                 },
             });
 
+            // Emit SSE event for real-time UI update
+            emitUserEvent(userId, {
+                type: 'NOTIFICATION_DELETED',
+                data: { notificationId: input.announcementId }
+            });
+
             return { success: true };
         }),
 
@@ -200,6 +213,9 @@ export const notificationsRouter = createTRPCRouter({
             })),
             skipDuplicates: true,
         });
+
+        // Emit SSE event
+        emitUserEvent(userId, { type: 'ALL_NOTIFICATIONS_READ', data: {} });
 
         return { success: true, count: announcements.length };
     }),
@@ -238,6 +254,12 @@ export const notificationsRouter = createTRPCRouter({
                     },
                 });
 
+                // Emit event
+                emitUserEvent(userId, {
+                    type: 'PUSH_SUBSCRIPTION_UPDATE',
+                    data: { isSubscribed: true, deviceCount: (await prisma.pushSubscription.count({ where: { userId } })) }
+                });
+
                 return { success: true, message: 'Successfully subscribed to push notifications' };
             } catch (error: any) {
                 console.error('Error subscribing to push:', error);
@@ -256,6 +278,12 @@ export const notificationsRouter = createTRPCRouter({
                 where: {
                     userId,
                 },
+            });
+
+            // Emit event
+            emitUserEvent(userId, {
+                type: 'PUSH_SUBSCRIPTION_UPDATE',
+                data: { isSubscribed: false, deviceCount: 0 }
             });
 
             return { success: true, message: 'Successfully unsubscribed from push notifications' };

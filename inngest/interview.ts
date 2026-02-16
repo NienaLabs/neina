@@ -6,12 +6,12 @@ import prisma from "@/lib/prisma";
 
 // Define the agent
 export const questionnaireAgent = createAgent({
-  name: "questionnaire-agent",
-  system: interviewQuestionPrompt,
-  model: openai({
-    model: process.env.OPENAI_MODEL || 'gpt-4o', // Fallback or use env
-    baseUrl: process.env.OPENAI_BASE_URL,
-  }),
+    name: "questionnaire-agent",
+    system: interviewQuestionPrompt,
+    model: openai({
+        model: process.env.OPENAI_MODEL || 'gpt-4o', // Fallback or use env
+        baseUrl: process.env.OPENAI_BASE_URL,
+    }),
 });
 
 // Define the Inngest function
@@ -38,7 +38,7 @@ export const interviewCreated = inngest.createFunction(
         const response = await questionnaireAgent.run(promptInput);
         console.log("✅ agent response received");
         const rawContent = lastAssistantTextMessageContent(response);
-        
+
         if (!rawContent) {
             console.error("❌ Agent returned no content");
             throw new Error("No content from agent");
@@ -46,20 +46,20 @@ export const interviewCreated = inngest.createFunction(
 
         // 2. Parse the content
         const questions = await step.run("parse-questions", async () => {
-             console.log("📝 Parsing agent content...");
-             // Extract JSON
-             const jsonMatch = rawContent.match(/```json\n([\s\S]*?)\n```/) || [null, rawContent];
-             const jsonStr = jsonMatch[1] || rawContent;
-             
-             // Use validJson helper
-             const questionsData = validJson(jsonStr) || JSON.parse(jsonStr);
-             console.log("✅ Parsed questions data:", questionsData);
-             
-             if (!questionsData || !Array.isArray(questionsData.questions)) {
-                 console.error("❌ Invalid questions format", questionsData);
-                 throw new Error("Invalid questions format");
-             }
-             return questionsData.questions; // Return just the array
+            console.log("📝 Parsing agent content...");
+            // Extract JSON
+            const jsonMatch = rawContent.match(/```json\n([\s\S]*?)\n```/) || [null, rawContent];
+            const jsonStr = jsonMatch[1] || rawContent;
+
+            // Use validJson helper
+            const questionsData = validJson(jsonStr) || JSON.parse(jsonStr);
+            console.log("✅ Parsed questions data:", questionsData);
+
+            if (!questionsData || !Array.isArray(questionsData.questions)) {
+                console.error("❌ Invalid questions format", questionsData);
+                throw new Error("Invalid questions format");
+            }
+            return questionsData.questions; // Return just the array
         });
 
         // 3. Save to DB
@@ -69,10 +69,21 @@ export const interviewCreated = inngest.createFunction(
                 where: { id: interviewId },
                 data: {
                     questions: questions, // Prisma Json type
-                    status: 'SCHEDULED' // Confirm status is set
+                    status: 'ACTIVE' // Move to ACTIVE once ready
                 }
             });
         });
+
+        // 4. Notify Client via SSE
+        const { userId } = event.data;
+        if (userId) {
+            console.log("📡 Emitting INTERVIEW_READY for user:", userId);
+            const { emitUserEvent } = await import("@/lib/events");
+            emitUserEvent(userId, {
+                type: 'INTERVIEW_READY',
+                data: { interviewId }
+            });
+        }
 
         return result;
     }

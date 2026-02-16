@@ -8,6 +8,7 @@ import { SuspensionGuard } from "@/components/auth/SuspensionGuard";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { NotificationBanner } from "@/components/notifications/NotificationBanner";
 import { CookiePrompt } from "@/components/shared/CookiePrompt";
+import { NotificationSSEProvider } from "@/components/notifications/NotificationSSEProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,8 @@ export const metadata: Metadata = {
         height: 630,
         alt: "Niena - AI Career Platform",
       }
-    ],  },
+    ],
+  },
   twitter: {
     card: "summary_large_image",
     title: "Niena – AI Resume Optimization, Job Matching & AI Interview Prep",
@@ -92,18 +94,20 @@ export default function RootLayout({
           <body
             className={`${geistSans.variable} ${geistMono.variable} font-syne antialiased`}
           >
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            <NotificationBanner />
-            <CookiePrompt />
-            {/*<Header/>*/}
-            <SuspensionGuard>
-              {children}
-            </SuspensionGuard>
-            <ServiceWorkerRegister />
-            <Toaster />
+            <NotificationSSEProvider>
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+              />
+              <NotificationBanner />
+              <CookiePrompt />
+              {/*<Header/>*/}
+              <SuspensionGuard>
+                {children}
+              </SuspensionGuard>
+              <ServiceWorkerRegister />
+              <Toaster position="top-right" />
+            </NotificationSSEProvider>
           </body>
         </html>
       </AuthProvider>

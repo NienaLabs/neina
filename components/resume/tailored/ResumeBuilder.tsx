@@ -1,5 +1,7 @@
 'use client';
-import React, { useState, Suspense, useCallback } from 'react';
+
+import React, { useState, Suspense, useCallback, useMemo } from 'react';
+import { useServerEvents } from '@/hooks/useServerEvents';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
@@ -20,7 +22,13 @@ import {
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
-  Layout
+  Layout,
+  FileText,
+  BriefcaseBusiness,
+  Mail,
+  MessageSquare,
+  Eye,
+  ScanSearch
 } from 'lucide-react';
 import {
   Select,
@@ -37,6 +45,7 @@ import { ResumePDF } from './ResumePDF';
 import { CoverLetterPDF } from './CoverLetterPDF';
 import { JobDescriptionPanel } from './JobDescriptionPanel';
 import { CoverLetterEditor } from './CoverLetterEditor';
+import { OutreachPanel } from './OutreachPanel';
 import { GeneratePromptPanel } from './GeneratePromptPanel';
 import { ResumeData, TemplateType } from '@/lib/types/resume';
 
@@ -72,7 +81,7 @@ const ResumeBuilderContent = ({
     coverLetter: initialCoverLetter = ''
 }: ResumeBuilderProps) => {
   const [activeTab, setActiveTab] = useState<TabId>('resume');
-  const [activeEditorTab, setActiveEditorTab] = useState<'content' | 'job-description' | 'cover-letter'>('content');
+  const [activeEditorTab, setActiveEditorTab] = useState<'content' | 'job-description' | 'cover-letter' | 'outreach'>('content');
   const [resumeData, setResumeData] = useState<ResumeData | null>(initialData || null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [previewScale, setPreviewScale] = useState(0.65);
@@ -85,6 +94,7 @@ const ResumeBuilderContent = ({
   const {mutateAsync: retailor} = trpc.resume.retailor.useMutation();
   const {mutateAsync: updateCoverLetterMutation} = trpc.resume.updateCoverLetter.useMutation();
   const {mutateAsync: generateCoverLetterMutation} = trpc.resume.generateCoverLetter.useMutation();
+  const {mutateAsync: generateOutreachMessageMutation} = trpc.resume.generateOutreachMessage.useMutation();
 
   // Sync state with prop changes (for when router.refresh() updates data)
   React.useEffect(() => {
@@ -121,32 +131,19 @@ const ResumeBuilderContent = ({
       }
   }, [initialData]);
 
-  // Poll for status updates when PENDING
-  const { data: pollingData } = trpc.resume.getUnique.useQuery(
-    { resumeId },
-    { 
-       enabled: status === 'PENDING' || status === 'PROCESSING',
-       refetchInterval: 5000 // 5 seconds to reduce overhead
-    }
-  );
-
-  // Invalidate query when status changes to completed or failed
-  React.useEffect(() => {
-    if (pollingData?.status === 'COMPLETED' || pollingData?.status === 'FAILED') {
-        // Invalidate the query to refetch without full page re-render
-        utils.resume.getUnique.invalidate({ resumeId });
-    }
-  }, [pollingData?.status, utils, resumeId]);
-  
   // Job Description State
   const [jdText, setJdText] = useState(jobDescription);
   const [selectedPrompt, setSelectedPrompt] = useState('keywords');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [processingAction, setProcessingAction] = useState<string | null>(null);
 
   // Cover Letter State
   const [coverLetter, setCoverLetter] = useState(initialCoverLetter);
   const [isCoverLetterSaving, setIsCoverLetterSaving] = useState(false);
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
+
+  // Outreach State
+  const [outreachMessage, setOutreachMessage] = useState('');
+  const [isGeneratingOutreach, setIsGeneratingOutreach] = useState(false);
 
   // Handle updates from child components
   const onUpdate = useCallback((newData: ResumeData) => {
@@ -190,7 +187,96 @@ const ResumeBuilderContent = ({
     }
   }, [initialCoverLetter, initialData?.template]);
 
+    // Listen for SSE events instead of polling for status updates
+    useServerEvents((event) => {
+      // Helper to check if an event belongs to this resume
+      const isForThisResume = 'resumeId' in event.data && event.data.resumeId === resumeId;
 
+      if (!isForThisResume) return;
+  
+      if (event.type === 'TAILORED_RESUME_READY' || event.type === 'COVER_LETTER_READY') {
+        console.log(`🚀 [SSE] ${event.type} received for resume ${resumeId}`);
+        setProcessingAction(null);
+        setIsGeneratingCoverLetter(false);
+
+        if (event.type === 'TAILORED_RESUME_READY') {
+             const action = event.data.action || 'refinement';
+             toast.success(`Resume ${action} complete!`);
+        } else {
+             toast.success('Cover letter generated successfully!');
+        }
+        router.refresh();
+      }
+  
+      if (event.type === 'TAILORED_RESUME_FAILED') {
+        console.error(`❌ [SSE] ${event.type} received for resume ${resumeId}`);
+        setProcessingAction(null);
+        setIsGeneratingCoverLetter(false);
+        toast.error('Resume processing failed. Please try again.');
+        router.refresh();
+      }
+
+      if (event.type === 'OUTREACH_MESSAGE_READY') {
+        console.log(`🚀 [SSE] ${event.type} received for resume ${resumeId}`);
+        setOutreachMessage(event.data.message);
+        setIsGeneratingOutreach(false);
+        toast.success('Outreach message generated!');
+      }
+
+      if (event.type === 'OUTREACH_MESSAGE_FAILED') {
+        console.error(`❌ [SSE] ${event.type} received for resume ${resumeId}`);
+        setIsGeneratingOutreach(false);
+        toast.error('Failed to generate outreach message.');
+      }
+
+      if (event.type === 'ITEM_REGENERATED_READY') {
+          console.log(`🚀 [SSE] ITEM_REGENERATED_READY received for resume ${resumeId}`);
+          const { itemId, newBullets, changeSummary } = event.data;
+          setResumeData(prev => {
+              if (!prev) return null;
+              const newWork = prev.workExperience?.map(item => 
+                  item.id === itemId ? { ...item, description: newBullets } : item
+              ) || [];
+              const projWork = prev.personalProjects?.map(item => 
+                  item.id === itemId ? { ...item, description: newBullets } : item
+              ) || [];
+              
+              const updatedData = { ...prev, workExperience: newWork, personalProjects: projWork };
+              return updatedData;
+          });
+          setHasUnsavedChanges(true);
+          setProcessingAction(null);
+          toast.success('Description regenerated!', {
+            description: changeSummary || undefined,
+            duration: changeSummary ? 6000 : 3000,
+          });
+      }
+
+      if (event.type === 'SKILLS_REGENERATED_READY') {
+          console.log(`🚀 [SSE] SKILLS_REGENERATED_READY received for resume ${resumeId}`);
+          const { newSkills, changeSummary } = event.data;
+          setResumeData(prev => {
+              if (!prev) return null;
+               const updatedAdditional = {
+                   ...prev.additional,
+                   technicalSkills: newSkills
+               };
+               return { ...prev, additional: updatedAdditional };
+          });
+          setHasUnsavedChanges(true);
+          setProcessingAction(null);
+          toast.success('Skills regenerated!', {
+            description: changeSummary || undefined,
+            duration: changeSummary ? 6000 : 3000,
+          });
+      }
+
+      if (event.type === 'ITEM_REGENERATED_FAILED' || event.type === 'SKILLS_REGENERATED_FAILED') {
+          console.error(`❌ [SSE] ${event.type} received`);
+          setProcessingAction(null);
+          toast.error(`Regeneration failed. Please try again.`);
+      }
+    });
 
   const handleGenerateTailored = async (mode?: string) => {
     if (!resumeId || !jdText.trim()) return;
@@ -200,7 +286,7 @@ const ResumeBuilderContent = ({
 
     const tailoringMode = mode || selectedPrompt;
     
-    setIsGenerating(true);
+    setProcessingAction(tailoringMode);
     try {
        const result = await retailor({
            resumeId: resumeId, // Use the current tailored resume ID
@@ -210,19 +296,15 @@ const ResumeBuilderContent = ({
        
        if(result && 'id' in result){
             toast.success(`Resume refinement started (${tailoringMode}). AI is working...`);
-            // We stay on the page. The subscription/polling elsewhere should pick up the status change.
-            // For now, we manually set isGenerating to true until we get a status update? 
-            // Actually, the mutation returns the updated resume.
-            // We might want to trigger a refresh of the data or rely on Inngest to finish.
-            // The Page component might need to revalidate.
+            // We stay on the page. SSE will handle the completion.
             router.refresh(); 
        }
     } catch (error) {
         console.error("Failed to re-tailor resume:", error);
         toast.error("Failed to start refinement process");
-    } finally {
-        setIsGenerating(false);
-    }
+        setProcessingAction(null);
+    } 
+    // Do NOT clear processingAction in finally - wait for SSE
   };
 
   // TRPC Mutation to save data
@@ -299,6 +381,20 @@ const ResumeBuilderContent = ({
     handleGenerateCoverLetter();
   }, [coverLetter, handleGenerateCoverLetter]);
 
+  const handleGenerateOutreach = useCallback(async () => {
+    if (!resumeId) return;
+    
+    setIsGeneratingOutreach(true);
+    try {
+        await generateOutreachMessageMutation({ resumeId });
+        toast.success('Generating outreach message...');
+    } catch (error) {
+        console.error("Failed to generate outreach message:", error);
+        toast.error("Failed to start generation");
+        setIsGeneratingOutreach(false);
+    }
+  }, [resumeId, generateOutreachMessageMutation]);
+
   // Show toast notification if job is taking too long
   React.useEffect(() => {
     if (status === 'PENDING' || status === 'PROCESSING') {
@@ -315,36 +411,31 @@ const ResumeBuilderContent = ({
 
   return (
     <div
-      className="min-h-screen w-full bg-[#F0F0E8] flex justify-center items-start py-2 px-2 md:py-3 md:px-4 overflow-x-hidden"
-      style={{
-        backgroundImage:
-          'linear-gradient(rgba(51, 65, 85, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(51, 65, 85, 0.1) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }}
+      className="min-h-screen w-full bg-background flex justify-center items-start py-2 px-2 md:py-3 md:px-4 overflow-x-hidden"
     >
         {/* Main Container */}
-      <div className="w-full h-[140vh] max-w-[92%] md:max-w-[96%] xl:max-w-[2000px] border border-black bg-[#F0F0E8] shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden">
+      <div className="w-full h-[140vh] max-w-[92%] md:max-w-[96%] xl:max-w-[2000px] bg-white dark:bg-card shadow-2xl border border-black/5 rounded-3xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="border-b border-black p-3 md:p-4 bg-[#F0F0E8]">
+          <div className="border-b border-black/5 p-3 md:p-4 bg-white/80 dark:bg-black/80 backdrop-blur-md">
              <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                 <div>
                      <Button
                         variant="link"
                         onClick={() => router.push('/dashboard')}
-                        className="mb-1 -ml-1 pl-0 text-black hover:text-blue-700 h-auto py-0"
+                        className="mb-1 -ml-1 pl-0 text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white h-auto py-0 text-xs"
                       >
                         <ArrowLeft className="w-3 h-3 mr-1" />
                         Back to Dashboard
                       </Button>
-                      <h1 className="font-serif text-2xl md:text-3xl text-black tracking-tight leading-none uppercase">
+                      <h1 className="font-serif text-2xl md:text-3xl text-black dark:text-white tracking-tight leading-none uppercase">
                         Resume Builder
                       </h1>
                       <div className="flex items-center gap-2 mt-1">
-                         <p className="text-xs font-mono text-slate-700 uppercase tracking-wide font-bold">
-                            {'// '} Edit Mode
+                         <p className="text-xs font-mono text-slate-700 dark:text-slate-300 uppercase tracking-wide font-bold">
+                            {'// '} Tailored Edit Mode
                          </p>
                          {hasUnsavedChanges && (
-                            <span className="flex items-center gap-1 text-[10px] font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 border border-amber-200">
+                            <span className="flex items-center gap-1 text-[10px] font-mono text-amber-600 bg-amber-50 px-1.5 py-0.5 border border-amber-200 rounded-md">
                                 <AlertTriangle className="w-3 h-3" />
                                 Unsaved
                             </span>
@@ -352,41 +443,45 @@ const ResumeBuilderContent = ({
                       </div>
                 </div>
 
-                <div className="flex items-center gap-3 mr-4 border-x border-black/10 px-4 h-10">
+                <div className="flex items-center gap-1 mr-4 border-x border-black/10 px-3 h-10">
                     <Button 
                       variant="ghost" 
-                      size="sm" 
-                      className={`h-8 gap-2 font-mono text-[10px] uppercase font-bold transition-all border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0px] active:translate-y-[0px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${isLeftPanelVisible ? 'bg-slate-200 text-slate-900' : 'bg-white text-slate-400'}`}
+                      size="icon" 
+                      className={`h-8 w-8 rounded-xl transition-all ${isLeftPanelVisible ? 'bg-black/5 text-slate-900 dark:bg-white/10 dark:text-white' : 'text-slate-400 hover:bg-black/5'}`}
                       onClick={() => setIsLeftPanelVisible(prev => !prev)}
+                      title={`Editor ${isLeftPanelVisible ? 'ON' : 'OFF'}`}
                     >
-                      <Layout className="w-3 h-3" />
-                      Editor {isLeftPanelVisible ? 'ON' : 'OFF'}
+                      {isLeftPanelVisible ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
                     </Button>
                     <Button 
                       variant="ghost" 
-                      size="sm" 
-                      className={`h-8 gap-2 font-mono text-[10px] uppercase font-bold transition-all border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0px] active:translate-y-[0px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${isRightPanelVisible ? 'bg-slate-200 text-slate-900' : 'bg-white text-slate-400'}`}
+                      size="icon" 
+                      className={`h-8 w-8 rounded-xl transition-all ${isRightPanelVisible ? 'bg-black/5 text-slate-900 dark:bg-white/10 dark:text-white' : 'text-slate-400 hover:bg-black/5'}`}
                       onClick={() => setIsRightPanelVisible(prev => !prev)}
+                      title={`Preview ${isRightPanelVisible ? 'ON' : 'OFF'}`}
                     >
-                      <Layout className="w-3 h-3" />
-                      Preview {isRightPanelVisible ? 'ON' : 'OFF'}
+                      {isRightPanelVisible ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
                     </Button>
                 </div>
 
                 <div className="flex gap-2 flex-wrap justify-end">
                     {activeTab === 'resume' && (
                       <>
-                        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => {}}>
-                            <Sparkles className="w-3 h-3 mr-1.5" />
-                            Regenerate
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateTailored()} title="Regenerate">
+                            <Sparkles className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setHasUnsavedChanges(false)}>
-                            <RotateCcw className="w-3 h-3 mr-1.5" />
-                            Reset
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setHasUnsavedChanges(false)} title="Reset">
+                            <RotateCcw className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" className="h-8 text-xs" onClick={handleSave} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <Save className="w-3 h-3 mr-1.5" />}
-                            {isSaving ? 'Saving...' : 'Save'}
+                        <Button 
+                          size="icon" 
+                          variant="outline"
+                          className="h-8 w-8 bg-white/50" 
+                          onClick={handleSave} 
+                          disabled={isSaving}
+                          title={isSaving ? 'Saving...' : 'Save'}
+                        >
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         </Button>
                         
                          <PDFDownloadLink
@@ -394,9 +489,8 @@ const ResumeBuilderContent = ({
                             fileName={`Resume-${resumeData?.personalInfo?.name || 'Tailored'}.pdf`}
                         >
                             {({ loading }) => (
-                                <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 h-8 text-xs" disabled={loading}>
-                                    {loading ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <Download className="w-3 h-3 mr-1.5" />}
-                                    {loading ? 'Generating...' : 'Export PDF'}
+                                <Button variant="default" size="icon" className="bg-green-600 hover:bg-green-700 h-8 w-8 shadow-sm" disabled={loading} title={loading ? 'Generating...' : 'Export PDF'}>
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                                 </Button>
                             )}
                         </PDFDownloadLink>
@@ -404,13 +498,11 @@ const ResumeBuilderContent = ({
                     )}
                     {activeTab === 'cover-letter' && coverLetter && (
                       <>
-                        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleRegenerateCoverLetter}>
-                          <Sparkles className="w-3 h-3 mr-1.5" />
-                          Regenerate
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleRegenerateCoverLetter} title="Regenerate">
+                          <Sparkles className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" className="h-8 text-xs" onClick={handleSaveCoverLetter} disabled={isCoverLetterSaving}>
-                          {isCoverLetterSaving ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <Save className="w-3 h-3 mr-1.5" />}
-                          {isCoverLetterSaving ? 'Saving...' : 'Save'}
+                        <Button size="icon" variant="outline" className="h-8 w-8 bg-white/50" onClick={handleSaveCoverLetter} disabled={isCoverLetterSaving} title={isCoverLetterSaving ? 'Saving...' : 'Save'}>
+                          {isCoverLetterSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         </Button>
                         
                         <PDFDownloadLink
@@ -418,9 +510,8 @@ const ResumeBuilderContent = ({
                           fileName={`CoverLetter-${resumeData?.personalInfo?.name || 'Tailored'}.pdf`}
                         >
                           {({ loading }) => (
-                            <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 h-8 text-xs" disabled={loading}>
-                              {loading ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <Download className="w-3 h-3 mr-1.5" />}
-                              {loading ? 'Generating...' : 'Export PDF'}
+                            <Button variant="default" size="icon" className="bg-green-600 hover:bg-green-700 h-8 w-8 shadow-sm" disabled={loading} title={loading ? 'Generating...' : 'Export PDF'}>
+                              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                             </Button>
                           )}
                         </PDFDownloadLink>
@@ -432,26 +523,27 @@ const ResumeBuilderContent = ({
 
 
           {/* Content Grid */}
-          <div className={`grid grid-cols-1 ${isLeftPanelVisible && isRightPanelVisible ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} bg-black gap-[2px] flex-1 min-h-0`}>
+          <div className={`grid grid-cols-1 ${isLeftPanelVisible && isRightPanelVisible ? 'lg:grid-cols-2' : 'lg:grid-cols-1'} bg-black/5 gap-[1px] flex-1 min-h-0`}>
              {/* Left Panel: Editor */}
-             <div className={`${!isLeftPanelVisible ? 'hidden' : 'flex'} bg-[#F0F0E8] flex-col min-h-0 relative group`}>
+             <div className={`${!isLeftPanelVisible ? 'hidden' : 'flex'} bg-white dark:bg-card flex-col min-h-0 relative group`}>
                  <div className="absolute top-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 rounded-full bg-white/90 hover:bg-white border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center p-0"
+                      className="h-8 w-8 rounded-full bg-white/90 hover:bg-white soft-glow border-none flex items-center justify-center p-0"
                       onClick={() => setIsLeftPanelVisible(false)}
                       title="Collapse Editor"
                     >
                       <PanelLeftClose className="w-4 h-4 text-slate-700" />
                     </Button>
                  </div>
-                 <div className="px-6 md:px-8 pt-6 md:pt-8 shrink-0 bg-[#F0F0E8] border-b-2 border-black/10">
+                 <div className="px-6 md:px-8 pt-6 md:pt-8 shrink-0 bg-transparent border-b border-black/5">
                      <RetroTabs 
                         tabs={[
-                            { id: 'content', label: 'Resume Content' },
-                            { id: 'job-description', label: 'Job Description' },
-                            { id: 'cover-letter', label: 'Cover Letter' },
+                            { id: 'content', label: 'Content', icon: <FileText className="w-3.5 h-3.5" /> },
+                            { id: 'job-description', label: 'Job Description', icon: <BriefcaseBusiness className="w-3.5 h-3.5" /> },
+                            { id: 'cover-letter', label: 'Cover Letter', icon: <Mail className="w-3.5 h-3.5" /> },
+                            { id: 'outreach', label: 'Outreach', icon: <MessageSquare className="w-3.5 h-3.5" /> },
                         ]}
                         activeTab={activeEditorTab}
                         onTabChange={(id) => setActiveEditorTab(id as any)}
@@ -460,7 +552,12 @@ const ResumeBuilderContent = ({
                  <div className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6">
                      <div className="max-w-4xl mx-auto space-y-6">
                         {activeEditorTab === 'content' && (
-                            <ResumeForm resumeData={resumeData} onUpdate={onUpdate} />
+                            <ResumeForm 
+                                resumeData={resumeData} 
+                                onUpdate={onUpdate} 
+                                resumeId={resumeId}
+                                onRegenerateStart={(type) => setProcessingAction(type)} 
+                            />
                         )}
                         {activeEditorTab === 'job-description' && (
                             <JobDescriptionPanel 
@@ -469,7 +566,7 @@ const ResumeBuilderContent = ({
                                 selectedPrompt={selectedPrompt}
                                 onPromptChange={setSelectedPrompt}
                                 onGenerate={handleGenerateTailored}
-                                isGenerating={isGenerating || status === 'PENDING' || status === 'PROCESSING'}
+                                isGenerating={!!processingAction || status === 'PENDING' || status === 'PROCESSING'}
                                 matchedKeywords={matchedKeywords}
                                 missingKeywords={missingKeywords}
                             />
@@ -489,35 +586,44 @@ const ResumeBuilderContent = ({
                             />
                           )
                         )}
+                        {activeEditorTab === 'outreach' && (
+                            <OutreachPanel 
+                                content={outreachMessage}
+                                onChange={setOutreachMessage}
+                                onGenerate={handleGenerateOutreach}
+                                isGenerating={isGeneratingOutreach}
+                            />
+                        )}
                      </div>
+
                  </div>
              </div>
 
              {/* Right Panel: Preview */}
-             <div className={`${!isRightPanelVisible ? 'hidden' : 'flex'} bg-[#E5E5E0] flex-col min-h-0 relative group`}>
+             <div className={`${!isRightPanelVisible ? 'hidden' : 'flex'} bg-slate-200/50 dark:bg-black/40 flex-col min-h-0 relative group`}>
                  <div className="absolute top-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 rounded-full bg-white/90 hover:bg-white border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center p-0"
+                      className="h-8 w-8 rounded-full bg-white/90 hover:bg-white soft-glow border-none flex items-center justify-center p-0"
                       onClick={() => setIsRightPanelVisible(false)}
                       title="Collapse Preview"
                     >
                       <PanelRightClose className="w-4 h-4 text-slate-700" />
                     </Button>
                  </div>
-                 <div className="px-6 md:px-8 pt-4 md:pt-5 shrink-0 bg-[#E5E5E0]">
+                 <div className="px-6 md:px-8 pt-4 md:pt-5 shrink-0 bg-transparent">
                      <RetroTabs 
                         tabs={[
-                            { id: 'resume', label: 'Resume' },
-                            { id: 'cover-letter', label: 'Cover Letter' },
-                            { id: 'jd-match', label: 'JD Match' },
+                            { id: 'resume', label: 'Resume', icon: <Eye className="w-3.5 h-3.5" /> },
+                            { id: 'cover-letter', label: 'Cover Letter', icon: <Mail className="w-3.5 h-3.5" /> },
+                            { id: 'jd-match', label: 'JD Match', icon: <ScanSearch className="w-3.5 h-3.5" /> },
                         ]}
                         activeTab={activeTab}
                         onTabChange={(id) => setActiveTab(id as TabId)}
                      />
                  </div>
-                 <div className="flex-1 overflow-auto min-h-0 p-4 md:p-6 bg-gray-100">
+                 <div className="flex-1 overflow-auto min-h-0 p-4 md:p-6 bg-transparent">
                       <ResumePreview 
                         data={resumeData} 
                         activeTab={activeTab}
@@ -537,7 +643,7 @@ const ResumeBuilderContent = ({
 
           
          {/* Footer */}
-        <div className="px-4 py-2 md:px-5 md:py-2.5 bg-[#F0F0E8] flex justify-between items-center font-mono text-xs text-slate-700 border-t border-black print:hidden z-50 relative shadow-md">
+        <div className="px-4 py-2 md:px-5 md:py-2.5 bg-background/80 backdrop-blur-md flex justify-between items-center font-mono text-xs text-slate-700 border-t border-black/5 print:hidden z-50 relative">
           <div className="flex items-center gap-4">
             <span className="uppercase font-bold flex items-center gap-2">
                Niena Module
@@ -575,7 +681,7 @@ const ResumeBuilderContent = ({
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap justify-end">
-             <div className="flex items-center gap-3 bg-white rounded-md px-3 py-1 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+             <div className="flex items-center gap-3 bg-white/50 rounded-xl px-3 py-1 border border-black/5 soft-glow">
                 <span className="text-[10px] font-bold uppercase text-gray-400">Template</span>
                 <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
                     <SelectTrigger className="h-6 w-[160px] text-[10px] border-none shadow-none focus:ring-0 bg-transparent font-bold font-mono">
@@ -590,7 +696,7 @@ const ResumeBuilderContent = ({
                 </Select>
              </div>
 
-             <div className="flex items-center gap-3 bg-white rounded-md px-3 py-1 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+             <div className="flex items-center gap-3 bg-white/50 rounded-xl px-3 py-1 border border-black/5 soft-glow">
                 <span className="text-[10px] font-bold uppercase text-gray-400">Accent</span>
                 <div className="flex gap-1.5 items-center">
                     {[
@@ -614,7 +720,7 @@ const ResumeBuilderContent = ({
                 </div>
              </div>
 
-             <div className="flex items-center gap-2 bg-white rounded-full px-3 py-1.5 border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+             <div className="flex items-center gap-2 bg-white/50 rounded-full px-3 py-1.5 border border-black/5 soft-glow">
                 <Button
                     variant="ghost"
                     size="sm"
@@ -640,15 +746,22 @@ const ResumeBuilderContent = ({
              <span className="font-bold">A4</span>
           </div>
         </div>
-
-      </div>
-      {/* Global Loading Overlay */}
-      {(isGenerating || isGeneratingCoverLetter || status === 'PENDING' || status === 'PROCESSING') && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[100] backdrop-blur-sm">
-            <div className="bg-white p-6 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center gap-4">
+       </div>
+       {/* Global Loading Overlay */}
+      {(!!processingAction || isGeneratingCoverLetter || status === 'PENDING' || status === 'PROCESSING') && (
+        <div className="fixed inset-0 bg-background/50 flex items-center justify-center z-[100] backdrop-blur-sm">
+            <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-2xl flex flex-col items-center gap-4">
                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                  <p className="font-mono font-bold text-lg blinking-cursor">
-                    {isGeneratingCoverLetter ? 'GENERATING COVER LETTER...' : (status === 'PROCESSING' || status === 'PENDING' ? 'REFINING RESUME...' : 'STARTING REFINEMENT...')}
+                    {isGeneratingCoverLetter ? 'GENERATING COVER LETTER...' : 
+                     (processingAction ? 
+                        (processingAction === 'enrich' ? 'ENRICHING CONTENT...' : 
+                         processingAction === 'refine' ? 'REFINING & POLISHING...' :
+                         processingAction === 'keywords' ? 'OPTIMIZING KEYWORDS...' :
+                         processingAction === 'nudge' ? 'NUDGING CONTENT...' :
+                         processingAction === 'full' ? 'FULL RE-TAILORING...' : 
+                         `PROCESSING (${processingAction.toUpperCase()})...`) 
+                     : (status === 'PROCESSING' || status === 'PENDING' ? 'REFINING RESUME...' : 'STARTING REFINEMENT...'))}
                  </p>
                  <p className="text-xs font-mono text-gray-500">This may take a moment</p>
             </div>

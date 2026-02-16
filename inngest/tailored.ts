@@ -148,6 +148,18 @@ export const tailoredResumeCreated = inngest.createFunction(
           "DO NOT fabricate any information."
       );
 
+      // Fetch Primary Resume Content if needed for verification (Refine mode)
+      let primaryResumeContent = "";
+      if (mode === 'refine' && event.data.primaryResumeId) {
+          const primaryResume = await prisma.resume.findUnique({
+              where: { id: event.data.primaryResumeId },
+              select: { content: true }
+          });
+          if (primaryResume) {
+              primaryResumeContent = primaryResume.content;
+          }
+      }
+
       // Parse the content - it might be a JSON string (from retailor) or plain text
       let resumeContent = event.data.content || "";
       try {
@@ -164,6 +176,7 @@ export const tailoredResumeCreated = inngest.createFunction(
         .replace("{job_description}", jobText) // Safe job text
         .replace("{job_keywords}", (jobContext.keywords || []).join(", "))
         .replace("{original_resume}", resumeContent)
+        .replace("{master_resume}", primaryResumeContent) // For verification in Refine mode
         .replace("{output_language}", "English")
         .replace("{schema}", RESUME_SCHEMA_EXAMPLE);
 
@@ -276,10 +289,31 @@ export const tailoredResumeCreated = inngest.createFunction(
           });
       });
 
+      // Notify client via SSE that tailored resume is ready
+      const { emitUserEvent } = await import("@/lib/events");
+      emitUserEvent(event.data.userId, {
+        type: 'TAILORED_RESUME_READY',
+        data: { 
+            resumeId: event.data.resumeId,
+            action: event.data.tailoringMode
+        }
+      });
+
       return { success: true, score: scoreData.finalScore };
 
     } catch (error) {
       console.error("Error in tailoredResumeCreated workflow:", error);
+      // Notify client via SSE that tailored resume processing failed
+      try {
+        const { emitUserEvent } = await import("@/lib/events");
+        emitUserEvent(event.data.userId, {
+          type: 'TAILORED_RESUME_FAILED',
+          data: { 
+              resumeId: event.data.resumeId,
+              action: event.data.tailoringMode
+          }
+        });
+      } catch (_) { /* best-effort */ }
       await step.run("delete-failed-tailored-resume", async () => {
         await prisma.tailoredResume.delete({
           where: { id: event.data.resumeId }
@@ -381,10 +415,25 @@ export const tailoredResumeUpdated = inngest.createFunction(
           });
       });
 
+      // Notify client via SSE that tailored resume update is ready
+      const { emitUserEvent } = await import("@/lib/events");
+      emitUserEvent(event.data.userId, {
+        type: 'TAILORED_RESUME_READY',
+        data: { resumeId: event.data.resumeId }
+      });
+
       return { success: true, score: scoreData.finalScore };
 
     } catch (error) {
       console.error("Error in tailoredResumeUpdated workflow:", error);
+      // Notify client via SSE that tailored resume update failed
+      try {
+        const { emitUserEvent } = await import("@/lib/events");
+        emitUserEvent(event.data.userId, {
+          type: 'TAILORED_RESUME_FAILED',
+          data: { resumeId: event.data.resumeId }
+        });
+      } catch (_) { /* best-effort */ }
        await step.run("reset-resume-status", async () => {
             await prisma.tailoredResume.update({
                 where: { id: event.data.resumeId },
@@ -429,11 +478,26 @@ export const coverLetterGenerated = inngest.createFunction(
                    }
                });
           });
+
+          // Notify client via SSE that cover letter is ready
+          const { emitUserEvent } = await import("@/lib/events");
+          emitUserEvent(event.data.userId, {
+            type: 'COVER_LETTER_READY',
+            data: { resumeId: event.data.resumeId }
+          });
   
           return { success: true };
   
       } catch (error) {
           console.error("Cover letter generation failed", error);
+          // Notify client via SSE that cover letter generation failed
+          try {
+            const { emitUserEvent } = await import("@/lib/events");
+            emitUserEvent(event.data.userId, {
+              type: 'TAILORED_RESUME_FAILED',
+              data: { resumeId: event.data.resumeId }
+            });
+          } catch (_) { /* best-effort */ }
           await step.run("revert-status", async () => {
                await prisma.tailoredResume.update({
                    where: { id: event.data.resumeId },
@@ -444,3 +508,4 @@ export const coverLetterGenerated = inngest.createFunction(
       }
     }
 );
+

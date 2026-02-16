@@ -220,8 +220,6 @@ export type ResumeWhereInput = {
   status?: Prisma.EnumResumeStatusFilter<"Resume"> | $Enums.ResumeStatus
   interviews?: Prisma.InterviewListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  resume_experience?: Prisma.XOR<Prisma.Resume_experienceNullableScalarRelationFilter, Prisma.resume_experienceWhereInput> | null
-  resume_skills?: Prisma.XOR<Prisma.Resume_skillsNullableScalarRelationFilter, Prisma.resume_skillsWhereInput> | null
   tailoredResumes?: Prisma.TailoredResumeListRelationFilter
   candidatePipelines?: Prisma.CandidatePipelineListRelationFilter
 }
@@ -240,8 +238,6 @@ export type ResumeOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   interviews?: Prisma.interviewOrderByRelationAggregateInput
   user?: Prisma.UserOrderByWithRelationInput
-  resume_experience?: Prisma.resume_experienceOrderByWithRelationInput
-  resume_skills?: Prisma.resume_skillsOrderByWithRelationInput
   tailoredResumes?: Prisma.TailoredResumeOrderByRelationAggregateInput
   candidatePipelines?: Prisma.CandidatePipelineOrderByRelationAggregateInput
 }
@@ -263,8 +259,6 @@ export type ResumeWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumResumeStatusFilter<"Resume"> | $Enums.ResumeStatus
   interviews?: Prisma.InterviewListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  resume_experience?: Prisma.XOR<Prisma.Resume_experienceNullableScalarRelationFilter, Prisma.resume_experienceWhereInput> | null
-  resume_skills?: Prisma.XOR<Prisma.Resume_skillsNullableScalarRelationFilter, Prisma.resume_skillsWhereInput> | null
   tailoredResumes?: Prisma.TailoredResumeListRelationFilter
   candidatePipelines?: Prisma.CandidatePipelineListRelationFilter
 }, "id">
@@ -316,8 +310,6 @@ export type ResumeCreateInput = {
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewCreateNestedManyWithoutResumeInput
   user: Prisma.UserCreateNestedOneWithoutResumesInput
-  resume_experience?: Prisma.resume_experienceCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeCreateNestedManyWithoutPrimaryResumeInput
   candidatePipelines?: Prisma.CandidatePipelineCreateNestedManyWithoutResumeInput
 }
@@ -335,8 +327,6 @@ export type ResumeUncheckedCreateInput = {
   userId: string
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedCreateNestedManyWithoutResumeInput
-  resume_experience?: Prisma.resume_experienceUncheckedCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsUncheckedCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedCreateNestedManyWithoutPrimaryResumeInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedCreateNestedManyWithoutResumeInput
 }
@@ -354,8 +344,6 @@ export type ResumeUpdateInput = {
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUpdateManyWithoutResumeNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutResumesNestedInput
-  resume_experience?: Prisma.resume_experienceUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUpdateManyWithoutPrimaryResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUpdateManyWithoutResumeNestedInput
 }
@@ -373,8 +361,6 @@ export type ResumeUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedUpdateManyWithoutResumeNestedInput
-  resume_experience?: Prisma.resume_experienceUncheckedUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUncheckedUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedUpdateManyWithoutResumeNestedInput
 }
@@ -552,38 +538,6 @@ export type ResumeUpdateOneWithoutInterviewsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ResumeUpdateToOneWithWhereWithoutInterviewsInput, Prisma.ResumeUpdateWithoutInterviewsInput>, Prisma.ResumeUncheckedUpdateWithoutInterviewsInput>
 }
 
-export type ResumeCreateNestedOneWithoutResume_experienceInput = {
-  create?: Prisma.XOR<Prisma.ResumeCreateWithoutResume_experienceInput, Prisma.ResumeUncheckedCreateWithoutResume_experienceInput>
-  connectOrCreate?: Prisma.ResumeCreateOrConnectWithoutResume_experienceInput
-  connect?: Prisma.ResumeWhereUniqueInput
-}
-
-export type ResumeUpdateOneWithoutResume_experienceNestedInput = {
-  create?: Prisma.XOR<Prisma.ResumeCreateWithoutResume_experienceInput, Prisma.ResumeUncheckedCreateWithoutResume_experienceInput>
-  connectOrCreate?: Prisma.ResumeCreateOrConnectWithoutResume_experienceInput
-  upsert?: Prisma.ResumeUpsertWithoutResume_experienceInput
-  disconnect?: Prisma.ResumeWhereInput | boolean
-  delete?: Prisma.ResumeWhereInput | boolean
-  connect?: Prisma.ResumeWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ResumeUpdateToOneWithWhereWithoutResume_experienceInput, Prisma.ResumeUpdateWithoutResume_experienceInput>, Prisma.ResumeUncheckedUpdateWithoutResume_experienceInput>
-}
-
-export type ResumeCreateNestedOneWithoutResume_skillsInput = {
-  create?: Prisma.XOR<Prisma.ResumeCreateWithoutResume_skillsInput, Prisma.ResumeUncheckedCreateWithoutResume_skillsInput>
-  connectOrCreate?: Prisma.ResumeCreateOrConnectWithoutResume_skillsInput
-  connect?: Prisma.ResumeWhereUniqueInput
-}
-
-export type ResumeUpdateOneWithoutResume_skillsNestedInput = {
-  create?: Prisma.XOR<Prisma.ResumeCreateWithoutResume_skillsInput, Prisma.ResumeUncheckedCreateWithoutResume_skillsInput>
-  connectOrCreate?: Prisma.ResumeCreateOrConnectWithoutResume_skillsInput
-  upsert?: Prisma.ResumeUpsertWithoutResume_skillsInput
-  disconnect?: Prisma.ResumeWhereInput | boolean
-  delete?: Prisma.ResumeWhereInput | boolean
-  connect?: Prisma.ResumeWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ResumeUpdateToOneWithWhereWithoutResume_skillsInput, Prisma.ResumeUpdateWithoutResume_skillsInput>, Prisma.ResumeUncheckedUpdateWithoutResume_skillsInput>
-}
-
 export type ResumeCreateNestedOneWithoutCandidatePipelinesInput = {
   create?: Prisma.XOR<Prisma.ResumeCreateWithoutCandidatePipelinesInput, Prisma.ResumeUncheckedCreateWithoutCandidatePipelinesInput>
   connectOrCreate?: Prisma.ResumeCreateOrConnectWithoutCandidatePipelinesInput
@@ -612,8 +566,6 @@ export type ResumeCreateWithoutUserInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewCreateNestedManyWithoutResumeInput
-  resume_experience?: Prisma.resume_experienceCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeCreateNestedManyWithoutPrimaryResumeInput
   candidatePipelines?: Prisma.CandidatePipelineCreateNestedManyWithoutResumeInput
 }
@@ -630,8 +582,6 @@ export type ResumeUncheckedCreateWithoutUserInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedCreateNestedManyWithoutResumeInput
-  resume_experience?: Prisma.resume_experienceUncheckedCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsUncheckedCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedCreateNestedManyWithoutPrimaryResumeInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedCreateNestedManyWithoutResumeInput
 }
@@ -692,8 +642,6 @@ export type ResumeCreateWithoutTailoredResumesInput = {
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewCreateNestedManyWithoutResumeInput
   user: Prisma.UserCreateNestedOneWithoutResumesInput
-  resume_experience?: Prisma.resume_experienceCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsCreateNestedOneWithoutResumeInput
   candidatePipelines?: Prisma.CandidatePipelineCreateNestedManyWithoutResumeInput
 }
 
@@ -710,8 +658,6 @@ export type ResumeUncheckedCreateWithoutTailoredResumesInput = {
   userId: string
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedCreateNestedManyWithoutResumeInput
-  resume_experience?: Prisma.resume_experienceUncheckedCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsUncheckedCreateNestedOneWithoutResumeInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedCreateNestedManyWithoutResumeInput
 }
 
@@ -744,8 +690,6 @@ export type ResumeUpdateWithoutTailoredResumesInput = {
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUpdateManyWithoutResumeNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutResumesNestedInput
-  resume_experience?: Prisma.resume_experienceUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUpdateOneWithoutResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUpdateManyWithoutResumeNestedInput
 }
 
@@ -762,8 +706,6 @@ export type ResumeUncheckedUpdateWithoutTailoredResumesInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedUpdateManyWithoutResumeNestedInput
-  resume_experience?: Prisma.resume_experienceUncheckedUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUncheckedUpdateOneWithoutResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedUpdateManyWithoutResumeNestedInput
 }
 
@@ -779,8 +721,6 @@ export type ResumeCreateWithoutInterviewsInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.ResumeStatus
   user: Prisma.UserCreateNestedOneWithoutResumesInput
-  resume_experience?: Prisma.resume_experienceCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeCreateNestedManyWithoutPrimaryResumeInput
   candidatePipelines?: Prisma.CandidatePipelineCreateNestedManyWithoutResumeInput
 }
@@ -797,8 +737,6 @@ export type ResumeUncheckedCreateWithoutInterviewsInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   userId: string
   status?: $Enums.ResumeStatus
-  resume_experience?: Prisma.resume_experienceUncheckedCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsUncheckedCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedCreateNestedManyWithoutPrimaryResumeInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedCreateNestedManyWithoutResumeInput
 }
@@ -831,8 +769,6 @@ export type ResumeUpdateWithoutInterviewsInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   user?: Prisma.UserUpdateOneRequiredWithoutResumesNestedInput
-  resume_experience?: Prisma.resume_experienceUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUpdateManyWithoutPrimaryResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUpdateManyWithoutResumeNestedInput
 }
@@ -849,184 +785,6 @@ export type ResumeUncheckedUpdateWithoutInterviewsInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
-  resume_experience?: Prisma.resume_experienceUncheckedUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUncheckedUpdateOneWithoutResumeNestedInput
-  tailoredResumes?: Prisma.TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeNestedInput
-  candidatePipelines?: Prisma.CandidatePipelineUncheckedUpdateManyWithoutResumeNestedInput
-}
-
-export type ResumeCreateWithoutResume_experienceInput = {
-  id?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  content: string
-  name: string
-  isPrimary?: boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  status?: $Enums.ResumeStatus
-  interviews?: Prisma.interviewCreateNestedManyWithoutResumeInput
-  user: Prisma.UserCreateNestedOneWithoutResumesInput
-  resume_skills?: Prisma.resume_skillsCreateNestedOneWithoutResumeInput
-  tailoredResumes?: Prisma.TailoredResumeCreateNestedManyWithoutPrimaryResumeInput
-  candidatePipelines?: Prisma.CandidatePipelineCreateNestedManyWithoutResumeInput
-}
-
-export type ResumeUncheckedCreateWithoutResume_experienceInput = {
-  id?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  content: string
-  name: string
-  isPrimary?: boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  userId: string
-  status?: $Enums.ResumeStatus
-  interviews?: Prisma.interviewUncheckedCreateNestedManyWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsUncheckedCreateNestedOneWithoutResumeInput
-  tailoredResumes?: Prisma.TailoredResumeUncheckedCreateNestedManyWithoutPrimaryResumeInput
-  candidatePipelines?: Prisma.CandidatePipelineUncheckedCreateNestedManyWithoutResumeInput
-}
-
-export type ResumeCreateOrConnectWithoutResume_experienceInput = {
-  where: Prisma.ResumeWhereUniqueInput
-  create: Prisma.XOR<Prisma.ResumeCreateWithoutResume_experienceInput, Prisma.ResumeUncheckedCreateWithoutResume_experienceInput>
-}
-
-export type ResumeUpsertWithoutResume_experienceInput = {
-  update: Prisma.XOR<Prisma.ResumeUpdateWithoutResume_experienceInput, Prisma.ResumeUncheckedUpdateWithoutResume_experienceInput>
-  create: Prisma.XOR<Prisma.ResumeCreateWithoutResume_experienceInput, Prisma.ResumeUncheckedCreateWithoutResume_experienceInput>
-  where?: Prisma.ResumeWhereInput
-}
-
-export type ResumeUpdateToOneWithWhereWithoutResume_experienceInput = {
-  where?: Prisma.ResumeWhereInput
-  data: Prisma.XOR<Prisma.ResumeUpdateWithoutResume_experienceInput, Prisma.ResumeUncheckedUpdateWithoutResume_experienceInput>
-}
-
-export type ResumeUpdateWithoutResume_experienceInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  content?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  isPrimary?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
-  interviews?: Prisma.interviewUpdateManyWithoutResumeNestedInput
-  user?: Prisma.UserUpdateOneRequiredWithoutResumesNestedInput
-  resume_skills?: Prisma.resume_skillsUpdateOneWithoutResumeNestedInput
-  tailoredResumes?: Prisma.TailoredResumeUpdateManyWithoutPrimaryResumeNestedInput
-  candidatePipelines?: Prisma.CandidatePipelineUpdateManyWithoutResumeNestedInput
-}
-
-export type ResumeUncheckedUpdateWithoutResume_experienceInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  content?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  isPrimary?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
-  interviews?: Prisma.interviewUncheckedUpdateManyWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUncheckedUpdateOneWithoutResumeNestedInput
-  tailoredResumes?: Prisma.TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeNestedInput
-  candidatePipelines?: Prisma.CandidatePipelineUncheckedUpdateManyWithoutResumeNestedInput
-}
-
-export type ResumeCreateWithoutResume_skillsInput = {
-  id?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  content: string
-  name: string
-  isPrimary?: boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  status?: $Enums.ResumeStatus
-  interviews?: Prisma.interviewCreateNestedManyWithoutResumeInput
-  user: Prisma.UserCreateNestedOneWithoutResumesInput
-  resume_experience?: Prisma.resume_experienceCreateNestedOneWithoutResumeInput
-  tailoredResumes?: Prisma.TailoredResumeCreateNestedManyWithoutPrimaryResumeInput
-  candidatePipelines?: Prisma.CandidatePipelineCreateNestedManyWithoutResumeInput
-}
-
-export type ResumeUncheckedCreateWithoutResume_skillsInput = {
-  id?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  content: string
-  name: string
-  isPrimary?: boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  userId: string
-  status?: $Enums.ResumeStatus
-  interviews?: Prisma.interviewUncheckedCreateNestedManyWithoutResumeInput
-  resume_experience?: Prisma.resume_experienceUncheckedCreateNestedOneWithoutResumeInput
-  tailoredResumes?: Prisma.TailoredResumeUncheckedCreateNestedManyWithoutPrimaryResumeInput
-  candidatePipelines?: Prisma.CandidatePipelineUncheckedCreateNestedManyWithoutResumeInput
-}
-
-export type ResumeCreateOrConnectWithoutResume_skillsInput = {
-  where: Prisma.ResumeWhereUniqueInput
-  create: Prisma.XOR<Prisma.ResumeCreateWithoutResume_skillsInput, Prisma.ResumeUncheckedCreateWithoutResume_skillsInput>
-}
-
-export type ResumeUpsertWithoutResume_skillsInput = {
-  update: Prisma.XOR<Prisma.ResumeUpdateWithoutResume_skillsInput, Prisma.ResumeUncheckedUpdateWithoutResume_skillsInput>
-  create: Prisma.XOR<Prisma.ResumeCreateWithoutResume_skillsInput, Prisma.ResumeUncheckedCreateWithoutResume_skillsInput>
-  where?: Prisma.ResumeWhereInput
-}
-
-export type ResumeUpdateToOneWithWhereWithoutResume_skillsInput = {
-  where?: Prisma.ResumeWhereInput
-  data: Prisma.XOR<Prisma.ResumeUpdateWithoutResume_skillsInput, Prisma.ResumeUncheckedUpdateWithoutResume_skillsInput>
-}
-
-export type ResumeUpdateWithoutResume_skillsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  content?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  isPrimary?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
-  interviews?: Prisma.interviewUpdateManyWithoutResumeNestedInput
-  user?: Prisma.UserUpdateOneRequiredWithoutResumesNestedInput
-  resume_experience?: Prisma.resume_experienceUpdateOneWithoutResumeNestedInput
-  tailoredResumes?: Prisma.TailoredResumeUpdateManyWithoutPrimaryResumeNestedInput
-  candidatePipelines?: Prisma.CandidatePipelineUpdateManyWithoutResumeNestedInput
-}
-
-export type ResumeUncheckedUpdateWithoutResume_skillsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  content?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  isPrimary?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  extractedData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  analysisData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
-  interviews?: Prisma.interviewUncheckedUpdateManyWithoutResumeNestedInput
-  resume_experience?: Prisma.resume_experienceUncheckedUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedUpdateManyWithoutResumeNestedInput
 }
@@ -1044,8 +802,6 @@ export type ResumeCreateWithoutCandidatePipelinesInput = {
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewCreateNestedManyWithoutResumeInput
   user: Prisma.UserCreateNestedOneWithoutResumesInput
-  resume_experience?: Prisma.resume_experienceCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeCreateNestedManyWithoutPrimaryResumeInput
 }
 
@@ -1062,8 +818,6 @@ export type ResumeUncheckedCreateWithoutCandidatePipelinesInput = {
   userId: string
   status?: $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedCreateNestedManyWithoutResumeInput
-  resume_experience?: Prisma.resume_experienceUncheckedCreateNestedOneWithoutResumeInput
-  resume_skills?: Prisma.resume_skillsUncheckedCreateNestedOneWithoutResumeInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedCreateNestedManyWithoutPrimaryResumeInput
 }
 
@@ -1096,8 +850,6 @@ export type ResumeUpdateWithoutCandidatePipelinesInput = {
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUpdateManyWithoutResumeNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutResumesNestedInput
-  resume_experience?: Prisma.resume_experienceUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUpdateManyWithoutPrimaryResumeNestedInput
 }
 
@@ -1114,8 +866,6 @@ export type ResumeUncheckedUpdateWithoutCandidatePipelinesInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedUpdateManyWithoutResumeNestedInput
-  resume_experience?: Prisma.resume_experienceUncheckedUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUncheckedUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeNestedInput
 }
 
@@ -1144,8 +894,6 @@ export type ResumeUpdateWithoutUserInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUpdateManyWithoutResumeNestedInput
-  resume_experience?: Prisma.resume_experienceUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUpdateManyWithoutPrimaryResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUpdateManyWithoutResumeNestedInput
 }
@@ -1162,8 +910,6 @@ export type ResumeUncheckedUpdateWithoutUserInput = {
   scoreData?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumResumeStatusFieldUpdateOperationsInput | $Enums.ResumeStatus
   interviews?: Prisma.interviewUncheckedUpdateManyWithoutResumeNestedInput
-  resume_experience?: Prisma.resume_experienceUncheckedUpdateOneWithoutResumeNestedInput
-  resume_skills?: Prisma.resume_skillsUncheckedUpdateOneWithoutResumeNestedInput
   tailoredResumes?: Prisma.TailoredResumeUncheckedUpdateManyWithoutPrimaryResumeNestedInput
   candidatePipelines?: Prisma.CandidatePipelineUncheckedUpdateManyWithoutResumeNestedInput
 }
@@ -1244,8 +990,6 @@ export type ResumeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   status?: boolean
   interviews?: boolean | Prisma.Resume$interviewsArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  resume_experience?: boolean | Prisma.Resume$resume_experienceArgs<ExtArgs>
-  resume_skills?: boolean | Prisma.Resume$resume_skillsArgs<ExtArgs>
   tailoredResumes?: boolean | Prisma.Resume$tailoredResumesArgs<ExtArgs>
   candidatePipelines?: boolean | Prisma.Resume$candidatePipelinesArgs<ExtArgs>
   _count?: boolean | Prisma.ResumeCountOutputTypeDefaultArgs<ExtArgs>
@@ -1299,8 +1043,6 @@ export type ResumeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type ResumeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   interviews?: boolean | Prisma.Resume$interviewsArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  resume_experience?: boolean | Prisma.Resume$resume_experienceArgs<ExtArgs>
-  resume_skills?: boolean | Prisma.Resume$resume_skillsArgs<ExtArgs>
   tailoredResumes?: boolean | Prisma.Resume$tailoredResumesArgs<ExtArgs>
   candidatePipelines?: boolean | Prisma.Resume$candidatePipelinesArgs<ExtArgs>
   _count?: boolean | Prisma.ResumeCountOutputTypeDefaultArgs<ExtArgs>
@@ -1317,8 +1059,6 @@ export type $ResumePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   objects: {
     interviews: Prisma.$interviewPayload<ExtArgs>[]
     user: Prisma.$UserPayload<ExtArgs>
-    resume_experience: Prisma.$resume_experiencePayload<ExtArgs> | null
-    resume_skills: Prisma.$resume_skillsPayload<ExtArgs> | null
     tailoredResumes: Prisma.$TailoredResumePayload<ExtArgs>[]
     candidatePipelines: Prisma.$CandidatePipelinePayload<ExtArgs>[]
   }
@@ -1730,8 +1470,6 @@ export interface Prisma__ResumeClient<T, Null = never, ExtArgs extends runtime.T
   readonly [Symbol.toStringTag]: "PrismaPromise"
   interviews<T extends Prisma.Resume$interviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Resume$interviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$interviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  resume_experience<T extends Prisma.Resume$resume_experienceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Resume$resume_experienceArgs<ExtArgs>>): Prisma.Prisma__resume_experienceClient<runtime.Types.Result.GetResult<Prisma.$resume_experiencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  resume_skills<T extends Prisma.Resume$resume_skillsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Resume$resume_skillsArgs<ExtArgs>>): Prisma.Prisma__resume_skillsClient<runtime.Types.Result.GetResult<Prisma.$resume_skillsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   tailoredResumes<T extends Prisma.Resume$tailoredResumesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Resume$tailoredResumesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TailoredResumePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   candidatePipelines<T extends Prisma.Resume$candidatePipelinesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Resume$candidatePipelinesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CandidatePipelinePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -2191,44 +1929,6 @@ export type Resume$interviewsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.InterviewScalarFieldEnum | Prisma.InterviewScalarFieldEnum[]
-}
-
-/**
- * Resume.resume_experience
- */
-export type Resume$resume_experienceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the resume_experience
-   */
-  select?: Prisma.resume_experienceSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the resume_experience
-   */
-  omit?: Prisma.resume_experienceOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.resume_experienceInclude<ExtArgs> | null
-  where?: Prisma.resume_experienceWhereInput
-}
-
-/**
- * Resume.resume_skills
- */
-export type Resume$resume_skillsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the resume_skills
-   */
-  select?: Prisma.resume_skillsSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the resume_skills
-   */
-  omit?: Prisma.resume_skillsOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.resume_skillsInclude<ExtArgs> | null
-  where?: Prisma.resume_skillsWhereInput
 }
 
 /**

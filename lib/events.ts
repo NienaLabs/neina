@@ -1,12 +1,17 @@
 import EventEmitter from 'events';
 
 /**
- * Global event emitter for Server-Sent Events (SSE)
+ * Global event emitter for Server-Sent Events (SSE).
+ * Cached on globalThis to survive Next.js dev-mode hot module reloads,
+ * ensuring the SSE route and Inngest handlers always share the same instance.
  */
-export const eventEmitter = new EventEmitter();
+const globalForEvents = globalThis as unknown as { sseEventEmitter?: EventEmitter };
 
-// Increase max listeners to prevent warnings
-eventEmitter.setMaxListeners(100);
+export const eventEmitter = globalForEvents.sseEventEmitter ??= (() => {
+    const emitter = new EventEmitter();
+    emitter.setMaxListeners(100);
+    return emitter;
+})();
 
 /**
  * Event Types for SSE
@@ -20,6 +25,10 @@ export type SSEEvent =
     }
     | { type: 'INTERVIEW_READY'; data: { interviewId: string } }
     | { type: 'RESUME_READY'; data: { resumeId: string } }
+    | { type: 'TAILORED_RESUME_READY'; data: { resumeId: string; action?: string } }
+    | { type: 'COVER_LETTER_READY'; data: { resumeId: string } }
+    | { type: 'RESUME_FAILED'; data: { resumeId: string } }
+    | { type: 'TAILORED_RESUME_FAILED'; data: { resumeId: string; action?: string } }
     | {
         type: 'NEW_NOTIFICATION'; data: {
             notification?: any; // Full notification object (optional for backward compatibility)
@@ -30,6 +39,12 @@ export type SSEEvent =
     | { type: 'NOTIFICATION_DELETED'; data: { notificationId: string } }
     | { type: 'ALL_NOTIFICATIONS_READ'; data: {} }
     | { type: 'PUSH_SUBSCRIPTION_UPDATE'; data: { isSubscribed: boolean; deviceCount: number } }
+    | { type: 'ITEM_REGENERATED_READY'; data: { itemId: string; resumeId: string; newBullets: string[]; changeSummary?: string } }
+    | { type: 'ITEM_REGENERATED_FAILED'; data: { itemId: string; resumeId: string; error: string } }
+    | { type: 'SKILLS_REGENERATED_READY'; data: { resumeId: string; newSkills: string[]; changeSummary?: string } }
+    | { type: 'SKILLS_REGENERATED_FAILED'; data: { resumeId: string; error: string } }
+    | { type: 'OUTREACH_MESSAGE_READY'; data: { message: string, resumeId: string } }
+    | { type: 'OUTREACH_MESSAGE_FAILED'; data: { resumeId: string; error: string } }
     | { type: 'PING'; data: { timestamp: number } };
 
 /**

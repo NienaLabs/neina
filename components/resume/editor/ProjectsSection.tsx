@@ -63,33 +63,31 @@ export const ProjectsSection = ({
 }: ProjectsSectionProps) => {
   return (
     <section>
-      <div className="text-xl font-semibold flex items-center justify-between">
-        <div className="flex flex-row gap-2 items-center">
-          <h2 className="text-xl font-semibold mb-3">Projects</h2>
-          <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay 
-              fixes={fixes} 
-              section="projects" 
-              onApplyFix={(fix) => onUpdate(fix.autoFix)}
-            />
-          </div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Projects</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleArrayAdd('projects', {
+                name: '',
+                description: '',
+                technologies: [''],
+                role: '',
+                link: '',
+                customFields: [],
+              })
+            }
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Project
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleArrayAdd('projects', {
-              name: '',
-              description: '',
-              technologies: [''],
-              role: '',
-              link: '',
-              customFields: [],
-            })
-          }
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Project
-        </Button>
+        <FixesDisplay 
+          fixes={fixes} 
+          section="projects" 
+          onApplyFix={(fix) => onUpdate(fix.autoFix)}
+        />
       </div>
 
       <div className="flex flex-col gap-6">

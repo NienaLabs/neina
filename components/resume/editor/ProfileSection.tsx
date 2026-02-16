@@ -29,18 +29,16 @@ export const ProfileSection = ({
     <>
       {profile && (
         <section>
-          <div className="flex flex-row gap-2 items-center">
-            <h2 className="text-xl font-semibold mb-3">Profile</h2>
-            <div className="p-1 mb-3 flex items-center justify-center">
-              <FixesDisplay 
-                fixes={fixes} 
-                section="profile" 
-                onApplyFix={(fix) => {
-                  if (onFixApply) onFixApply('profile', fix.autoFix);
-                  else handleFieldChange('profile', fix.autoFix);
-                }}
-              />
-            </div>
+          <div className="mb-3">
+            <h2 className="text-xl font-semibold">Profile</h2>
+            <FixesDisplay 
+              fixes={fixes} 
+              section="profile" 
+              onApplyFix={(fix) => {
+                if (onFixApply) onFixApply('profile', fix.autoFix);
+                else handleFieldChange('profile', fix.autoFix);
+              }}
+            />
           </div>
           <Textarea
             rows={4}

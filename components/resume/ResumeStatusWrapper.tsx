@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { trpc } from '@/trpc/client'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { ResumeControlProvider, useResumeControl } from './ResumeControlContext'
 import { useServerEvents } from "@/hooks/useServerEvents"
 
@@ -38,6 +39,12 @@ function ResumeStatusLogic({ resumeId, children }: ResumeStatusWrapperProps) {
       console.log("🚀 [SSE] Resume is ready! Refreshing...");
       utils.resume.getUnique.invalidate({ resumeId });
     }
+
+    if (event.type === 'RESUME_FAILED' && event.data.resumeId === resumeId && isPending) {
+      console.error("❌ [SSE] Resume processing failed!");
+      toast.error('Resume processing failed. Please try again.');
+      utils.resume.getUnique.invalidate({ resumeId });
+    }
   });
 
   useEffect(() => {
@@ -71,7 +78,7 @@ function ResumeStatusLogic({ resumeId, children }: ResumeStatusWrapperProps) {
 }
 
 /**
- * Wrapper component that provides context and polling logic.
+ * Wrapper component that provides context and SSE-driven status updates.
  */
 export function ResumeStatusWrapper(props: ResumeStatusWrapperProps) {
   return (

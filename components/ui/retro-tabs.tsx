@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 const RetroTabs = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root> & {
-    tabs: { id: string; label: string; disabled?: boolean }[]
+    tabs: { id: string; label: string; icon?: React.ReactNode; disabled?: boolean }[]
     activeTab: string
     onTabChange: (id: string) => void
   }
@@ -19,19 +19,21 @@ const RetroTabs = React.forwardRef<
     onValueChange={onTabChange}
     {...props}
   >
-    <TabsPrimitive.List className="flex items-center gap-2 border-b-2 border-black bg-[#E5E5E0] px-4 pb-0">
+    <TabsPrimitive.List className="flex items-center gap-1 bg-transparent px-4 pb-2 overflow-x-hidden min-w-0">
       {tabs.map((tab) => (
         <TabsPrimitive.Trigger
           key={tab.id}
           value={tab.id}
           disabled={tab.disabled}
+          title={tab.label}
           className={cn(
-            "relative -mb-[2px] border-2 border-transparent px-4 py-2 font-mono text-sm font-bold uppercase transition-all disabled:opacity-50",
-            "data-[state=active]:border-black data-[state=active]:bg-white data-[state=active]:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
-            "hover:not-disabled:text-blue-700"
+            "relative -mb-[2px] rounded-xl px-3 py-2 font-mono text-xs font-bold uppercase transition-all disabled:opacity-50 flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+            "data-[state=active]:tab-active data-[state=active]:bg-white data-[state=active]:text-primary-purple",
+            "hover:not-disabled:bg-white/50"
           )}
         >
-          {tab.label}
+          {tab.icon && <span className="shrink-0">{tab.icon}</span>}
+          <span className={tab.icon ? "hidden xl:inline" : ""}>{tab.label}</span>
         </TabsPrimitive.Trigger>
       ))}
     </TabsPrimitive.List>

@@ -43,9 +43,11 @@ import { toast } from 'sonner';
 interface ResumeFormProps {
   resumeData: ResumeData | null;
   onUpdate: (data: ResumeData) => void;
+  resumeId: string;
+  onRegenerateStart?: (type: string) => void;
 }
 
-export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeData, onUpdate }) => {
+export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeData, onUpdate, resumeId, onRegenerateStart }) => {
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
 
@@ -154,6 +156,8 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeD
             return <ExperienceForm 
                     data={inputResumeData.workExperience || []} 
                     onChange={(val) => onUpdate({...inputResumeData, workExperience: val})} 
+                    resumeId={resumeId}
+                    onRegenerateStart={onRegenerateStart}
                    />;
         case 'education':
             return <EducationForm 
@@ -169,6 +173,8 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeD
             return <SkillsForm 
                     data={inputResumeData.additional || { technicalSkills: [], languages: [], certificationsTraining: [], awards: [] }} 
                     onChange={(val) => onUpdate({...inputResumeData, additional: val})} 
+                    resumeId={resumeId}
+                    onRegenerateStart={onRegenerateStart}
                    />;
         default:
              const customKey = section.key;

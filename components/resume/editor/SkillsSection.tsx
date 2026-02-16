@@ -32,15 +32,13 @@ export const SkillsSection = ({
 }: SkillsSectionProps) => {
   return (
     <section>
-      <div className="flex flex-row gap-2 items-center">
-        <h2 className="text-xl font-semibold mb-3">Skills</h2>
-        <div className="p-1 mb-3 flex items-center justify-center">
-          <FixesDisplay 
-            fixes={fixes} 
-            section="skills" 
-            onApplyFix={(fix) => onUpdate(fix.autoFix)}
-          />
-        </div>
+      <div className="mb-3">
+        <h2 className="text-xl font-semibold">Skills</h2>
+        <FixesDisplay 
+          fixes={fixes} 
+          section="skills" 
+          onApplyFix={(fix) => onUpdate(fix.autoFix)}
+        />
       </div>
       {Object.entries(skills).map(([type, skillList]) => {
         // Safeguard: ensure skillList is an array

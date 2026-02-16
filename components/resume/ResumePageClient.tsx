@@ -63,8 +63,14 @@ const ResumePageClient = () => {
 
   // SSE Listener for real-time resume status updates
   useServerEvents((event) => {
-    if (event.type === 'RESUME_READY') {
-      console.log("🚀 [SSE] A resume is ready! Refreshing resumes list...");
+    if (event.type === 'RESUME_READY' || event.type === 'TAILORED_RESUME_READY' || event.type === 'COVER_LETTER_READY') {
+      console.log(`🚀 [SSE] ${event.type} received! Refreshing resumes list...`);
+      utils.resume.getPrimaryResumes.invalidate();
+    }
+
+    if (event.type === 'RESUME_FAILED' || event.type === 'TAILORED_RESUME_FAILED') {
+      console.error(`❌ [SSE] ${event.type} received for resume ${event.data.resumeId}`);
+      toast.error('Resume processing failed. Please try again.');
       utils.resume.getPrimaryResumes.invalidate();
     }
   });

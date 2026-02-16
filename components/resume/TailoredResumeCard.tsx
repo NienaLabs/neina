@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { MoreHorizontal, Edit, Trash2, Star, Briefcase, Calendar, Loader2 } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Star, Briefcase, Calendar, Loader2, X } from "lucide-react";
 import CircularProgress from "@/components/progress-circle";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,19 @@ const TailoredResumeCard: React.FC<TailoredResumeCardProps> = ({ resume, onSetPr
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
           <p className="text-xs font-semibold text-primary mt-2 animate-pulse">Processing...</p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive pointer-events-auto"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onDelete(resume.id);
+            }}
+            title="Stop & Delete"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       )}
 

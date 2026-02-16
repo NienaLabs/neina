@@ -227,7 +227,7 @@ export default function DashboardPage() {
             icon={Zap}
             description="Available to use"
             hideProgress
-            gradient="from-violet-500/10 to-indigo-500/10"
+           // gradient="from-violet-500/10 to-indigo-500/10"
             iconColor="text-violet-600 dark:text-violet-400"
             delay={0}
             tooltip="AI credits used for resume optimization and analysis. Each optimization costs 1 credit."
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             icon={FileText}
             description="Latest analysis score"
             progress={data.resumeStrength}
-            gradient="from-fuchsia-500/10 to-pink-500/10"
+         //   gradient="from-fuchsia-500/10 to-pink-500/10"
             iconColor="text-fuchsia-600 dark:text-fuchsia-400"
             delay={100}
             tooltip="Calculated based on your latest resume analysis score"
@@ -249,7 +249,7 @@ export default function DashboardPage() {
             icon={Video}
             description={`${data.aiInsight.interviewCount} sessions done`}
             progress={data.aiInsight.readiness}
-            gradient="from-blue-500/10 to-cyan-500/10"
+           // gradient="from-blue-500/10 to-cyan-500/10"
             iconColor="text-blue-600 dark:text-blue-400"
             delay={200}
             tooltip="The average score of all your analyzed interviews. Higher scores indicate better performance."
@@ -261,7 +261,7 @@ export default function DashboardPage() {
             description="Minutes remaining"
             progress={(data.credits / 30) * 100}
             hideProgress
-            gradient="from-amber-500/10 to-orange-500/10"
+           // gradient="from-amber-500/10 to-orange-500/10"
             iconColor="text-amber-600 dark:text-amber-400"
             delay={300}
             tooltip="Minutes available for AI mock interviews. Credits are deducted based on interview duration."

@@ -66,10 +66,14 @@ export const handleArrayAdd = (
   setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
   setSave: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  setEditorState((prev) => ({
-    ...prev!,
-    [section]: [...((prev![section] as any[]) || []), newItem],
-  }));
+  setEditorState((prev) => {
+    const existing = prev![section];
+    const arr = Array.isArray(existing) ? existing : [];
+    return {
+      ...prev!,
+      [section]: [...arr, newItem],
+    };
+  });
   setSave(true);
 };
 

@@ -1,4 +1,4 @@
-import { analysisPrompt, extractionPrompt, scorePrompt, skillsExtractorPrompt, experienceExtractorPrompt, jobExtractionPrompt, autofixPrompt, resumeScopePrompt, normalizationPrompt, resumeSummaryPrompt, domainTranslationPrompt, roleClassifierPrompt, EXTRACT_KEYWORDS_PROMPT } from "@/constants/prompts";
+import { analysisPrompt, extractionPrompt, scorePrompt, jobExtractionPrompt, autofixPrompt, resumeScopePrompt, normalizationPrompt, resumeSummaryPrompt, domainTranslationPrompt, roleClassifierPrompt, EXTRACT_KEYWORDS_PROMPT } from "@/constants/prompts";
 import { createAgent, openai } from "@inngest/agent-kit";
 import { lastAssistantTextMessageContent, validJson } from "@/lib/utils";
 
@@ -91,43 +91,7 @@ export const autofixAgent = createAgent({
 
 });
 
-// Skills & Certifications extractor agent
-export const skillsExtractorAgent = createAgent({
-  name: "skills-extractor-agent",
-  system: skillsExtractorPrompt,
-  model: openai({
-    model: process.env.OPENAI_MODEL!,
-    baseUrl: process.env.OPENAI_BASE_URL!,
-  }),
-  lifecycle: {
-    onResponse: async ({ result, network }) => {
-      const assistantMessage = lastAssistantTextMessageContent(result);
-      if (assistantMessage && network) {
-        network.state.data.skillsExtractorAgent = extractJson(assistantMessage);
-      }
-      return result;
-    },
-  },
-});
 
-// Experience extractor agent
-export const experienceExtractorAgent = createAgent({
-  name: "experience-extractor-agent",
-  system: experienceExtractorPrompt,
-  model: openai({
-    model: process.env.OPENAI_MODEL!,
-    baseUrl: process.env.OPENAI_BASE_URL!,
-  }),
-  lifecycle: {
-    onResponse: async ({ result, network }) => {
-      const assistantMessage = lastAssistantTextMessageContent(result);
-      if (assistantMessage && network) {
-        network.state.data.experienceExtractorAgent = extractJson(assistantMessage);
-      }
-      return result;
-    },
-  },
-});
 
 
 
@@ -372,6 +336,63 @@ export const coverLetterAgent = createAgent({
       const assistantMessage = lastAssistantTextMessageContent(result);
       if (assistantMessage && network) {
         network.state.data.coverLetterAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const regenerateItemAgent = createAgent({
+  name: "regenerate-item-agent",
+  system: "You are an expert resume writer specializing in rewriting experience descriptions.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0.7 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.regenerateItemAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const regenerateSkillsAgent = createAgent({
+  name: "regenerate-skills-agent",
+  system: "You are an expert resume writer specializing in technical skills sections.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0.5 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.regenerateSkillsAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
+});
+
+export const outreachMessageAgent = createAgent({
+  name: "outreach-message-agent",
+  system: "You are an expert career coach and networking specialist.",
+  model: openai({
+    model: process.env.OPENAI_MODEL!,
+    baseUrl: process.env.OPENAI_BASE_URL!,
+    defaultParameters: { temperature: 0.7 },
+  }),
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.outreachMessageAgent = assistantMessage;
       }
       return result;
     },

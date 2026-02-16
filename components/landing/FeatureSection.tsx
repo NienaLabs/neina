@@ -53,7 +53,12 @@ const FeatureSection = ({
         {/* Content Grid */}
         <div className={`grid grid-cols-1 md:grid-cols-2  gap-0 md:gap-12 items-center ${reversed ? 'md:flex md:flex-row-reverse justify-around' : ''}`}>
           {/* Media */}
-          <div className={" relative h-[400] w-[300] place-self-center flex items-center"}>
+          <div className={cn(
+            "relative place-self-center flex items-center overflow-hidden",
+            media.type === 'image' 
+              ? "w-full max-w-[500px] aspect-[1216/880] rounded-xl shadow-2xl" 
+              : "h-[400px] w-[300px]"
+          )}>
             {media.type === 'image' ? (
                 <Image
                   src={media.src}
@@ -75,7 +80,7 @@ const FeatureSection = ({
           {/* Features & CTA */}
           <div className="flex flex-col">
             {/* Bullets */}
-            <ul className="space-y-4 bg-white p-2 border rounded-lg mb-8">
+            <ul className="space-y-4 premium-glow premium-glow-white p-6 rounded-xl mb-8">
               {bullets.map((bullet, index) => (
                 <li
                   key={index}

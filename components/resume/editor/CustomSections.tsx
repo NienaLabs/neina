@@ -43,33 +43,31 @@ export const CustomSections = ({
 
   return (
     <section>
-      <div className="text-xl font-semibold mb-3 flex items-center justify-between">
-        <div className="flex flex-row gap-2 items-center">
-          <h2 className="text-xl font-semibold mb-3">Other Sections</h2>
-          <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay 
-              fixes={fixes} 
-              section="otherSections" 
-              onApplyFix={(fix) => {
-                // Validate autoFix data is an array before applying
-                if (Array.isArray(fix.autoFix)) {
-                  onUpdate(fix.autoFix);
-                } else {
-                  console.warn('Auto-fix data for customSections is not an array:', fix.autoFix);
-                }
-              }}
-            />
-          </div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Other Sections</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleArrayAdd('customSections', { sectionName: 'New Section', entries: [] })
+            }
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Custom Section
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleArrayAdd('customSections', { sectionName: 'New Section', entries: [] })
-          }
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Custom Section
-        </Button>
+        <FixesDisplay 
+          fixes={fixes} 
+          section="otherSections" 
+          onApplyFix={(fix) => {
+            // Validate autoFix data is an array before applying
+            if (Array.isArray(fix.autoFix)) {
+              onUpdate(fix.autoFix);
+            } else {
+              console.warn('Auto-fix data for customSections is not an array:', fix.autoFix);
+            }
+          }}
+        />
       </div>
 
       <div className="flex flex-col gap-6">

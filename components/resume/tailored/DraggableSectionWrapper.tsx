@@ -38,8 +38,8 @@ export const DraggableSectionWrapper = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'relative bg-white border-2 border-transparent transition-all mb-4',
-        isDragging && 'shadow-xl z-50 border-blue-500 scale-[1.02]'
+        'relative bg-white border-none rounded-2xl soft-glow transition-all mb-4',
+        isDragging && 'z-50 scale-[1.02] ring-2 ring-primary-purple'
       )}
     >
       {!disabled && (

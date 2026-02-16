@@ -427,7 +427,7 @@ export const adminRouter = createTRPCRouter({
 
         // Trigger the daily job feed event
         await inngest.send({
-            name: 'jobs/daily.feed',
+            name: 'admin/trigger.job.feed',
             data: {},
         });
 

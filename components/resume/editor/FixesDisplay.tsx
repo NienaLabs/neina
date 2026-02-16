@@ -28,7 +28,7 @@ export const FixesDisplay = ({ fixes, section, onApplyFix }: FixesDisplayProps) 
     const autoFixable = sectionFixes.find((f) => f.autoFix);
     
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center my-2 justify-between">
         <Hint
           hint={
             <div className="max-h-80 overflow-auto p-2 space-y-2 text-sm">

@@ -54,36 +54,34 @@ export const EducationSection = ({
 }: EducationSectionProps) => {
   return (
     <section>
-      <div className="text-xl font-semibold flex items-center justify-between">
-        <div className="flex flex-row gap-2 items-center">
-          <h2 className="text-xl font-semibold mb-3">Education</h2>
-          <div className="p-1 mb-3 flex items-center justify-center">
-            <FixesDisplay
-              fixes={fixes}
-              section="education"
-              onApplyFix={(fix) => onUpdate(fix.autoFix)}
-            />
-          </div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Education</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleArrayAdd('education', {
+                institution: '',
+                degree: '',
+                fieldOfStudy: '',
+                startDate: '',
+                endDate: '',
+                grade: '',
+                location: '',
+                description: '',
+                customFields: [],
+              })
+            }
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Education
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            handleArrayAdd('education', {
-              institution: '',
-              degree: '',
-              fieldOfStudy: '',
-              startDate: '',
-              endDate: '',
-              grade: '',
-              location: '',
-              description: '',
-              customFields: [],
-            })
-          }
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Education
-        </Button>
+        <FixesDisplay
+          fixes={fixes}
+          section="education"
+          onApplyFix={(fix) => onUpdate(fix.autoFix)}
+        />
       </div>
 
       <div className="flex flex-col gap-6">

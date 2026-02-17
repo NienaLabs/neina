@@ -10,7 +10,8 @@
     "cy:open": "cypress open",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint:fix": "eslint --fix"
+    "lint:fix": "eslint --fix",
+    "postinstall": "prisma generate"
   },
   "type": "module",
   "dependencies": {

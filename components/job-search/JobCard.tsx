@@ -38,9 +38,6 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
     : "Recently";
 
   const matchScore = Math.round(job.total_similarity * 100);
-  const skillsScore = Math.round(job.skill_similarity * 100);
-  const respScore = Math.round(job.responsibility_similarity * 100);
-  const contentScore = job.overall_similarity ? Math.round(job.overall_similarity * 100) : 0;
 
   return (
     <Card className="group relative overflow-hidden border-border/50 bg-gradient-to-br from-background to-muted/20 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full">
@@ -122,54 +119,6 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
              <Eye className="w-3 h-3 text-violet-400" />
              {job.viewCount || 0} views
           </Badge>
-        </div>
-
-        {/* Detailed Scores */}
-        <div className="grid grid-cols-3 gap-3 py-3 border-t border-dashed border-border/60">
-             <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">Content</span>
-                    <span className={cn("font-bold", contentScore > 70 ? "text-indigo-600" : "text-muted-foreground")}>{contentScore}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div 
-                        className={cn("h-full rounded-full transition-all duration-500", 
-                            contentScore > 70 ? "bg-indigo-500" : contentScore > 40 ? "bg-purple-500" : "bg-pink-400"
-                        )} 
-                        style={{ width: `${contentScore}%` }} 
-                    />
-                </div>
-            </div>
-
-            <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">Skills</span>
-                    <span className={cn("font-bold", skillsScore > 70 ? "text-green-600" : "text-muted-foreground")}>{skillsScore}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div 
-                        className={cn("h-full rounded-full transition-all duration-500", 
-                            skillsScore > 70 ? "bg-green-500" : skillsScore > 40 ? "bg-emerald-500" : "bg-teal-400"
-                        )} 
-                        style={{ width: `${skillsScore}%` }} 
-                    />
-                </div>
-            </div>
-            
-            <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">Exp</span>
-                    <span className={cn("font-bold", respScore > 70 ? "text-blue-600" : "text-muted-foreground")}>{respScore}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div 
-                        className={cn("h-full rounded-full transition-all duration-500", 
-                            respScore > 70 ? "bg-blue-500" : respScore > 40 ? "bg-sky-500" : "bg-cyan-400"
-                        )} 
-                        style={{ width: `${respScore}%` }} 
-                    />
-                </div>
-            </div>
         </div>
 
         {/* Description Snippet */}

@@ -70,8 +70,8 @@ export const SkillsForm = ({ data, onChange, resumeId, onRegenerateStart }: Skil
 
   return (
     <div className="space-y-6">
-       <div className="flex justify-between items-center mb-2 border-b border-gray-200 pb-2">
-         <h4 className="font-bold text-gray-700">Skills & Additional</h4>
+       <div className="flex justify-between items-center mb-2 border-b pb-3">
+         <h4 className="text-xl font-semibold">Skills & Additional</h4>
        </div>
 
        <div className="space-y-4">

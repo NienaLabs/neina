@@ -1,20 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import dragula from 'dragula';
+
 import { ResumeData, SectionMeta, DEFAULT_SECTION_META } from '@/lib/types/resume';
 import { DraggableSectionWrapper } from './DraggableSectionWrapper';
 import { PersonalInfoForm } from './forms/PersonalInfoForm'; 
@@ -50,12 +38,13 @@ interface ResumeFormProps {
 export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeData, onUpdate, resumeId, onRegenerateStart }) => {
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
-  if (!inputResumeData) return <div>Loading data...</div>;
+
 
   // Merge extracted custom sections into sectionMeta if they exist but aren't in meta yet
-  const rawMeta = inputResumeData.sectionMeta || DEFAULT_SECTION_META;
-  const customSectionKeys = Object.keys(inputResumeData.customSections || {});
+  const rawMeta = inputResumeData?.sectionMeta || DEFAULT_SECTION_META;
+  const customSectionKeys = Object.keys(inputResumeData?.customSections || {});
   
   const missingKeys = customSectionKeys.filter(key => !rawMeta.find(s => s.key === key));
   
@@ -63,7 +52,7 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeD
      if (missingKeys.length === 0) return rawMeta;
      
      const newSections: SectionMeta[] = missingKeys.map((key, index) => {
-         const sectionData = inputResumeData.customSections?.[key];
+         const sectionData = inputResumeData?.customSections?.[key];
          return {
              id: key,
              key: key,
@@ -76,36 +65,59 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeD
      });
      
      return [...rawMeta, ...newSections];
-  }, [rawMeta, missingKeys.join(','), inputResumeData.customSections]);
+  }, [rawMeta, missingKeys.join(','), inputResumeData?.customSections]);
 
-  // Sorting handlers
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  // Refs for stable access inside Dragula event handlers (avoids stale closures)
+  const sectionMetaRef = React.useRef(sectionMeta);
+  sectionMetaRef.current = sectionMeta;
+  const inputResumeDataRef = React.useRef(inputResumeData);
+  inputResumeDataRef.current = inputResumeData;
+  const onUpdateRef = React.useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  // Dragula Effect — initialized once, uses refs for stable access to latest state
+  React.useEffect(() => {
+    if (!containerRef.current) return;
 
-    const oldIndex = sectionMeta.findIndex((s) => s.id === active.id);
-    const newIndex = sectionMeta.findIndex((s) => s.id === over.id);
+    const drake = dragula([containerRef.current], {
+      moves: (_el, _container, handle) => {
+        return !!handle?.closest('.drag-handle');
+      },
+    });
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-        const newMeta = [...sectionMeta];
-        const [moved] = newMeta.splice(oldIndex, 1);
-        newMeta.splice(newIndex, 0, moved);
-        
-        const updatedMeta = newMeta.map((s, idx) => ({ ...s, order: idx }));
-        
-        onUpdate({
-            ...inputResumeData,
-            sectionMeta: updatedMeta
-        });
-    }
-  };
+    drake.on('drop', () => {
+      if (!containerRef.current) return;
+      
+      const newOrderIds = Array.from(containerRef.current.children)
+        .map((child) => (child as HTMLElement).dataset.id)
+        .filter(Boolean) as string[];
+
+      const currentMeta = sectionMetaRef.current;
+
+      // Reorder sectionMeta based on the new DOM order
+      const newMeta = [...currentMeta].sort((a, b) => {
+        const indexA = newOrderIds.indexOf(a.id);
+        const indexB = newOrderIds.indexOf(b.id);
+        if (indexA === -1) return 1; 
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+
+      const updatedMeta = newMeta.map((s, idx) => ({ ...s, order: idx }));
+      
+      onUpdateRef.current({
+           ...inputResumeDataRef.current!,
+           sectionMeta: updatedMeta
+      });
+    });
+
+    return () => {
+      drake.destroy();
+    };
+  }, []); // Run once on mount — refs provide access to latest state
+
+  if (!inputResumeData) return <div>Loading data...</div>;
+
 
   const handleAddSection = () => {
       const name = newSectionName.trim();
@@ -204,12 +216,8 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeD
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext
-        items={sectionMeta.map((s) => s.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="space-y-6 pb-20">
+    <>
+        <div className="space-y-6 pb-20" ref={containerRef}>
           {sectionMeta
           .sort((a,b) => a.order - b.order)
           .map((section) => (
@@ -217,9 +225,10 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeD
               {renderSection(section)}
             </DraggableSectionWrapper>
           ))}
-          
+        </div>
+
            {/* Add Section Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-4 pb-20">
             <Dialog open={isAddSectionOpen} onOpenChange={setIsAddSectionOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="border-dashed border-2 w-full py-8 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50">
@@ -252,8 +261,7 @@ export const ResumeForm: React.FC<ResumeFormProps> = ({ resumeData: inputResumeD
               </DialogContent>
             </Dialog>
           </div>
-        </div>
-      </SortableContext>
-    </DndContext>
+    </>
   );
 };
+

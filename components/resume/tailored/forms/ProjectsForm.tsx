@@ -43,8 +43,8 @@ export const ProjectsForm = ({ data, onChange }: ProjectsFormProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center bg-gray-100 p-2 border border-gray-200">
-        <h4 className="font-bold text-gray-700">Projects</h4>
+      <div className="flex justify-between items-center border-b pb-3">
+        <h4 className="text-xl font-semibold">Projects</h4>
         <Button size="sm" variant="ghost" onClick={handleAdd} className="text-blue-600 hover:text-blue-800 hover:bg-blue-50">
            <Plus className="w-4 h-4 mr-1" /> Add Project
         </Button>

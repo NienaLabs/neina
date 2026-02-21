@@ -326,11 +326,13 @@ export const coverLetterGenerated = inngest.createFunction(
           
           const data = JSON.parse(result.state.data.coverLetterAgent || "{}");
           
+          const polishedCoverLetter = polishCoverLetter(data.coverLetter || "");
+
           await step.run("save-cover-letter", async () => {
                await prisma.tailoredResume.update({
                    where: { id: resumeId },
                    data: {
-                       coverLetter: data.coverLetter || "", // Fallback
+                       coverLetter: polishedCoverLetter,
                        status: "COMPLETED"
                    }
                });
@@ -451,6 +453,82 @@ function formatResumeContentString(tailoredContent: any): string {
         (Array.isArray(tailoredContent.experience) ? tailoredContent.experience : [])
             .map((e: any) => e.description).join(" "),
     ].join(" ");
+}
+
+/**
+ * Polishes a cover letter by removing em dashes and common AI filler words/phrases
+ * to produce more natural, human-sounding text.
+ *
+ * @param text - The raw cover letter text returned by the AI agent.
+ * @returns The cleaned and polished cover letter text.
+ */
+function polishCoverLetter(text: string): string {
+    // 1. Replace em dashes with a comma-space or regular dash depending on context
+    //    e.g. "...skills—communication..." → "...skills, communication..."
+    //    We preserve en-dashes and hyphens (e.g. in compound words).
+    let polished = text.replace(/\u2014/g, ", "); // em dash → ", "
+
+    // 2. Remove / replace common AI filler words and phrases (case-insensitive)
+    const aiWordReplacements: Array<[RegExp, string]> = [
+        // Overused openers
+        [/\bI am thrilled to\b/gi, "I am eager to"],
+        [/\bI am excited to\b/gi, "I am eager to"],
+        [/\bI am delighted to\b/gi, "I am eager to"],
+        [/\bI am pleased to\b/gi, "I am eager to"],
+        [/\bI am deeply passionate about\b/gi, "I am passionate about"],
+
+        // Buzzwords / jargon (each tense handled separately to keep types simple)
+        [/\bseamlessly\b/gi, "effectively"],
+        [/\bleveraged\b/gi, "used"],
+        [/\bleveraging\b/gi, "using"],
+        [/\bleverage\b/gi, "use"],
+        [/\bsynergy\b/gi, "collaboration"],
+        [/\bsynergies\b/gi, "collaborations"],
+        [/\bsynergize\b/gi, "collaborate"],
+        [/\brobust\b/gi, "strong"],
+        [/\bholistic\b/gi, "comprehensive"],
+        [/\bparadigm\b/gi, "approach"],
+        [/\boptimizing\b/gi, "improving"],
+        [/\boptimized\b/gi, "improved"],
+        [/\boptimize\b/gi, "improve"],
+        [/\butilizing\b/gi, "using"],
+        [/\butilized\b/gi, "used"],
+        [/\butilize\b/gi, "use"],
+        [/\bfacilitating\b/gi, "helping"],
+        [/\bfacilitated\b/gi, "helped"],
+        [/\bfacilitate\b/gi, "help"],
+        [/\bdemonstrated\b/gi, "showed"],
+        [/\bdemonstrate\b/gi, "show"],
+        [/\bspearheaded\b/gi, "led"],
+        [/\bspearheading\b/gi, "leading"],
+        [/\bspearhead\b/gi, "lead"],
+        [/\bpivotal\b/gi, "key"],
+        [/\bgroundbreaking\b/gi, "innovative"],
+        [/\bcutting-edge\b/gi, "modern"],
+        [/\bstate-of-the-art\b/gi, "modern"],
+        [/\bworld-class\b/gi, "high-quality"],
+        [/\bthought leadership\b/gi, "expertise"],
+        [/\bthought leader\b/gi, "expert"],
+        [/\bvalue-added\b/gi, "valuable"],
+        [/\bvalue-add\b/gi, "valuable"],
+        [/\bimpactful\b/gi, "effective"],
+        [/\bdynamic\b/gi, "proactive"],
+        [/\binnovative solutions\b/gi, "solutions"],
+
+        // Closing clichés
+        [/\bI look forward to discussing[^.]*\./gi, "I welcome the opportunity to discuss this further."],
+        [/\bThank you for your consideration\.?/gi, "Thank you for your time."],
+        [/\bI am confident that I (?:would|will)\b/gi, "I believe I"],
+    ];
+
+    for (const [pattern, replacement] of aiWordReplacements) {
+        polished = polished.replace(pattern, replacement as string);
+    }
+
+    // 3. Collapse any double spaces or space-before-punctuation artifacts left by replacements
+    polished = polished.replace(/ {2,}/g, " ").replace(/ ([,.])/g, "$1");
+
+    return polished.trim();
 }
 
 /**

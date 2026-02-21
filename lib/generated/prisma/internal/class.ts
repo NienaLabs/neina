@@ -395,16 +395,6 @@ export interface PrismaClient<
     * ```
     */
   get pushSubscription(): Prisma.PushSubscriptionDelegate<ExtArgs, { omit: OmitOpts }>;
-
-  /**
-   * `prisma.sSEEventSignal`: Exposes CRUD operations for the **SSEEventSignal** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more SSEEventSignals
-    * const sSEEventSignals = await prisma.sSEEventSignal.findMany()
-    * ```
-    */
-  get sSEEventSignal(): Prisma.SSEEventSignalDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

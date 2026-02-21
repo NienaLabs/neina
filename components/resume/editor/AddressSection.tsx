@@ -94,7 +94,7 @@ export const AddressSection = ({
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-3 mb-4 p-4 border rounded-lg bg-white/50">
+      <div className="grid grid-cols-2 gap-4 mb-4 p-4 border rounded-lg bg-white/50">
            <div className="col-span-1">
               <p className="font-medium mb-1 text-sm">Full Name</p>
               <Input 
@@ -115,11 +115,11 @@ export const AddressSection = ({
            </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.keys(address).map((key) => {
           if (key === 'otherLinks') {
             return (
-              <div key={key} className="col-span-3">
+              <div key={key} className="col-span-full">
                  <div className="flex items-center gap-2 mb-1">
                   <LinkIcon className="w-4 h-4" />
                   <p className="font-medium">Other Links</p>
@@ -166,7 +166,7 @@ export const AddressSection = ({
           );
         })}
         {missingFields.length > 0 && (
-          <div className="col-span-3 mt-2">
+          <div className="col-span-full mt-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">

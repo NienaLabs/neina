@@ -35,21 +35,8 @@ import {
 
 } from '@/lib/utils'
 
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  closestCorners,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import dragula from 'dragula';
+
 
 
 import { useGSAP } from "@gsap/react";
@@ -72,8 +59,9 @@ export interface ResumeEditorRef {
 
 const ResumeEditor = forwardRef<ResumeEditorRef, ResumeEditorProps>(({ fixes, extractedData, resumeId, isTailored, onStateChange, template, onHistoryChange }, ref) => {
   const [save, setSave] = useState(false)
-
+  const containerRef = useRef<HTMLDivElement>(null);
   const autoFixButtonRef = useRef<HTMLButtonElement>(null);
+
 
   // Auto Fix Shake Animation
   useGSAP(() => {
@@ -411,51 +399,61 @@ const ResumeEditor = forwardRef<ResumeEditorRef, ResumeEditorProps>(({ fixes, ex
   };
 
   // ---------- Drag and Drop Handlers ----------
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
+  
   // Track latest editorState in a ref to avoid stale closures in event handlers
   const editorStateRef = useRef(editorState);
   editorStateRef.current = editorState;
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  // Dragula Effect
+  useEffect(() => {
+    if (!containerRef.current) return;
 
-    const currentState = editorStateRef.current;
-    if (!currentState?.sectionMeta) return;
+    const drake = dragula([containerRef.current], {
+      moves: (el, container, handle) => {
+        return !!handle?.closest('.drag-handle');
+      },
+    });
 
-    const oldIndex = currentState.sectionMeta.findIndex((s) => s.id === active.id);
-    const newIndex = currentState.sectionMeta.findIndex((s) => s.id === over.id);
+    drake.on('drop', (el, target, source, sibling) => {
+      if (!containerRef.current) return;
+      
+      const currentState = editorStateRef.current;
+      if (!currentState?.sectionMeta) return;
 
-    if (oldIndex === -1 || newIndex === -1) return;
+      const newOrderIds = Array.from(containerRef.current.children)
+        .map((child) => (child as HTMLElement).dataset.id)
+        .filter(Boolean) as string[];
 
-    // Save current state to history before modifying
-    setHistory((h) => [...h.slice(-49), currentState]);
+      // Save current state to history before modifying
+      setHistory((h) => [...h.slice(-49), currentState]);
 
-    const newMeta = [...currentState.sectionMeta];
-    const [moved] = newMeta.splice(oldIndex, 1);
-    newMeta.splice(newIndex, 0, moved);
+      // Reorder sectionMeta based on the new DOM order
+      const newMeta = [...currentState.sectionMeta].sort((a, b) => {
+        const indexA = newOrderIds.indexOf(a.id);
+        const indexB = newOrderIds.indexOf(b.id);
+        // If ID not found, put it at the end (shouldn't happen for visible sections)
+        if (indexA === -1) return 1; 
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
 
-    const updatedMeta = newMeta.map((s, idx) => ({ ...s, order: idx }));
-    
-    const newState = {
-      ...currentState,
-      sectionMeta: updatedMeta,
+      const updatedMeta = newMeta.map((s, idx) => ({ ...s, order: idx }));
+      
+      const newState = {
+        ...currentState,
+        sectionMeta: updatedMeta,
+      };
+
+      setEditorState(newState);
+      onStateChange?.(newState); // Sync to parent for Preview
+      setSave(true);
+    });
+
+    return () => {
+      drake.destroy();
     };
+  }, []); // Run once on mount
 
-    setEditorState(newState);
-    onStateChange?.(newState); // Sync to parent for Preview
-    setSave(true);
-  };
 
   /**
    * Checks whether a given section key has meaningful data in the editor state.
@@ -643,26 +641,17 @@ const ResumeEditor = forwardRef<ResumeEditorRef, ResumeEditorProps>(({ fixes, ex
       <div className="p-4 pl-10 space-y-10">
 
        
-        <DndContext 
-            sensors={sensors} 
-            collisionDetection={closestCorners} 
-            onDragEnd={handleDragEnd}
-        >
-            <SortableContext 
-                items={editorState.sectionMeta?.filter(s => !isSectionEmpty(s.key)).map(s => s.id) || []} 
-                strategy={verticalListSortingStrategy}
-            >
-                <div className="space-y-6">
-                    {editorState.sectionMeta
-                        ?.filter(section => !isSectionEmpty(section.key))
-                        .map((section) => (
-                        <DraggableSectionWrapper key={section.id} id={section.id} disabled={section.key === 'address'}>
-                            {renderSection(section.key)}
-                        </DraggableSectionWrapper>
-                    ))}
-                </div>
-            </SortableContext>
-        </DndContext>
+        <div ref={containerRef} className="space-y-6">
+            {editorState.sectionMeta
+                ?.filter(section => !isSectionEmpty(section.key))
+                .sort((a, b) => a.order - b.order) // Ensure render order matches state order
+                .map((section) => (
+                <DraggableSectionWrapper key={section.id} id={section.id} disabled={section.key === 'address'}>
+                    {renderSection(section.key)}
+                </DraggableSectionWrapper>
+            ))}
+        </div>
+
       </div>
 
       <SaveChangesPopup

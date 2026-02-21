@@ -127,8 +127,3 @@ export type blog_post = Prisma.blog_postModel
  * 
  */
 export type PushSubscription = Prisma.PushSubscriptionModel
-/**
- * Model SSEEventSignal
- * 
- */
-export type SSEEventSignal = Prisma.SSEEventSignalModel

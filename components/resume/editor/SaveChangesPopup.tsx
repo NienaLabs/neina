@@ -22,8 +22,11 @@ interface SaveChangesPopupProps {
  */
 export const SaveChangesPopup = ({ save, onSave, onCancel, isLoading, onUndo, canUndo }: SaveChangesPopupProps) => {
   return (
-    <div className={cn("hidden flex-row gap-2 fixed transition-all bg-white soft-glow border-none bottom-8 place-self-center p-4 rounded-2xl z-50 items-center", save ? "flex" : "")}>
-      Do you want to save the changes?
+    <div className={cn(
+      "hidden flex-row gap-3 fixed transition-all duration-300 bg-amber-50 border border-amber-200 soft-glow bottom-8 place-self-center p-5 rounded-2xl z-100 items-center text-sm font-medium",
+      save ? "flex animate-in slide-in-from-bottom-4 fade-in" : ""
+    )}>
+      <span className="text-amber-900">Do you want to save the changes?</span>
       <ButtonGroup>
         <Button 
             variant="ghost" 

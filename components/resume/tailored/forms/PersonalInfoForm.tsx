@@ -21,7 +21,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
 
   return (
     <div className="space-y-6">
-        <h3 className="font-mono text-lg font-bold uppercase tracking-wider border-b-2 border-black pb-2">
+        <h3 className="text-xl font-semibold border-b pb-3">
             Personal Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -32,7 +32,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.name || ''} 
                     onChange={(e) => handleChange('name', e.target.value)} 
                     placeholder="John Doe"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
             <div className="space-y-2">
@@ -42,7 +42,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.title || ''} 
                     onChange={(e) => handleChange('title', e.target.value)} 
                     placeholder="Software Engineer"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
             <div className="space-y-2">
@@ -53,7 +53,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.email || ''} 
                     onChange={(e) => handleChange('email', e.target.value)} 
                     placeholder="john@example.com"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
             <div className="space-y-2">
@@ -63,7 +63,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.phone || ''} 
                     onChange={(e) => handleChange('phone', e.target.value)} 
                     placeholder="+1 (555) 123-4567"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -73,7 +73,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.location || ''} 
                     onChange={(e) => handleChange('location', e.target.value)} 
                     placeholder="New York, NY"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
              <div className="space-y-2">
@@ -83,7 +83,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.linkedin || ''} 
                     onChange={(e) => handleChange('linkedin', e.target.value)} 
                     placeholder="linkedin.com/in/johndoe"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
              <div className="space-y-2">
@@ -93,7 +93,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.website || ''} 
                     onChange={(e) => handleChange('website', e.target.value)} 
                     placeholder="johndoe.com"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
              <div className="space-y-2">
@@ -103,7 +103,7 @@ export const PersonalInfoForm = ({ data = {}, onChange }: PersonalInfoFormProps)
                     value={data.github || ''} 
                     onChange={(e) => handleChange('github', e.target.value)} 
                     placeholder="github.com/johndoe"
-                    className="bg-white border-2 border-gray-300 focus:border-blue-500 rounded-none shadow-sm"
+                    className="bg-white shadow-sm"
                 />
             </div>
         </div>

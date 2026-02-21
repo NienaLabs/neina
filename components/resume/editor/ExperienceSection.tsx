@@ -94,7 +94,7 @@ export const ExperienceSection = ({
       <div className="flex flex-col gap-6">
         {/* Safeguard: ensure experience is an array */}
         {Array.isArray(experience) && experience.map((exp, index) => (
-          <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
+          <div key={index} className="p-5 border rounded-lg relative bg-gray-50">
             <div className="flex justify-end mb-2">
               <Button
                 variant="ghost"
@@ -105,7 +105,7 @@ export const ExperienceSection = ({
                 <Trash2 className="size-4 mr-2" /> Delete Entry
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <RemovableInput
                 placeholder="Position"
                 value={exp.position}

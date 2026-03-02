@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../init";
 import prisma from "@/lib/prisma";
-import { broadcastEvent } from '@/lib/events';
+import { emitUserEvent, broadcastEvent } from '@/lib/events';
 
 export const userRouter = createTRPCRouter({
     getMe: protectedProcedure.query(async ({ ctx }) => {
@@ -86,25 +86,27 @@ export const userRouter = createTRPCRouter({
                     }
                 });
 
-                // Emit SSE broadcast event (all admins are listening)
-                broadcastEvent({
-                    type: 'NEW_NOTIFICATION',
-                    data: {
-                        notification: {
-                            id: announcement.id,
-                            title: announcement.title,
-                            content: announcement.content,
-                            sentAt: announcement.sentAt,
-                            isRead: false,
-                            readAt: null,
-                        }
-                    }
-                });
-
-                // 3. Try to send push notifications to admins
+                // 3. Try to notify admins via SSE and Push
                 const admins = await prisma.user.findMany({
                     where: { role: 'admin' },
                     include: { pushSubscriptions: true },
+                });
+
+                // Emit SSE event to each admin individually
+                admins.forEach(admin => {
+                    emitUserEvent(admin.id, {
+                        type: 'NEW_NOTIFICATION',
+                        data: {
+                            notification: {
+                                id: announcement.id,
+                                title: announcement.title,
+                                content: announcement.content,
+                                sentAt: announcement.sentAt,
+                                isRead: false,
+                                readAt: null,
+                            }
+                        }
+                    });
                 });
 
                 const tokens = admins.flatMap((admin: any) =>

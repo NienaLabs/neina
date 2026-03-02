@@ -129,11 +129,10 @@ model Resume {
   userId             String
   embedding          Unsupported("vector")?
   status             ResumeStatus           @default(COMPLETED)
+  candidatePipelines CandidatePipeline[]
   interviews         interview[]
   user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   tailoredResumes    TailoredResume[]
-  candidatePipelines CandidatePipeline[]
 
   @@index([userId])
   @@map("resume")
@@ -156,7 +155,7 @@ model TailoredResume {
   jobResponsibilitiesEmbedding Unsupported("vector")?
   jobSkillsEmbedding           Unsupported("vector")?
   status                       ResumeStatus           @default(COMPLETED)
-  coverLetter                  String?                @db.Text
+  coverLetter                  String?
   primaryResume                Resume                 @relation(fields: [primaryResumeId], references: [id], onDelete: Cascade)
   user                         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -223,33 +222,28 @@ model job_ingest_runs {
   notes        String?
 }
 
-
-
 model jobs {
-  id                   String                 @id @default(cuid())
-  job_publisher        String?
-  job_title            String?
-  employer_name        String?
-  employer_logo        String?
-  job_apply_link       String?
-  job_location         String?
-  job_description      String?
-  job_posted_at        String?
-  job_is_remote        Boolean?
-  qualifications       String[]
-  responsibilities     String[]
-  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
-  embedding            Unsupported("vector")?
-  jobCertifications    String[]
-  category             String?
-
-  recruiterJob         RecruiterJob?
-  jobViews             JobView[]
-  viewCount            Int                    @default(0)
+  id                String                 @id @default(cuid())
+  job_publisher     String?
+  job_title         String?
+  employer_name     String?
+  employer_logo     String?
+  job_apply_link    String?
+  job_location      String?
+  job_description   String?
+  job_posted_at     String?
+  job_is_remote     Boolean?
+  qualifications    String[]
+  responsibilities  String[]
+  created_at        DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?              @default(now()) @db.Timestamptz(6)
+  embedding         Unsupported("vector")?
+  jobCertifications String[]
+  category          String?
+  viewCount         Int                    @default(0)
+  jobViews          JobView[]
+  recruiterJob      RecruiterJob?
 }
-
-
 
 model SupportTicket {
   id        String          @id @default(cuid())
@@ -357,11 +351,11 @@ model CandidatePipeline {
   recruiterJobId String
   candidateName  String
   candidateEmail String
-  resumeId       String?
   status         CandidateStatus @default(NEW)
   notes          String?
   appliedAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  resumeId       String?
   recruiterJob   RecruiterJob    @relation(fields: [recruiterJobId], references: [id], onDelete: Cascade)
   resume         Resume?         @relation(fields: [resumeId], references: [id])
 
@@ -372,11 +366,11 @@ model CandidatePipeline {
 
 model JobView {
   id        String   @id @default(cuid())
-  jobId     String
   userId    String?
   viewedAt  DateTime @default(now())
   ipAddress String?
   userAgent String?
+  jobId     String
   job       jobs     @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])

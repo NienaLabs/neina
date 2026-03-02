@@ -1,323 +1,362 @@
 import { inngest } from "./client";
-import { createNetwork, createState } from "@inngest/agent-kit";
+import { createAgent, createNetwork, createState, openai } from "@inngest/agent-kit";
 import prisma from "@/lib/prisma";
 import { keywordExtractorAgent, improveResumeNudgeAgent, improveResumeKeywordsAgent, improveResumeFullAgent, improveResumeRefineAgent, improveResumeEnrichAgent, coverLetterAgent } from "./agents";
-import { getTailoringPrompt, COVER_LETTER_PROMPT } from "@/constants/prompts";
+import { getTailoringPrompt, COVER_LETTER_PROMPT, EXTRACT_KEYWORDS_PROMPT } from "@/constants/prompts";
+import { lastAssistantTextMessageContent, validJson } from "@/lib/utils";
 import { IMPROVE_RESUME_PROMPT_NUDGE, IMPROVE_RESUME_PROMPT_KEYWORDS, IMPROVE_RESUME_PROMPT_FULL, VALIDATION_POLISH_PROMPT, CRITICAL_TRUTHFULNESS_RULES_TEMPLATE, RESUME_SCHEMA_EXAMPLE } from "@/constants/prompts-backend";
 
 
 
 
-const keywordExtractionNetwork = createNetwork({
-  name: "tailored-keyword-extraction",
-  agents: [keywordExtractorAgent],
-  defaultState: createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return keywordExtractorAgent;
+
+function extractJson(str: string): string {
+  let jsonStr = str;
+  const match = str.match(/```json\n([\s\S]*?)\n```/);
+  if (match && match[1]) {
+    jsonStr = match[1];
   }
+  const parsed = validJson(jsonStr);
+  return parsed ? JSON.stringify(parsed) : "{}";
+}
+
+// --- Refactored Master Network Orchestration ---
+
+/**
+ * Proxy agent for job keyword extraction that uses the network state for dynamic input.
+ */
+const jobKeywordProxy = createAgent({
+  name: "job-keyword-proxy",
+  system: async ({ network }: { network?: any }) => {
+    return `${EXTRACT_KEYWORDS_PROMPT}\n\nJOB DESCRIPTION:\n${network?.state?.data?.jobText}`;
+  },
+  model: keywordExtractorAgent.model,
+  lifecycle: {
+    onResponse: async ({ result, network }: { result: any, network?: any }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.keywordExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
 });
 
-const nudgeTailoringNetwork = createNetwork({
-  name: "tailored-nudge-network",
-  agents: [improveResumeNudgeAgent],
-  defaultState: createState<{ improveResumeNudgeAgent: string }>({ improveResumeNudgeAgent: "" }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return improveResumeNudgeAgent;
-  }
+/**
+ * Proxy agent for resume keyword extraction that uses the network state for dynamic input.
+ */
+const resumeKeywordProxy = createAgent({
+  name: "resume-keyword-proxy",
+  system: async ({ network }: { network?: any }) => {
+    const tailored = network?.state?.data?.tailoredContentData;
+    const textToExtract = JSON.stringify(tailored);
+    return `${EXTRACT_KEYWORDS_PROMPT}\n\nTAILORED RESUME CONTENT:\n${textToExtract}`;
+  },
+  model: keywordExtractorAgent.model,
+  lifecycle: {
+    onResponse: async ({ result, network }: { result: any, network?: any }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result);
+      if (assistantMessage && network) {
+        network.state.data.keywordExtractorAgent = extractJson(assistantMessage);
+      }
+      return result;
+    },
+  },
 });
 
-const keywordsTailoringNetwork = createNetwork({
-  name: "tailored-keywords-network",
-  agents: [improveResumeKeywordsAgent],
-  defaultState: createState<{ improveResumeKeywordsAgent: string }>({ improveResumeKeywordsAgent: "" }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return improveResumeKeywordsAgent;
-  }
-});
+const getAgentIdForMode = (mode: string) => {
+  if (mode === "nudge") return "improveResumeNudgeAgent";
+  if (mode === "full") return "improveResumeFullAgent";
+  if (mode === "refine") return "improveResumeRefineAgent";
+  if (mode === "enrich") return "improveResumeEnrichAgent";
+  return "improveResumeKeywordsAgent";
+};
 
-const fullTailoringNetwork = createNetwork({
-  name: "tailored-full-network",
-  agents: [improveResumeFullAgent],
-  defaultState: createState<{ improveResumeFullAgent: string }>({ improveResumeFullAgent: "" }),
-  router: ({ callCount }) => {
-    if (callCount > 0) return undefined;
-    return improveResumeFullAgent;
-  }
-});
+const getAgentForMode = (mode: string) => {
+  if (mode === "nudge") return improveResumeNudgeAgent;
+  if (mode === "full") return improveResumeFullAgent;
+  if (mode === "refine") return improveResumeRefineAgent;
+  if (mode === "enrich") return improveResumeEnrichAgent;
+  return improveResumeKeywordsAgent;
+};
 
-const refineTailoringNetwork = createNetwork({
-    name: "tailored-refine-network",
-    agents: [improveResumeRefineAgent],
-    defaultState: createState<{ improveResumeRefineAgent: string }>({ improveResumeRefineAgent: "" }),
-    router: ({ callCount }) => {
-      if (callCount > 0) return undefined;
-      return improveResumeRefineAgent;
+/**
+ * The Tailoring Orchestrator Network consolidates all AI steps into a single network run
+ * to avoid Inngest step ID collisions and nesting errors.
+ */
+const tailoringOrchestratorNetwork = createNetwork({
+  name: "tailoring-orchestrator",
+  agents: [
+    jobKeywordProxy,
+    resumeKeywordProxy,
+    improveResumeNudgeAgent,
+    improveResumeKeywordsAgent,
+    improveResumeFullAgent,
+    improveResumeRefineAgent,
+    improveResumeEnrichAgent
+  ],
+  defaultState: createState({
+    stage: 'JOB_KEYWORDS',
+    tailoringMode: 'keywords',
+    jobText: '',
+    resumeContent: '',
+    primaryResumeContent: '',
+    jobKeywordsData: {} as any,
+    tailoredContentData: {} as any,
+    resumeKeywordsData: {} as any,
+    filledTailoringPrompt: '',
+    skipTailoring: false,
+    // Legacy mapping support for agents.ts lifecycles
+    keywordExtractorAgent: '',
+    improveResumeNudgeAgent: '',
+    improveResumeKeywordsAgent: '',
+    improveResumeFullAgent: '',
+    improveResumeRefineAgent: '',
+    improveResumeEnrichAgent: '',
+  }),
+  router: ({ network, lastResult }) => {
+    const state = network.state.data;
+
+    // 1. Transition from JOB_KEYWORDS to TAILORING
+    if (state.stage === 'JOB_KEYWORDS' && lastResult?.agentName === 'job-keyword-proxy') {
+      state.jobKeywordsData = JSON.parse(state.keywordExtractorAgent || "{}");
+
+      // If we only needed keywords (Update flow), we might be done or skip to resume keywords
+      if (state.skipTailoring) {
+        state.stage = 'RESUME_KEYWORDS';
+      } else {
+        state.stage = 'TAILORING';
+      }
     }
-  });
-  
-  const enrichTailoringNetwork = createNetwork({
-    name: "tailored-enrich-network",
-    agents: [improveResumeEnrichAgent],
-    defaultState: createState<{ improveResumeEnrichAgent: string }>({ improveResumeEnrichAgent: "" }),
-    router: ({ callCount }) => {
-      if (callCount > 0) return undefined;
-      return improveResumeEnrichAgent;
+
+    // 2. Transition from TAILORING to RESUME_KEYWORDS
+    else if (state.stage === 'TAILORING' && lastResult?.agentName.includes('improve-resume')) {
+      const agentId = getAgentIdForMode(state.tailoringMode);
+      state.tailoredContentData = JSON.parse(state[agentId] || "{}");
+      state.stage = 'RESUME_KEYWORDS';
     }
-  });
 
-  const coverLetterNetwork = createNetwork({
-    name: "cover-letter-network",
-    agents: [coverLetterAgent],
-    defaultState: createState<{ coverLetterAgent: string }>({ coverLetterAgent: "" }),
-    router: ({ callCount }) => {
-      if (callCount > 0) return undefined;
-      return coverLetterAgent;
+    // 3. Transition from RESUME_KEYWORDS to COMPLETED
+    else if (state.stage === 'RESUME_KEYWORDS' && lastResult?.agentName === 'resume-keyword-proxy') {
+      state.resumeKeywordsData = JSON.parse(state.keywordExtractorAgent || "{}");
+      state.stage = 'COMPLETED';
+      return undefined;
     }
-  });
 
+    // --- Routing ---
+    if (state.stage === 'JOB_KEYWORDS') return jobKeywordProxy;
 
+    if (state.stage === 'TAILORING') {
+      // Lazy construction of the prompt if not already done
+      if (!state.filledTailoringPrompt) {
+        // Construct prompt logic (moved from function body to ensure it's captured in state)
+        const mode = state.tailoringMode;
+        let template = IMPROVE_RESUME_PROMPT_KEYWORDS;
+        if (mode === 'nudge') template = IMPROVE_RESUME_PROMPT_NUDGE;
+        if (mode === 'full') template = IMPROVE_RESUME_PROMPT_FULL;
+        if (mode === 'refine') template = VALIDATION_POLISH_PROMPT;
+        if (mode === 'enrich') template = IMPROVE_RESUME_PROMPT_FULL;
+
+        const truthfulnessRules = CRITICAL_TRUTHFULNESS_RULES_TEMPLATE.replace(
+          "{rule_7}",
+          "DO NOT fabricate any information."
+        );
+
+        const keywords = [
+          ...(state.jobKeywordsData.required_skills || []),
+          ...(state.jobKeywordsData.preferred_skills || []),
+          ...(state.jobKeywordsData.keywords || []),
+          ...(state.jobKeywordsData.key_responsibilities || [])
+        ].filter(Boolean);
+        const uniqueKeywords = Array.from(new Set(keywords.map((k: any) => String(k).toLowerCase())));
+
+        state.filledTailoringPrompt = template
+          .replace("{critical_truthfulness_rules}", truthfulnessRules)
+          .replace("{job_description}", state.jobText)
+          .replace("{job_keywords}", uniqueKeywords.join(", "))
+          .replace("{original_resume}", state.resumeContent)
+          .replace("{master_resume}", state.primaryResumeContent)
+          .replace("{output_language}", "English")
+          .replace("{schema}", RESUME_SCHEMA_EXAMPLE);
+      }
+      return getAgentForMode(state.tailoringMode);
+    }
+
+    if (state.stage === 'RESUME_KEYWORDS') {
+      // Prepare content for extraction
+      if (!state.tailoredContentData && state.stage === 'RESUME_KEYWORDS') {
+        // This handles the Update flow where content is passed directly
+        const content = state.tailoredContentData || state.resumeContent;
+        // The proxy agent will handle the stringification
+      }
+      return resumeKeywordProxy;
+    }
+
+    return undefined;
+  }
+});
+
+const coverLetterNetwork = createNetwork({
+  name: "cover-letter-network",
+  agents: [coverLetterAgent],
+  defaultState: createState<{ coverLetterAgent: string }>({ coverLetterAgent: "" }),
+  router: ({ callCount }) => {
+    if (callCount > 0) return undefined;
+    return coverLetterAgent;
+  }
+});
 
 export const tailoredResumeCreated = inngest.createFunction(
-  { id: "tailored-resume-AI-workflow" },
+  { id: "tailored-resume-AI-workflow", concurrency: 1 },
   { event: "app/tailored-resume.created" },
   async ({ step, event }) => {
-  async ({ step, event }) => {
     try {
-      // 1. Extract Job Keywords (Source of Truth for Scoring)
+      // Safety delay for API rate limits
+      await step.sleep('rate-limit-cooldown', '10s');
+      const mode = event.data.tailoringMode || "keywords";
       const jobText = event.data.description || "";
-      const keywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
-      // Execute Agent Network (Must be outside step.run)
-      const keywordResult = await keywordExtractionNetwork.run(jobText, { state: keywordState });
+      let resumeContent = event.data.content || "";
 
-      const jobContext = await step.run("process-job-keywords", async () => {
-        const data = JSON.parse(keywordResult.state.data.keywordExtractorAgent || "{}");
-        const keywords = [
-          ...(data.required_skills || []),
-          ...(data.preferred_skills || []),
-          ...(data.keywords || []),
-          ...(data.key_responsibilities || []) 
-        ].filter(Boolean);
-        const uniqueKeywords = Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
-        
+      // Fetch Primary Resume Content if needed (Refine mode)
+      let primaryResumeContent = "";
+      if (mode === 'refine' && event.data.primaryResumeId) {
+        const primaryResume = await step.run("fetch-primary-resume", async () => {
+          return await prisma.resume.findUnique({
+            where: { id: event.data.primaryResumeId },
+            select: { content: true }
+          });
+        });
+        if (primaryResume) {
+          primaryResumeContent = primaryResume.content;
+        }
+      }
+
+      // Pre-process content
+      try {
+        const parsed = JSON.parse(resumeContent);
+        resumeContent = JSON.stringify(parsed, null, 2);
+      } catch { /* use as is */ }
+
+      // Run Consolidated Workflow Network
+      const initialState = createState({
+        stage: 'JOB_KEYWORDS',
+        tailoringMode: mode,
+        jobText: jobText,
+        resumeContent: resumeContent,
+        primaryResumeContent: primaryResumeContent,
+      });
+
+      const workflowResult = await tailoringOrchestratorNetwork.run(jobText, { state: initialState });
+      const finalState = workflowResult.state.data;
+
+      // Extract results from state
+      const jobKeywords = [
+        ...(finalState.jobKeywordsData.required_skills || []),
+        ...(finalState.jobKeywordsData.preferred_skills || []),
+        ...(finalState.jobKeywordsData.keywords || []),
+        ...(finalState.jobKeywordsData.key_responsibilities || [])
+      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
+      const uniqueJobKeywords = Array.from(new Set(jobKeywords));
+
+      const tailoredContent = finalState.tailoredContentData;
+
+      const tailoredResumeKeywords = [
+        ...(finalState.resumeKeywordsData.required_skills || []),
+        ...(finalState.resumeKeywordsData.preferred_skills || []),
+        ...(finalState.resumeKeywordsData.keywords || [])
+      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
+      const uniqueResumeKeywords = Array.from(new Set(tailoredResumeKeywords));
+
+      // Calculate Score
+      const scoreData = await step.run("calculate-match-score", async () => {
+        const jobKeywordsSet = new Set(uniqueJobKeywords);
+        const resumeKeywordsSet = new Set(uniqueResumeKeywords);
+
+        let matchCount = 0;
+        const matchedKeywords: string[] = [];
+        const missingKeywords: string[] = [];
+
+        jobKeywordsSet.forEach(k => {
+          if (resumeKeywordsSet.has(k)) {
+            matchCount++;
+            matchedKeywords.push(k);
+          } else {
+            missingKeywords.push(k);
+          }
+        });
+
+        const score = jobKeywordsSet.size > 0 ? (matchCount / jobKeywordsSet.size) : 0;
         return {
-          extractedData: data,
-          keywords: uniqueKeywords
+          finalScore: score,
+          matchedKeywords,
+          missingKeywords,
+          totalKeywords: jobKeywordsSet.size
         };
       });
 
-      // 2. Tailor Resume based on Mode
-      const mode = event.data.tailoringMode || "keywords";
-      let network;
-      let agentId;
-
-      if (mode === "nudge") {
-        network = nudgeTailoringNetwork;
-        agentId = "improveResumeNudgeAgent";
-      } else if (mode === "full") {
-        network = fullTailoringNetwork;
-        agentId = "improveResumeFullAgent";
-      } else if (mode === "refine") {
-        network = refineTailoringNetwork;
-        agentId = "improveResumeRefineAgent";
-      } else if (mode === "enrich") {
-         // Enrich acts like a "Full" tailor but with specific focus on adding detail
-         // For now, we'll map it to the Full agent but with a special note or prompt if needed
-         // Or strictly, use 'improveResumeEnrichAgent' if I defined it. I did.
-        network = enrichTailoringNetwork;
-        agentId = "improveResumeEnrichAgent";
-      } else {
-        network = keywordsTailoringNetwork;
-        agentId = "improveResumeKeywordsAgent";
-      }
-
-      // Construct Prompt
-      let template = IMPROVE_RESUME_PROMPT_KEYWORDS;
-      if (mode === 'nudge') template = IMPROVE_RESUME_PROMPT_NUDGE;
-      if (mode === 'full') template = IMPROVE_RESUME_PROMPT_FULL;
-      if (mode === 'refine') template = VALIDATION_POLISH_PROMPT;
-      // For enrich, we might use FULL for now as a fallback if ENRICH prompt is too complex (interactive)
-      // But let's use FULL for enrich too as a "Stronger" tailor, or maybe Nudge but with "add detail" instruction?
-      // Actually, let's use IMPROVE_RESUME_PROMPT_FULL for Enrich for now, as the interactive Enrichment flow is not fully implemented.
-      if (mode === 'enrich') template = IMPROVE_RESUME_PROMPT_FULL; 
-
-      const truthfulnessRules = CRITICAL_TRUTHFULNESS_RULES_TEMPLATE.replace(
-          "{rule_7}",
-          "DO NOT fabricate any information."
-      );
-
-      // Fetch Primary Resume Content if needed for verification (Refine mode)
-      let primaryResumeContent = "";
-      if (mode === 'refine' && event.data.primaryResumeId) {
-          const primaryResume = await prisma.resume.findUnique({
-              where: { id: event.data.primaryResumeId },
-              select: { content: true }
-          });
-          if (primaryResume) {
-              primaryResumeContent = primaryResume.content;
-          }
-      }
-
-      // Parse the content - it might be a JSON string (from retailor) or plain text
-      let resumeContent = event.data.content || "";
-      try {
-        // If it's a JSON string, parse it back to object then stringify it nicely
-        const parsed = JSON.parse(resumeContent);
-        resumeContent = JSON.stringify(parsed, null, 2);
-      } catch {
-        // If parsing fails, it's already text/markdown - use as is
-        // This handles the initial creation case where content is markdown
-      }
-
-      let filledPrompt = template
-        .replace("{critical_truthfulness_rules}", truthfulnessRules)
-        .replace("{job_description}", jobText) // Safe job text
-        .replace("{job_keywords}", (jobContext.keywords || []).join(", "))
-        .replace("{original_resume}", resumeContent)
-        .replace("{master_resume}", primaryResumeContent) // For verification in Refine mode
-        .replace("{output_language}", "English")
-        .replace("{schema}", RESUME_SCHEMA_EXAMPLE);
-
-      // Special handling for Refine/Polish (doesn't strictly need JD/Keywords but safe to include if prompt has placeholders)
-      // VALIDATION_POLISH_PROMPT defined in prompts-backend.ts:
-      // Review and polish... {critical_truthfulness_rules} ... {original_resume} ... {schema}
-      // It DOES NOT have {job_description} or {job_keywords}.
-      // So the replace calls above might be no-ops for those placeholders, which is fine.
-
-      const tailorState = createState<any>({ [agentId]: "" });
-      const tailorResult = await network.run(filledPrompt, { state: tailorState });
-
-      const tailoredContent = await step.run("process-tailored-content", async () => {
-        return JSON.parse(tailorResult.state.data[agentId] || "{}");
-      });
-
-      // 3. Extract Keywords from Tailored Resume (for Verification/Scoring)
-      const getSkillsList = (skills: any): string[] => {
-        if (!skills) return [];
-        if (Array.isArray(skills)) return skills;
-        if (typeof skills === 'object') {
-            return Object.values(skills).flat().map(s => String(s));
-        }
-        return [];
-      };
-
-      const contentString = [
-            tailoredContent.summary || "",
-            getSkillsList(tailoredContent.skills).join(", "),
-            (Array.isArray(tailoredContent.experience) ? tailoredContent.experience : [])
-                .map((e: any) => e.description).join(" "),
-      ].join(" ");
-      
-      const tailoredKeywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
-      const tailoredKeywordResult = await keywordExtractionNetwork.run(contentString, { state: tailoredKeywordState });
-
-      const tailoredResumeKeywords = await step.run("process-tailored-keywords", async () => {
-         const data = JSON.parse(tailoredKeywordResult.state.data.keywordExtractorAgent || "{}");
-         const keywords = [
-          ...(data.required_skills || []),
-          ...(data.preferred_skills || []),
-          ...(data.keywords || [])
-        ].filter(Boolean);
-        return Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
-      });
-
-      // 4. Calculate Word Match Score
-      const scoreData = await step.run("calculate-word-match-score", async () => {
-          const jobKeywords = new Set(jobContext.keywords);
-          const resumeKeywords = new Set(tailoredResumeKeywords);
-          
-          let matchCount = 0;
-          const matchedKeywords: string[] = [];
-          const missingKeywords: string[] = [];
-          
-          jobKeywords.forEach(k => {
-              if (resumeKeywords.has(k)) {
-                  matchCount++;
-                  matchedKeywords.push(k);
-              } else {
-                  missingKeywords.push(k);
-              }
-          });
-          
-          const score = jobKeywords.size > 0 ? (matchCount / jobKeywords.size) : 0;
-          
-          return {
-              finalScore: score,
-              matchedKeywords,
-              missingKeywords,
-              totalKeywords: jobKeywords.size
-          };
-      });
-
-      // 5. Save to DB
+      // Save to DB
       await step.run("save-tailored-resume", async () => {
-          // Quick JSON-to-Markdown helper
-          const jsonToMarkdown = (data: any) => {
-              let md = `# ${data.name || "Tailored Resume"}\n\n`;
-              if (data.summary) md += `## Summary\n${data.summary}\n\n`;
-              if (data.skills && data.skills.length) md += `## Skills\n${data.skills.join(", ")}\n\n`;
-              if (data.experience) {
-                  md += `## Experience\n`;
-                  data.experience.forEach((exp: any) => {
-                      md += `### ${exp.role} at ${exp.company}\n${exp.date || ""}\n${exp.description}\n\n`;
-                  });
-              }
-              return md;
-          };
-          
-          const finalContent = jsonToMarkdown(tailoredContent);
-          
-          await prisma.tailoredResume.update({
-            where: { id: event.data.resumeId },
-            data: {
-              content: finalContent, 
-              extractedData: tailoredContent, 
-              analysisData: JSON.stringify({
-                  matches: scoreData.matchedKeywords,
-                  missing: scoreData.missingKeywords
-              }),
-              scores: {
-                  finalScore: scoreData.finalScore,
-                  wordMatchScore: scoreData.finalScore,
-                  totalKeywords: scoreData.totalKeywords,
-                  matchedCount: scoreData.matchedKeywords.length
-              },
-              status: "COMPLETED"
-            }
-          });
+        const jsonToMarkdown = (data: any) => {
+          let md = `# ${data.name || "Tailored Resume"}\n\n`;
+          if (data.summary) md += `## Summary\n${data.summary}\n\n`;
+          if (data.skills && data.skills.length) md += `## Skills\n${data.skills.join(", ")}\n\n`;
+          if (data.experience) {
+            md += `## Experience\n`;
+            data.experience.forEach((exp: any) => {
+              md += `### ${exp.role} at ${exp.company}\n${exp.date || ""}\n${exp.description}\n\n`;
+            });
+          }
+          return md;
+        };
+
+        const finalContent = jsonToMarkdown(tailoredContent);
+        await prisma.tailoredResume.update({
+          where: { id: event.data.resumeId },
+          data: {
+            content: finalContent,
+            extractedData: tailoredContent,
+            analysisData: JSON.stringify({
+              matches: scoreData.matchedKeywords,
+              missing: scoreData.missingKeywords
+            }),
+            scores: {
+              finalScore: scoreData.finalScore,
+              wordMatchScore: scoreData.finalScore,
+              totalKeywords: scoreData.totalKeywords,
+              matchedCount: scoreData.matchedKeywords.length
+            },
+            status: "COMPLETED"
+          }
+        });
       });
 
-      // Notify client via SSE that tailored resume is ready
+      // Notify SSE
       const { emitUserEvent } = await import("@/lib/events");
       emitUserEvent(event.data.userId, {
         type: 'TAILORED_RESUME_READY',
-        data: { 
-            resumeId: event.data.resumeId,
-            action: event.data.tailoringMode
+        data: {
+          resumeId: event.data.resumeId,
+          action: event.data.tailoringMode
         }
       });
 
       return { success: true, score: scoreData.finalScore };
 
     } catch (error) {
-      console.error("Error in tailoredResumeCreated workflow:", error);
-      // Notify client via SSE that tailored resume processing failed
+      console.error("Error in Master Tailoring workflow:", error);
       try {
         const { emitUserEvent } = await import("@/lib/events");
         emitUserEvent(event.data.userId, {
           type: 'TAILORED_RESUME_FAILED',
-          data: { 
-              resumeId: event.data.resumeId,
-              action: event.data.tailoringMode
+          data: {
+            resumeId: event.data.resumeId,
+            action: event.data.tailoringMode
           }
         });
       } catch (_) { /* best-effort */ }
-      await step.run("delete-failed-tailored-resume", async () => {
-        await prisma.tailoredResume.delete({
-          where: { id: event.data.resumeId }
-        });
+
+      await step.run("cleanup-failed-resume", async () => {
+        await prisma.tailoredResume.delete({ where: { id: event.data.resumeId } }).catch(() => { });
       });
       throw error;
     }
@@ -325,97 +364,89 @@ export const tailoredResumeCreated = inngest.createFunction(
 );
 
 export const tailoredResumeUpdated = inngest.createFunction(
-  { id: "tailored-resume-updated-workflow" },
+  { id: "tailored-resume-updated-workflow", concurrency: 1 },
   { event: "app/tailored-resume.updated" },
   async ({ step, event }) => {
     try {
-       // 1. Extract Job Keywords
+      // Safety delay for API rate limits
+      await step.sleep('rate-limit-cooldown', '10s');
       const jobText = event.data.description || "";
-      const keywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
-      const keywordResult = await keywordExtractionNetwork.run(jobText, { state: keywordState });
-
-      const jobContext = await step.run("extract-job-keywords-update", async () => {
-        const data = JSON.parse(keywordResult.state.data.keywordExtractorAgent || "{}");
-        const keywords = [
-          ...(data.required_skills || []),
-          ...(data.preferred_skills || []),
-          ...(data.keywords || [])
-        ].filter(Boolean);
-        const uniqueKeywords = Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
-        return { extractedData: data, keywords: uniqueKeywords };
-      });
-
-      // 2. Tailoring is NOT re-run on simple update unless explicitly requested?
-      // The `tailoredResumeUpdated` event usually implies the USER edited the content manually or requested a re-generation.
-      // We assume the content in `event.data.content` is the Latest.
-      
       const tailoredContentString = event.data.content;
 
-      // 3. Extract Keywords from Current Content (for Scoring)
-      const tailoredKeywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
-      const tailoredKeywordResult = await keywordExtractionNetwork.run(tailoredContentString, { state: tailoredKeywordState });
-
-      const tailoredResumeKeywords = await step.run("extract-tailored-keywords-update", async () => {
-         const data = JSON.parse(tailoredKeywordResult.state.data.keywordExtractorAgent || "{}");
-         const keywords = [
-          ...(data.required_skills || []),
-          ...(data.preferred_skills || []),
-          ...(data.keywords || [])
-        ].filter(Boolean);
-        
-        return Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
+      // Run Consolidated Workflow (Update Mode: Skip Tailoring stage)
+      const initialState = createState({
+        stage: 'JOB_KEYWORDS',
+        skipTailoring: true, // Custom flag for our router
+        jobText: jobText,
+        resumeContent: tailoredContentString, // Reuse for extraction
+        // resumeKeywordsData will be filled by the resume-keyword-proxy
       });
 
-      // 4. Calculate Word Match Score
-      const scoreData = await step.run("calculate-word-match-score-update", async () => {
-          const jobKeywords = new Set(jobContext.keywords);
-          const resumeKeywords = new Set(tailoredResumeKeywords);
-          
-          let matchCount = 0;
-          const matchedKeywords: string[] = [];
-          const missingKeywords: string[] = [];
-          
-          jobKeywords.forEach(k => {
-              if (resumeKeywords.has(k)) {
-                  matchCount++;
-                  matchedKeywords.push(k);
-              } else {
-                  missingKeywords.push(k);
-              }
-          });
-          
-          const score = jobKeywords.size > 0 ? (matchCount / jobKeywords.size) : 0;
-          
-          return {
-              finalScore: score,
-              matchedKeywords,
-              missingKeywords,
-              totalKeywords: jobKeywords.size
-          };
+      // We need to slightly adjust the router logic to handle tailoredContentData from resumeContent if skipTailoring
+      const workflowResult = await tailoringOrchestratorNetwork.run(jobText, { state: initialState });
+      const finalState = workflowResult.state.data;
+
+      // Extract results
+      const jobKeywords = [
+        ...(finalState.jobKeywordsData.required_skills || []),
+        ...(finalState.jobKeywordsData.preferred_skills || []),
+        ...(finalState.jobKeywordsData.keywords || [])
+      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
+
+      const tailoredResumeKeywords = [
+        ...(finalState.resumeKeywordsData.required_skills || []),
+        ...(finalState.resumeKeywordsData.preferred_skills || []),
+        ...(finalState.resumeKeywordsData.keywords || [])
+      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
+
+      // Calculate Score
+      const scoreData = await step.run("calculate-match-score-update", async () => {
+        const jobKeywordsSet = new Set(jobKeywords);
+        const resumeKeywordsSet = new Set(Array.from(new Set(tailoredResumeKeywords)));
+
+        let matchCount = 0;
+        const matchedKeywords: string[] = [];
+        const missingKeywords: string[] = [];
+
+        jobKeywordsSet.forEach(k => {
+          if (resumeKeywordsSet.has(k)) {
+            matchCount++;
+            matchedKeywords.push(k);
+          } else {
+            missingKeywords.push(k);
+          }
+        });
+
+        const score = jobKeywordsSet.size > 0 ? (matchCount / jobKeywordsSet.size) : 0;
+        return {
+          finalScore: score,
+          matchedKeywords,
+          missingKeywords,
+          totalKeywords: jobKeywordsSet.size
+        };
       });
 
-      // 5. Save to DB
+      // Save to DB
       await step.run("save-tailored-resume-update", async () => {
-          await prisma.tailoredResume.update({
-            where: { id: event.data.resumeId },
-            data: {
-              content: tailoredContentString,
-              analysisData: JSON.stringify({
-                  matches: scoreData.matchedKeywords,
-                  missing: scoreData.missingKeywords
-              }),
-              scores: {
-                  finalScore: scoreData.finalScore,
-                  wordMatchScore: scoreData.finalScore,
-                  totalKeywords: scoreData.totalKeywords,
-                  matchedCount: scoreData.matchedKeywords.length
-              },
-              status: "COMPLETED"
-            }
-          });
+        await prisma.tailoredResume.update({
+          where: { id: event.data.resumeId },
+          data: {
+            content: tailoredContentString,
+            analysisData: JSON.stringify({
+              matches: scoreData.matchedKeywords,
+              missing: scoreData.missingKeywords
+            }),
+            scores: {
+              finalScore: scoreData.finalScore,
+              wordMatchScore: scoreData.finalScore,
+              totalKeywords: scoreData.totalKeywords,
+              matchedCount: scoreData.matchedKeywords.length
+            },
+            status: "COMPLETED"
+          }
+        });
       });
 
-      // Notify client via SSE that tailored resume update is ready
       const { emitUserEvent } = await import("@/lib/events");
       emitUserEvent(event.data.userId, {
         type: 'TAILORED_RESUME_READY',
@@ -425,8 +456,7 @@ export const tailoredResumeUpdated = inngest.createFunction(
       return { success: true, score: scoreData.finalScore };
 
     } catch (error) {
-      console.error("Error in tailoredResumeUpdated workflow:", error);
-      // Notify client via SSE that tailored resume update failed
+      console.error("Error in Master Update workflow:", error);
       try {
         const { emitUserEvent } = await import("@/lib/events");
         emitUserEvent(event.data.userId, {
@@ -434,28 +464,30 @@ export const tailoredResumeUpdated = inngest.createFunction(
           data: { resumeId: event.data.resumeId }
         });
       } catch (_) { /* best-effort */ }
-       await step.run("reset-resume-status", async () => {
-            await prisma.tailoredResume.update({
-                where: { id: event.data.resumeId },
-                data: { status: "COMPLETED" } 
-            });
+      await step.run("reset-status", async () => {
+        await prisma.tailoredResume.update({
+          where: { id: event.data.resumeId },
+          data: { status: "COMPLETED" }
         });
+      });
       throw error;
     }
   }
 );
 
 export const coverLetterGenerated = inngest.createFunction(
-    { id: "cover-letter-generation-workflow" },
-    { event: "app/cover-letter.generation-requested" },
-    async ({ step, event }) => {
-      try {
-          const { resumeId, content, jobDescription } = event.data;
-  
-          // Run Agent
-          const state = createState<{ coverLetterAgent: string }>({ coverLetterAgent: "" });
-          
-          const filledPrompt = `
+  { id: "cover-letter-generation-workflow", concurrency: 1 },
+  { event: "app/cover-letter.generation-requested" },
+  async ({ step, event }) => {
+    try {
+      // Safety delay for API rate limits
+      await step.sleep('rate-limit-cooldown', '10s');
+      const { resumeId, content, jobDescription } = event.data;
+
+      // Run Agent
+      const state = createState<{ coverLetterAgent: string }>({ coverLetterAgent: "" });
+
+      const filledPrompt = `
   ${COVER_LETTER_PROMPT}
   
   RESUME CONTENT:
@@ -464,48 +496,48 @@ export const coverLetterGenerated = inngest.createFunction(
   JOB DESCRIPTION:
   ${jobDescription}
   `;
-  
-          const result = await coverLetterNetwork.run(filledPrompt, { state });
-          
-          const data = JSON.parse(result.state.data.coverLetterAgent || "{}");
-          
-          await step.run("save-cover-letter", async () => {
-               await prisma.tailoredResume.update({
-                   where: { id: resumeId },
-                   data: {
-                       coverLetter: data.coverLetter || "", // Fallback
-                       status: "COMPLETED"
-                   }
-               });
-          });
 
-          // Notify client via SSE that cover letter is ready
-          const { emitUserEvent } = await import("@/lib/events");
-          emitUserEvent(event.data.userId, {
-            type: 'COVER_LETTER_READY',
-            data: { resumeId: event.data.resumeId }
-          });
-  
-          return { success: true };
-  
-      } catch (error) {
-          console.error("Cover letter generation failed", error);
-          // Notify client via SSE that cover letter generation failed
-          try {
-            const { emitUserEvent } = await import("@/lib/events");
-            emitUserEvent(event.data.userId, {
-              type: 'TAILORED_RESUME_FAILED',
-              data: { resumeId: event.data.resumeId }
-            });
-          } catch (_) { /* best-effort */ }
-          await step.run("revert-status", async () => {
-               await prisma.tailoredResume.update({
-                   where: { id: event.data.resumeId },
-                   data: { status: "COMPLETED" } 
-               });
-          });
-          throw error;
-      }
+      const result = await coverLetterNetwork.run(filledPrompt, { state });
+
+      const data = JSON.parse(result.state.data.coverLetterAgent || "{}");
+
+      await step.run("save-cover-letter", async () => {
+        await prisma.tailoredResume.update({
+          where: { id: resumeId },
+          data: {
+            coverLetter: data.coverLetter || "", // Fallback
+            status: "COMPLETED"
+          }
+        });
+      });
+
+      // Notify client via SSE that cover letter is ready
+      const { emitUserEvent } = await import("@/lib/events");
+      emitUserEvent(event.data.userId, {
+        type: 'COVER_LETTER_READY',
+        data: { resumeId: event.data.resumeId }
+      });
+
+      return { success: true };
+
+    } catch (error) {
+      console.error("Cover letter generation failed", error);
+      // Notify client via SSE that cover letter generation failed
+      try {
+        const { emitUserEvent } = await import("@/lib/events");
+        emitUserEvent(event.data.userId, {
+          type: 'TAILORED_RESUME_FAILED',
+          data: { resumeId: event.data.resumeId }
+        });
+      } catch (_) { /* best-effort */ }
+      await step.run("revert-status", async () => {
+        await prisma.tailoredResume.update({
+          where: { id: event.data.resumeId },
+          data: { status: "COMPLETED" }
+        });
+      });
+      throw error;
     }
+  }
 );
 

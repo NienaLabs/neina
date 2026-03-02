@@ -124,8 +124,8 @@ export const ClassicSinglePDF: React.FC<{ data: ResumeData }> = ({ data }) => {
     .sort((a, b) => a.order - b.order);
 
   const defaultOrder = ['summary', 'workExperience', 'education', 'personalProjects', 'additional'];
-  const sectionsToRender = sortedSections.length > 0 
-    ? sortedSections.map(s => s.key) 
+  const sectionsToRender = sortedSections.length > 0
+    ? sortedSections.map(s => s.key)
     : [...defaultOrder, ...(customSections ? Object.keys(customSections) : [])];
 
   return (
@@ -149,7 +149,7 @@ export const ClassicSinglePDF: React.FC<{ data: ResumeData }> = ({ data }) => {
 
       {/* Sections */}
       {sectionsToRender.map(key => {
-        switch(key) {
+        switch (key) {
           case 'summary':
             return summary ? (
               <View key={key} style={styles.section} wrap={false}>
@@ -159,7 +159,7 @@ export const ClassicSinglePDF: React.FC<{ data: ResumeData }> = ({ data }) => {
             ) : null;
 
           case 'workExperience':
-            return workExperience?.length > 0 ? (
+            return Array.isArray(workExperience) && workExperience.length > 0 ? (
               <View key={key} style={styles.section}>
                 <Text style={[styles.sectionTitle, { borderBottomColor: accentColor }]}>Experience</Text>
                 {workExperience.map((exp, i) => (
@@ -184,7 +184,7 @@ export const ClassicSinglePDF: React.FC<{ data: ResumeData }> = ({ data }) => {
             ) : null;
 
           case 'education':
-            return education?.length > 0 ? (
+            return Array.isArray(education) && education.length > 0 ? (
               <View key={key} style={styles.section}>
                 <Text style={[styles.sectionTitle, { borderBottomColor: accentColor }]}>Education</Text>
                 {education.map((edu, i) => (
@@ -203,7 +203,7 @@ export const ClassicSinglePDF: React.FC<{ data: ResumeData }> = ({ data }) => {
             ) : null;
 
           case 'personalProjects':
-            return personalProjects?.length > 0 ? (
+            return Array.isArray(personalProjects) && personalProjects.length > 0 ? (
               <View key={key} style={styles.section}>
                 <Text style={styles.sectionTitle}>Projects</Text>
                 {personalProjects.map((proj, i) => (
@@ -225,29 +225,29 @@ export const ClassicSinglePDF: React.FC<{ data: ResumeData }> = ({ data }) => {
             ) : null;
 
           case 'additional':
-             return additional ? (
+            return additional ? (
               <View key={key} style={styles.section} wrap={false}>
                 <Text style={[styles.sectionTitle, { borderBottomColor: accentColor }]}>Skills & Additional</Text>
                 <View style={styles.skillsGrid}>
-                  {additional.technicalSkills?.length > 0 && (
+                  {Array.isArray(additional.technicalSkills) && additional.technicalSkills.length > 0 && (
                     <View style={styles.skillRow}>
                       <Text style={styles.skillLabel}>Technical Skills: </Text>
                       <Text style={styles.skillText}>{additional.technicalSkills.join(', ')}</Text>
                     </View>
                   )}
-                  {additional.languages?.length > 0 && (
+                  {Array.isArray(additional.languages) && additional.languages.length > 0 && (
                     <View style={styles.skillRow}>
                       <Text style={styles.skillLabel}>Languages: </Text>
                       <Text style={styles.skillText}>{additional.languages.join(', ')}</Text>
                     </View>
                   )}
-                  {additional.certificationsTraining?.length > 0 && (
+                  {Array.isArray(additional.certificationsTraining) && additional.certificationsTraining.length > 0 && (
                     <View style={styles.skillRow}>
                       <Text style={styles.skillLabel}>Certifications: </Text>
                       <Text style={styles.skillText}>{additional.certificationsTraining.join(', ')}</Text>
                     </View>
                   )}
-                   {additional.awards?.length > 0 && (
+                  {Array.isArray(additional.awards) && additional.awards.length > 0 && (
                     <View style={styles.skillRow}>
                       <Text style={styles.skillLabel}>Awards:</Text>
                       <Text style={styles.skillValue}>{additional.awards.join(', ')}</Text>
@@ -255,47 +255,47 @@ export const ClassicSinglePDF: React.FC<{ data: ResumeData }> = ({ data }) => {
                   )}
                 </View>
               </View>
-             ) : null;
+            ) : null;
 
           default: {
-              const section = customSections?.[key];
-              if (!section) return null;
+            const section = customSections?.[key];
+            if (!section) return null;
 
-              return (
-                <View key={key} style={styles.section}>
-                  <Text style={[styles.sectionTitle, { borderBottomColor: accentColor }]}>{section.displayName || key.replace(/-/g, ' ')}</Text>
-                                    {section.sectionType === 'text' && section.text ? (
-                            <Text style={styles.summary}>{section.text}</Text>
-                  ) : section.sectionType === 'itemList' && section.items ? (
-                    section.items.map((item, idx) => (
-                      <View key={idx} style={{ marginBottom: 6 }} wrap={false}>
-                        <View style={styles.itemHeader}>
-                          <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{item.name}</Text>
-                          {(item.date || item.startDate) && (
-                            <Text style={styles.itemDate}>{item.date || item.startDate} {item.endDate ? `- ${item.endDate}` : ''}</Text>
-                          )}
-                        </View>
-                        {item.role && <Text style={styles.itemCompany}>{item.role}</Text>}
-                        {(item.email || item.phone || item.url) && (
-                          <View style={{ flexDirection: 'row', gap: 10, marginVertical: 2 }}>
-                            {item.email && <Text style={{ fontSize: 8, color: '#444' }}>{item.email}</Text>}
-                            {item.phone && <Text style={{ fontSize: 8, color: '#444' }}>{item.phone}</Text>}
-                            {item.url && <Text style={{ fontSize: 8, color: accentColor }}>{item.url}</Text>}
-                          </View>
+            return (
+              <View key={key} style={styles.section}>
+                <Text style={[styles.sectionTitle, { borderBottomColor: accentColor }]}>{section.displayName || key.replace(/-/g, ' ')}</Text>
+                {section.sectionType === 'text' && section.text ? (
+                  <Text style={styles.summary}>{section.text}</Text>
+                ) : section.sectionType === 'itemList' && Array.isArray(section.items) ? (
+                  section.items.map((item, idx) => (
+                    <View key={idx} style={{ marginBottom: 6 }} wrap={false}>
+                      <View style={styles.itemHeader}>
+                        <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{item.name}</Text>
+                        {(item.date || item.startDate) && (
+                          <Text style={styles.itemDate}>{item.date || item.startDate} {item.endDate ? `- ${item.endDate}` : ''}</Text>
                         )}
-                        {item.description && <Text style={[styles.summary, { marginTop: 2 }]}>{item.description}</Text>}
                       </View>
-                    ))
-                  ) : section.sectionType === 'stringList' && section.strings ? (
-                    section.strings.map((str, idx) => (
-                      <View key={idx} style={styles.listItem}>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={styles.listContent}>{str}</Text>
-                      </View>
-                    ))
-                  ) : null}
-                </View>
-              );
+                      {item.role && <Text style={styles.itemCompany}>{item.role}</Text>}
+                      {(item.email || item.phone || item.url) && (
+                        <View style={{ flexDirection: 'row', gap: 10, marginVertical: 2 }}>
+                          {item.email && <Text style={{ fontSize: 8, color: '#444' }}>{item.email}</Text>}
+                          {item.phone && <Text style={{ fontSize: 8, color: '#444' }}>{item.phone}</Text>}
+                          {item.url && <Text style={{ fontSize: 8, color: accentColor }}>{item.url}</Text>}
+                        </View>
+                      )}
+                      {item.description && <Text style={[styles.summary, { marginTop: 2 }]}>{item.description}</Text>}
+                    </View>
+                  ))
+                ) : section.sectionType === 'stringList' && Array.isArray(section.strings) ? (
+                  section.strings.map((str, idx) => (
+                    <View key={idx} style={styles.listItem}>
+                      <Text style={styles.bullet}>•</Text>
+                      <Text style={styles.listContent}>{str}</Text>
+                    </View>
+                  ))
+                ) : null}
+              </View>
+            );
           }
         }
       })}

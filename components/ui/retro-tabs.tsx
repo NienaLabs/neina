@@ -19,7 +19,7 @@ const RetroTabs = React.forwardRef<
     onValueChange={onTabChange}
     {...props}
   >
-    <TabsPrimitive.List className="flex items-center gap-1 bg-transparent px-4 pb-2 overflow-x-hidden min-w-0">
+    <TabsPrimitive.List className="flex items-center gap-1 bg-transparent px-4 pb-2 overflow-x-auto min-w-0">
       {tabs.map((tab) => (
         <TabsPrimitive.Trigger
           key={tab.id}

@@ -169,7 +169,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
   // MODE: SCREEN (Interactive, ZOOMABLE preview)
   // ----------------------------------------------------------------------
   return (
-    <div className="min-w-full min-h-full w-fit flex justify-center items-center bg-transparent py-8 relative">
+    <div className="min-w-full min-h-full w-fit flex justify-center items-start bg-transparent py-8 relative">
         {/* 
             MEASUREMENT CONTAINER (Hidden) 
             Must remain unscaled 1:1 for accurate pagination
@@ -217,7 +217,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                         <div className="h-full flex flex-col font-serif text-black leading-relaxed">
                             {template === 'classic-two' && (
                                 <div className="grid grid-cols-[190px_1fr] h-full gap-8">
-                                    <aside className="bg-gray-50/50 p-6 border-r border-gray-100 -m-0 min-h-full">
+                                    <aside className="bg-gray-50/50 p-6 border-r border-gray-100 m-0 min-h-full">
                                         <ClassicTwoColumnSidebar data={data} accentColor={data.accentColor} />
                                     </aside>
                                     <main className="py-10 pr-10">

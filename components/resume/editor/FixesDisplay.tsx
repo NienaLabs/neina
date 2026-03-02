@@ -43,15 +43,15 @@ export const FixesDisplay = ({ fixes, section, onApplyFix }: FixesDisplayProps) 
             </div>
           }
         >
-          <Badge className="flex items-center gap-1">
-            report <Info className="size-4" />
+          <Badge className="flex items-center gap-1 bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200">
+            {sectionFixes.length} {sectionFixes.length === 1 ? 'issue' : 'issues'} <Info className="size-3.5" />
           </Badge>
         </Hint>
         {onApplyFix && autoFixable && (
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 px-2 text-xs text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200"
+            className="h-7 px-3 text-xs font-medium text-green-700 bg-green-50 hover:text-green-800 hover:bg-green-100 border border-green-300 rounded-lg"
             onClick={(e) => {
                 const target = e.currentTarget;
                 gsap.to(target, {

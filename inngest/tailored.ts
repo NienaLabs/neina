@@ -211,11 +211,44 @@ export const tailoredResumeCreated = inngest.createFunction(
   { event: "app/tailored-resume.created" },
   async ({ step, event }) => {
     try {
-      // Safety delay for API rate limits
-      await step.sleep('rate-limit-cooldown', '10s');
-      const mode = event.data.tailoringMode || "keywords";
+      // 1. Extract Job Keywords (Source of Truth for Scoring)
       const jobText = event.data.description || "";
-      let resumeContent = event.data.content || "";
+      const jobContext = await extractKeywords(step, "process-job-keywords", jobText);
+
+      // 2. Tailor Resume based on Mode
+      const mode = event.data.tailoringMode || "keywords";
+      let network;
+      let agentId;
+
+      if (mode === "nudge") {
+        network = nudgeTailoringNetwork;
+        agentId = "improveResumeNudgeAgent";
+      } else if (mode === "full") {
+        network = fullTailoringNetwork;
+        agentId = "improveResumeFullAgent";
+      } else if (mode === "refine") {
+        network = refineTailoringNetwork;
+        agentId = "improveResumeRefineAgent";
+      } else if (mode === "enrich") {
+         // Enrich acts like a "Full" tailor but with specific focus on adding detail
+        network = enrichTailoringNetwork;
+        agentId = "improveResumeEnrichAgent";
+      } else {
+        network = keywordsTailoringNetwork;
+        agentId = "improveResumeKeywordsAgent";
+      }
+
+      // Construct Prompt
+      let template = IMPROVE_RESUME_PROMPT_KEYWORDS;
+      if (mode === 'nudge') template = IMPROVE_RESUME_PROMPT_NUDGE;
+      if (mode === 'full') template = IMPROVE_RESUME_PROMPT_FULL;
+      if (mode === 'refine') template = VALIDATION_POLISH_PROMPT;
+      if (mode === 'enrich') template = IMPROVE_RESUME_PROMPT_FULL; 
+
+      const truthfulnessRules = CRITICAL_TRUTHFULNESS_RULES_TEMPLATE.replace(
+          "{rule_7}",
+          "DO NOT fabricate any information."
+      );
 
       // Fetch Primary Resume Content if needed (Refine mode)
       let primaryResumeContent = "";
@@ -235,99 +268,57 @@ export const tailoredResumeCreated = inngest.createFunction(
       try {
         const parsed = JSON.parse(resumeContent);
         resumeContent = JSON.stringify(parsed, null, 2);
-      } catch { /* use as is */ }
+      } catch {
+        // If parsing fails, it's already text/markdown - use as is
+        // This handles the initial creation case where content is markdown
+      }
 
-      // Run Consolidated Workflow Network
-      const initialState = createState({
-        stage: 'JOB_KEYWORDS',
-        tailoringMode: mode,
-        jobText: jobText,
-        resumeContent: resumeContent,
-        primaryResumeContent: primaryResumeContent,
+      let filledPrompt = template
+        .replace("{critical_truthfulness_rules}", truthfulnessRules)
+        .replace("{job_description}", jobText) // Safe job text
+        .replace("{job_keywords}", (jobContext.keywords || []).join(", "))
+        .replace("{original_resume}", resumeContent)
+        .replace("{master_resume}", primaryResumeContent) // For verification in Refine mode
+        .replace("{output_language}", "English")
+        .replace("{schema}", RESUME_SCHEMA_EXAMPLE);
+
+      const tailorState = createState<any>({ [agentId]: "" });
+      const tailorResult = await network.run(filledPrompt, { state: tailorState });
+
+      const tailoredContent = await step.run("process-tailored-content", async () => {
+        return JSON.parse(tailorResult.state.data[agentId] || "{}");
       });
 
-      const workflowResult = await tailoringOrchestratorNetwork.run(jobText, { state: initialState });
-      const finalState = workflowResult.state.data;
+      // 3. Extract Keywords from Tailored Resume (for Verification/Scoring)
+      const contentString = formatResumeContentString(tailoredContent);
+      
+      const tailoredResumeKeywords = (await extractKeywords(step, "process-tailored-keywords", contentString)).keywords;
 
-      // Extract results from state
-      const jobKeywords = [
-        ...(finalState.jobKeywordsData.required_skills || []),
-        ...(finalState.jobKeywordsData.preferred_skills || []),
-        ...(finalState.jobKeywordsData.keywords || []),
-        ...(finalState.jobKeywordsData.key_responsibilities || [])
-      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
-      const uniqueJobKeywords = Array.from(new Set(jobKeywords));
-
-      const tailoredContent = finalState.tailoredContentData;
-
-      const tailoredResumeKeywords = [
-        ...(finalState.resumeKeywordsData.required_skills || []),
-        ...(finalState.resumeKeywordsData.preferred_skills || []),
-        ...(finalState.resumeKeywordsData.keywords || [])
-      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
-      const uniqueResumeKeywords = Array.from(new Set(tailoredResumeKeywords));
-
-      // Calculate Score
-      const scoreData = await step.run("calculate-match-score", async () => {
-        const jobKeywordsSet = new Set(uniqueJobKeywords);
-        const resumeKeywordsSet = new Set(uniqueResumeKeywords);
-
-        let matchCount = 0;
-        const matchedKeywords: string[] = [];
-        const missingKeywords: string[] = [];
-
-        jobKeywordsSet.forEach(k => {
-          if (resumeKeywordsSet.has(k)) {
-            matchCount++;
-            matchedKeywords.push(k);
-          } else {
-            missingKeywords.push(k);
-          }
-        });
-
-        const score = jobKeywordsSet.size > 0 ? (matchCount / jobKeywordsSet.size) : 0;
-        return {
-          finalScore: score,
-          matchedKeywords,
-          missingKeywords,
-          totalKeywords: jobKeywordsSet.size
-        };
-      });
+      // 4. Calculate Word Match Score
+      const scoreData = await calculateScore(step, "calculate-word-match-score", jobContext.keywords, tailoredResumeKeywords);
 
       // Save to DB
       await step.run("save-tailored-resume", async () => {
-        const jsonToMarkdown = (data: any) => {
-          let md = `# ${data.name || "Tailored Resume"}\n\n`;
-          if (data.summary) md += `## Summary\n${data.summary}\n\n`;
-          if (data.skills && data.skills.length) md += `## Skills\n${data.skills.join(", ")}\n\n`;
-          if (data.experience) {
-            md += `## Experience\n`;
-            data.experience.forEach((exp: any) => {
-              md += `### ${exp.role} at ${exp.company}\n${exp.date || ""}\n${exp.description}\n\n`;
-            });
-          }
-          return md;
-        };
-
-        const finalContent = jsonToMarkdown(tailoredContent);
-        await prisma.tailoredResume.update({
-          where: { id: event.data.resumeId },
-          data: {
-            content: finalContent,
-            extractedData: tailoredContent,
-            analysisData: JSON.stringify({
-              matches: scoreData.matchedKeywords,
-              missing: scoreData.missingKeywords
-            }),
-            scores: {
-              finalScore: scoreData.finalScore,
-              wordMatchScore: scoreData.finalScore,
-              totalKeywords: scoreData.totalKeywords,
-              matchedCount: scoreData.matchedKeywords.length
-            },
-            status: "COMPLETED"
-          }
-        });
+          const finalContent = jsonToMarkdown(tailoredContent);
+          
+          await prisma.tailoredResume.update({
+            where: { id: event.data.resumeId },
+            data: {
+              content: finalContent, 
+              extractedData: tailoredContent, 
+              analysisData: JSON.stringify({
+                  matches: scoreData.matchedKeywords,
+                  missing: scoreData.missingKeywords
+              }),
+              scores: {
+                  finalScore: scoreData.finalScore,
+                  wordMatchScore: scoreData.finalScore,
+                  totalKeywords: scoreData.totalKeywords,
+                  matchedCount: scoreData.matchedKeywords.length
+              },
+              status: "COMPLETED"
+            }
+          });
       });
 
       // Notify SSE
@@ -371,60 +362,19 @@ export const tailoredResumeUpdated = inngest.createFunction(
       // Safety delay for API rate limits
       await step.sleep('rate-limit-cooldown', '10s');
       const jobText = event.data.description || "";
+      const jobContext = await extractKeywords(step, "extract-job-keywords-update", jobText);
+
+      // 2. Tailoring is NOT re-run on simple update unless explicitly requested?
+      // The `tailoredResumeUpdated` event usually implies the USER edited the content manually or requested a re-generation.
+      // We assume the content in `event.data.content` is the Latest.
+      
       const tailoredContentString = event.data.content;
 
-      // Run Consolidated Workflow (Update Mode: Skip Tailoring stage)
-      const initialState = createState({
-        stage: 'JOB_KEYWORDS',
-        skipTailoring: true, // Custom flag for our router
-        jobText: jobText,
-        resumeContent: tailoredContentString, // Reuse for extraction
-        // resumeKeywordsData will be filled by the resume-keyword-proxy
-      });
+      // 3. Extract Keywords from Current Content (for Scoring)
+      const tailoredResumeKeywords = (await extractKeywords(step, "extract-tailored-keywords-update", tailoredContentString)).keywords;
 
-      // We need to slightly adjust the router logic to handle tailoredContentData from resumeContent if skipTailoring
-      const workflowResult = await tailoringOrchestratorNetwork.run(jobText, { state: initialState });
-      const finalState = workflowResult.state.data;
-
-      // Extract results
-      const jobKeywords = [
-        ...(finalState.jobKeywordsData.required_skills || []),
-        ...(finalState.jobKeywordsData.preferred_skills || []),
-        ...(finalState.jobKeywordsData.keywords || [])
-      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
-
-      const tailoredResumeKeywords = [
-        ...(finalState.resumeKeywordsData.required_skills || []),
-        ...(finalState.resumeKeywordsData.preferred_skills || []),
-        ...(finalState.resumeKeywordsData.keywords || [])
-      ].filter(Boolean).map((k: any) => String(k).toLowerCase());
-
-      // Calculate Score
-      const scoreData = await step.run("calculate-match-score-update", async () => {
-        const jobKeywordsSet = new Set(jobKeywords);
-        const resumeKeywordsSet = new Set(Array.from(new Set(tailoredResumeKeywords)));
-
-        let matchCount = 0;
-        const matchedKeywords: string[] = [];
-        const missingKeywords: string[] = [];
-
-        jobKeywordsSet.forEach(k => {
-          if (resumeKeywordsSet.has(k)) {
-            matchCount++;
-            matchedKeywords.push(k);
-          } else {
-            missingKeywords.push(k);
-          }
-        });
-
-        const score = jobKeywordsSet.size > 0 ? (matchCount / jobKeywordsSet.size) : 0;
-        return {
-          finalScore: score,
-          matchedKeywords,
-          missingKeywords,
-          totalKeywords: jobKeywordsSet.size
-        };
-      });
+      // 4. Calculate Word Match Score
+      const scoreData = await calculateScore(step, "calculate-word-match-score-update", jobContext.keywords, tailoredResumeKeywords);
 
       // Save to DB
       await step.run("save-tailored-resume-update", async () => {
@@ -496,6 +446,22 @@ export const coverLetterGenerated = inngest.createFunction(
   JOB DESCRIPTION:
   ${jobDescription}
   `;
+  
+          const result = await coverLetterNetwork.run(filledPrompt, { state });
+          
+          const data = JSON.parse(result.state.data.coverLetterAgent || "{}");
+          
+          const polishedCoverLetter = polishCoverLetter(data.coverLetter || "");
+
+          await step.run("save-cover-letter", async () => {
+               await prisma.tailoredResume.update({
+                   where: { id: resumeId },
+                   data: {
+                       coverLetter: polishedCoverLetter,
+                       status: "COMPLETED"
+                   }
+               });
+          });
 
       const result = await coverLetterNetwork.run(filledPrompt, { state });
 
@@ -540,4 +506,183 @@ export const coverLetterGenerated = inngest.createFunction(
     }
   }
 );
+
+
+/* ============================================================================
+   Helper Functions
+   ============================================================================ */
+
+/**
+ * Extracts and processes keywords from the given text using the AI agent.
+ */
+async function extractKeywords(step: any, stepId: string, text: string) {
+    const keywordState = createState<{ keywordExtractorAgent: string }>({ keywordExtractorAgent: "" });
+    // Execute Agent Network (Must be outside step.run because createNetwork.run is async and stateful)
+    // Wait, step.run can be wrapped around the network run if network run is deterministic or if we want to memoize it?
+    // Inngest steps should be deterministic.
+    // However, the original code ran network.run OUTSIDE step.run, then processed inside.
+    // To match original behavior for safety:
+    const keywordResult = await keywordExtractionNetwork.run(text, { state: keywordState });
+
+    return await step.run(stepId, async () => {
+        const data = JSON.parse(keywordResult.state.data.keywordExtractorAgent || "{}");
+        const keywords = [
+          ...(data.required_skills || []),
+          ...(data.preferred_skills || []),
+          ...(data.keywords || []),
+          ...(data.key_responsibilities || []) 
+        ].filter(Boolean);
+        const uniqueKeywords = Array.from(new Set(keywords.map((k: string) => k.toLowerCase())));
+        
+        return {
+          extractedData: data,
+          keywords: uniqueKeywords
+        };
+    });
+}
+
+/**
+ * Calculates the match score between resumes and job keywords.
+ */
+async function calculateScore(step: any, stepId: string, jobKeywordsList: string[], resumeKeywordsList: string[]) {
+    return await step.run(stepId, async () => {
+        const jobKeywords = new Set(jobKeywordsList);
+        const resumeKeywords = new Set(resumeKeywordsList);
+        
+        let matchCount = 0;
+        const matchedKeywords: string[] = [];
+        const missingKeywords: string[] = [];
+        
+        jobKeywords.forEach(k => {
+            if (resumeKeywords.has(k)) {
+                matchCount++;
+                matchedKeywords.push(k);
+            } else {
+                missingKeywords.push(k);
+            }
+        });
+        
+        const score = jobKeywords.size > 0 ? (matchCount / jobKeywords.size) : 0;
+        
+        return {
+            finalScore: score,
+            matchedKeywords,
+            missingKeywords,
+            totalKeywords: jobKeywords.size
+        };
+    });
+}
+
+/**
+ * Helper to flatten structured resume content into a single string for keyword extraction.
+ */
+function formatResumeContentString(tailoredContent: any): string {
+    const getSkillsList = (skills: any): string[] => {
+        if (!skills) return [];
+        if (Array.isArray(skills)) return skills;
+        if (typeof skills === 'object') {
+            return Object.values(skills).flat().map(s => String(s));
+        }
+        return [];
+    };
+
+    return [
+        tailoredContent.summary || "",
+        getSkillsList(tailoredContent.skills).join(", "),
+        (Array.isArray(tailoredContent.experience) ? tailoredContent.experience : [])
+            .map((e: any) => e.description).join(" "),
+    ].join(" ");
+}
+
+/**
+ * Polishes a cover letter by removing em dashes and common AI filler words/phrases
+ * to produce more natural, human-sounding text.
+ *
+ * @param text - The raw cover letter text returned by the AI agent.
+ * @returns The cleaned and polished cover letter text.
+ */
+function polishCoverLetter(text: string): string {
+    // 1. Replace em dashes with a comma-space or regular dash depending on context
+    //    e.g. "...skills—communication..." → "...skills, communication..."
+    //    We preserve en-dashes and hyphens (e.g. in compound words).
+    let polished = text.replace(/\u2014/g, ", "); // em dash → ", "
+
+    // 2. Remove / replace common AI filler words and phrases (case-insensitive)
+    const aiWordReplacements: Array<[RegExp, string]> = [
+        // Overused openers
+        [/\bI am thrilled to\b/gi, "I am eager to"],
+        [/\bI am excited to\b/gi, "I am eager to"],
+        [/\bI am delighted to\b/gi, "I am eager to"],
+        [/\bI am pleased to\b/gi, "I am eager to"],
+        [/\bI am deeply passionate about\b/gi, "I am passionate about"],
+
+        // Buzzwords / jargon (each tense handled separately to keep types simple)
+        [/\bseamlessly\b/gi, "effectively"],
+        [/\bleveraged\b/gi, "used"],
+        [/\bleveraging\b/gi, "using"],
+        [/\bleverage\b/gi, "use"],
+        [/\bsynergy\b/gi, "collaboration"],
+        [/\bsynergies\b/gi, "collaborations"],
+        [/\bsynergize\b/gi, "collaborate"],
+        [/\brobust\b/gi, "strong"],
+        [/\bholistic\b/gi, "comprehensive"],
+        [/\bparadigm\b/gi, "approach"],
+        [/\boptimizing\b/gi, "improving"],
+        [/\boptimized\b/gi, "improved"],
+        [/\boptimize\b/gi, "improve"],
+        [/\butilizing\b/gi, "using"],
+        [/\butilized\b/gi, "used"],
+        [/\butilize\b/gi, "use"],
+        [/\bfacilitating\b/gi, "helping"],
+        [/\bfacilitated\b/gi, "helped"],
+        [/\bfacilitate\b/gi, "help"],
+        [/\bdemonstrated\b/gi, "showed"],
+        [/\bdemonstrate\b/gi, "show"],
+        [/\bspearheaded\b/gi, "led"],
+        [/\bspearheading\b/gi, "leading"],
+        [/\bspearhead\b/gi, "lead"],
+        [/\bpivotal\b/gi, "key"],
+        [/\bgroundbreaking\b/gi, "innovative"],
+        [/\bcutting-edge\b/gi, "modern"],
+        [/\bstate-of-the-art\b/gi, "modern"],
+        [/\bworld-class\b/gi, "high-quality"],
+        [/\bthought leadership\b/gi, "expertise"],
+        [/\bthought leader\b/gi, "expert"],
+        [/\bvalue-added\b/gi, "valuable"],
+        [/\bvalue-add\b/gi, "valuable"],
+        [/\bimpactful\b/gi, "effective"],
+        [/\bdynamic\b/gi, "proactive"],
+        [/\binnovative solutions\b/gi, "solutions"],
+
+        // Closing clichés
+        [/\bI look forward to discussing[^.]*\./gi, "I welcome the opportunity to discuss this further."],
+        [/\bThank you for your consideration\.?/gi, "Thank you for your time."],
+        [/\bI am confident that I (?:would|will)\b/gi, "I believe I"],
+    ];
+
+    for (const [pattern, replacement] of aiWordReplacements) {
+        polished = polished.replace(pattern, replacement as string);
+    }
+
+    // 3. Collapse any double spaces or space-before-punctuation artifacts left by replacements
+    polished = polished.replace(/ {2,}/g, " ").replace(/ ([,.])/g, "$1");
+
+    return polished.trim();
+}
+
+/**
+ * Converts JSON resume structure to Markdown.
+ */
+function jsonToMarkdown(data: any) {
+    let md = `# ${data.name || "Tailored Resume"}\n\n`;
+    if (data.summary) md += `## Summary\n${data.summary}\n\n`;
+    if (data.skills && data.skills.length) md += `## Skills\n${data.skills.join(", ")}\n\n`;
+    if (data.experience) {
+        md += `## Experience\n`;
+        data.experience.forEach((exp: any) => {
+            md += `### ${exp.role} at ${exp.company}\n${exp.date || ""}\n${exp.description}\n\n`;
+        });
+    }
+    return md;
+}
 

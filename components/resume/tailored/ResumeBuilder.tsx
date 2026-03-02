@@ -84,7 +84,7 @@ const ResumeBuilderContent = ({
   const [activeEditorTab, setActiveEditorTab] = useState<'content' | 'job-description' | 'cover-letter' | 'outreach'>('content');
   const [resumeData, setResumeData] = useState<ResumeData | null>(initialData || null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [previewScale, setPreviewScale] = useState(0.65);
+  const [previewScale, setPreviewScale] = useState(0.75);
   const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true);
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
 
@@ -414,7 +414,7 @@ const ResumeBuilderContent = ({
       className="min-h-screen w-full bg-background flex justify-center items-start py-2 px-2 md:py-3 md:px-4 overflow-x-hidden"
     >
         {/* Main Container */}
-      <div className="w-full h-[140vh] max-w-[92%] md:max-w-[96%] xl:max-w-[2000px] bg-white dark:bg-card shadow-2xl border border-black/5 rounded-3xl flex flex-col overflow-hidden">
+      <div className="w-full min-h-[calc(100vh-2rem)] max-w-[92%] md:max-w-[96%] xl:max-w-[2000px] bg-white dark:bg-card shadow-2xl border border-black/5 rounded-3xl flex flex-col overflow-hidden">
           {/* Header */}
           <div className="border-b border-black/5 p-3 md:p-4 bg-white/80 dark:bg-black/80 backdrop-blur-md">
              <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
@@ -549,7 +549,7 @@ const ResumeBuilderContent = ({
                         onTabChange={(id) => setActiveEditorTab(id as any)}
                      />
                  </div>
-                 <div className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6">
+                 <div className="flex-1 overflow-y-auto min-h-0 p-6 md:p-8">
                      <div className="max-w-4xl mx-auto space-y-6">
                         {activeEditorTab === 'content' && (
                             <ResumeForm 
@@ -601,169 +601,174 @@ const ResumeBuilderContent = ({
 
              {/* Right Panel: Preview */}
              <div className={`${!isRightPanelVisible ? 'hidden' : 'flex'} bg-slate-200/50 dark:bg-black/40 flex-col min-h-0 relative group`}>
-                 <div className="absolute top-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 rounded-full bg-white/90 hover:bg-white soft-glow border-none flex items-center justify-center p-0"
-                      onClick={() => setIsRightPanelVisible(false)}
-                      title="Collapse Preview"
-                    >
-                      <PanelRightClose className="w-4 h-4 text-slate-700" />
-                    </Button>
-                 </div>
-                 <div className="px-6 md:px-8 pt-4 md:pt-5 shrink-0 bg-transparent">
-                     <RetroTabs 
-                        tabs={[
-                            { id: 'resume', label: 'Resume', icon: <Eye className="w-3.5 h-3.5" /> },
-                            { id: 'cover-letter', label: 'Cover Letter', icon: <Mail className="w-3.5 h-3.5" /> },
-                            { id: 'jd-match', label: 'JD Match', icon: <ScanSearch className="w-3.5 h-3.5" /> },
-                        ]}
-                        activeTab={activeTab}
-                        onTabChange={(id) => setActiveTab(id as TabId)}
+                 {/* Tab row + zoom (same line) */}
+                 <div className="px-4 md:px-6 pt-4 shrink-0 bg-transparent border-b border-black/10 flex items-end justify-between gap-4">
+                     <RetroTabs
+                         tabs={[
+                             { id: 'resume', label: 'Resume', icon: <Eye className="w-3.5 h-3.5" /> },
+                             { id: 'cover-letter', label: 'Cover Letter', icon: <Mail className="w-3.5 h-3.5" /> },
+                             { id: 'jd-match', label: 'JD Match', icon: <ScanSearch className="w-3.5 h-3.5" /> },
+                         ]}
+                         activeTab={activeTab}
+                         onTabChange={(id) => setActiveTab(id as TabId)}
                      />
+                     {/* Zoom — right-aligned in same row as tabs */}
+                     <div className="flex items-center gap-1 bg-white/70 rounded-lg px-2 py-1 border border-black/8 mb-2 shrink-0">
+                         <Button
+                             variant="ghost"
+                             size="sm"
+                             className="h-5 w-5 p-0 rounded hover:bg-gray-100"
+                             onClick={() => setPreviewScale(s => Math.max(0.3, s - 0.1))}
+                             disabled={previewScale <= 0.3}
+                         >
+                             <ZoomOut className="w-3 h-3 text-black" />
+                         </Button>
+                         <span className="text-[10px] font-bold text-black w-7 text-center">
+                             {Math.round(previewScale * 100)}%
+                         </span>
+                         <Button
+                             variant="ghost"
+                             size="sm"
+                             className="h-5 w-5 p-0 rounded hover:bg-gray-100"
+                             onClick={() => setPreviewScale(s => Math.min(1.5, s + 0.1))}
+                             disabled={previewScale >= 1.5}
+                         >
+                             <ZoomIn className="w-3 h-3 text-black" />
+                         </Button>
+                     </div>
                  </div>
-                 <div className="flex-1 overflow-auto min-h-0 p-4 md:p-6 bg-transparent">
-                      <ResumePreview 
-                        data={resumeData} 
-                        activeTab={activeTab}
-                        template={selectedTemplate}
-                        wordMatchScore={wordMatchScore}
-                        matchedKeywords={matchedKeywords}
-                        missingKeywords={missingKeywords}
-                        jobDescription={jdText}
-                        scale={previewScale}
-                        coverLetter={coverLetter}
-                     />
+                 {/* Template + Accent + Collapse row */}
+                 <div className="px-4 md:px-6 py-2 shrink-0 flex items-center justify-between gap-2 border-b border-black/5">
+                     <div className="flex items-center gap-1.5 bg-white/50 rounded-lg px-2 py-1 border border-black/8 text-[10px]">
+                         <span className="font-bold uppercase text-gray-400">Template</span>
+                         <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+                             <SelectTrigger className="h-5 w-[130px] text-[10px] border-none shadow-none focus:ring-0 bg-transparent font-bold font-mono p-0">
+                                 <SelectValue placeholder="Template" />
+                             </SelectTrigger>
+                             <SelectContent>
+                                 <SelectItem value="classic-single">Classic Single</SelectItem>
+                                 <SelectItem value="modern-single">Modern Single</SelectItem>
+                                 <SelectItem value="classic-two">Classic Two Col</SelectItem>
+                                 <SelectItem value="modern-two">Modern Two Col</SelectItem>
+                             </SelectContent>
+                         </Select>
+                     </div>
+                     <div className="flex items-center gap-2">
+                         <div className="flex items-center gap-1.5 bg-white/50 rounded-lg px-2 py-1 border border-black/8">
+                             <span className="text-[10px] font-bold uppercase text-gray-400">Accent</span>
+                             <div className="flex gap-1 items-center">
+                                 {[
+                                     { name: 'Slate', value: '#334155' },
+                                     { name: 'Blue', value: '#2563eb' },
+                                     { name: 'Emerald', value: '#059669' },
+                                     { name: 'Violet', value: '#7c3aed' },
+                                     { name: 'Rose', value: '#e11d48' },
+                                     { name: 'Amber', value: '#d97706' },
+                                 ].map((c) => (
+                                     <button
+                                         key={c.value}
+                                         onClick={() => handleColorChange(c.value)}
+                                         className="w-3.5 h-3.5 rounded-full border border-black/10 flex items-center justify-center transition-transform hover:scale-110"
+                                         style={{ backgroundColor: c.value }}
+                                         title={c.name}
+                                     >
+                                         {resumeData?.accentColor === c.value && <Check className="w-2 h-2 text-white" />}
+                                     </button>
+                                 ))}
+                             </div>
+                         </div>
+                         {/* Collapse button — right side of controls row, no overlap with zoom */}
+                         <Button
+                             variant="ghost"
+                             size="icon"
+                             className="h-7 w-7 rounded-full bg-white/90 hover:bg-white soft-glow border-none flex items-center justify-center p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                             onClick={() => setIsRightPanelVisible(false)}
+                             title="Collapse Preview"
+                         >
+                             <PanelRightClose className="w-4 h-4 text-slate-700" />
+                         </Button>
+                     </div>
+                 </div>
+                 {/* rotateX(180deg) on outer flips the horizontal scrollbar to the top;
+                     counter-rotate on inner keeps content visually upright */}
+                 <div className="flex-1 overflow-auto min-h-0 bg-transparent transform-[rotateX(180deg)]">
+                     <div className="p-4 md:p-6 min-h-full transform-[rotateX(180deg)]">
+                         <ResumePreview
+                             data={resumeData}
+                             activeTab={activeTab}
+                             template={selectedTemplate}
+                             wordMatchScore={wordMatchScore}
+                             matchedKeywords={matchedKeywords}
+                             missingKeywords={missingKeywords}
+                             jobDescription={jdText}
+                             scale={previewScale}
+                             coverLetter={coverLetter}
+                         />
+                     </div>
+                 </div>
              </div>
-          </div>
           </div>
 
 
 
           
-         {/* Footer */}
-        <div className="px-4 py-2 md:px-5 md:py-2.5 bg-background/80 backdrop-blur-md flex justify-between items-center font-mono text-xs text-slate-700 border-t border-black/5 print:hidden z-50 relative">
-          <div className="flex items-center gap-4">
-            <span className="uppercase font-bold flex items-center gap-2">
-               Niena Module
-            </span>
-            <div className="flex items-center gap-1 border-l border-slate-300 pl-4">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={`h-7 px-2 text-[10px] uppercase font-bold transition-colors ${isLeftPanelVisible ? 'text-slate-900 bg-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
-                  onClick={() => setIsLeftPanelVisible(prev => !prev)}
-                >
-                  Editor
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={`h-7 px-2 text-[10px] uppercase font-bold transition-colors ${isRightPanelVisible ? 'text-slate-900 bg-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
-                  onClick={() => setIsRightPanelVisible(prev => !prev)}
-                >
-                  Preview
-                </Button>
-              {(!isLeftPanelVisible || !isRightPanelVisible) && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 px-2 text-[10px] uppercase font-bold text-blue-600 hover:text-blue-700"
-                  onClick={() => {
-                    setIsLeftPanelVisible(true);
-                    setIsRightPanelVisible(true);
-                  }}
-                >
-                  Reset View
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap justify-end">
-             <div className="flex items-center gap-3 bg-white/50 rounded-xl px-3 py-1 border border-black/5 soft-glow">
-                <span className="text-[10px] font-bold uppercase text-gray-400">Template</span>
-                <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-                    <SelectTrigger className="h-6 w-[160px] text-[10px] border-none shadow-none focus:ring-0 bg-transparent font-bold font-mono">
-                        <SelectValue placeholder="Select Template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="classic-single">Classic (Single Column)</SelectItem>
-                        <SelectItem value="modern-single">Modern (Single Column)</SelectItem>
-                        <SelectItem value="classic-two">Classic (Two Column)</SelectItem>
-                        <SelectItem value="modern-two">Modern (Two Column)</SelectItem>
-                    </SelectContent>
-                </Select>
+          {/* Footer — panel toggles only, controls moved to preview panel header */}
+         <div className="px-4 py-2 md:px-5 md:py-2.5 bg-background/80 backdrop-blur-md flex justify-between items-center font-mono text-xs text-slate-700 border-t border-black/5 print:hidden z-50 relative">
+           <div className="flex items-center gap-4">
+             <span className="uppercase font-bold flex items-center gap-2">
+                Niena Module
+             </span>
+             <div className="flex items-center gap-1 border-l border-slate-300 pl-4">
+                 <Button 
+                   variant="ghost" 
+                   size="sm" 
+                   className={`h-7 px-2 text-[10px] uppercase font-bold transition-colors ${isLeftPanelVisible ? 'text-slate-900 bg-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                   onClick={() => setIsLeftPanelVisible(prev => !prev)}
+                 >
+                   Editor
+                 </Button>
+                 <Button 
+                   variant="ghost" 
+                   size="sm" 
+                   className={`h-7 px-2 text-[10px] uppercase font-bold transition-colors ${isRightPanelVisible ? 'text-slate-900 bg-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                   onClick={() => setIsRightPanelVisible(prev => !prev)}
+                 >
+                   Preview
+                 </Button>
+               {(!isLeftPanelVisible || !isRightPanelVisible) && (
+                 <Button 
+                   variant="ghost" 
+                   size="sm" 
+                   className="h-7 px-2 text-[10px] uppercase font-bold text-blue-600 hover:text-blue-700"
+                   onClick={() => {
+                     setIsLeftPanelVisible(true);
+                     setIsRightPanelVisible(true);
+                   }}
+                 >
+                   Reset View
+                 </Button>
+               )}
              </div>
-
-             <div className="flex items-center gap-3 bg-white/50 rounded-xl px-3 py-1 border border-black/5 soft-glow">
-                <span className="text-[10px] font-bold uppercase text-gray-400">Accent</span>
-                <div className="flex gap-1.5 items-center">
-                    {[
-                        { name: 'Blue', value: '#2563eb' },
-                        { name: 'Emerald', value: '#059669' },
-                        { name: 'Violet', value: '#7c3aed' },
-                        { name: 'Rose', value: '#e11d48' },
-                        { name: 'Amber', value: '#d97706' },
-                        { name: 'Slate', value: '#334155' }
-                    ].map((c) => (
-                        <button
-                            key={c.value}
-                            onClick={() => handleColorChange(c.value)}
-                            className="w-4 h-4 rounded-full border border-black/10 flex items-center justify-center transition-transform hover:scale-110"
-                            style={{ backgroundColor: c.value }}
-                            title={c.name}
-                        >
-                            {resumeData?.accentColor === c.value && <Check className="w-2.5 h-2.5 text-white" />}
-                        </button>
-                    ))}
-                </div>
-             </div>
-
-             <div className="flex items-center gap-2 bg-white/50 rounded-full px-3 py-1.5 border border-black/5 soft-glow">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0 rounded-full hover:bg-gray-100"
-                    onClick={() => setPreviewScale(s => Math.max(0.3, s - 0.1))}
-                    disabled={previewScale <= 0.3}
-                >
-                    <ZoomOut className="w-3 h-3 text-black" />
-                </Button>
-                <span className="text-[10px] font-bold text-black w-8 text-center bg-transparent">
-                    {Math.round(previewScale * 100)}%
-                </span>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0 rounded-full hover:bg-gray-100"
-                    onClick={() => setPreviewScale(s => Math.min(1.5, s + 0.1))}
-                    disabled={previewScale >= 1.5}
-                >
-                    <ZoomIn className="w-3 h-3 text-black" />
-                </Button>
-             </div>
-             <span className="font-bold">A4</span>
-          </div>
-        </div>
+           </div>
+         </div>
        </div>
-       {/* Global Loading Overlay */}
+       {/* Processing Notification — non-blocking floating indicator */}
       {(!!processingAction || isGeneratingCoverLetter || status === 'PENDING' || status === 'PROCESSING') && (
-        <div className="fixed inset-0 bg-background/50 flex items-center justify-center z-[100] backdrop-blur-sm">
-            <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-2xl flex flex-col items-center gap-4">
-                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                 <p className="font-mono font-bold text-lg blinking-cursor">
-                    {isGeneratingCoverLetter ? 'GENERATING COVER LETTER...' : 
-                     (processingAction ? 
-                        (processingAction === 'enrich' ? 'ENRICHING CONTENT...' : 
-                         processingAction === 'refine' ? 'REFINING & POLISHING...' :
-                         processingAction === 'keywords' ? 'OPTIMIZING KEYWORDS...' :
-                         processingAction === 'nudge' ? 'NUDGING CONTENT...' :
-                         processingAction === 'full' ? 'FULL RE-TAILORING...' : 
-                         `PROCESSING (${processingAction.toUpperCase()})...`) 
-                     : (status === 'PROCESSING' || status === 'PENDING' ? 'REFINING RESUME...' : 'STARTING REFINEMENT...'))}
-                 </p>
-                 <p className="text-xs font-mono text-gray-500">This may take a moment</p>
+        <div className="fixed bottom-24 right-6 z-[100] flex items-center gap-3 bg-white border border-black/10 shadow-xl rounded-2xl px-4 py-3 animate-in slide-in-from-bottom-4 fade-in">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600 shrink-0" />
+            <div className="flex flex-col">
+              <p className="font-semibold text-sm leading-tight">
+                {isGeneratingCoverLetter ? 'Generating Cover Letter' : 
+                 (processingAction ? 
+                    (processingAction === 'enrich' ? 'Enriching Content' : 
+                     processingAction === 'refine' ? 'Refining & Polishing' :
+                     processingAction === 'keywords' ? 'Optimizing Keywords' :
+                     processingAction === 'nudge' ? 'Nudging Content' :
+                     processingAction === 'full' ? 'Full Re-Tailoring' : 
+                     `Processing`) 
+                 : 'Refining Resume')}
+              </p>
+              <p className="text-xs text-muted-foreground">AI is working in the background…</p>
             </div>
         </div>
       )}

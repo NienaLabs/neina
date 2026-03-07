@@ -10,6 +10,7 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
+    Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -40,6 +41,11 @@ const sidebarLinks = [
         label: "Post a Job",
         href: "/recruiters/jobs/new",
         icon: PlusCircle,
+    },
+    {
+        label: "Talent Pool",
+        href: "/recruiters/talent",
+        icon: Users,
     },
 ];
 

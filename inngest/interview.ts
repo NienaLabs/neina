@@ -16,10 +16,11 @@ export const questionnaireAgent = createAgent({
 
 // Define the Inngest function
 export const interviewCreated = inngest.createFunction(
-    { id: "interview-generation-workflow" },
+    { id: "interview-generation-workflow", concurrency: 1 },
     { event: "app/interview.created" },
     async ({ event, step }) => {
-        console.log("🚀 Interview generation started:", event.data.interviewId);
+        // Safety delay for API rate limits
+        await step.sleep('rate-limit-cooldown', '10s');
         const { interviewId, role, description, type, questionCount, resumeContent } = event.data;
 
         // Construct the prompt input
@@ -31,32 +32,24 @@ export const interviewCreated = inngest.createFunction(
         ${resumeContent ? `Resume Context: ${resumeContent}` : ''}
         `;
 
-        // Run the agent
-        // 1. Run the agent to get raw content
-        // 1. Run the agent to get raw content
-        console.log("🤖 calling questionnaire agent...");
+        // Run the agent to get raw content
         const response = await questionnaireAgent.run(promptInput);
-        console.log("✅ agent response received");
         const rawContent = lastAssistantTextMessageContent(response);
 
         if (!rawContent) {
-            console.error("❌ Agent returned no content");
             throw new Error("No content from agent");
         }
 
         // 2. Parse the content
         const questions = await step.run("parse-questions", async () => {
-            console.log("📝 Parsing agent content...");
             // Extract JSON
             const jsonMatch = rawContent.match(/```json\n([\s\S]*?)\n```/) || [null, rawContent];
             const jsonStr = jsonMatch[1] || rawContent;
 
             // Use validJson helper
             const questionsData = validJson(jsonStr) || JSON.parse(jsonStr);
-            console.log("✅ Parsed questions data:", questionsData);
 
             if (!questionsData || !Array.isArray(questionsData.questions)) {
-                console.error("❌ Invalid questions format", questionsData);
                 throw new Error("Invalid questions format");
             }
             return questionsData.questions; // Return just the array
@@ -64,7 +57,6 @@ export const interviewCreated = inngest.createFunction(
 
         // 3. Save to DB
         const result = await step.run("save-questions", async () => {
-            console.log("💾 Saving questions to DB for ID:", interviewId);
             return await prisma.interview.update({
                 where: { id: interviewId },
                 data: {
@@ -77,7 +69,6 @@ export const interviewCreated = inngest.createFunction(
         // 4. Notify Client via SSE
         const { userId } = event.data;
         if (userId) {
-            console.log("📡 Emitting INTERVIEW_READY for user:", userId);
             const { emitUserEvent } = await import("@/lib/events");
             emitUserEvent(userId, {
                 type: 'INTERVIEW_READY',

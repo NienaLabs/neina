@@ -49,7 +49,9 @@ type SortOption = "newest" | "views" | "applications";
 export default function RecruiterDashboardPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<SortOption>("newest");
-    const { data: dashboard, isLoading } = trpc.recruiter.getRecruiterDashboardData.useQuery();
+    const { data: dashboard, isLoading } = trpc.recruiter.getRecruiterDashboardData.useQuery(undefined, {
+        refetchOnWindowFocus: false,
+    });
 
     if (isLoading) {
         return (
@@ -70,7 +72,7 @@ export default function RecruiterDashboardPage() {
         )
         .sort((a, b) => {
             if (sortBy === "views") {
-                return b.job._count.jobViews - a.job._count.jobViews;
+                return b.viewCount - a.viewCount;
             }
             if (sortBy === "applications") {
                 return b._count.candidates - a._count.candidates;
@@ -391,7 +393,7 @@ export default function RecruiterDashboardPage() {
                                                 <td className="py-5">
                                                     <div className="flex items-center justify-center gap-6">
                                                         <div className="flex flex-col items-center">
-                                                            <span className="text-xs font-bold">{rj.job._count.jobViews}</span>
+                                                            <span className="text-xs font-bold">{rj.viewCount}</span>
                                                             <span className="text-[9px] font-medium text-muted-foreground">Views</span>
                                                         </div>
                                                         <div className="flex flex-col items-center border-l pl-6">

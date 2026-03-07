@@ -26,58 +26,58 @@ export type AggregateJobView = {
 
 export type JobViewMinAggregateOutputType = {
   id: string | null
-  jobId: string | null
   userId: string | null
   viewedAt: Date | null
   ipAddress: string | null
   userAgent: string | null
+  jobId: string | null
 }
 
 export type JobViewMaxAggregateOutputType = {
   id: string | null
-  jobId: string | null
   userId: string | null
   viewedAt: Date | null
   ipAddress: string | null
   userAgent: string | null
+  jobId: string | null
 }
 
 export type JobViewCountAggregateOutputType = {
   id: number
-  jobId: number
   userId: number
   viewedAt: number
   ipAddress: number
   userAgent: number
+  jobId: number
   _all: number
 }
 
 
 export type JobViewMinAggregateInputType = {
   id?: true
-  jobId?: true
   userId?: true
   viewedAt?: true
   ipAddress?: true
   userAgent?: true
+  jobId?: true
 }
 
 export type JobViewMaxAggregateInputType = {
   id?: true
-  jobId?: true
   userId?: true
   viewedAt?: true
   ipAddress?: true
   userAgent?: true
+  jobId?: true
 }
 
 export type JobViewCountAggregateInputType = {
   id?: true
-  jobId?: true
   userId?: true
   viewedAt?: true
   ipAddress?: true
   userAgent?: true
+  jobId?: true
   _all?: true
 }
 
@@ -155,11 +155,11 @@ export type JobViewGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 
 export type JobViewGroupByOutputType = {
   id: string
-  jobId: string
   userId: string | null
   viewedAt: Date
   ipAddress: string | null
   userAgent: string | null
+  jobId: string
   _count: JobViewCountAggregateOutputType | null
   _min: JobViewMinAggregateOutputType | null
   _max: JobViewMaxAggregateOutputType | null
@@ -185,21 +185,21 @@ export type JobViewWhereInput = {
   OR?: Prisma.JobViewWhereInput[]
   NOT?: Prisma.JobViewWhereInput | Prisma.JobViewWhereInput[]
   id?: Prisma.StringFilter<"JobView"> | string
-  jobId?: Prisma.StringFilter<"JobView"> | string
   userId?: Prisma.StringNullableFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"JobView"> | string | null
   userAgent?: Prisma.StringNullableFilter<"JobView"> | string | null
+  jobId?: Prisma.StringFilter<"JobView"> | string
   job?: Prisma.XOR<Prisma.JobsScalarRelationFilter, Prisma.jobsWhereInput>
 }
 
 export type JobViewOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
+  jobId?: Prisma.SortOrder
   job?: Prisma.jobsOrderByWithRelationInput
 }
 
@@ -208,21 +208,21 @@ export type JobViewWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.JobViewWhereInput | Prisma.JobViewWhereInput[]
   OR?: Prisma.JobViewWhereInput[]
   NOT?: Prisma.JobViewWhereInput | Prisma.JobViewWhereInput[]
-  jobId?: Prisma.StringFilter<"JobView"> | string
   userId?: Prisma.StringNullableFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"JobView"> | string | null
   userAgent?: Prisma.StringNullableFilter<"JobView"> | string | null
+  jobId?: Prisma.StringFilter<"JobView"> | string
   job?: Prisma.XOR<Prisma.JobsScalarRelationFilter, Prisma.jobsWhereInput>
 }, "id">
 
 export type JobViewOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
+  jobId?: Prisma.SortOrder
   _count?: Prisma.JobViewCountOrderByAggregateInput
   _max?: Prisma.JobViewMaxOrderByAggregateInput
   _min?: Prisma.JobViewMinOrderByAggregateInput
@@ -233,11 +233,11 @@ export type JobViewScalarWhereWithAggregatesInput = {
   OR?: Prisma.JobViewScalarWhereWithAggregatesInput[]
   NOT?: Prisma.JobViewScalarWhereWithAggregatesInput | Prisma.JobViewScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"JobView"> | string
-  jobId?: Prisma.StringWithAggregatesFilter<"JobView"> | string
   userId?: Prisma.StringNullableWithAggregatesFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeWithAggregatesFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableWithAggregatesFilter<"JobView"> | string | null
   userAgent?: Prisma.StringNullableWithAggregatesFilter<"JobView"> | string | null
+  jobId?: Prisma.StringWithAggregatesFilter<"JobView"> | string
 }
 
 export type JobViewCreateInput = {
@@ -251,11 +251,11 @@ export type JobViewCreateInput = {
 
 export type JobViewUncheckedCreateInput = {
   id?: string
-  jobId: string
   userId?: string | null
   viewedAt?: Date | string
   ipAddress?: string | null
   userAgent?: string | null
+  jobId: string
 }
 
 export type JobViewUpdateInput = {
@@ -269,20 +269,20 @@ export type JobViewUpdateInput = {
 
 export type JobViewUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  jobId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type JobViewCreateManyInput = {
   id?: string
-  jobId: string
   userId?: string | null
   viewedAt?: Date | string
   ipAddress?: string | null
   userAgent?: string | null
+  jobId: string
 }
 
 export type JobViewUpdateManyMutationInput = {
@@ -295,11 +295,11 @@ export type JobViewUpdateManyMutationInput = {
 
 export type JobViewUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  jobId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   viewedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ipAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  jobId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type JobViewListRelationFilter = {
@@ -314,29 +314,29 @@ export type JobViewOrderByRelationAggregateInput = {
 
 export type JobViewCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
 }
 
 export type JobViewMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
 }
 
 export type JobViewMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  jobId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   viewedAt?: Prisma.SortOrder
   ipAddress?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  jobId?: Prisma.SortOrder
 }
 
 export type JobViewCreateNestedManyWithoutJobInput = {
@@ -428,11 +428,11 @@ export type JobViewScalarWhereInput = {
   OR?: Prisma.JobViewScalarWhereInput[]
   NOT?: Prisma.JobViewScalarWhereInput | Prisma.JobViewScalarWhereInput[]
   id?: Prisma.StringFilter<"JobView"> | string
-  jobId?: Prisma.StringFilter<"JobView"> | string
   userId?: Prisma.StringNullableFilter<"JobView"> | string | null
   viewedAt?: Prisma.DateTimeFilter<"JobView"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"JobView"> | string | null
   userAgent?: Prisma.StringNullableFilter<"JobView"> | string | null
+  jobId?: Prisma.StringFilter<"JobView"> | string
 }
 
 export type JobViewCreateManyJobInput = {
@@ -471,44 +471,44 @@ export type JobViewUncheckedUpdateManyWithoutJobInput = {
 
 export type JobViewSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
+  jobId?: boolean
   job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["jobView"]>
 
 export type JobViewSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
+  jobId?: boolean
   job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["jobView"]>
 
 export type JobViewSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
+  jobId?: boolean
   job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["jobView"]>
 
 export type JobViewSelectScalar = {
   id?: boolean
-  jobId?: boolean
   userId?: boolean
   viewedAt?: boolean
   ipAddress?: boolean
   userAgent?: boolean
+  jobId?: boolean
 }
 
-export type JobViewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "jobId" | "userId" | "viewedAt" | "ipAddress" | "userAgent", ExtArgs["result"]["jobView"]>
+export type JobViewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "viewedAt" | "ipAddress" | "userAgent" | "jobId", ExtArgs["result"]["jobView"]>
 export type JobViewInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   job?: boolean | Prisma.jobsDefaultArgs<ExtArgs>
 }
@@ -526,11 +526,11 @@ export type $JobViewPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    jobId: string
     userId: string | null
     viewedAt: Date
     ipAddress: string | null
     userAgent: string | null
+    jobId: string
   }, ExtArgs["result"]["jobView"]>
   composites: {}
 }
@@ -956,11 +956,11 @@ export interface Prisma__JobViewClient<T, Null = never, ExtArgs extends runtime.
  */
 export interface JobViewFieldRefs {
   readonly id: Prisma.FieldRef<"JobView", 'String'>
-  readonly jobId: Prisma.FieldRef<"JobView", 'String'>
   readonly userId: Prisma.FieldRef<"JobView", 'String'>
   readonly viewedAt: Prisma.FieldRef<"JobView", 'DateTime'>
   readonly ipAddress: Prisma.FieldRef<"JobView", 'String'>
   readonly userAgent: Prisma.FieldRef<"JobView", 'String'>
+  readonly jobId: Prisma.FieldRef<"JobView", 'String'>
 }
     
 

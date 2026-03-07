@@ -34,10 +34,6 @@ const Page = async ({ params }: Props) => {
         parsedExtractedData = {};
     }
 
-    // Calculate Analysis Stats
-    const isTailored = false;
-    const score = resume.scoreData as { overallScore?: number; experienceScore?: number; skillsScore?: number } | null;
-    
     // Calculate total issues from fixes
     const totalIssues = Object.values(fixes as Record<string, any>).reduce((acc: number, sectionVotes: any) => {
         if (Array.isArray(sectionVotes)) {
@@ -46,22 +42,28 @@ const Page = async ({ params }: Props) => {
         return acc;
     }, 0);
 
+    const isTailored = false;
+    const scoreData = (resume as any).scoreData as { scores?: { overallScore?: number }; overallScore?: number } | null;
+    const rawOverall = scoreData?.scores?.overallScore ?? scoreData?.overallScore ?? 0;
+
     // Calculate star rating (0-5)
-    // If we have an AI score, use that.
-    // If not (non-tailored), calculate based on issues: 0 issues = 5 stars, >10 issues = 0 stars approx.
+    // score is out of 10, convert to 0-5 stars
     let starRating = 0;
-    if (score?.overallScore) {
-        starRating = Math.round(score.overallScore * 5);
+    if (rawOverall > 0) {
+        starRating = Math.round((rawOverall / 10) * 5);
     } else {
-        const calculatedScore = Math.max(0, 100 - (totalIssues * 5)); // Aggressive deduction for issues
+        const calculatedScore = Math.max(0, 100 - (totalIssues * 5));
         starRating = Math.round((calculatedScore / 100) * 5);
     }
 
+    // Keep score shape compatible with PrimaryResumeBuilder prop
+    const score = scoreData;
+
     return (
         <ResumeStatusWrapper resumeId={resumeId}>
-            <PrimaryResumeBuilder 
-                initialData={parsedExtractedData} 
-                resumeId={resumeId} 
+            <PrimaryResumeBuilder
+                initialData={parsedExtractedData}
+                resumeId={resumeId}
                 fixes={fixes}
                 resumeName={name || "My Resume"}
                 isTailored={isTailored}

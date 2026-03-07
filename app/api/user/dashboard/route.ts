@@ -115,17 +115,17 @@ export async function GET(req: Request) {
             const latestResume = resumes[0];
             try {
                 if (latestResume.extractedData) {
-                   const parsed = typeof latestResume.extractedData === 'string' 
-                        ? JSON.parse(latestResume.extractedData) 
+                    const parsed = typeof latestResume.extractedData === 'string'
+                        ? JSON.parse(latestResume.extractedData)
                         : latestResume.extractedData;
-                   
-                   // Extract skills from additional.technicalSkills and certifications
-                   if (parsed.additional?.technicalSkills && Array.isArray(parsed.additional.technicalSkills)) {
-                       parsed.additional.technicalSkills.forEach((s: string) => userSkills.add(s.toLowerCase().trim()));
-                   }
-                   if (parsed.additional?.certificationsTraining && Array.isArray(parsed.additional.certificationsTraining)) {
-                       parsed.additional.certificationsTraining.forEach((s: string) => userSkills.add(s.toLowerCase().trim()));
-                   }
+
+                    // Extract skills from additional.technicalSkills and certifications
+                    if (parsed.additional?.technicalSkills && Array.isArray(parsed.additional.technicalSkills)) {
+                        parsed.additional.technicalSkills.forEach((s: string) => userSkills.add(s.toLowerCase().trim()));
+                    }
+                    if (parsed.additional?.certificationsTraining && Array.isArray(parsed.additional.certificationsTraining)) {
+                        parsed.additional.certificationsTraining.forEach((s: string) => userSkills.add(s.toLowerCase().trim()));
+                    }
                 }
             } catch (e) {
                 console.error("Failed to parse extractedData for dashboard skills:", e);
@@ -168,7 +168,7 @@ export async function GET(req: Request) {
         let resumeStrength = 0;
         if (resumes.length > 0) {
             const latestResume = resumes[0];
-            
+
             // Logic mirrored from Resume Edit Page:
             // Calculate score based on total issues found in analysisData
             try {
@@ -177,7 +177,7 @@ export async function GET(req: Request) {
                     const parsedData = typeof analysisData === 'string' ? JSON.parse(analysisData) : analysisData;
                     // Fixes object contains the actual fix usage, the rest of keys are issue counts
                     const { fixes = {}, ...fixCountRaw } = parsedData as any;
-                    
+
                     const totalIssues = Object.values(fixCountRaw).reduce((acc: number, curr: any) => {
                         return acc + (typeof curr === 'number' ? curr : 0);
                     }, 0);
@@ -185,8 +185,8 @@ export async function GET(req: Request) {
                     // Score Formula: 100 - (Total Issues * 2)
                     resumeStrength = Math.max(0, 100 - (totalIssues * 2));
                 } else {
-                     // Fallback if no analysis data yet
-                     resumeStrength = 0;
+                    // Fallback if no analysis data yet
+                    resumeStrength = 0;
                 }
             } catch (e) {
                 console.error("Error calculating resume strength:", e);
@@ -195,8 +195,10 @@ export async function GET(req: Request) {
 
             // Fallback: If for some reason we have a tailored resume here (unlikely for "latest" if we consider primary),
             // or if we want to support scoreData as an alternative source:
-            if (resumeStrength === 0 && (latestResume.scoreData as any)?.overallScore) {
-                 resumeStrength = (latestResume.scoreData as any).overallScore;
+            const sd = latestResume.scoreData as any;
+            const rawOverall = sd?.scores?.overallScore ?? sd?.overallScore ?? 0;
+            if (resumeStrength === 0 && rawOverall > 0) {
+                resumeStrength = rawOverall;
             }
         }
 

@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.3.0
- * Query Engine version: 9d6ad21cbbceab97458517b147a6a09ff43aa735
+ * Prisma Client JS version: 7.4.0
+ * Query Engine version: ab56fe763f921d033a6c195e7ddeb3e255bdbb57
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.3.0",
-  engine: "9d6ad21cbbceab97458517b147a6a09ff43aa735"
+  client: "7.4.0",
+  engine: "ab56fe763f921d033a6c195e7ddeb3e255bdbb57"
 }
 
 /**
@@ -2408,11 +2408,11 @@ export const CandidatePipelineScalarFieldEnum = {
   recruiterJobId: 'recruiterJobId',
   candidateName: 'candidateName',
   candidateEmail: 'candidateEmail',
-  resumeId: 'resumeId',
   status: 'status',
   notes: 'notes',
   appliedAt: 'appliedAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  resumeId: 'resumeId'
 } as const
 
 export type CandidatePipelineScalarFieldEnum = (typeof CandidatePipelineScalarFieldEnum)[keyof typeof CandidatePipelineScalarFieldEnum]
@@ -2420,11 +2420,11 @@ export type CandidatePipelineScalarFieldEnum = (typeof CandidatePipelineScalarFi
 
 export const JobViewScalarFieldEnum = {
   id: 'id',
-  jobId: 'jobId',
   userId: 'userId',
   viewedAt: 'viewedAt',
   ipAddress: 'ipAddress',
-  userAgent: 'userAgent'
+  userAgent: 'userAgent',
+  jobId: 'jobId'
 } as const
 
 export type JobViewScalarFieldEnum = (typeof JobViewScalarFieldEnum)[keyof typeof JobViewScalarFieldEnum]

@@ -13,21 +13,21 @@ export function lastAssistantTextMessageContent(result: AgentResult): string | u
   const lastAssistantTextMessageIndex = result.output.findLastIndex(
     (message) => message.role === "assistant"
   )
-  
+
   if (lastAssistantTextMessageIndex === -1) {
     return undefined
   }
-  
+
   const message = result.output[lastAssistantTextMessageIndex] as TextMessage | undefined
-  
+
   if (!message?.content) {
     return undefined
   }
-  
+
   if (typeof message.content === "string") {
     return message.content
   }
-  
+
   // Handle array content type
   return message.content.map((c) => c.text).join("")
 }
@@ -140,11 +140,11 @@ export const handleSkillArrayChange = (
   setSave: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   setEditorState((prev) => {
-    const updatedSkills = { ...prev!.skills };
+    const updatedSkills = { ...(prev!.skills as any) };
     const arr = [...(updatedSkills[type] || [])];
     arr[index] = value;
     updatedSkills[type] = arr;
-    return { ...prev, skills: updatedSkills };
+    return { ...prev!, skills: updatedSkills };
   });
   setSave(true);
 };
@@ -162,13 +162,9 @@ export const addSkill = (
 ) => {
 
   setEditorState((prev) => {
-
-    const updatedSkills = { ...prev!.skills };
-
+    const updatedSkills = { ...(prev!.skills as any) };
     updatedSkills[type] = [...(updatedSkills[type] || []), ''];
-
-    return { ...prev, skills: updatedSkills };
-
+    return { ...prev!, skills: updatedSkills };
   });
 
   setSave(true);
@@ -182,11 +178,11 @@ export const removeSkill = (
   setSave: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   setEditorState((prev) => {
-    const updatedSkills = { ...prev!.skills };
+    const updatedSkills = { ...(prev!.skills as any) };
     const arr = [...(updatedSkills[type] || [])];
     arr.splice(index, 1);
     updatedSkills[type] = arr;
-    return { ...prev, skills: updatedSkills };
+    return { ...prev!, skills: updatedSkills };
   });
   setSave(true);
 };
@@ -204,16 +200,16 @@ export const handleCustomFieldChange = (
     const updatedSection = [...(prev![section] as any[])];
     const updatedItem = { ...updatedSection[index] };
     const updatedCustomFields = [...(updatedItem.customFields || [])];
-    
+
     if (key === 'key') {
       updatedCustomFields[fieldIndex] = { ...updatedCustomFields[fieldIndex], key: value };
     } else {
       updatedCustomFields[fieldIndex] = { ...updatedCustomFields[fieldIndex], value: value };
     }
-    
+
     updatedItem.customFields = updatedCustomFields;
     updatedSection[index] = updatedItem;
-    
+
     return { ...prev, [section]: updatedSection };
   });
   setSave(true);
@@ -229,10 +225,10 @@ export const addCustomField = (
     const updatedSection = [...(prev![section] as any[])];
     const updatedItem = { ...updatedSection[index] };
     const updatedCustomFields = [...(updatedItem.customFields || []), { key: '', value: '' }];
-    
+
     updatedItem.customFields = updatedCustomFields;
     updatedSection[index] = updatedItem;
-    
+
     return { ...prev, [section]: updatedSection };
   });
   setSave(true);
@@ -249,12 +245,12 @@ export const removeCustomField = (
     const updatedSection = [...(prev![section] as any[])];
     const updatedItem = { ...updatedSection[index] };
     const updatedCustomFields = [...(updatedItem.customFields || [])];
-    
+
     updatedCustomFields.splice(fieldIndex, 1);
-    
+
     updatedItem.customFields = updatedCustomFields;
     updatedSection[index] = updatedItem;
-    
+
     return { ...prev, [section]: updatedSection };
   });
   setSave(true);
@@ -424,4 +420,38 @@ export function validJson(jsonString: string) {
 export function decodeStreamMessage(stream: Uint8Array) {
   const decoder = new TextDecoder();
   return decoder.decode(stream);
+}
+
+/**
+ * Generates an absolute URL for a given path, using the base URL from environment variables.
+ */
+export function getAbsoluteUrl(path: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
+}
+
+/**
+ * Triggers the native share sheet or copies the link if sharing is unavailable.
+ */
+export async function triggerShare(data: { title: string; text: string; url: string }) {
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share(data);
+      return true;
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        console.error('Share failed:', err);
+      }
+      return false;
+    }
+  } else {
+    // Fallback if navigator.share is not available
+    try {
+      await navigator.clipboard.writeText(data.url);
+      return 'copied';
+    } catch {
+      return false;
+    }
+  }
 }

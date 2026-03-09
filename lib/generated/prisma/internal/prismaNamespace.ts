@@ -2410,11 +2410,11 @@ export const CandidatePipelineScalarFieldEnum = {
   recruiterJobId: 'recruiterJobId',
   candidateName: 'candidateName',
   candidateEmail: 'candidateEmail',
-  resumeId: 'resumeId',
   status: 'status',
   notes: 'notes',
   appliedAt: 'appliedAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  resumeId: 'resumeId'
 } as const
 
 export type CandidatePipelineScalarFieldEnum = (typeof CandidatePipelineScalarFieldEnum)[keyof typeof CandidatePipelineScalarFieldEnum]
@@ -2422,11 +2422,11 @@ export type CandidatePipelineScalarFieldEnum = (typeof CandidatePipelineScalarFi
 
 export const JobViewScalarFieldEnum = {
   id: 'id',
-  jobId: 'jobId',
   userId: 'userId',
   viewedAt: 'viewedAt',
   ipAddress: 'ipAddress',
-  userAgent: 'userAgent'
+  userAgent: 'userAgent',
+  jobId: 'jobId'
 } as const
 
 export type JobViewScalarFieldEnum = (typeof JobViewScalarFieldEnum)[keyof typeof JobViewScalarFieldEnum]

@@ -33,7 +33,6 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
                     eventSource?.close();
                     return;
                 }
-                console.log("✅ SSE Connection established");
                 retryCount = 0;
             };
 
@@ -45,10 +44,9 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
                     // Ignore PING events in the consumer
                     if (payload.type === 'PING') return;
 
-                    console.log("📨 SSE Message received:", payload);
                     onEventRef.current(payload);
                 } catch (error) {
-                    console.error("❌ Failed to parse SSE data:", error);
+                    // Fail silently or log only on real errors
                 }
             };
 

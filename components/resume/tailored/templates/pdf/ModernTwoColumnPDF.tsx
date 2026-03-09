@@ -144,8 +144,8 @@ export const ModernTwoColumnPDF: React.FC<{ data: ResumeData }> = ({ data }) => 
     .sort((a, b) => a.order - b.order);
 
   const defaultMainOrder = ['summary', 'workExperience', 'personalProjects'];
-  const mainSectionsToRender = sortedSections.length > 0 
-    ? sortedSections.map(s => s.key) 
+  const mainSectionsToRender = sortedSections.length > 0
+    ? sortedSections.map(s => s.key)
     : [...defaultMainOrder, ...(customSections ? Object.keys(customSections) : [])];
 
   return (
@@ -155,177 +155,177 @@ export const ModernTwoColumnPDF: React.FC<{ data: ResumeData }> = ({ data }) => 
         <Text style={[styles.jobTitle, { color: accentColor }]}>{personalInfo?.title || 'Professional'}</Text>
 
         <View style={styles.sidebarSection}>
-            <Text style={styles.sidebarTitle}>Contact</Text>
-            {personalInfo?.email && <Text style={styles.sidebarText}>{personalInfo.email}</Text>}
-            {personalInfo?.phone && <Text style={styles.sidebarText}>{personalInfo.phone}</Text>}
-            {personalInfo?.location && <Text style={styles.sidebarText}>{personalInfo.location}</Text>}
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 5 }}>
-                {personalInfo?.linkedin && <Link src={personalInfo.linkedin} style={[styles.sidebarText, { color: accentColor }]}>LinkedIn</Link>}
-                {personalInfo?.github && <Link src={personalInfo.github} style={[styles.sidebarText, { color: accentColor }]}>GitHub</Link>}
-            </View>
+          <Text style={styles.sidebarTitle}>Contact</Text>
+          {personalInfo?.email && <Text style={styles.sidebarText}>{personalInfo.email}</Text>}
+          {personalInfo?.phone && <Text style={styles.sidebarText}>{personalInfo.phone}</Text>}
+          {personalInfo?.location && <Text style={styles.sidebarText}>{personalInfo.location}</Text>}
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 5 }}>
+            {personalInfo?.linkedin && <Link src={personalInfo.linkedin} style={[styles.sidebarText, { color: accentColor }]}>LinkedIn</Link>}
+            {personalInfo?.github && <Link src={personalInfo.github} style={[styles.sidebarText, { color: accentColor }]}>GitHub</Link>}
+          </View>
         </View>
 
-        {additional?.technicalSkills?.length > 0 && (
-            <View style={styles.sidebarSection}>
-                <Text style={styles.sidebarTitle}>Skills</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    {additional.technicalSkills.map((s, i) => (
-                        <Text key={i} style={[styles.skillPill, { backgroundColor: `${accentColor}40` }]}>{s}</Text>
-                    ))}
-                </View>
+        {Array.isArray(additional?.technicalSkills) && additional.technicalSkills.length > 0 && (
+          <View style={styles.sidebarSection}>
+            <Text style={styles.sidebarTitle}>Skills</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              {additional.technicalSkills.map((s, i) => (
+                <Text key={i} style={[styles.skillPill, { backgroundColor: `${accentColor}40` }]}>{s}</Text>
+              ))}
             </View>
+          </View>
         )}
 
-        {education?.length > 0 && (
-            <View style={styles.sidebarSection}>
-                <Text style={styles.sidebarTitle}>Education</Text>
-                {education.map((edu, i) => (
-                    <View key={i} style={{ marginBottom: 10 }}>
-                        <Text style={{ fontFamily: 'Times-Bold', color: '#fff', fontSize: 9 }}>{edu.institution}</Text>
-                        <Text style={{ fontSize: 8, color: accentColor, marginTop: 2 }}>{edu.degree}</Text>
-                        <Text style={{ fontSize: 7, color: '#94a3b8', marginTop: 1 }}>{edu.endDate}</Text>
-                    </View>
-                ))}
-            </View>
+        {Array.isArray(education) && education.length > 0 && (
+          <View style={styles.sidebarSection}>
+            <Text style={styles.sidebarTitle}>Education</Text>
+            {education.map((edu, i) => (
+              <View key={i} style={{ marginBottom: 10 }}>
+                <Text style={{ fontFamily: 'Times-Bold', color: '#fff', fontSize: 9 }}>{edu.institution}</Text>
+                <Text style={{ fontSize: 8, color: accentColor, marginTop: 2 }}>{edu.degree}</Text>
+                <Text style={{ fontSize: 7, color: '#94a3b8', marginTop: 1 }}>{edu.endDate}</Text>
+              </View>
+            ))}
+          </View>
         )}
 
-        {additional?.languages?.length > 0 && (
-            <View style={styles.sidebarSection}>
-                <Text style={styles.sidebarTitle}>Languages</Text>
-                <Text style={styles.sidebarText}>{additional.languages.join(', ')}</Text>
-            </View>
+        {Array.isArray(additional?.languages) && additional.languages.length > 0 && (
+          <View style={styles.sidebarSection}>
+            <Text style={styles.sidebarTitle}>Languages</Text>
+            <Text style={styles.sidebarText}>{additional.languages.join(', ')}</Text>
+          </View>
         )}
 
-        {(additional?.certificationsTraining?.length > 0 || additional?.awards?.length > 0) && (
-            <View style={styles.sidebarSection}>
-                <Text style={styles.sidebarTitle}>Additional</Text>
-                {additional.certificationsTraining?.length > 0 && (
-                    <View style={{ marginBottom: 6 }}>
-                        <Text style={{ fontSize: 7, fontFamily: 'Times-Bold', color: '#fff' }}>Certifications</Text>
-                        <Text style={{ fontSize: 6.5, color: '#cbd5e1' }}>{additional.certificationsTraining.join(', ')}</Text>
-                    </View>
-                )}
-                {additional.awards?.length > 0 && (
-                    <View>
-                        <Text style={{ fontSize: 7, fontFamily: 'Times-Bold', color: '#fff' }}>Awards</Text>
-                        <Text style={{ fontSize: 6.5, color: '#cbd5e1' }}>{additional.awards.join(', ')}</Text>
-                    </View>
-                )}
-            </View>
+        {(Array.isArray(additional?.certificationsTraining) || Array.isArray(additional?.awards)) && (
+          <View style={styles.sidebarSection}>
+            <Text style={styles.sidebarTitle}>Additional</Text>
+            {Array.isArray(additional?.certificationsTraining) && additional.certificationsTraining.length > 0 && (
+              <View style={{ marginBottom: 6 }}>
+                <Text style={{ fontSize: 7, fontFamily: 'Times-Bold', color: '#fff' }}>Certifications</Text>
+                <Text style={{ fontSize: 6.5, color: '#cbd5e1' }}>{additional.certificationsTraining.join(', ')}</Text>
+              </View>
+            )}
+            {Array.isArray(additional?.awards) && additional.awards.length > 0 && (
+              <View>
+                <Text style={{ fontSize: 7, fontFamily: 'Times-Bold', color: '#fff' }}>Awards</Text>
+                <Text style={{ fontSize: 6.5, color: '#cbd5e1' }}>{additional.awards.join(', ')}</Text>
+              </View>
+            )}
+          </View>
         )}
       </View>
 
       <View style={styles.main}>
         {mainSectionsToRender.map(key => {
-            switch(key) {
+          switch (key) {
             case 'summary':
-                return summary ? (
+              return summary ? (
                 <View key={key}>
-                    <View style={styles.mainSectionTitle}>
-                        <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
-                        <Text style={styles.sectionTitle}>Profile</Text>
-                    </View>
-                    <Text style={styles.summary}>{summary}</Text>
+                  <View style={styles.mainSectionTitle}>
+                    <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
+                    <Text style={styles.sectionTitle}>Profile</Text>
+                  </View>
+                  <Text style={styles.summary}>{summary}</Text>
                 </View>
-                ) : null;
+              ) : null;
 
             case 'workExperience':
-                return workExperience?.length > 0 ? (
+              return Array.isArray(workExperience) && workExperience.length > 0 ? (
                 <View key={key}>
-                    <View style={styles.mainSectionTitle}>
-                        <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
-                        <Text style={styles.sectionTitle}>Experience</Text>
-                    </View>
-                    {workExperience.map((exp, i) => (
+                  <View style={styles.mainSectionTitle}>
+                    <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
+                    <Text style={styles.sectionTitle}>Experience</Text>
+                  </View>
+                  {workExperience.map((exp, i) => (
                     <View key={i} style={{ marginBottom: 12 }} wrap={false}>
-                        <View style={styles.itemHeader}>
-                            <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{exp.title}</Text>
-                            <Text style={[styles.itemDate, { color: accentColor }]}>{exp.startDate} - {exp.endDate}</Text>
-                        </View>
-                        <View style={styles.itemSubtitleRow}>
-                            <Text style={[styles.itemCompany, { color: accentColor }]}>{exp.company}</Text>
-                        </View>
-                        {(Array.isArray(exp.description) ? exp.description : [exp.description]).map((desc, idx) => (
+                      <View style={styles.itemHeader}>
+                        <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{exp.title}</Text>
+                        <Text style={[styles.itemDate, { color: accentColor }]}>{exp.startDate} - {exp.endDate}</Text>
+                      </View>
+                      <View style={styles.itemSubtitleRow}>
+                        <Text style={[styles.itemCompany, { color: accentColor }]}>{exp.company}</Text>
+                      </View>
+                      {(Array.isArray(exp.description) ? exp.description : [exp.description]).map((desc, idx) => (
                         <View key={idx} style={styles.listItem}>
-                            <Text style={[styles.bullet, { color: accentColor }]}>•</Text>
-                            <Text style={styles.listContent}>{desc}</Text>
+                          <Text style={[styles.bullet, { color: accentColor }]}>•</Text>
+                          <Text style={styles.listContent}>{desc}</Text>
                         </View>
-                        ))}
+                      ))}
                     </View>
-                    ))}
+                  ))}
                 </View>
-                ) : null;
+              ) : null;
 
             case 'personalProjects':
-                return personalProjects?.length > 0 ? (
+              return Array.isArray(personalProjects) && personalProjects.length > 0 ? (
                 <View key={key}>
-                    <View style={styles.mainSectionTitle}>
-                        <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
-                        <Text style={styles.sectionTitle}>Projects</Text>
-                    </View>
-                    {personalProjects.map((proj, i) => (
+                  <View style={styles.mainSectionTitle}>
+                    <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
+                    <Text style={styles.sectionTitle}>Projects</Text>
+                  </View>
+                  {personalProjects.map((proj, i) => (
                     <View key={i} style={{ marginBottom: 12 }} wrap={false}>
-                        <View style={styles.itemHeader}>
-                            <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{proj.name}</Text>
-                            <Text style={styles.itemDate}>{proj.startDate} - {proj.endDate}</Text>
-                        </View>
-                        <Text style={[styles.itemCompany, { marginBottom: 6, fontSize: 8, color: '#6b7280' }]}>{proj.role}</Text>
-                        {(Array.isArray(proj.description) ? proj.description : [proj.description]).map((desc, idx) => (
+                      <View style={styles.itemHeader}>
+                        <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{proj.name}</Text>
+                        <Text style={styles.itemDate}>{proj.startDate} - {proj.endDate}</Text>
+                      </View>
+                      <Text style={[styles.itemCompany, { marginBottom: 6, fontSize: 8, color: '#6b7280' }]}>{proj.role}</Text>
+                      {(Array.isArray(proj.description) ? proj.description : [proj.description]).map((desc, idx) => (
                         <View key={idx} style={styles.listItem}>
-                            <Text style={[styles.bullet, { color: accentColor }]}>•</Text>
-                            <Text style={styles.listContent}>{desc}</Text>
+                          <Text style={[styles.bullet, { color: accentColor }]}>•</Text>
+                          <Text style={styles.listContent}>{desc}</Text>
                         </View>
-                        ))}
+                      ))}
                     </View>
-                    ))}
+                  ))}
                 </View>
-                ) : null;
+              ) : null;
 
             default: {
-                const section = customSections?.[key];
-                if (!section) return null;
+              const section = customSections?.[key];
+              if (!section) return null;
 
-                return (
-                    <View key={key} style={{ marginBottom: 15 }}>
-                        <View style={styles.mainSectionTitle}>
-                            <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
-                            <Text style={styles.sectionTitle}>{section.displayName || key.replace(/-/g, ' ')}</Text>
+              return (
+                <View key={key} style={{ marginBottom: 15 }}>
+                  <View style={styles.mainSectionTitle}>
+                    <View style={[styles.titleDot, { backgroundColor: accentColor }]} />
+                    <Text style={styles.sectionTitle}>{section.displayName || key.replace(/-/g, ' ')}</Text>
+                  </View>
+
+                  {section.sectionType === 'text' && section.text ? (
+                    <Text style={styles.summary}>{section.text}</Text>
+                  ) : section.sectionType === 'itemList' && Array.isArray(section.items) ? (
+                    section.items.map((item, idx) => (
+                      <View key={idx} style={{ marginBottom: 12 }} wrap={false}>
+                        <View style={styles.itemHeader}>
+                          <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{item.name}</Text>
+                          {(item.date || item.startDate) && (
+                            <Text style={styles.itemDate}>{item.date || item.startDate} {item.endDate ? `- ${item.endDate}` : ''}</Text>
+                          )}
                         </View>
-                        
-                        {section.sectionType === 'text' && section.text ? (
-                            <Text style={styles.summary}>{section.text}</Text>
-                        ) : section.sectionType === 'itemList' && section.items ? (
-                            section.items.map((item, idx) => (
-                                <View key={idx} style={{ marginBottom: 12 }} wrap={false}>
-                                    <View style={styles.itemHeader}>
-                                        <Text style={[styles.itemTitle, { flex: 1, marginRight: 10 }]}>{item.name}</Text>
-                                        {(item.date || item.startDate) && (
-                                            <Text style={styles.itemDate}>{item.date || item.startDate} {item.endDate ? `- ${item.endDate}` : ''}</Text>
-                                        )}
-                                    </View>
-                                    {item.role && <Text style={[styles.itemCompany, { color: accentColor, marginBottom: 4 }]}>{item.role}</Text>}
-                                    {(item.email || item.phone || item.url) && (
-                                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
-                                            {item.email && <Text style={{ fontSize: 7, color: '#6b7280' }}>{item.email}</Text>}
-                                            {item.phone && <Text style={{ fontSize: 7, color: '#6b7280' }}>{item.phone}</Text>}
-                                            {item.url && <Text style={{ fontSize: 7, color: accentColor }}>{item.url}</Text>}
-                                        </View>
-                                    )}
-                                    {item.description && <Text style={[styles.listContent, { flex: 0 }]}>{item.description}</Text>}
-                                </View>
-                            ))
-                        ) : section.sectionType === 'stringList' && section.strings ? (
-                            section.strings.map((str, idx) => (
-                                <View key={idx} style={styles.listItem}>
-                                    <Text style={[styles.bullet, { color: accentColor }]}>•</Text>
-                                    <Text style={styles.listContent}>{str}</Text>
-                                </View>
-                            ))
-                        ) : null}
-                    </View>
-                );
+                        {item.role && <Text style={[styles.itemCompany, { color: accentColor, marginBottom: 4 }]}>{item.role}</Text>}
+                        {(item.email || item.phone || item.url) && (
+                          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
+                            {item.email && <Text style={{ fontSize: 7, color: '#6b7280' }}>{item.email}</Text>}
+                            {item.phone && <Text style={{ fontSize: 7, color: '#6b7280' }}>{item.phone}</Text>}
+                            {item.url && <Text style={{ fontSize: 7, color: accentColor }}>{item.url}</Text>}
+                          </View>
+                        )}
+                        {item.description && <Text style={[styles.listContent, { flex: 0 }]}>{item.description}</Text>}
+                      </View>
+                    ))
+                  ) : section.sectionType === 'stringList' && Array.isArray(section.strings) ? (
+                    section.strings.map((str, idx) => (
+                      <View key={idx} style={styles.listItem}>
+                        <Text style={[styles.bullet, { color: accentColor }]}>•</Text>
+                        <Text style={styles.listContent}>{str}</Text>
+                      </View>
+                    ))
+                  ) : null}
+                </View>
+              );
             }
-            }
+          }
         })}
       </View>
     </Page>

@@ -463,20 +463,6 @@ export const coverLetterGenerated = inngest.createFunction(
                });
           });
 
-      const result = await coverLetterNetwork.run(filledPrompt, { state });
-
-      const data = JSON.parse(result.state.data.coverLetterAgent || "{}");
-
-      await step.run("save-cover-letter", async () => {
-        await prisma.tailoredResume.update({
-          where: { id: resumeId },
-          data: {
-            coverLetter: data.coverLetter || "", // Fallback
-            status: "COMPLETED"
-          }
-        });
-      });
-
       // Notify client via SSE that cover letter is ready
       const { emitUserEvent } = await import("@/lib/events");
       emitUserEvent(event.data.userId, {

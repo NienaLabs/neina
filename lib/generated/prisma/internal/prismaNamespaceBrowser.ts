@@ -107,6 +107,8 @@ export const UserScalarFieldEnum = {
   plan: 'plan',
   polarCustomerId: 'polarCustomerId',
   polarSubscriptionId: 'polarSubscriptionId',
+  paystackSubscriptionCode: 'paystackSubscriptionCode',
+  paystackCustomerCode: 'paystackCustomerCode',
   preferredProvider: 'preferredProvider',
   experienceLevel: 'experienceLevel',
   goal: 'goal',

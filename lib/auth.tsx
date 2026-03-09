@@ -4,229 +4,238 @@ import { Resend } from "resend"
 import { EmailTemplate } from "@daveyplate/better-auth-ui/server"
 import { polar, checkout, portal, usage, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
-// If your Prisma file is located elsewhere, you can change the path
 import prisma from "@/lib/prisma";
-import { POLAR_PRODUCT_IDS } from "@/lib/plans";
+import { POLAR_PRODUCT_IDS, PLANS, PlanKey, POLAR_TOPUP_PRODUCT_IDS } from "@/lib/plans";
 
+/**
+ * Polar SDK client — switches between sandbox and production based on NODE_ENV.
+ * Access tokens are environment-specific: sandbox tokens only work in sandbox,
+ * production tokens only work in production.
+ */
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  server: "sandbox", // Use 'production' for live environment
+  server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
 });
-const resend = new Resend(process.env.RESEND_API_KEY)
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+/**
+ * Resolves our internal PlanKey from a Polar product ID.
+ * Returns null if the product is not a subscription plan.
+ */
+function resolvePlanFromProductId(productId: string): PlanKey | null {
+  if (productId === POLAR_PRODUCT_IDS.SILVER) return "SILVER";
+  if (productId === POLAR_PRODUCT_IDS.GOLD) return "GOLD";
+  if (productId === POLAR_PRODUCT_IDS.DIAMOND) return "DIAMOND";
+  return null;
+}
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
-    provider: "postgresql", // or "mysql", "postgresql", ...etc
+    provider: "postgresql",
   }),
   plugins: [
     //@ts-ignore
     polar({
       //@ts-ignore
       polar: polarClient,
-      createCustomerOnSignUp: false,
+      /**
+       * Create a Polar customer (with externalId = user.id) on sign up.
+       * This is critical: it allows all webhook handlers to reliably look up
+       * our user via payload.data.customer.externalId instead of email.
+       */
+      createCustomerOnSignUp: true,
       use: [
         checkout({
           products: [
             {
-              productId: "f30a8e41-4d9a-423a-9638-4ddbc0c22a27",
-              slug: "silver" // Custom slug for easy reference in Checkout URL, e.g. /checkout/silver
+              productId: POLAR_PRODUCT_IDS.SILVER,
+              slug: "silver",
             },
             {
-              productId: "cb97ea94-750b-4904-b23f-c4379bb194b5",
-              slug: "Gold" // Custom slug for easy reference in Checkout URL, e.g. /checkout/Gold
+              productId: POLAR_PRODUCT_IDS.GOLD,
+              slug: "gold",
             },
             {
-              productId: "d9b65b5f-9d18-4c4f-add6-02aa3aaf3804",
-              slug: "Diamond" // Custom slug for easy reference in Checkout URL, e.g. /checkout/Diamond
+              productId: POLAR_PRODUCT_IDS.DIAMOND,
+              slug: "diamond",
             }
           ],
-          successUrl: "/success?checkout_id={CHECKOUT_ID}",
-          authenticatedUsersOnly: true
+          /**
+           * After a successful Polar checkout, redirect to our verify page.
+           * The {CHECKOUT_ID} placeholder is replaced by Polar with the actual checkout ID.
+           */
+          successUrl: "/pricing/verify?checkout_id={CHECKOUT_ID}",
+          authenticatedUsersOnly: true,
         }),
         portal(),
         usage(),
         webhooks({
-          secret: process.env.POLAR_WEBHOOK_SECRET || "temp_secret_to_avoid_crash",
-          // Triggered when subscription is created/updated
-          onCustomerStateChanged: async (payload) => {
-            // This is more complex as it involves full state sync. 
-            // For MVP, we might rely on onOrderPaid for One-time and Sub 'Invoice Paid' events if Polar treats them similarly.
-            // But for Subscriptions, `onSubscriptionCreated` or `onOrderPaid` (msg invoice) is key.
-            // Better Auth Plugin docs say `onCustomerStateChanged` is triggered.
-            console.log("Customer state changed", payload);
-          },
+          secret: process.env.POLAR_WEBHOOK_SECRET!,
+
+          /**
+           * Fired when an order is paid — this covers:
+           *   - New subscription first payment
+           *   - Recurring subscription renewal charges
+           *
+           * We use customer.externalId (= our user.id set during createCustomerOnSignUp)
+           * as the reliable user lookup key. This avoids email-based lookups that can
+           * fail when Polar hasn't synced the email or when emails don't match exactly.
+           */
           onOrderPaid: async (payload) => {
-            console.log("Order paid", payload);
-            // @ts-ignore
-            const { order } = payload;
+            const order = (payload as any).data;
             if (!order) return;
 
-            // User ID should be in metadata or linked via email if createCustomerOnSignUp was true
-            // Better Auth Polar Plugin links using external_id = user.id
-            // We can verify this via payload.customer.external_id if available, or finding user by email.
-            // However, payload structure depends on Polar SDK version.
-            // Assuming payload.order.customer.external_id exists.
-
-            // For now we will try to find user by email as fallback.
-            const userEmail = order.customer.email;
-            const user = await prisma.user.findUnique({ where: { email: userEmail } });
-
-            if (!user) {
-              console.error(`User not found for order ${order.id}`);
+            const externalId = order.customer?.externalId;
+            if (!externalId) {
+              console.error("[Polar] onOrderPaid: no externalId on customer. Order ID:", order.id);
               return;
             }
 
-            // Determine what was bought.
-            // This is tricky without predictable Product IDs.
-            // We will match by product name substring for this implementation as requested "make sure everything works".
-            const productName = order.product.name.toUpperCase();
+            const productId: string = order.product?.id ?? "";
+            const planKey = resolvePlanFromProductId(productId);
+            if (!planKey) {
+              // Check if it's a one-time top-up product
+              const topUpCreditMap: Record<string, number> = {
+                [POLAR_TOPUP_PRODUCT_IDS.CREDITS_10]: 10,
+                [POLAR_TOPUP_PRODUCT_IDS.CREDITS_20]: 20,
+                [POLAR_TOPUP_PRODUCT_IDS.CREDITS_30]: 30,
+                [POLAR_TOPUP_PRODUCT_IDS.CREDITS_50]: 50,
+              };
+              const topUpMinuteMap: Record<string, number> = {
+                [POLAR_TOPUP_PRODUCT_IDS.MINUTES_15]: 15,
+              };
 
-            // Import PLANS dynamically or rely on it being present (I need to import it).
-            // I will handle logic:
-
-            let creditsToAdd = 0;
-            let minutesToAdd = 0;
-            let newPlan = null;
-
-            // Check Plans
-            if (productName.includes("SILVER")) {
-              newPlan = "SILVER";
-              creditsToAdd = 10;
-              minutesToAdd = 0;
-            } else if (productName.includes("GOLD")) {
-              newPlan = "GOLD";
-              creditsToAdd = 20;
-              minutesToAdd = 15;
-            } else if (productName.includes("DIAMOND")) {
-              newPlan = "DIAMOND";
-              creditsToAdd = 30;
-              minutesToAdd = 60;
+              if (topUpCreditMap[productId] !== undefined) {
+                await prisma.user.update({
+                  where: { id: externalId },
+                  data: { resume_credits: { increment: topUpCreditMap[productId] } },
+                });
+                await prisma.transaction.updateMany({
+                  where: { polarCheckoutId: order.id, userId: externalId },
+                  data: { status: "SUCCESS" },
+                });
+                console.log(`[Polar] onOrderPaid: added ${topUpCreditMap[productId]} credits to user ${externalId}`);
+              } else if (topUpMinuteMap[productId] !== undefined) {
+                await prisma.user.update({
+                  where: { id: externalId },
+                  data: { interview_minutes: { increment: topUpMinuteMap[productId] } },
+                });
+                await prisma.transaction.updateMany({
+                  where: { polarCheckoutId: order.id, userId: externalId },
+                  data: { status: "SUCCESS" },
+                });
+                console.log(`[Polar] onOrderPaid: added ${topUpMinuteMap[productId]} minutes to user ${externalId}`);
+              } else {
+                console.log("[Polar] onOrderPaid: no matching plan or top-up for productId", productId);
+              }
+              return;
             }
 
-            // Check One-time credits
-            if (productName.includes("CREDITS")) {
-              // E.g. "10 Credits"
-              const match = productName.match(/(\d+)\s*CREDITS/);
-              if (match) creditsToAdd = parseInt(match[1]);
-            }
+            const planData = PLANS[planKey];
 
-            if (productName.includes("MINUTES")) {
-              // E.g. "15 Minutes"
-              const match = productName.match(/(\d+)\s*MINUTES/);
-              if (match) minutesToAdd = parseInt(match[1]);
-            }
+            await prisma.user.update({
+              where: { id: externalId },
+              data: {
+                plan: planKey,
+                resume_credits: { increment: planData.credits },
+                interview_minutes: { increment: planData.minutes },
+                // Set expiry to 30 days from now; onSubscriptionUpdated will sync actual period end
+                planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                polarCustomerId: order.customer?.id ?? undefined,
+                polarSubscriptionId: order.subscriptionId ?? undefined,
+              },
+            });
 
-            // Update User
-            if (newPlan) {
-              await prisma.user.update({
-                where: { id: user.id },
-                data: {
-                  plan: newPlan as any,
-                  resume_credits: { increment: creditsToAdd },
-                  interview_minutes: { increment: minutesToAdd },
-                  planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                  polarCustomerId: order.customer.id, 
-                  polarSubscriptionId: order.subscription_id
-                }
-              });
-            } else {
-              // Just credits/minutes
-              await prisma.user.update({
-                where: { id: user.id },
-                data: {
-                  resume_credits: { increment: creditsToAdd },
-                  interview_minutes: { increment: minutesToAdd },
-                  polarCustomerId: order.customer.id
-                }
-              });
-            }
+            console.log(`[Polar] onOrderPaid: upgraded user ${externalId} to ${planKey}`);
           },
+
+          /**
+           * Fired when subscription status changes (renewal, plan change, status update).
+           * Used to keep planExpiresAt in sync with the actual billing period end.
+           * Only acts when the subscription is in "active" state.
+           */
           onSubscriptionUpdated: async (payload) => {
-             console.log("Polar subscription updated", payload);
-             // @ts-ignore
-             const subscription = payload.data;
-             if (!subscription) return;
-             
-             // Find user (try by Subscription ID first, then Customer ID)
-             let user = await prisma.user.findFirst({
-                 where: { polarSubscriptionId: subscription.id }
-             });
+            const sub = (payload as any).data;
+            if (!sub) return;
 
-             if (!user) {
-                 user = await prisma.user.findFirst({
-                     where: { polarCustomerId: subscription.customerId }
-                 });
-             }
+            const externalId = sub.customer?.externalId;
+            if (!externalId) {
+              console.error("[Polar] onSubscriptionUpdated: no externalId on customer. Sub ID:", sub.id);
+              return;
+            }
 
-             if (!user) {
-                 console.error(`User not found for subscription ${subscription.id}`);
-                 return;
-             }
+            // Only sync active subscriptions
+            if (sub.status !== "active") return;
 
-             // Determine Plan from Product ID
-             const productId = subscription.productId;
-             let newPlan = "FREE";
-             
-             if (productId === POLAR_PRODUCT_IDS.SILVER) newPlan = "SILVER";
-             else if (productId === POLAR_PRODUCT_IDS.GOLD) newPlan = "GOLD";
-             else if (productId === POLAR_PRODUCT_IDS.DIAMOND) newPlan = "DIAMOND";
+            const productId: string = sub.product?.id ?? sub.productId ?? "";
+            const planKey = resolvePlanFromProductId(productId);
+            if (!planKey) return;
 
-             if (subscription.status === 'active' && newPlan !== 'FREE') {
-                 await prisma.user.update({
-                     where: { id: user.id },
-                     data: {
-                         plan: newPlan as any,
-                         planExpiresAt: subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : undefined,
-                         polarCustomerId: subscription.customerId,
-                         polarSubscriptionId: subscription.id
-                     }
-                 });
-             } else if (subscription.status !== 'active') {
-                 // Handle cancellation/expiration? 
-                 // If canceled, maybe downgrade? relying on manual downgrade or expiration logic for now so we don't accidentally downgrade due to transient states.
-                 // But strictly speaking, if status is canceled, we should set to FREE effective immediately or at period end.
-                 // Polar handles 'cancel_at_period_end' separately.
-             }
+            await prisma.user.update({
+              where: { id: externalId },
+              data: {
+                plan: planKey,
+                planExpiresAt: sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : undefined,
+                polarSubscriptionId: sub.id,
+                polarCustomerId: sub.customerId ?? sub.customer?.id ?? undefined,
+              },
+            });
+
+            console.log(`[Polar] onSubscriptionUpdated: synced user ${externalId} plan=${planKey}`);
           },
-          onSubscriptionCreated: async (payload) => {
-             console.log("Polar subscription created", payload);
-             // @ts-ignore
-             const subscription = payload.data;
-             if (!subscription) return;
 
-             // Find user by customer ID (since sub ID might be new)
-             const user = await prisma.user.findFirst({
-                 where: { polarCustomerId: subscription.customerId}
-             });
-             
-             // If not found by ID, maybe try finding by email if available in payload?
-             // Subscription payload usually has customer_id, not email directly unless expanded.
-             // We rely on previous steps (create/checkout) to have linked the user.
-
-             if (user) {
-                 const productId = subscription.productId;
-                 let newPlan = "FREE";
-                 if (productId === POLAR_PRODUCT_IDS.SILVER) newPlan = "SILVER";
-                 else if (productId === POLAR_PRODUCT_IDS.GOLD) newPlan = "GOLD";
-                 else if (productId === POLAR_PRODUCT_IDS.DIAMOND) newPlan = "DIAMOND";
-
-                 if (newPlan !== 'FREE') {
-                      await prisma.user.update({
-                         where: { id: user.id },
-                         data: {
-                             plan: newPlan as any,
-                             planExpiresAt: subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : undefined,
-                             polarCustomerId: subscription.customerId,
-                             polarSubscriptionId: subscription.id
-                         }
-                     });
-                 }
-             }
+          /**
+           * Fired when a subscription is canceled (at period end — user still has access).
+           * We log this but do NOT downgrade immediately; access continues until period end.
+           * The definitive downgrade happens in onSubscriptionRevoked.
+           */
+          onSubscriptionCanceled: async (payload) => {
+            const sub = (payload as any).data;
+            const externalId = sub?.customer?.externalId;
+            console.log(`[Polar] onSubscriptionCanceled: user ${externalId ?? "unknown"}, sub ${sub?.id}`);
           },
-          onPayload: async (payload) => { console.log("Polar webhook payload", payload) },
-        })
+
+          /**
+           * Fired when subscription access is definitively ended:
+           *   - Immediate cancellation, OR
+           *   - End-of-period cancellation (billing period expired)
+           *
+           * This is the ONLY handler that actually downgrades the user to FREE.
+           */
+          onSubscriptionRevoked: async (payload) => {
+            const sub = (payload as any).data;
+            if (!sub) return;
+
+            const externalId = sub.customer?.externalId;
+            if (!externalId) {
+              console.error("[Polar] onSubscriptionRevoked: no externalId on customer. Sub ID:", sub.id);
+              return;
+            }
+
+            await prisma.user.update({
+              where: { id: externalId },
+              data: {
+                plan: "FREE",
+                planExpiresAt: null,
+                polarSubscriptionId: null,
+              },
+            });
+
+            console.log(`[Polar] onSubscriptionRevoked: downgraded user ${externalId} to FREE`);
+          },
+
+          /**
+           * Catch-all for debugging — logs every incoming event.
+           */
+          onPayload: async (payload) => {
+            if (process.env.NODE_ENV !== "production") {
+              console.log("[Polar] Raw webhook payload event type:", (payload as any).type ?? "unknown");
+            }
+          },
+        }),
       ],
-    })
+    }),
   ],
   emailAndPassword: {
     enabled: true,
@@ -262,7 +271,7 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         defaultValue: "user",
-        input: false, // Don't allow user to set their own role during sign up
+        input: false,
       },
       isSuspended: {
         type: "boolean",
@@ -318,9 +327,8 @@ export const auth = betterAuth({
           siteName: "Niena",
           baseUrl: process.env.NEXT_PUBLIC_BASE_URL!,
           url
-        })
-      },
-      )
+        }),
+      })
     },
     sendOnSignUp: true,
     autoSignInAfterVerification: true,

@@ -1,10 +1,10 @@
-import {withSentryConfig} from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-    serverExternalPackages: ["pdf-parse","tiktoken"],
-     webpack(config) {
+  serverExternalPackages: ["pdf-parse", "tiktoken"],
+  webpack(config) {
     config.experiments = {
       asyncWebAssembly: true,
       layers: true,
@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-  turbopack:{},
-    images: {
+  // turbopack:{},
+  images: {
     remotePatterns: [
       {
         protocol: 'https',
@@ -21,8 +21,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-    typescript:{
-    ignoreBuildErrors:true
+  typescript: {
+    ignoreBuildErrors: true
   }
 };
 

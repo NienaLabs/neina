@@ -11,8 +11,8 @@ export async function GET(req: NextRequest) {
         session = await auth.api.getSession({
             headers: req.headers
         });
-    } catch (error) {
-        console.error("❌ [SSE Route] Failed to get session:", error);
+    } catch {
+        // Silently fail to get session
     }
 
     if (!session) {
@@ -29,9 +29,8 @@ export async function GET(req: NextRequest) {
             const sendEvent = (event: any) => {
                 try {
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
-                } catch (e) {
-                    // Controller might be closed
-                    console.error("SSE enqueue error:", e);
+                } catch {
+                    // Controller might be closed, ignore silently
                 }
             };
 
@@ -133,6 +132,14 @@ export async function GET(req: NextRequest) {
             };
 
             const onBroadcast = (event: any) => {
+                // Security check for broadcast events
+                // If the event has targeting metadata, verify user eligibility
+                if (event.data?.targetRoles?.length > 0) {
+                    if (!event.data.targetRoles.includes(userRole)) return;
+                }
+                if (event.data?.targetUserIds?.length > 0) {
+                    if (!event.data.targetUserIds.includes(userId)) return;
+                }
                 sendEvent(event);
             };
 
@@ -146,8 +153,7 @@ export async function GET(req: NextRequest) {
             const pingInterval = setInterval(() => {
                 try {
                     controller.enqueue(encoder.encode(`: keep-alive\n\n`));
-                    sendEvent({ type: 'PING', data: { timestamp: Date.now() } });
-                } catch (e) {
+                } catch {
                     clearInterval(pingInterval);
                 }
             }, 15000);

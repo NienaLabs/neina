@@ -24,9 +24,15 @@ export default function ApplicationPage() {
     const router = useRouter();
     const { data: user } = trpc.user.getMe.useQuery();
     const jobId = params.id as string;
+    const utils = trpc.useUtils();
 
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
+    const [resumeId, setResumeId] = useState<string>("");
+    const [coverLetter, setCoverLetter] = useState("");
+    const [uploadMode, setUploadMode] = useState<"select" | "upload">("select");
+    const [isParsing, setIsParsing] = useState(false);
+    const [uploadedFile, setUploadedFile] = useState<string | null>(null);
 
     // Effect to pre-fill data when user loads
     useEffect(() => {
@@ -35,11 +41,16 @@ export default function ApplicationPage() {
             setEmail(user.email || "");
         }
     }, [user]);
-    const [resumeId, setResumeId] = useState<string>("");
-    const [coverLetter, setCoverLetter] = useState("");
 
     const { data: job, isLoading: isLoadingJob } = trpc.jobs.getJob.useQuery({ id: jobId });
     const { data: resumes, isLoading: isLoadingResumes } = trpc.resume.getPrimaryResumes.useQuery();
+
+    // Default to upload mode if no resumes exist
+    useEffect(() => {
+        if (!isLoadingResumes && (!resumes || resumes.length === 0)) {
+            setUploadMode("upload");
+        }
+    }, [resumes, isLoadingResumes]);
 
     const submitMutation = trpc.jobs.submitApplication.useMutation({
         onSuccess: () => {
@@ -48,6 +59,43 @@ export default function ApplicationPage() {
         },
         onError: (error) => toast.error(error.message),
     });
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.type !== "application/pdf") {
+            toast.error("Please upload a PDF file");
+            return;
+        }
+
+        setIsParsing(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/api/parse-pdf", {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setResumeId(data.resumeId);
+                setUploadedFile(file.name);
+                toast.success("Resume uploaded and parsed!");
+                // Refresh resumes list in the background
+                utils.resume.getPrimaryResumes.invalidate();
+            } else {
+                toast.error(data.message || "Failed to parse resume");
+            }
+        } catch (error) {
+            console.error("Parse error:", error);
+            toast.error("An error occurred while parsing the resume");
+        } finally {
+            setIsParsing(false);
+        }
+    };
 
     if (isLoadingJob || isLoadingResumes) {
         return (
@@ -63,9 +111,9 @@ export default function ApplicationPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!resumeId) {
-            toast.error("Please select a resume");
+            toast.error("Please provide a resume");
             return;
         }
 
@@ -101,33 +149,50 @@ export default function ApplicationPage() {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="fullName">Full Name</Label>
-                                    <Input 
-                                        id="fullName" 
-                                        value={fullName} 
-                                        onChange={(e) => setFullName(e.target.value)} 
-                                        required 
+                                    <Label htmlFor="fullName" className="text-sm font-semibold">Full Name</Label>
+                                    <Input
+                                        id="fullName"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        required
                                         placeholder="John Doe"
+                                        className="h-11"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input 
-                                        id="email" 
+                                    <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
+                                    <Input
+                                        id="email"
                                         type="email"
-                                        value={email} 
-                                        onChange={(e) => setEmail(e.target.value)} 
-                                        required 
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
                                         placeholder="john@example.com"
+                                        className="h-11"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label>Resume</Label>
-                                {resumes && resumes.length > 0 ? (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-sm font-semibold">Resume</Label>
+                                    {resumes && resumes.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setUploadMode(uploadMode === "select" ? "upload" : "select");
+                                                if (uploadMode === "select") setResumeId(""); // Reset if switching to upload
+                                            }}
+                                            className="text-xs font-medium text-primary hover:underline"
+                                        >
+                                            {uploadMode === "select" ? "Upload new instead" : "Select from saved"}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {uploadMode === "select" && resumes && resumes.length > 0 ? (
                                     <Select value={resumeId} onValueChange={setResumeId}>
-                                        <SelectTrigger>
+                                        <SelectTrigger className="h-11">
                                             <SelectValue placeholder="Select a resume" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -139,38 +204,68 @@ export default function ApplicationPage() {
                                         </SelectContent>
                                     </Select>
                                 ) : (
-                                    <div className="rounded-md border border-dashed p-4 text-center">
-                                        <p className="text-sm text-muted-foreground mb-2">No resumes found.</p>
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm" 
-                                            type="button"
-                                            onClick={() => router.push("/dashboard/resume")}
+                                    <div className="relative">
+                                        <input
+                                            type="file"
+                                            accept=".pdf"
+                                            className="hidden"
+                                            id="resume-upload"
+                                            onChange={handleFileUpload}
+                                            disabled={isParsing}
+                                        />
+                                        <label
+                                            htmlFor="resume-upload"
+                                            className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all hover:bg-primary/5 hover:border-primary/50 relative ${uploadedFile ? 'bg-primary/5 border-primary/50' : 'bg-gray-50 dark:bg-zinc-900 border-gray-200 dark:border-zinc-800'
+                                                }`}
                                         >
-                                            Upload/Create Resume
-                                        </Button>
+                                            {isParsing ? (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                                    <span className="text-sm font-medium">Processing Resume...</span>
+                                                </div>
+                                            ) : uploadedFile ? (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="bg-primary/10 p-2 rounded-full">
+                                                        <Upload className="h-6 w-6 text-primary" />
+                                                    </div>
+                                                    <span className="text-sm font-semibold">{uploadedFile}</span>
+                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Click to change</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <Upload className="h-8 w-8 text-muted-foreground" />
+                                                    <span className="text-sm font-medium">Click to upload resume (PDF)</span>
+                                                    <span className="text-xs text-muted-foreground">Max 5MB</span>
+                                                </div>
+                                            )}
+                                        </label>
                                     </div>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="coverLetter">Cover Letter (Optional)</Label>
-                                <Textarea 
-                                    id="coverLetter" 
-                                    value={coverLetter} 
-                                    onChange={(e) => setCoverLetter(e.target.value)} 
+                                <Label htmlFor="coverLetter" className="text-sm font-semibold">Cover Letter (Optional)</Label>
+                                <Textarea
+                                    id="coverLetter"
+                                    value={coverLetter}
+                                    onChange={(e) => setCoverLetter(e.target.value)}
                                     placeholder="Tell us why you're a great fit..."
-                                    className="min-h-[150px]"
+                                    className="min-h-[150px] resize-none"
                                 />
                             </div>
 
-                            <Button 
-                                type="submit" 
-                                className="w-full" 
+                            <Button
+                                type="submit"
+                                className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20"
                                 size="lg"
-                                disabled={submitMutation.isPending}
+                                disabled={submitMutation.isPending || isParsing}
                             >
-                                {submitMutation.isPending ? "Submitting..." : "Submit Application"}
+                                {submitMutation.isPending ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Submitting...
+                                    </>
+                                ) : "Submit Application"}
                             </Button>
                         </form>
                     </CardContent>

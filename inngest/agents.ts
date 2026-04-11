@@ -10,7 +10,7 @@ function extractJson(str: string): string {
   if (match && match[1]) {
     jsonStr = match[1];
   }
-  
+
   // Attempt to parse/repair
   const parsed = validJson(jsonStr);
   return parsed ? JSON.stringify(parsed) : "{}";
@@ -23,13 +23,13 @@ export const parserAgent = createAgent({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
   }),
-  lifecycle:{
-    onResponse:async({result,network})=>{
-    const assistantMessage = lastAssistantTextMessageContent(result)
-    if(assistantMessage && network){
-      network.state.data.parserAgent = extractJson(assistantMessage)
-        }
-    return result
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result)
+      if (assistantMessage && network) {
+        network.state.data.parserAgent = extractJson(assistantMessage)
+      }
+      return result
     },
   }
 });
@@ -41,13 +41,13 @@ export const analysisAgent = createAgent({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
   }),
-  lifecycle:{
-    onResponse:async({result,network})=>{
-    const assistantMessage = lastAssistantTextMessageContent(result)
-    if(assistantMessage && network){
-      network.state.data.analyserAgent = assistantMessage
-        }
-    return result
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result)
+      if (assistantMessage && network) {
+        network.state.data.analyserAgent = extractJson(assistantMessage)
+      }
+      return result
     },
   }
 
@@ -60,13 +60,13 @@ export const scoreAgent = createAgent({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
   }),
-  lifecycle:{
-    onResponse:async({result,network})=>{
-    const assistantMessage = lastAssistantTextMessageContent(result)
-    if(assistantMessage && network){
-      network.state.data.scoreAgent = assistantMessage
-    }
-    return result
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result)
+      if (assistantMessage && network) {
+        network.state.data.scoreAgent = extractJson(assistantMessage)
+      }
+      return result
     },
   }
 
@@ -79,13 +79,13 @@ export const autofixAgent = createAgent({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
   }),
-  lifecycle:{
-    onResponse:async({result,network})=>{
-    const assistantMessage = lastAssistantTextMessageContent(result)
-    if(assistantMessage && network){
-      network.state.data.autofixAgent = extractJson(assistantMessage)
-    }
-    return result
+  lifecycle: {
+    onResponse: async ({ result, network }) => {
+      const assistantMessage = lastAssistantTextMessageContent(result)
+      if (assistantMessage && network) {
+        network.state.data.autofixAgent = extractJson(assistantMessage)
+      }
+      return result
     },
   }
 
@@ -101,7 +101,7 @@ export const jobExtractorAgent = createAgent({
   model: openai({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
-  defaultParameters: { temperature: 0 },
+    defaultParameters: { temperature: 0 },
   }),
   lifecycle: {
     onResponse: async ({ result, network }) => {
@@ -120,7 +120,7 @@ export const resumeScopeExtractorAgent = createAgent({
   model: openai({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
-  defaultParameters: { temperature: 0 },
+    defaultParameters: { temperature: 0 },
   }),
   lifecycle: {
     onResponse: async ({ result, network }) => {
@@ -139,7 +139,7 @@ export const normalizationAgent = createAgent({
   model: openai({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
-  defaultParameters: { temperature: 0 },
+    defaultParameters: { temperature: 0 },
   }),
   lifecycle: {
     onResponse: async ({ result, network }) => {
@@ -158,7 +158,7 @@ export const resumeSummaryAgent = createAgent({
   model: openai({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
-  defaultParameters: { temperature: 0 },
+    defaultParameters: { temperature: 0 },
   }),
   lifecycle: {
     onResponse: async ({ result, network }) => {
@@ -177,7 +177,7 @@ export const domainTranslationAgent = createAgent({
   model: openai({
     model: process.env.OPENAI_MODEL!,
     baseUrl: process.env.OPENAI_BASE_URL!,
-  defaultParameters: { temperature: 0 },
+    defaultParameters: { temperature: 0 },
   }),
   lifecycle: {
     onResponse: async ({ result, network }) => {

@@ -266,13 +266,7 @@ export const recruiterRouter = createTRPCRouter({
             const recruiterJobs = await prisma.recruiterJob.findMany({
                 where,
                 include: {
-                    job: {
-                        include: {
-                            _count: {
-                                select: { jobViews: true }
-                            }
-                        }
-                    },
+                    job: true,
                     _count: {
                         select: {
                             candidates: true,
@@ -488,7 +482,9 @@ export const recruiterRouter = createTRPCRouter({
                         select: {
                             id: true,
                             name: true,
-                            content: true
+                            content: true,
+                            scoreData: true,
+                            analysisData: true
                         }
                     }
                 },
@@ -725,7 +721,7 @@ export const recruiterRouter = createTRPCRouter({
             });
 
             return {
-                totalViews: recruiterJob.job._count.jobViews,
+                totalViews: recruiterJob.viewCount,
                 totalApplications: recruiterJob._count.candidates,
                 candidateFunnel: candidatesByStatus.map(stat => ({
                     status: stat.status,
@@ -770,13 +766,12 @@ export const recruiterRouter = createTRPCRouter({
             },
         });
 
-        // Get total views
-        const totalViews = await prisma.jobView.count({
-            where: {
-                job: {
-                    recruiterJob: { recruiterId: userId }
-                }
-            },
+        // Get total views from recruiter jobs
+        const aggregateViews = await prisma.recruiterJob.aggregate({
+            where: { recruiterId: userId },
+            _sum: {
+                viewCount: true
+            }
         });
 
         return {
@@ -785,7 +780,7 @@ export const recruiterRouter = createTRPCRouter({
                 count: stat._count,
             })),
             totalCandidates,
-            totalViews,
+            totalViews: aggregateViews._sum.viewCount || 0,
         };
     }),
 
@@ -828,13 +823,13 @@ export const recruiterRouter = createTRPCRouter({
             _count: true,
         });
 
-        const totalViews = await prisma.jobView.count({
-            where: {
-                job: {
-                    recruiterJob: { recruiterId: userId }
-                }
-            },
+        const aggregateViews = await prisma.recruiterJob.aggregate({
+            where: { recruiterId: userId },
+            _sum: {
+                viewCount: true
+            }
         });
+        const totalViews = aggregateViews._sum.viewCount || 0;
 
         // 2. Recent Activity (last 10 events: new applications and status updates)
         const recentActivities = await prisma.candidatePipeline.findMany({
@@ -854,13 +849,7 @@ export const recruiterRouter = createTRPCRouter({
         const activeJobs = await prisma.recruiterJob.findMany({
             where: { recruiterId: userId, status: 'ACTIVE' },
             include: {
-                job: {
-                    include: {
-                        _count: {
-                            select: { jobViews: true }
-                        }
-                    }
-                },
+                job: true,
                 _count: {
                     select: {
                         candidates: true,
@@ -981,5 +970,77 @@ export const recruiterRouter = createTRPCRouter({
             }
 
             return candidate.resume;
+        }),
+    getAllCandidates: protectedProcedure
+        .query(async ({ ctx }) => {
+            const recruiter = await prisma.recruiterApplication.findUnique({
+                where: { userId: ctx.session.user.id }
+            });
+
+            if (!recruiter || recruiter.status !== 'APPROVED') {
+                throw new TRPCError({ code: "FORBIDDEN", message: "User is not a verified recruiter" });
+            }
+
+            // Fetch all candidates for jobs owned by this recruiter
+            const candidates = await prisma.candidatePipeline.findMany({
+                where: {
+                    recruiterJob: {
+                        recruiterId: ctx.session.user.id
+                    }
+                },
+                include: {
+                    recruiterJob: {
+                        include: {
+                            job: {
+                                select: {
+                                    id: true,
+                                    job_title: true
+                                }
+                            }
+                        }
+                    },
+                    resume: {
+                        select: {
+                            id: true,
+                            scoreData: true
+                        }
+                    }
+                },
+                orderBy: { appliedAt: 'desc' }
+            });
+
+            // Aggregate by email
+            const candidateMap = new Map<string, any>();
+
+            candidates.forEach((c) => {
+                if (!candidateMap.has(c.candidateEmail)) {
+                    candidateMap.set(c.candidateEmail, {
+                        id: c.id,
+                        email: c.candidateEmail,
+                        name: c.candidateName,
+                        applications: [],
+                        bestMatch: { score: 0, jobTitle: '' }
+                    });
+                }
+
+                const entry = candidateMap.get(c.candidateEmail);
+                entry.applications.push({
+                    jobId: c.recruiterJob.jobId,
+                    jobTitle: c.recruiterJob.job.job_title,
+                    status: c.status,
+                    appliedAt: c.appliedAt
+                });
+
+                // Check if this is the best match
+                const scoreData = c.resume?.scoreData as { scores?: { overallScore?: number }; overallScore?: number } | null;
+                const raw = scoreData?.scores?.overallScore ?? scoreData?.overallScore ?? 0;
+                const score = raw <= 0 ? 0 : raw <= 1 ? raw * 100 : raw <= 10 ? raw * 10 : raw;
+
+                if (score > entry.bestMatch.score) {
+                    entry.bestMatch = { score: Math.round(score), jobTitle: c.recruiterJob.job.job_title };
+                }
+            });
+
+            return Array.from(candidateMap.values());
         }),
 });

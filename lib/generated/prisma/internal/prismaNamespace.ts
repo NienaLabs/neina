@@ -405,8 +405,7 @@ export const ModelName = {
   CandidatePipeline: 'CandidatePipeline',
   JobView: 'JobView',
   blog_post: 'blog_post',
-  PushSubscription: 'PushSubscription',
-  SSEEventSignal: 'SSEEventSignal'
+  PushSubscription: 'PushSubscription'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -2054,80 +2053,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    SSEEventSignal: {
-      payload: Prisma.$SSEEventSignalPayload<ExtArgs>
-      fields: Prisma.SSEEventSignalFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.SSEEventSignalFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.SSEEventSignalFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>
-        }
-        findFirst: {
-          args: Prisma.SSEEventSignalFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.SSEEventSignalFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>
-        }
-        findMany: {
-          args: Prisma.SSEEventSignalFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>[]
-        }
-        create: {
-          args: Prisma.SSEEventSignalCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>
-        }
-        createMany: {
-          args: Prisma.SSEEventSignalCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.SSEEventSignalCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>[]
-        }
-        delete: {
-          args: Prisma.SSEEventSignalDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>
-        }
-        update: {
-          args: Prisma.SSEEventSignalUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>
-        }
-        deleteMany: {
-          args: Prisma.SSEEventSignalDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.SSEEventSignalUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.SSEEventSignalUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>[]
-        }
-        upsert: {
-          args: Prisma.SSEEventSignalUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SSEEventSignalPayload>
-        }
-        aggregate: {
-          args: Prisma.SSEEventSignalAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateSSEEventSignal>
-        }
-        groupBy: {
-          args: Prisma.SSEEventSignalGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.SSEEventSignalGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.SSEEventSignalCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.SSEEventSignalCountAggregateOutputType> | number
-        }
-      }
-    }
   }
 } & {
   other: {
@@ -2183,6 +2108,8 @@ export const UserScalarFieldEnum = {
   plan: 'plan',
   polarCustomerId: 'polarCustomerId',
   polarSubscriptionId: 'polarSubscriptionId',
+  paystackSubscriptionCode: 'paystackSubscriptionCode',
+  paystackCustomerCode: 'paystackCustomerCode',
   preferredProvider: 'preferredProvider',
   experienceLevel: 'experienceLevel',
   goal: 'goal',
@@ -2483,11 +2410,11 @@ export const CandidatePipelineScalarFieldEnum = {
   recruiterJobId: 'recruiterJobId',
   candidateName: 'candidateName',
   candidateEmail: 'candidateEmail',
-  resumeId: 'resumeId',
   status: 'status',
   notes: 'notes',
   appliedAt: 'appliedAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  resumeId: 'resumeId'
 } as const
 
 export type CandidatePipelineScalarFieldEnum = (typeof CandidatePipelineScalarFieldEnum)[keyof typeof CandidatePipelineScalarFieldEnum]
@@ -2495,11 +2422,11 @@ export type CandidatePipelineScalarFieldEnum = (typeof CandidatePipelineScalarFi
 
 export const JobViewScalarFieldEnum = {
   id: 'id',
-  jobId: 'jobId',
   userId: 'userId',
   viewedAt: 'viewedAt',
   ipAddress: 'ipAddress',
-  userAgent: 'userAgent'
+  userAgent: 'userAgent',
+  jobId: 'jobId'
 } as const
 
 export type JobViewScalarFieldEnum = (typeof JobViewScalarFieldEnum)[keyof typeof JobViewScalarFieldEnum]
@@ -2536,17 +2463,6 @@ export const PushSubscriptionScalarFieldEnum = {
 } as const
 
 export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
-
-
-export const SSEEventSignalScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  type: 'type',
-  payload: 'payload',
-  createdAt: 'createdAt'
-} as const
-
-export type SSEEventSignalScalarFieldEnum = (typeof SSEEventSignalScalarFieldEnum)[keyof typeof SSEEventSignalScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -2964,7 +2880,6 @@ export type GlobalOmitConfig = {
   jobView?: Prisma.JobViewOmit
   blog_post?: Prisma.blog_postOmit
   pushSubscription?: Prisma.PushSubscriptionOmit
-  sSEEventSignal?: Prisma.SSEEventSignalOmit
 }
 
 /* Types for Logging */

@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@daveyplate/better-auth-ui/css";
+@import "dragula/dist/dragula.css";
 
 @custom-variant dark (&:is(.dark *));
 

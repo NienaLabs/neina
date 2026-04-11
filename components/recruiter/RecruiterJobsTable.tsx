@@ -12,14 +12,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+    Search,
+    Share2,
     MoreHorizontal,
-    Eye,
-    Edit,
     Users,
-    Trash,
-    ChevronRight,
-    Search
+    Edit,
+    Trash
 } from "lucide-react";
+import {
+    getAbsoluteUrl,
+    triggerShare
+} from "@/lib/utils";
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -58,6 +62,16 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
             deleteMutation.mutate({ recruiterJobId: id });
         }
     };
+
+    const handleShare = async (job: any) => {
+        const url = getAbsoluteUrl(`/jobs/${job.job.id}`);
+        await triggerShare({
+            title: job.job.job_title,
+            text: `Check out this opening for ${job.job.job_title} at ${job.job.employer_name}!`,
+            url: url
+        });
+    };
+
 
 
 
@@ -106,7 +120,7 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
                                             <span className="text-[9px] font-medium text-muted-foreground">Applicants</span>
                                         </div>
                                         <div className="flex flex-col items-center border-l pl-6">
-                                            <span className="text-xs font-bold">{job.job._count.jobViews}</span>
+                                            <span className="text-xs font-bold">{job.viewCount}</span>
                                             <span className="text-[9px] font-medium text-muted-foreground">Reach</span>
                                         </div>
                                     </div>
@@ -134,6 +148,13 @@ export function RecruiterJobsTable({ jobs, onUpdate }: RecruiterJobsTableProps) 
                                                     <Edit className="mr-2 h-4 w-4" /> Edit Role
                                                 </Link>
                                             </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => handleShare(job)}
+                                                className="rounded-lg py-2 focus:bg-slate-50 focus:text-slate-700 cursor-pointer"
+                                            >
+                                                <Share2 className="mr-2 h-4 w-4 text-slate-500" /> Share Role
+                                            </DropdownMenuItem>
+
                                             <DropdownMenuSeparator className="my-1.5 opacity-50" />
 
                                             <DropdownMenuItem

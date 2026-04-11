@@ -28,7 +28,6 @@ export function NotificationSSEProvider({ children }: { children: React.ReactNod
 
     useServerEvents((event) => {
         if (event.type === 'INITIAL_STATE') {
-            console.log('📊 [SSE] Received initial global state');
 
             // Notifications
             if (event.data.notifications) {
@@ -45,7 +44,6 @@ export function NotificationSSEProvider({ children }: { children: React.ReactNod
         }
 
         if (event.type === 'NEW_NOTIFICATION') {
-            console.log('🔔 [SSE] New notification, updating state');
             setUnreadCount((prev) => event.data.unreadCount ?? (prev + 1));
             if (event.data.notification) {
                 setNotifications((prev) => [event.data.notification, ...prev].slice(0, 50));
@@ -54,7 +52,6 @@ export function NotificationSSEProvider({ children }: { children: React.ReactNod
         }
 
         if (event.type === 'NOTIFICATION_READ') {
-            console.log('✅ [SSE] Notification marked as read');
             let wasUnread = false;
             setNotifications((prev) => prev.map(n => {
                 if (n.id === event.data.notificationId) {
@@ -70,7 +67,6 @@ export function NotificationSSEProvider({ children }: { children: React.ReactNod
         }
 
         if (event.type === 'NOTIFICATION_DELETED') {
-            console.log('🗑️ [SSE] Notification deleted');
             let wasUnread = false;
 
             setNotifications((prev) => {
@@ -85,14 +81,12 @@ export function NotificationSSEProvider({ children }: { children: React.ReactNod
         }
 
         if (event.type === 'ALL_NOTIFICATIONS_READ') {
-            console.log('✅ [SSE] All notifications marked as read');
             setUnreadCount(0);
             setNotifications((prev) => prev.map(n => ({ ...n, isRead: true, readAt: new Date() })));
             setIsLoading(false);
         }
 
         if (event.type === 'PUSH_SUBSCRIPTION_UPDATE') {
-            console.log('🔄 [SSE] Push Subscription Update:', event.data);
             setPushSubscribed(event.data.isSubscribed);
             setPushCheckingStatus(false);
         }

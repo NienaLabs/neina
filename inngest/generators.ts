@@ -37,14 +37,16 @@ const outreachMessageNetwork = createNetwork({
 // Workflows
 
 export const itemRegenerated = inngest.createFunction(
-  { id: "item-regeneration-workflow" },
+  { id: "item-regeneration-workflow", concurrency: 1 },
   { event: "app/item.regenerated" },
   async ({ step, event }) => {
     try {
+      // Safety delay for API rate limits
+      await step.sleep('rate-limit-cooldown', '10s');
       const { itemType, title, subtitle, currentDescription, userInstruction } = event.data;
-      
+
       const state = createState<{ regenerateItemAgent: string }>({ regenerateItemAgent: "" });
-      
+
       const filledPrompt = REGENERATE_ITEM_PROMPT
         .replace("{output_language}", "English")
         .replace("{item_type}", itemType)
@@ -54,18 +56,18 @@ export const itemRegenerated = inngest.createFunction(
         .replace("{user_instruction}", userInstruction);
 
       const result = await regenerateItemNetwork.run(filledPrompt, { state });
-      
+
       const data = JSON.parse(result.state.data.regenerateItemAgent || "{}");
-      
+
       // Notify client via SSE
       const { emitUserEvent } = await import("@/lib/events");
       emitUserEvent(event.data.userId, {
         type: 'ITEM_REGENERATED_READY',
-        data: { 
-            itemId: event.data.itemId,
-            resumeId: event.data.resumeId,
-            newBullets: data.new_bullets,
-            changeSummary: data.change_summary
+        data: {
+          itemId: event.data.itemId,
+          resumeId: event.data.resumeId,
+          newBullets: data.new_bullets,
+          changeSummary: data.change_summary
         }
       });
 
@@ -87,31 +89,33 @@ export const itemRegenerated = inngest.createFunction(
 );
 
 export const skillsRegenerated = inngest.createFunction(
-  { id: "skills-regeneration-workflow" },
+  { id: "skills-regeneration-workflow", concurrency: 1 },
   { event: "app/skills.regenerated" },
   async ({ step, event }) => {
     try {
+      // Safety delay for API rate limits
+      await step.sleep('rate-limit-cooldown', '10s');
       const { currentSkills, userInstruction } = event.data;
-      
+
       const state = createState<{ regenerateSkillsAgent: string }>({ regenerateSkillsAgent: "" });
-      
+
       const filledPrompt = REGENERATE_SKILLS_PROMPT
         .replace("{output_language}", "English")
         .replace("{current_skills}", Array.isArray(currentSkills) ? currentSkills.join(", ") : currentSkills)
         .replace("{user_instruction}", userInstruction);
 
       const result = await regenerateSkillsNetwork.run(filledPrompt, { state });
-      
+
       const data = JSON.parse(result.state.data.regenerateSkillsAgent || "{}");
-      
+
       // Notify client via SSE
       const { emitUserEvent } = await import("@/lib/events");
       emitUserEvent(event.data.userId, {
         type: 'SKILLS_REGENERATED_READY',
-        data: { 
-            resumeId: event.data.resumeId,
-            newSkills: data.new_skills,
-            changeSummary: data.change_summary
+        data: {
+          resumeId: event.data.resumeId,
+          newSkills: data.new_skills,
+          changeSummary: data.change_summary
         }
       });
 
@@ -132,14 +136,16 @@ export const skillsRegenerated = inngest.createFunction(
 );
 
 export const outreachMessageGenerated = inngest.createFunction(
-  { id: "outreach-message-generation-workflow" },
+  { id: "outreach-message-generation-workflow", concurrency: 1 },
   { event: "app/outreach-message.generated" },
   async ({ step, event }) => {
     try {
+      // Safety delay for API rate limits
+      await step.sleep('rate-limit-cooldown', '10s');
       const { jobDescription, resumeData } = event.data;
-      
+
       const state = createState<{ outreachMessageAgent: string }>({ outreachMessageAgent: "" });
-      
+
       // Ensure resume data is a string for the prompt
       const resumeString = typeof resumeData === 'string' ? resumeData : JSON.stringify(resumeData, null, 2);
 
@@ -149,18 +155,18 @@ export const outreachMessageGenerated = inngest.createFunction(
         .replace("{resume_data}", resumeString);
 
       const result = await outreachMessageNetwork.run(filledPrompt, { state });
-      
+
       // Agent returns plain text directly
       const message = result.state.data.outreachMessageAgent;
-      
+
       // Notify client via SSE
       const { emitUserEvent } = await import("@/lib/events");
       emitUserEvent(event.data.userId, {
         type: 'OUTREACH_MESSAGE_READY',
-        data: { 
-            message,
-            resumeId: event.data.resumeId // Assuming this is passed in event.data
-         } 
+        data: {
+          message,
+          resumeId: event.data.resumeId // Assuming this is passed in event.data
+        }
       });
 
       return { success: true, message };

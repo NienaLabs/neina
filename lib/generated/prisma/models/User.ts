@@ -52,6 +52,8 @@ export type UserMinAggregateOutputType = {
   plan: $Enums.Plan | null
   polarCustomerId: string | null
   polarSubscriptionId: string | null
+  paystackSubscriptionCode: string | null
+  paystackCustomerCode: string | null
   preferredProvider: string | null
   experienceLevel: string | null
   goal: string | null
@@ -80,6 +82,8 @@ export type UserMaxAggregateOutputType = {
   plan: $Enums.Plan | null
   polarCustomerId: string | null
   polarSubscriptionId: string | null
+  paystackSubscriptionCode: string | null
+  paystackCustomerCode: string | null
   preferredProvider: string | null
   experienceLevel: string | null
   goal: string | null
@@ -108,6 +112,8 @@ export type UserCountAggregateOutputType = {
   plan: number
   polarCustomerId: number
   polarSubscriptionId: number
+  paystackSubscriptionCode: number
+  paystackCustomerCode: number
   preferredProvider: number
   experienceLevel: number
   goal: number
@@ -149,6 +155,8 @@ export type UserMinAggregateInputType = {
   plan?: true
   polarCustomerId?: true
   polarSubscriptionId?: true
+  paystackSubscriptionCode?: true
+  paystackCustomerCode?: true
   preferredProvider?: true
   experienceLevel?: true
   goal?: true
@@ -177,6 +185,8 @@ export type UserMaxAggregateInputType = {
   plan?: true
   polarCustomerId?: true
   polarSubscriptionId?: true
+  paystackSubscriptionCode?: true
+  paystackCustomerCode?: true
   preferredProvider?: true
   experienceLevel?: true
   goal?: true
@@ -205,6 +215,8 @@ export type UserCountAggregateInputType = {
   plan?: true
   polarCustomerId?: true
   polarSubscriptionId?: true
+  paystackSubscriptionCode?: true
+  paystackCustomerCode?: true
   preferredProvider?: true
   experienceLevel?: true
   goal?: true
@@ -321,6 +333,8 @@ export type UserGroupByOutputType = {
   plan: $Enums.Plan
   polarCustomerId: string | null
   polarSubscriptionId: string | null
+  paystackSubscriptionCode: string | null
+  paystackCustomerCode: string | null
   preferredProvider: string | null
   experienceLevel: string | null
   goal: string | null
@@ -373,6 +387,8 @@ export type UserWhereInput = {
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
   polarCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
   polarSubscriptionId?: Prisma.StringNullableFilter<"User"> | string | null
+  paystackSubscriptionCode?: Prisma.StringNullableFilter<"User"> | string | null
+  paystackCustomerCode?: Prisma.StringNullableFilter<"User"> | string | null
   preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
   experienceLevel?: Prisma.StringNullableFilter<"User"> | string | null
   goal?: Prisma.StringNullableFilter<"User"> | string | null
@@ -413,6 +429,8 @@ export type UserOrderByWithRelationInput = {
   plan?: Prisma.SortOrder
   polarCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrderInput | Prisma.SortOrder
   preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   experienceLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   goal?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -456,6 +474,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
   polarCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
   polarSubscriptionId?: Prisma.StringNullableFilter<"User"> | string | null
+  paystackSubscriptionCode?: Prisma.StringNullableFilter<"User"> | string | null
+  paystackCustomerCode?: Prisma.StringNullableFilter<"User"> | string | null
   preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
   experienceLevel?: Prisma.StringNullableFilter<"User"> | string | null
   goal?: Prisma.StringNullableFilter<"User"> | string | null
@@ -496,6 +516,8 @@ export type UserOrderByWithAggregationInput = {
   plan?: Prisma.SortOrder
   polarCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrderInput | Prisma.SortOrder
   preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   experienceLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   goal?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -533,6 +555,8 @@ export type UserScalarWhereWithAggregatesInput = {
   plan?: Prisma.EnumPlanWithAggregatesFilter<"User"> | $Enums.Plan
   polarCustomerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   polarSubscriptionId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  paystackSubscriptionCode?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  paystackCustomerCode?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   preferredProvider?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   experienceLevel?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   goal?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -562,6 +586,8 @@ export type UserCreateInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -602,6 +628,8 @@ export type UserUncheckedCreateInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -642,6 +670,8 @@ export type UserUpdateInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -682,6 +712,8 @@ export type UserUncheckedUpdateInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -722,6 +754,8 @@ export type UserCreateManyInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -751,6 +785,8 @@ export type UserUpdateManyMutationInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -780,6 +816,8 @@ export type UserUncheckedUpdateManyInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -817,6 +855,8 @@ export type UserCountOrderByAggregateInput = {
   plan?: Prisma.SortOrder
   polarCustomerId?: Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrder
   preferredProvider?: Prisma.SortOrder
   experienceLevel?: Prisma.SortOrder
   goal?: Prisma.SortOrder
@@ -851,6 +891,8 @@ export type UserMaxOrderByAggregateInput = {
   plan?: Prisma.SortOrder
   polarCustomerId?: Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrder
   preferredProvider?: Prisma.SortOrder
   experienceLevel?: Prisma.SortOrder
   goal?: Prisma.SortOrder
@@ -879,6 +921,8 @@ export type UserMinOrderByAggregateInput = {
   plan?: Prisma.SortOrder
   polarCustomerId?: Prisma.SortOrder
   polarSubscriptionId?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrder
   preferredProvider?: Prisma.SortOrder
   experienceLevel?: Prisma.SortOrder
   goal?: Prisma.SortOrder
@@ -1112,6 +1156,8 @@ export type UserCreateWithoutTransactionsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1151,6 +1197,8 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1206,6 +1254,8 @@ export type UserUpdateWithoutTransactionsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1245,6 +1295,8 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1284,6 +1336,8 @@ export type UserCreateWithoutSessionsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1323,6 +1377,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1378,6 +1434,8 @@ export type UserUpdateWithoutSessionsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1417,6 +1475,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1456,6 +1516,8 @@ export type UserCreateWithoutAccountsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1495,6 +1557,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1550,6 +1614,8 @@ export type UserUpdateWithoutAccountsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1589,6 +1655,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1628,6 +1696,8 @@ export type UserCreateWithoutResumesInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1667,6 +1737,8 @@ export type UserUncheckedCreateWithoutResumesInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1722,6 +1794,8 @@ export type UserUpdateWithoutResumesInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1761,6 +1835,8 @@ export type UserUncheckedUpdateWithoutResumesInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1800,6 +1876,8 @@ export type UserCreateWithoutTailoredResumesInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1839,6 +1917,8 @@ export type UserUncheckedCreateWithoutTailoredResumesInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -1894,6 +1974,8 @@ export type UserUpdateWithoutTailoredResumesInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1933,6 +2015,8 @@ export type UserUncheckedUpdateWithoutTailoredResumesInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1972,6 +2056,8 @@ export type UserCreateWithoutInterviewInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2011,6 +2097,8 @@ export type UserUncheckedCreateWithoutInterviewInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2066,6 +2154,8 @@ export type UserUpdateWithoutInterviewInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2105,6 +2195,8 @@ export type UserUncheckedUpdateWithoutInterviewInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2144,6 +2236,8 @@ export type UserCreateWithoutSupportTicketsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2183,6 +2277,8 @@ export type UserUncheckedCreateWithoutSupportTicketsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2238,6 +2334,8 @@ export type UserUpdateWithoutSupportTicketsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2277,6 +2375,8 @@ export type UserUncheckedUpdateWithoutSupportTicketsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2316,6 +2416,8 @@ export type UserCreateWithoutAnnouncement_readInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2355,6 +2457,8 @@ export type UserUncheckedCreateWithoutAnnouncement_readInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2410,6 +2514,8 @@ export type UserUpdateWithoutAnnouncement_readInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2449,6 +2555,8 @@ export type UserUncheckedUpdateWithoutAnnouncement_readInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2488,6 +2596,8 @@ export type UserCreateWithoutRecruiterApplicationInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2527,6 +2637,8 @@ export type UserUncheckedCreateWithoutRecruiterApplicationInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2582,6 +2694,8 @@ export type UserUpdateWithoutRecruiterApplicationInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2621,6 +2735,8 @@ export type UserUncheckedUpdateWithoutRecruiterApplicationInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2660,6 +2776,8 @@ export type UserCreateWithoutRecruiterJobsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2699,6 +2817,8 @@ export type UserUncheckedCreateWithoutRecruiterJobsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2754,6 +2874,8 @@ export type UserUpdateWithoutRecruiterJobsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2793,6 +2915,8 @@ export type UserUncheckedUpdateWithoutRecruiterJobsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2832,6 +2956,8 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2871,6 +2997,8 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   plan?: $Enums.Plan
   polarCustomerId?: string | null
   polarSubscriptionId?: string | null
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
   preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
@@ -2926,6 +3054,8 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2965,6 +3095,8 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   polarCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   polarSubscriptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3116,6 +3248,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   plan?: boolean
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
   preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
@@ -3157,6 +3291,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   plan?: boolean
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
   preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
@@ -3186,6 +3322,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   plan?: boolean
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
   preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
@@ -3215,6 +3353,8 @@ export type UserSelectScalar = {
   plan?: boolean
   polarCustomerId?: boolean
   polarSubscriptionId?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
   preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
@@ -3228,7 +3368,7 @@ export type UserSelectScalar = {
   companyName?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan" | "polarCustomerId" | "polarSubscriptionId" | "preferredProvider" | "experienceLevel" | "goal" | "jobTitle" | "jobType" | "location" | "onboardingCompleted" | "referralSource" | "remotePreference" | "selectedTopics" | "companyName", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan" | "polarCustomerId" | "polarSubscriptionId" | "paystackSubscriptionCode" | "paystackCustomerCode" | "preferredProvider" | "experienceLevel" | "goal" | "jobTitle" | "jobType" | "location" | "onboardingCompleted" | "referralSource" | "remotePreference" | "selectedTopics" | "companyName", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   announcement_read?: boolean | Prisma.User$announcement_readArgs<ExtArgs>
@@ -3277,6 +3417,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     plan: $Enums.Plan
     polarCustomerId: string | null
     polarSubscriptionId: string | null
+    paystackSubscriptionCode: string | null
+    paystackCustomerCode: string | null
     preferredProvider: string | null
     experienceLevel: string | null
     goal: string | null
@@ -3737,6 +3879,8 @@ export interface UserFieldRefs {
   readonly plan: Prisma.FieldRef<"User", 'Plan'>
   readonly polarCustomerId: Prisma.FieldRef<"User", 'String'>
   readonly polarSubscriptionId: Prisma.FieldRef<"User", 'String'>
+  readonly paystackSubscriptionCode: Prisma.FieldRef<"User", 'String'>
+  readonly paystackCustomerCode: Prisma.FieldRef<"User", 'String'>
   readonly preferredProvider: Prisma.FieldRef<"User", 'String'>
   readonly experienceLevel: Prisma.FieldRef<"User", 'String'>
   readonly goal: Prisma.FieldRef<"User", 'String'>

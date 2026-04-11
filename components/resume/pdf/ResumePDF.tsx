@@ -154,13 +154,14 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
     ));
   };
 
-  // Filter out unwanted custom sections
-  const filteredCustomSections = customSections?.filter(section => {
-    const name = section.sectionName.toLowerCase();
-    return !name.includes('job description') && 
-           !name.includes('target role') && 
-           !name.includes('qualifications') &&
-           !name.includes('targetted role');
+  // Filter out unwanted custom sections - ensure it's an array first
+  const sectionsArray = Array.isArray(customSections) ? customSections : [];
+  const filteredCustomSections = sectionsArray.filter(section => {
+    const name = section?.sectionName?.toLowerCase() || '';
+    return !name.includes('job description') &&
+      !name.includes('target role') &&
+      !name.includes('qualifications') &&
+      !name.includes('targetted role');
   });
 
   return (
@@ -176,13 +177,13 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
               <Link src={address.linkedInProfile} style={styles.link}>LinkedIn</Link>
             )}
             {address?.githubProfile && (
-               <Link src={address.githubProfile} style={styles.link}>GitHub</Link>
+              <Link src={address.githubProfile} style={styles.link}>GitHub</Link>
             )}
             {address?.portfolio && (
-               <Link src={address.portfolio} style={styles.link}>Portfolio</Link>
+              <Link src={address.portfolio} style={styles.link}>Portfolio</Link>
             )}
-             {address?.otherLinks && address.otherLinks.map((link, i) => (
-               <Link key={i} src={link} style={styles.link}>Link</Link>
+            {Array.isArray(address?.otherLinks) && address.otherLinks.map((link, i) => (
+              link && <Link key={i} src={link} style={styles.link}>Link</Link>
             ))}
           </View>
         </View>
@@ -197,7 +198,7 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
         )}
 
         {/* Experience */}
-        {experience && experience.length > 0 && (
+        {Array.isArray(experience) && experience.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Experience</Text>
             {experience.map((exp, index) => (
@@ -221,20 +222,20 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
         )}
 
         {/* Education */}
-        {education && education.length > 0 && (
+        {Array.isArray(education) && education.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Education</Text>
             {education.map((edu, index) => (
               <View key={index} style={styles.itemContainer}>
-                 <View style={styles.row}>
+                <View style={styles.row}>
                   <Text style={styles.mainText}>{edu.institution}</Text>
                   <Text style={styles.dateLocation}>
                     {formatDateRange(edu.startDate, edu.endDate)}
                   </Text>
                 </View>
                 <View style={styles.row}>
-                   <Text style={styles.subText}>{edu.degree} in {edu.fieldOfStudy}</Text>
-                   <Text style={styles.dateLocation}>{edu.location}</Text>
+                  <Text style={styles.subText}>{edu.degree} in {edu.fieldOfStudy}</Text>
+                  <Text style={styles.dateLocation}>{edu.location}</Text>
                 </View>
                 {edu.grade && <Text style={styles.description}>Grade: {edu.grade}</Text>}
                 {edu.description && <Text style={styles.description}>{edu.description}</Text>}
@@ -244,22 +245,31 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
         )}
 
         {/* Skills */}
-        {skills && Object.keys(skills).length > 0 && (
+        {skills && (Array.isArray(skills) || Object.keys(skills).length > 0) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skills</Text>
-            {Object.entries(skills).map(([category, items], index) => (
-              <View key={index} style={{ marginBottom: 6 }}>
-                <Text style={{ ...styles.subText, fontWeight: 'bold', marginBottom: 2, textTransform: 'capitalize' }}>
-                  {category}:
-                </Text>
-                <Text style={styles.description}>{items.join(', ')}</Text>
+            {Array.isArray(skills) ? (
+              <View style={styles.skillsContainer}>
+                {skills.map((item, index) => {
+                  const skillName = typeof item === 'string' ? item : (item as any)?.name || '';
+                  return <Text key={index} style={styles.skillItem}>{skillName}</Text>;
+                })}
               </View>
-            ))}
+            ) : (
+              Object.entries(skills).map(([category, items], index) => (
+                <View key={index} style={{ marginBottom: 6 }}>
+                  <Text style={{ ...styles.subText, fontWeight: 'bold', marginBottom: 2, textTransform: 'capitalize' }}>
+                    {category}:
+                  </Text>
+                  <Text style={styles.description}>{Array.isArray(items) ? items.join(', ') : String(items)}</Text>
+                </View>
+              ))
+            )}
           </View>
         )}
 
         {/* Projects */}
-        {projects && projects.length > 0 && (
+        {Array.isArray(projects) && projects.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Projects</Text>
             {projects.map((proj, index) => (
@@ -281,7 +291,7 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
         )}
 
         {/* Certifications */}
-        {certifications && certifications.length > 0 && (
+        {Array.isArray(certifications) && certifications.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Certifications</Text>
             {certifications.map((cert, index) => (
@@ -298,12 +308,12 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
         )}
 
         {/* Awards */}
-        {awards && awards.length > 0 && (
+        {Array.isArray(awards) && awards.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Awards</Text>
             {awards.map((award, index) => (
               <View key={index} style={styles.itemContainer}>
-                 <View style={styles.row}>
+                <View style={styles.row}>
                   <Text style={styles.mainText}>{award.title}</Text>
                   <Text style={styles.dateLocation}>{formatDate(award.year)}</Text>
                 </View>
@@ -313,14 +323,14 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
             ))}
           </View>
         )}
-        
+
         {/* Publications */}
-        {publications && publications.length > 0 && (
+        {Array.isArray(publications) && publications.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Publications</Text>
             {publications.map((pub, index) => (
               <View key={index} style={styles.itemContainer}>
-                 <View style={styles.row}>
+                <View style={styles.row}>
                   <Text style={styles.mainText}>{pub.title}</Text>
                   <Text style={styles.dateLocation}>{formatDate(pub.date)}</Text>
                 </View>

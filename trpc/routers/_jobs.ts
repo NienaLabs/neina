@@ -1,4 +1,4 @@
-import { createTRPCRouter, protectedProcedure } from '../init'
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '../init'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import prisma from '@/lib/prisma'
@@ -91,7 +91,7 @@ export const jobsRouter = createTRPCRouter({
       return jobs as any;
     }),
 
-  getJob: protectedProcedure
+  getJob: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const job = await prisma.jobs.findUnique({
@@ -145,13 +145,33 @@ export const jobsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'CONFLICT', message: 'You have already applied to this job.' });
       }
 
+      // Auto-link the user's primary or latest completed resume for AI scoring
+      const primaryResume = await prisma.resume.findFirst({
+        where: {
+          userId: user.id,
+          status: 'COMPLETED',
+        },
+        orderBy: [
+          { isPrimary: 'desc' },
+          { updatedAt: 'desc' },
+        ],
+        select: { id: true },
+      });
+
       const application = await prisma.candidatePipeline.create({
         data: {
           recruiterJobId: job.recruiterJob.id,
           candidateName: user.name || 'Candidate',
           candidateEmail: user.email,
+          resumeId: primaryResume?.id ?? null,
           status: 'NEW',
         },
+      });
+
+      // Increment application count
+      await prisma.recruiterJob.update({
+        where: { id: job.recruiterJob.id },
+        data: { applicationCount: { increment: 1 } },
       });
 
       return { success: true, application };
@@ -218,14 +238,31 @@ export const jobsRouter = createTRPCRouter({
       return { success: true, applicationId: application.id };
     }),
 
-  recordView: protectedProcedure
+  recordView: publicProcedure
     .input(z.object({ jobId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const userId = ctx.session?.user?.id;
 
-      // Use a simpler check: if job exists and user hasn't viewed it recently
+      // If no user session, just increment the global view count
+      if (!userId) {
+        await prisma.jobs.update({
+          where: { id: input.jobId },
+          data: {
+            viewCount: { increment: 1 },
+            recruiterJob: {
+              update: {
+                viewCount: { increment: 1 }
+              }
+            }
+          },
+        });
+        return { success: true, viewed: true };
+      }
+
+      // For logged in users, track unique views
       const job = await prisma.jobs.findUnique({
         where: { id: input.jobId },
+        include: { recruiterJob: true }
       });
 
       if (!job) return { success: false };
@@ -250,6 +287,11 @@ export const jobsRouter = createTRPCRouter({
             where: { id: input.jobId },
             data: {
               viewCount: { increment: 1 },
+              recruiterJob: {
+                update: {
+                  viewCount: { increment: 1 }
+                }
+              }
             },
           }),
         ]);

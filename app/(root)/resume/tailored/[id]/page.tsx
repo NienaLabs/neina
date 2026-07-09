@@ -44,13 +44,13 @@ export default async function TailoredResumeEditPage({ params }: PageProps) {
   // Normalize to ResumeData type using the shared mapper
   const resumeData = mapExtractionToResumeData(extractedData, resume.name);
 
-  // Scores
-  const scores = typeof resume.scores === 'string'
-      ? JSON.parse(resume.scores)
-      : resume.scores;
+  // Scores (TailoredResume stores them in `scores`; primary Resume in `scoreData`)
+  const rawScores = 'scores' in resume ? resume.scores : resume.scoreData;
+  const scores = (typeof rawScores === 'string'
+      ? JSON.parse(rawScores)
+      : rawScores) as { wordMatchScore?: number; finalScore?: number } | null;
 
-  // @ts-ignore
-  const score = (scores?.wordMatchScore !== undefined ? scores.wordMatchScore : scores?.finalScore) || 0;
+  const score = scores?.wordMatchScore ?? scores?.finalScore ?? 0;
   
   // Job Description
   const jobDescription = (resume as any).jobDescription || "";

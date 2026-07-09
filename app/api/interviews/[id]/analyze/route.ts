@@ -7,7 +7,7 @@ import { generateInterviewScore } from "@/lib/ai-scoring";
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth.api.getSession({
@@ -40,13 +40,6 @@ export async function POST(
 
         if (interview.user_id !== userId) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
-        if (!interview.conversation_id) {
-            return NextResponse.json(
-                { error: "No conversation associated with this interview" },
-                { status: 400 }
-            );
         }
 
         // 2. Use Stored Transcript from DB

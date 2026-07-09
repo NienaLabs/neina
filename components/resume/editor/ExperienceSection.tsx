@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ interface ExperienceSectionProps {
     index: number,
     key: string,
     values: string[] | undefined
-  ) => JSX.Element;
+  ) => React.JSX.Element;
   fixes: Fixes;
   onUpdate: (data: ResumeExtraction['experience']) => void;
 }
@@ -63,7 +64,7 @@ export const ExperienceSection = ({
   return (
     <section>
       <div className="mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold">Experience</h2>
           <Button
             variant="outline"
@@ -94,7 +95,7 @@ export const ExperienceSection = ({
       <div className="flex flex-col gap-6">
         {/* Safeguard: ensure experience is an array */}
         {Array.isArray(experience) && experience.map((exp, index) => (
-          <div key={index} className="p-5 border rounded-lg relative bg-gray-50">
+          <div key={index} className="p-4 sm:p-5 border border-gray-200/80 rounded-xl relative bg-gray-50/70">
             <div className="flex justify-end mb-2">
               <Button
                 variant="ghost"
@@ -105,7 +106,7 @@ export const ExperienceSection = ({
                 <Trash2 className="size-4 mr-2" /> Delete Entry
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <RemovableInput
                 placeholder="Position"
                 value={exp.position}
@@ -147,18 +148,18 @@ export const ExperienceSection = ({
                   }
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <p className="font-medium">Responsibilities</p>
                 {renderStringArray('experience', index, 'responsibilities', exp.responsibilities)}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <p className="font-medium">Achievements</p>
                 {renderStringArray('experience', index, 'achievements', exp.achievements)}
               </div>
               
               {/* Custom Fields */}
               {Array.isArray(exp.customFields) && exp.customFields.map((field, fieldIndex) => (
-                <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
+                <div key={fieldIndex} className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-3 rounded-lg border">
                   <Input
                     placeholder="Field Name"
                     value={field.key}
@@ -177,7 +178,7 @@ export const ExperienceSection = ({
                 </div>
               ))}
               
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <Button
                   variant="outline"
                   size="sm"

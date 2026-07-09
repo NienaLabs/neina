@@ -414,10 +414,10 @@ const ResumeBuilderContent = ({
       className="min-h-screen w-full bg-background flex justify-center items-start py-2 px-2 md:py-3 md:px-4 overflow-x-hidden"
     >
         {/* Main Container */}
-      <div className="w-full min-h-[calc(100vh-2rem)] max-w-[92%] md:max-w-[96%] xl:max-w-[2000px] bg-white dark:bg-card shadow-2xl border border-black/5 rounded-3xl flex flex-col overflow-hidden">
+      <div className="w-full min-h-[calc(100vh-2rem)] max-w-[98%] md:max-w-[96%] xl:max-w-[2000px] bg-white dark:bg-card shadow-2xl border border-black/5 rounded-3xl flex flex-col overflow-hidden">
           {/* Header */}
           <div className="border-b border-black/5 p-3 md:p-4 bg-white/80 dark:bg-black/80 backdrop-blur-md">
-             <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
                 <div>
                      <Button
                         variant="link"
@@ -443,7 +443,7 @@ const ResumeBuilderContent = ({
                       </div>
                 </div>
 
-                <div className="flex items-center gap-1 mr-4 border-x border-black/10 px-3 h-10">
+                <div className="flex items-center gap-1 md:mr-4 md:border-x border-black/10 md:px-3 md:h-10">
                     <Button 
                       variant="ghost" 
                       size="icon" 

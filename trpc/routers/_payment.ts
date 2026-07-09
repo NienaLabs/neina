@@ -243,9 +243,9 @@ export const paymentRouter = createTRPCRouter({
       }
 
       const checkout = await polar.checkouts.create({
-        productId: productId,
+        products: [productId],
         customerEmail: user.email,
-        customerExternalId: user.id,
+        externalCustomerId: user.id,
         customerId: user.polarCustomerId || undefined,
         successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing/verify?checkout_id={CHECKOUT_ID}`,
       });
@@ -298,9 +298,9 @@ export const paymentRouter = createTRPCRouter({
       }
 
       const checkout = await polar.checkouts.create({
-        productId,
+        products: [productId],
         customerEmail: user.email,
-        customerExternalId: user.id,
+        externalCustomerId: user.id,
         customerId: user.polarCustomerId || undefined,
         successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing/verify?checkout_id={CHECKOUT_ID}`,
       });
@@ -364,7 +364,11 @@ export const paymentRouter = createTRPCRouter({
     if (user.polarSubscriptionId) {
       const polar = createPolarClient();
       try {
-        await polar.subscriptions.cancel({ id: user.polarSubscriptionId });
+        // Cancel at period end (the SDK has no `cancel` method; `revoke` would cut access immediately)
+        await polar.subscriptions.update({
+          id: user.polarSubscriptionId,
+          subscriptionUpdate: { cancelAtPeriodEnd: true },
+        });
       } catch (err: any) {
         console.warn("[cancelSubscription] Polar cancel error (may already be canceled):", err.message);
       }

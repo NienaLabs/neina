@@ -179,7 +179,7 @@ export default function ConvoTextStream({
       {isOpen ? (
         <div
           className={cn(
-            'bg-white rounded-lg shadow-xl w-80 md:w-96 flex flex-col text-black transition-all duration-300 ease-in-out', // Adjusted width and added transition
+            'bg-white rounded-lg shadow-xl w-[calc(100vw-2rem)] max-w-sm md:w-96 md:max-w-none flex flex-col text-black transition-all duration-300 ease-in-out', // Responsive width: never overflows small screens
             // Dynamic height based on expanded state
             isChatExpanded ? 'h-[60vh] max-h-[500px]' : 'h-80'
           )}

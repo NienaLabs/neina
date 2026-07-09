@@ -175,7 +175,7 @@ export const JobDescriptionPanel: React.FC<JobDescriptionPanelProps> = ({
          <label className="block text-sm font-mono font-bold uppercase tracking-wider text-black">
             Advanced Improvements
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {ADVANCED_ACTIONS.map((action) => (
                  <Button
                     key={action.id}

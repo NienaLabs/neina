@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
-import { MessageSquare } from "lucide-react";
+import { CheckCircle2, MessageSquare } from "lucide-react";
 
 const ticketSchema = z.object({
     subject: z.string().min(1, "Subject is required"),
@@ -28,6 +28,7 @@ const ticketSchema = z.object({
 type TicketFormData = z.infer<typeof ticketSchema>;
 
 export default function SupportPage() {
+    const [submitted, setSubmitted] = useState(false);
     const form = useForm<TicketFormData>({
         resolver: zodResolver(ticketSchema),
         defaultValues: {
@@ -46,6 +47,7 @@ export default function SupportPage() {
                 toast.success("Support ticket created. Our team will get back to you soon.");
             }
             form.reset();
+            setSubmitted(true);
         },
         onError: (error) => {
             toast.error(error.message || "Failed to send message");
@@ -61,6 +63,25 @@ export default function SupportPage() {
             message: fullMessage,
         });
     };
+
+    if (submitted) {
+        return (
+            <div className="container mx-auto py-8 px-4 max-w-3xl">
+                <Card>
+                    <CardContent className="text-center py-16">
+                        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">Message Sent!</h2>
+                        <p className="text-muted-foreground mb-6">
+                            Our team has been notified and will get back to you soon.
+                        </p>
+                        <Button onClick={() => setSubmitted(false)} variant="outline">
+                            Send Another Message
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto py-8 px-4 max-w-3xl">
@@ -93,7 +114,7 @@ export default function SupportPage() {
                                 )}
                             />
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
                                     name="category"

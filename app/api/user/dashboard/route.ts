@@ -87,7 +87,7 @@ export async function GET(req: Request) {
                     job_is_remote: true,
                     created_at: true,
                     employer_logo: true,
-
+                    qualifications: true,
                 }
             }),
 
@@ -134,11 +134,11 @@ export async function GET(req: Request) {
 
         // 2. Score Jobs
         const scoredJobs = jobs.map(job => {
-            const jobSkills = job.job_skills?.skill_text || [];
+            const jobSkills = job.qualifications || [];
             let score = 0;
 
             if (jobSkills.length > 0) {
-                const matchCount = jobSkills.reduce((count, skill) => {
+                const matchCount = jobSkills.reduce((count: number, skill: string) => {
                     return userSkills.has(skill.toLowerCase().trim()) ? count + 1 : count;
                 }, 0);
                 score = Math.round((matchCount / jobSkills.length) * 100);

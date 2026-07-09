@@ -8,8 +8,7 @@ export const metadata: Metadata = {
   description: 'Manage, edit, and tailor your AI-powered resumes.',
 }
 
-import { Activity } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Suspense } from 'react'
 import { ResumePageSkeleton } from '@/components/resume/ResumePageSkeleton'
 
 const ResumePage = async () => {
@@ -17,9 +16,9 @@ const ResumePage = async () => {
 
   return (
     <HydrateClient>
-      <Activity mode="visible">
+      <Suspense fallback={<ResumePageSkeleton />}>
         <ResumePageClient />
-      </Activity>
+      </Suspense>
     </HydrateClient>
   )
 }

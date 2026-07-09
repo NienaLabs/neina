@@ -109,6 +109,7 @@ const ResumePageClient = () => {
     // PDF file validation
     if (file.type !== "application/pdf") {
       toast.error("Please select a PDF file!..");
+      e.target.value = '';
       return;
     }
 
@@ -143,6 +144,8 @@ const ResumePageClient = () => {
       );
     } finally {
       setLoading(false);
+      // Reset so selecting the same file again re-fires onChange
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 

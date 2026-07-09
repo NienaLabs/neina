@@ -14,6 +14,7 @@ export const userRouter = createTRPCRouter({
         .input(
             z.object({
                 role: z.string().optional(),
+                name: z.string().trim().min(1).optional(),
                 goal: z.string().optional(),
                 referralSource: z.string().optional(),
                 jobTitle: z.string().optional(),
@@ -119,7 +120,7 @@ export const userRouter = createTRPCRouter({
                     const notification = {
                         title: `📬 Support Ticket: ${input.subject}`,
                         body: `From ${user.name || user.email}`,
-                        icon: '/niena.png',
+                        icon: '/logo-black.svg',
                     };
 
                     const data = {

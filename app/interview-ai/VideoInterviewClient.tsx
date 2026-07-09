@@ -201,28 +201,9 @@ const VideoInterview = () => {
     return () => clearInterval(timer);
   }, [isConnecting, connectionStartTime]);
 
-  // Handle local video stream
-  useEffect(() => {
-    if (sessionData?.conversationId && !localStream && conversationState === 'active') {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-        .then(stream => {
-          setLocalStream(stream);
-          localStreamRef.current = stream;
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = stream;
-          }
-        })
-        .catch(err => {
-          console.error('Failed to get local video:', err);
-        });
-    }
-
-    return () => {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [sessionData?.conversationId, localStream, conversationState]);
+  // Camera acquisition is handled by the ref-guarded effect below (keyed on
+  // conversationState). A second getUserMedia effect here used to race it and
+  // leak a duplicate camera stream.
 
   // Sync local video element with stream
   useEffect(() => {
@@ -633,7 +614,7 @@ const VideoInterview = () => {
   return (
     <div
       ref={containerRef}
-      className={`min-h-screen flex flex-col relative bg-transparent transition-colors duration-500 font-sans ${warningLevel === 'critical' ? 'ring-inset ring-8 ring-red-600 animate-pulse' : ''
+      className={`min-h-full flex flex-col relative bg-transparent transition-colors duration-500 font-sans ${warningLevel === 'critical' ? 'ring-inset ring-8 ring-red-600 animate-pulse' : ''
         } ${warningLevel === 'low' ? 'ring-inset ring-4 ring-yellow-500' : ''}`}
     >
 
@@ -672,8 +653,10 @@ const VideoInterview = () => {
         )}
 
         {(conversationState === 'active' || conversationState === 'connecting') && sessionData ? (
-          /* ACTIVE INTERVIEW UI - Integrated into Studio */
-          <div className="flex-1 w-full relative flex flex-col">
+          /* ACTIVE INTERVIEW UI — fixed fullscreen overlay. The layout adds a 64px
+             header and the browser often blocks requestFullscreen on mobile, which
+             used to push the call controls below the fold. */
+          <div className="fixed inset-0 z-[80] bg-slate-950 flex flex-col">
             <div
               id="anam-container"
               className="flex-1 w-full bg-slate-950 relative group"
@@ -681,7 +664,7 @@ const VideoInterview = () => {
               <video
                 ref={anamVideoRef}
                 id="anam-video-element"
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 autoPlay
                 playsInline
               />
@@ -697,21 +680,21 @@ const VideoInterview = () => {
             </div>
 
             {/* PIP (User Video) */}
-            <div className="absolute top-20 right-6 w-44 h-56 sm:w-52 sm:h-72 rounded-3xl overflow-hidden border-2 border-white/30 shadow-2xl z-40 bg-gray-950">
+            <div className="absolute bottom-36 right-4 w-24 h-36 sm:bottom-auto sm:top-20 sm:right-6 sm:w-52 sm:h-72 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/30 shadow-2xl z-40 bg-gray-950">
               {localStream ? (
                 <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover mirror-mode" />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-950 text-gray-500">
-                  <User className="h-12 w-12 mb-3 opacity-20" />
-                  <p className="text-[11px] uppercase tracking-wider font-semibold opacity-40">No Camera</p>
+                  <User className="h-8 w-8 sm:h-12 sm:w-12 mb-3 opacity-20" />
+                  <p className="text-[9px] sm:text-[11px] uppercase tracking-wider font-semibold opacity-40">No Camera</p>
                 </div>
               )}
-              <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg text-[11px] text-white font-semibold">You</div>
+              <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-black/50 backdrop-blur-md px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg text-[9px] sm:text-[11px] text-white font-semibold">You</div>
             </div>
 
             {/* Header Overlays */}
-            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-50 pointer-events-none">
-              <div className="bg-gray-900/50 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/20 shadow-lg pointer-events-auto">
+            <div className="absolute top-0 left-0 right-0 p-3 sm:p-6 flex justify-between items-start gap-2 z-50 pointer-events-none">
+              <div className="bg-gray-900/50 backdrop-blur-xl px-3 py-2 sm:px-5 sm:py-3 rounded-2xl border border-white/20 shadow-lg pointer-events-auto">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center"><User className="h-5 w-5 text-blue-400" /></div>
                   <div>
@@ -722,7 +705,7 @@ const VideoInterview = () => {
               </div>
 
               {sessionData?.interviewId && (
-                <div className="bg-gray-900/50 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/20 shadow-lg pointer-events-auto">
+                <div className="bg-gray-900/50 backdrop-blur-xl px-3 py-2 sm:px-5 sm:py-3 rounded-2xl border border-white/20 shadow-lg pointer-events-auto">
                   {isAvatarVisible ? (
                     <InterviewTimer interviewId={sessionData.interviewId} initialSeconds={sessionData.remainingSeconds} onTimeExpired={handleTimeExpired} onWarning={handleTimeWarning} />
                   ) : (
@@ -745,33 +728,33 @@ const VideoInterview = () => {
                 ))}
               </div>
 
-              <div className="bg-black/50 backdrop-blur-2xl border border-white/20 rounded-full px-10 py-5 flex items-center justify-between gap-14 shadow-2xl">
-                <div className="flex items-center gap-7">
+              <div className="bg-black/50 backdrop-blur-2xl border border-white/20 rounded-full px-4 py-3 sm:px-10 sm:py-5 flex items-center justify-between gap-4 sm:gap-14 shadow-2xl max-w-full">
+                <div className="flex items-center gap-3 sm:gap-7">
                   <button
-                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${isMicOn ? 'bg-white/10 text-white hover:bg-white/20 hover:scale-105' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${isMicOn ? 'bg-white/10 text-white hover:bg-white/20 hover:scale-105' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`}
                     onClick={toggleMic}
                   >
                     {isMicOn ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
                   </button>
                   <div className="h-8 w-[1px] bg-white/20" />
                   <button
-                    className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-xl hover:scale-105 transition-all"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-xl hover:scale-105 transition-all"
                     onClick={() => endConversation('User Hangup')}
                   >
                     <PhoneOff className="h-6 w-6" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-7">
+                <div className="flex items-center gap-3 sm:gap-7">
                   <button
                     onClick={() => setShowTranscript(!showTranscript)}
-                    className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full transition-all shadow-lg ${showTranscript ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80'}`}
+                    className={`flex items-center gap-2.5 px-3 py-2 sm:px-5 sm:py-2.5 rounded-full transition-all shadow-lg ${showTranscript ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80'}`}
                   >
                     <Clock className="h-4 w-4" />
                     <span className="text-[11px] font-bold uppercase tracking-widest">History</span>
                   </button>
-                  <div className="h-8 w-[1px] bg-white/20" />
-                  <div className="flex items-center gap-2.5">
+                  <div className="hidden sm:block h-8 w-[1px] bg-white/20" />
+                  <div className="hidden sm:flex items-center gap-2.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse shadow-lg shadow-purple-500/50" />
                     <span className="text-[11px] uppercase font-black tracking-widest text-white/50">Studio</span>
                   </div>
@@ -785,7 +768,7 @@ const VideoInterview = () => {
                   initial={{ x: '100%' }}
                   animate={{ x: 0 }}
                   exit={{ x: '100%' }}
-                  className="absolute top-0 right-0 bottom-0 w-80 z-[60] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-slate-200 dark:border-white/10 flex flex-col pt-24 pb-32"
+                  className="absolute top-0 right-0 bottom-0 w-full sm:w-80 z-[60] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-slate-200 dark:border-white/10 flex flex-col pt-24 pb-32"
                 >
                   <div className="px-6 mb-6 flex items-center justify-between">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">History</h3>
@@ -811,13 +794,7 @@ const VideoInterview = () => {
               )}
             </AnimatePresence>
 
-            <div className="absolute top-24 left-8 z-50 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-              </span>
-              <span className="text-[10px] font-bold text-white tracking-widest">LIVE STUDIO</span>
-            </div>
+
           </div>
         ) : conversationState === 'ended' || conversationState === 'ending' ? (
           /* ENDED UI */
@@ -923,11 +900,11 @@ const VideoInterview = () => {
       {/* Preview Dialog - Shows interview details before starting */}
       <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
         <DialogContent
-          className="w-[92vw] sm:max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 p-0 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden fixed top-24 left-[50%] -translate-x-1/2 translate-y-0 bottom-auto sm:top-24"
+          className="w-[92vw] sm:max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 p-0 rounded-3xl sm:rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden fixed top-1/2 -translate-y-1/2 sm:top-24 sm:translate-y-0 left-[50%] -translate-x-1/2 bottom-auto"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="relative p-6 sm:p-8 max-h-[75vh] overflow-y-auto scrollbar-hide">
-            <DialogHeader className="mb-8 items-center text-center">
+          <div className="relative p-5 sm:p-8 max-h-[85dvh] overflow-y-auto scrollbar-hide">
+            <DialogHeader className="mb-5 sm:mb-8 items-center text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mb-4 border border-purple-500/20 shrink-0">
                 <Video className="h-8 w-8 text-purple-600" />
               </div>
@@ -935,20 +912,20 @@ const VideoInterview = () => {
               <DialogDescription className="text-slate-500 text-sm mt-1 font-medium">Review your details before entering the studio</DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-5">
-              <div className="p-5 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="p-4 sm:p-5 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Target Position</p>
                 <p className="font-bold text-lg text-slate-900 dark:text-white truncate">{userRole}</p>
               </div>
 
-              <div className="p-5 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+              <div className="p-4 sm:p-5 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Briefing</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-4">
                   {userDescription}
                 </p>
               </div>
 
-              <div className="flex items-center justify-between p-5 px-6 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+              <div className="flex items-center justify-between p-4 sm:p-5 sm:px-6 rounded-3xl bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-purple-500/10 flex items-center justify-center">
                     <User className="h-5 w-5 text-purple-600" />
@@ -958,7 +935,7 @@ const VideoInterview = () => {
                 <Switch checked={useResume} onCheckedChange={setUseResume} disabled={!hasResume} className="data-[state=checked]:bg-purple-600" />
               </div>
 
-              <div className="flex flex-col gap-4 pt-6">
+              <div className="flex flex-col gap-3 sm:gap-4 pt-4 sm:pt-6">
                 <Button
                   onClick={handleRoleSubmit}
                   disabled={isConnecting || isPolling}
@@ -981,7 +958,9 @@ const VideoInterview = () => {
 
       <style dangerouslySetInnerHTML={{
         __html: `
-        #anam-container video { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
+        /* absolute + inset pins the video to the container even if the SDK
+           resets width/height to auto on the element */
+        #anam-container video { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
         .mirror-mode { transform: scaleX(-1); }
       `}} />
 

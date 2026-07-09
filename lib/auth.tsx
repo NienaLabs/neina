@@ -35,16 +35,17 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   plugins: [
-    //@ts-ignore
     polar({
-      //@ts-ignore
-      polar: polarClient,
+      client: polarClient,
       /**
-       * Create a Polar customer (with externalId = user.id) on sign up.
-       * This is critical: it allows all webhook handlers to reliably look up
-       * our user via payload.data.customer.externalId instead of email.
+       * Do NOT create the Polar customer eagerly on sign up: if Polar is down
+       * or the token is invalid, the plugin throws and the whole signup 500s.
+       * Checkout passes externalCustomerId = user.id, which makes Polar
+       * create/link the customer at purchase time, and the webhook handlers
+       * look users up via payload.data.customer.externalId — so nothing needs
+       * the customer to exist before the first checkout.
        */
-      createCustomerOnSignUp: true,
+      createCustomerOnSignUp: false,
       use: [
         checkout({
           products: [
@@ -293,6 +294,8 @@ export const auth = betterAuth({
       jobType: { type: "string", required: false },
       remotePreference: { type: "string", required: false },
       companyName: { type: "string", required: false },
+      polarCustomerId: { type: "string", required: false, input: false },
+      polarSubscriptionId: { type: "string", required: false, input: false },
     },
   },
   socialProviders: {

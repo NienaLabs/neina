@@ -1,5 +1,18 @@
 import { TemplateType } from "@/lib/types/resume";
 
+export interface CustomSection {
+  sectionName: string
+  entries: {
+    title?: string
+    organization?: string
+    description?: string
+    year?: string
+    date?: string
+    customFields?: { key: string; value: string }[]
+    id?: string
+  }[]
+}
+
 export interface ResumeExtraction {
   address?: {
     email?: string
@@ -109,18 +122,7 @@ export interface ResumeExtraction {
 
   hobbies?: string[]
 
-  customSections?: {
-    sectionName: string
-    entries: {
-      title?: string
-      organization?: string
-      description?: string
-      year?: string
-      date?: string
-      customFields?: { key: string; value: string }[]
-      id?: string
-    }[]
-  }[] | Record<string, any>
+  customSections?: CustomSection[] | Record<string, any>
 
   // New combined "additional" object for cleaner schema compatibility
   additional?: {

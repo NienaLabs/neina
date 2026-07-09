@@ -69,7 +69,7 @@ export function ResumePreviewSheet({
                         </div>
                     ) : parsedData ? (
                         <div className="h-full bg-white">
-                            <PDFPreviewPageClient data={parsedData} fullName={resume.name} />
+                            <PDFPreviewPageClient data={parsedData} fullName={resume?.name || candidateName} />
                         </div>
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-slate-50/30">

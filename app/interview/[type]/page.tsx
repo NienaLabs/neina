@@ -37,6 +37,14 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { FeatureGuide } from '@/components/FeatureGuide';
 import { Progress } from '@/components/ui/progress';
 import { useServerEvents } from "@/hooks/useServerEvents";
@@ -90,6 +98,8 @@ export default function InterviewPage() {
     const [messages, setMessages] = useState<IMessageListItem[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [scoreResult, setScoreResult] = useState<any>(null);
+    const [showEndConfirm, setShowEndConfirm] = useState(false);
+    const pollingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Queries
     const { data: resumes, isLoading: isLoadingResumes } = trpc.resume.getPrimaryResumes.useQuery();
@@ -101,6 +111,22 @@ export default function InterviewPage() {
 
     // Plan Check
     const isDiamondPlan = userData?.plan === 'DIAMOND';
+
+    // Guard against invalid interview types in the URL (e.g. /interview/foo)
+    const validTypes = ['screening', 'behavioral', 'technical', 'general', 'promotion'];
+    useEffect(() => {
+        if (type && !validTypes.includes(type)) {
+            router.replace('/interview');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [type, router]);
+
+    const clearPollingTimeout = () => {
+        if (pollingTimeoutRef.current) {
+            clearTimeout(pollingTimeoutRef.current);
+            pollingTimeoutRef.current = null;
+        }
+    };
 
     const getInterviewTitle = (t: string) => {
         switch (t) {
@@ -123,21 +149,49 @@ export default function InterviewPage() {
         }
     };
 
-    const handleConfigSubmit = () => {
+    const handleConfigSubmit = async () => {
         if (!role || !jobDescription) {
             toast.error("Please enter both a role and job description.");
             return;
         }
 
-        if (mode === 'AVATAR') {
-            // IMMEDIATE REDIRECTION for Avatar
-            const resumeParam = resumeId && resumeId !== 'none' ? `&resumeId=${resumeId}` : '';
-            const techParam = technicalTopic ? `&technicalTopic=${encodeURIComponent(technicalTopic)}` : '';
+        // Clamp question count — mid-typing it can be 0, which the API's min(3) rejects
+        const count = Math.min(10, Math.max(3, questionCount[0] || 10));
+        if (count !== questionCount[0]) setQuestionCount([count]);
 
-            router.push(`/interview-ai?role=${encodeURIComponent(role)}&description=${encodeURIComponent(jobDescription)}&type=${type}&count=${questionCount[0]}${resumeParam}${techParam}`);
+        // Users with no minutes shouldn't start either mode
+        if (userData && userData.interview_minutes <= 0) {
+            toast.error("You have 0 interview minutes remaining. Please upgrade or purchase more minutes.");
+            return;
+        }
+
+        if (mode === 'AVATAR') {
+            setIsLoading(true);
+            try {
+                // Fold the technical topic into the description
+                const finalDescription = technicalTopic
+                    ? `${jobDescription}\n\nFocus Topic/Skill: ${technicalTopic}`
+                    : jobDescription;
+
+                const result = await createSessionMutation.mutateAsync({
+                    role,
+                    description: finalDescription,
+                    type: type as any,
+                    questionCount: count,
+                    resumeId: resumeId !== 'none' ? resumeId : undefined,
+                    mode: 'AVATAR'
+                });
+
+                router.push(`/interview-ai?interviewId=${result.interviewId}`);
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to create session");
+            } finally {
+                setIsLoading(false);
+            }
         } else {
-            // Voice mode starts on this page
-            handleStartSession();
+            // Voice mode: show the briefing/confirmation step before starting
+            setStep('briefing');
         }
     };
 
@@ -160,6 +214,7 @@ export default function InterviewPage() {
     useEffect(() => {
         if (interviewData && interviewData.questions && (interviewData.questions as any[]).length > 0 && isPolling) {
             setIsPolling(false);
+            clearPollingTimeout();
 
             // This polling logic now ONLY applies to VOICE mode since AVATAR redirects immediately
             initiateAgoraSession(interviewData.id);
@@ -174,9 +229,9 @@ export default function InterviewPage() {
             return;
         }
 
-        // Minutes check for Avatar mode
-        if (mode === 'AVATAR' && userData && userData.interview_minutes <= 0) {
-            toast.error("You have 0 interview minutes remaining. Please upgrade or purchase more minutes.");
+        // Minutes check (voice mode runs on this page; Avatar redirects in handleConfigSubmit)
+        if (userData && userData.interview_minutes <= 0) {
+            toast.error("You have no interview minutes left. Please upgrade your plan or buy more minutes.");
             return;
         }
 
@@ -190,7 +245,7 @@ export default function InterviewPage() {
                 role,
                 description: finalDescription,
                 type: type as any,
-                questionCount: questionCount[0],
+                questionCount: Math.min(10, Math.max(3, questionCount[0] || 10)),
                 resumeId: resumeId !== 'none' ? resumeId : undefined,
                 mode: mode
             });
@@ -198,6 +253,15 @@ export default function InterviewPage() {
             setCreatedInterviewId(result.interviewId);
             setIsPolling(true);
             toast.info("Generating interview questions...");
+
+            // Rescue hatch: if question generation never completes (e.g. Inngest down),
+            // stop the infinite loading overlay after 60s
+            clearPollingTimeout();
+            pollingTimeoutRef.current = setTimeout(() => {
+                setIsPolling(false);
+                setIsLoading(false);
+                toast.error("Interview generation timed out. Please try again in a moment.");
+            }, 60000);
         } catch (error) {
             console.error(error);
             toast.error("Failed to create session");
@@ -305,10 +369,11 @@ export default function InterviewPage() {
         }
     };
 
-    // Cleanup timer
+    // Cleanup timers
     useEffect(() => {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
+            if (pollingTimeoutRef.current) clearTimeout(pollingTimeoutRef.current);
         }
     }, []);
 
@@ -316,10 +381,26 @@ export default function InterviewPage() {
         return (
             <div className="h-screen w-full bg-slate-950 relative overflow-hidden flex flex-col">
                 <div className="absolute top-4 left-4 z-10">
-                    <Button variant="ghost" className="text-white hover:bg-white/10 gap-2" onClick={handleEndSession}>
+                    <Button variant="ghost" className="text-white hover:bg-white/10 gap-2" onClick={() => setShowEndConfirm(true)}>
                         <ArrowLeft className="w-4 h-4" /> End Call
                     </Button>
                 </div>
+
+                {/* End Call Confirmation */}
+                <Dialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+                    <DialogContent className="max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle>End Interview?</DialogTitle>
+                            <DialogDescription>
+                                This will end your session and generate your performance report. You can&apos;t resume afterwards.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setShowEndConfirm(false)}>Keep Going</Button>
+                            <Button variant="destructive" onClick={() => { setShowEndConfirm(false); handleEndSession(); }}>End Session</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Timer Display */}
                 <div className="absolute top-4 right-4 z-10">
@@ -327,6 +408,11 @@ export default function InterviewPage() {
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                         <TimerIcon className="w-4 h-4 text-slate-400" />
                         <span>{formatTime(elapsedSeconds)}</span>
+                        {typeof userData?.interview_minutes === 'number' && (
+                            <span className="text-xs text-slate-400 pl-2 border-l border-white/10">
+                                {Math.max(0, userData.interview_minutes)} min left
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -386,6 +472,7 @@ export default function InterviewPage() {
                             <Button
                                 variant="ghost"
                                 onClick={() => router.push('/dashboard')}
+                                disabled={isAnalyzing}
                                 className="w-full h-12 rounded-2xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-semibold"
                             >
                                 Return to Dashboard
@@ -528,7 +615,7 @@ export default function InterviewPage() {
 
     // Config Step (Immersive Layout)
     return (
-        <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col lg:flex-row relative lg:overflow-hidden">
+        <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col lg:flex-row relative overflow-x-hidden lg:overflow-hidden">
             {/* Background Ambience */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
@@ -561,7 +648,7 @@ export default function InterviewPage() {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-4 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
                             <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center mb-3">
                                 <CheckCircle2 className="w-5 h-5" />

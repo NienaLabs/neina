@@ -30,14 +30,14 @@ messaging.onBackgroundMessage((payload) => {
     // If it's a data payload, everything is in payload.data
     const title = payload.notification?.title || payload.data?.title || 'Niena';
     const body = payload.notification?.body || payload.data?.body || '';
-    const icon = payload.data?.icon || payload.notification?.icon || '/niena.png';
+    const icon = payload.data?.icon || payload.notification?.icon || '/logo-black.svg';
     const url = payload.data?.url || '/';
     const tag = payload.data?.tag || 'job-alert';
 
     const notificationOptions = {
         body: body,
         icon: icon,
-        badge: '/niena.png', // Android small icon usually
+        badge: '/logo-black.svg', // Android small icon usually
         data: {
             url: url,
             ...payload.data // Keep all data

@@ -133,7 +133,7 @@ export const addNewOtherLink = (
 };
 
 export const handleSkillArrayChange = (
-  type: keyof NonNullable<ResumeExtraction['skills']>,
+  type: string,
   index: number,
   value: string,
   setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
@@ -153,7 +153,7 @@ export const handleSkillArrayChange = (
 
 export const addSkill = (
 
-  type: keyof NonNullable<ResumeExtraction['skills']>,
+  type: string,
 
   setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
 
@@ -172,7 +172,7 @@ export const addSkill = (
 };
 
 export const removeSkill = (
-  type: keyof NonNullable<ResumeExtraction['skills']>,
+  type: string,
   index: number,
   setEditorState: React.Dispatch<React.SetStateAction<ResumeExtraction | null>>,
   setSave: React.Dispatch<React.SetStateAction<boolean>>

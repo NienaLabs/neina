@@ -9,7 +9,7 @@ import Header from './Header'
 import InterviewAI from './InterviewAI'
 import ResumeAI from './ResumeAI'
 import JobSearchFeature from './JobSearchFeature'
-import { ReactLenis } from 'lenis/react'
+import { ReactLenis, type LenisRef } from 'lenis/react'
 import gsap from 'gsap'
 import { useEffect, useRef} from 'react'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
@@ -21,12 +21,12 @@ gsap.registerPlugin(ScrollTrigger);
 
 
 export default function LandingPage() {
-  const lenisRef = useRef()
-  
- 
+  const lenisRef = useRef<LenisRef | null>(null)
+
+
 
   useEffect(() => {
-    function update(time) {
+    function update(time: number) {
       lenisRef.current?.lenis?.raf(time * 1000)
     }
   

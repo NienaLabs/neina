@@ -57,7 +57,7 @@ export function InterviewCard({
 
   return (
     <Link href={href} className={cn("block h-full", className)}>
-      <div ref={containerRef} className="h-full overflow-hidden rounded-xl relative group cursor-pointer border border-border/50">
+      <div ref={containerRef} className="h-full min-h-[220px] sm:min-h-[240px] overflow-hidden rounded-xl relative group cursor-pointer border border-border/50">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -65,6 +65,7 @@ export function InterviewCard({
             src={image}
             alt={title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover"
             priority={false}
           />

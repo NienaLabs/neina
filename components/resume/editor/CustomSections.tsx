@@ -1,7 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
-import { ResumeExtraction, Fixes } from './types';
+import { ResumeExtraction, Fixes, CustomSection } from './types';
 import { FixesDisplay } from './FixesDisplay';
 
 interface CustomSectionsProps {
@@ -39,12 +39,12 @@ export const CustomSections = ({
   onUpdate,
 }: CustomSectionsProps) => {
   // Safeguard: ensure customSections is always an array
-  const safeCustomSections = Array.isArray(customSections) ? customSections : [];
+  const safeCustomSections: CustomSection[] = Array.isArray(customSections) ? customSections : [];
 
   return (
     <section>
       <div className="mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold">Other Sections</h2>
           <Button
             variant="outline"
@@ -72,7 +72,7 @@ export const CustomSections = ({
 
       <div className="flex flex-col gap-6">
         {safeCustomSections.map((section, secIndex) => (
-          <div key={secIndex} className="p-4 border rounded-lg bg-gray-50">
+          <div key={secIndex} className="p-4 sm:p-5 border border-gray-200/80 rounded-xl bg-gray-50/70">
             <div className="flex justify-between items-center mb-2">
               <Input
                 className="font-bold text-lg"
@@ -100,7 +100,7 @@ export const CustomSections = ({
                   onClick={() => {
                     const updated = [...section.entries];
                     updated.splice(entryIndex, 1);
-                    const updatedSections = [...customSections];
+                    const updatedSections = [...safeCustomSections];
                     updatedSections[secIndex] = {
                       ...section,
                       entries: updated,
@@ -117,7 +117,7 @@ export const CustomSections = ({
                   <div key={key} className="mt-2">
                     <p className="text-sm font-medium capitalize">{key}</p>
                     <Input
-                      value={entry[key as keyof typeof entry] || ''}
+                      value={(entry[key as keyof typeof entry] as string) || ''}
                       placeholder={key}
                       onChange={(e) => {
                         const updatedEntries = [...section.entries];

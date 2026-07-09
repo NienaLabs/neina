@@ -129,7 +129,7 @@ export function Sidebar() {
                     <Link href="/admin" className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-transparent overflow-hidden">
                             <Image
-                                src="/niena.png"
+                                src="/logo-black.svg"
                                 alt="Niena Logo"
                                 width={40}
                                 height={40}

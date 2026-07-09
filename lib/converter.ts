@@ -1,4 +1,4 @@
-import { ResumeExtraction } from "@/components/resume/editor/types";
+import { ResumeExtraction, CustomSection } from "@/components/resume/editor/types";
 
 export function jsonToMarkdown(data: ResumeExtraction): string {
   let markdown = "";
@@ -146,8 +146,9 @@ export function jsonToMarkdown(data: ResumeExtraction): string {
   }
 
   // Custom Sections
-  if (data.customSections && data.customSections.length > 0) {
-    data.customSections.forEach(section => {
+  const customSections: CustomSection[] = Array.isArray(data.customSections) ? data.customSections : [];
+  if (customSections.length > 0) {
+    customSections.forEach(section => {
       markdown += `# ${section.sectionName}\n`;
       section.entries.forEach(entry => {
         markdown += `## ${entry.title || ''}\n`;

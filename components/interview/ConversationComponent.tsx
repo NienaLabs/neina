@@ -40,6 +40,9 @@ export default function ConversationComponent({
   const [currentInProgressMessage, setCurrentInProgressMessage] =
     useState<IMessageListItem | null>(null);
   const messageEngineRef = useRef<MessageEngine | null>(null);
+  // One-shot guard: the message callback fires on every update, so without this
+  // the end-call phrase would schedule a new stop timeout each time.
+  const endCallScheduledRef = useRef(false);
   const agentUID = process.env.NEXT_PUBLIC_AGENT_UID;
 
   const client = useRTCClient();
@@ -180,6 +183,12 @@ export default function ConversationComponent({
     }
   };
 
+  // Keep a ref to the latest handleStopConversation: the MessageEngine callback is
+  // created once (per client) and would otherwise capture a stale closure with a
+  // null microphone track.
+  const stopConversationRef = useRef(handleStopConversation);
+  stopConversationRef.current = handleStopConversation;
+
   // CLEANUP: Ensure hardware is released on unmount
   useEffect(() => {
     return () => {
@@ -240,10 +249,11 @@ export default function ConversationComponent({
             return normalizedText.includes("i will now end the session");
           });
 
-          if (endCallCommand) {
+          if (endCallCommand && !endCallScheduledRef.current) {
+            endCallScheduledRef.current = true;
             console.log("ConversationComponent: Received end_call phrase from Agent. Ending conversation in 5s.");
             setTimeout(() => {
-              handleStopConversation();
+              stopConversationRef.current();
             }, 5000); // 5 second delay to let the audio finish
           }
 

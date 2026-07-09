@@ -60,7 +60,7 @@ export function RecruiterSidebar() {
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between border-b bg-background px-6 py-4">
                 <Link href="/recruiters/dashboard" className="flex items-center gap-2">
-                    <Image src="/niena.png" alt="Niena" width={32} height={32} className="object-contain" />
+                    <Image src="/logo-black.svg" alt="Niena" width={32} height={32} className="object-contain" />
                     <span className="text-xl font-bold tracking-tight font-syne text-foreground">Niena</span>
                 </Link>
                 <Button
@@ -90,7 +90,7 @@ export function RecruiterSidebar() {
                             className="fixed left-0 top-0 bottom-0 w-[260px] bg-gradient-to-b from-indigo-50/60 via-background to-purple-50/60 z-[80] border-r border-indigo-100/50 lg:hidden flex flex-col p-6"
                         >
                             <div className="flex items-center gap-2 mb-10">
-                                <Image src="/niena.png" alt="Niena" width={36} height={36} className="object-contain" />
+                                <Image src="/logo-black.svg" alt="Niena" width={36} height={36} className="object-contain" />
                                 <span className="text-2xl font-bold font-syne text-foreground">Niena</span>
                             </div>
 
@@ -146,7 +146,7 @@ export function RecruiterSidebar() {
                 {/* Logo Section */}
                 <div className="p-6 h-[72px] flex items-center gap-3 border-b">
                     <Link href="/recruiters/dashboard" className="flex items-center gap-2">
-                        <Image src="/niena.png" alt="Niena" width={32} height={32} className="object-contain" />
+                        <Image src="/logo-black.svg" alt="Niena" width={32} height={32} className="object-contain" />
                         {!isCollapsed && (
                             <span className="text-xl font-bold tracking-tight font-syne text-foreground">Niena</span>
                         )}

@@ -30,7 +30,7 @@ jest.mock('tailwind-merge', () => jest.fn((...args) => args.join(' ')));
 
 describe('lastAssistantTextMessageContent', () => {
   it('should return undefined if there are no messages', () => {
-    const result: AgentResult = { output: [] };
+    const result = { output: [] } as unknown as AgentResult;
     expect(lastAssistantTextMessageContent(result)).toBeUndefined();
   });
 
@@ -97,11 +97,11 @@ describe('Resume Editor Helpers', () => {
 
   describe('handleFieldChange', () => {
     it('should update a top-level field', () => {
-      handleFieldChange('name', 'Jane Doe', setEditorState, setSave);
+      handleFieldChange('profile', 'Jane Doe', setEditorState, setSave);
       expect(setEditorState).toHaveBeenCalledWith(expect.any(Function));
       const updater = setEditorState.mock.calls[0][0];
       const newState = updater(initialEditorState);
-      expect(newState.name).toBe('Jane Doe');
+      expect(newState.profile).toBe('Jane Doe');
       expect(setSave).toHaveBeenCalledWith(true);
     });
   });
@@ -143,11 +143,11 @@ describe('Resume Editor Helpers', () => {
 
   describe('handleAddressChange', () => {
     it('should update a field in the address object', () => {
-      handleAddressChange('city', 'New York', setEditorState, setSave);
+      handleAddressChange('location', 'New York', setEditorState, setSave);
       expect(setEditorState).toHaveBeenCalledWith(expect.any(Function));
       const updater = setEditorState.mock.calls[0][0];
       const newState = updater(initialEditorState);
-      expect(newState.address.city).toBe('New York');
+      expect(newState.address.location).toBe('New York');
       expect(setSave).toHaveBeenCalledWith(true);
     });
   });

@@ -4,7 +4,7 @@ import React, { useState, useRef, useLayoutEffect, useMemo } from 'react';
 import { ResumeData, TemplateType } from '@/lib/types/resume';
 import { HighlightedResumeView } from './HighlightedResumeView';
 import { CoverLetterPreview } from './CoverLetterPreview';
-import { generateClassicSingleItems, ClassicSingleRenderer } from './templates/ClassicSingle';
+import { generateClassicSingleItems, ClassicSingleRenderer, ResumePreviewItem } from './templates/ClassicSingle';
 import { generateModernSingleItems, ModernSingleRenderer } from './templates/ModernSingle';
 import { generateClassicTwoColumnItems, ClassicTwoColumnRenderer, ClassicTwoColumnSidebar } from './templates/ClassicTwoColumn';
 import { generateModernTwoColumnItems, ModernTwoColumnRenderer, ModernTwoColumnSidebar } from './templates/ModernTwoColumn';

@@ -94,7 +94,7 @@ export const AddressSection = ({
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 mb-4 p-4 border rounded-lg bg-white/50">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 border rounded-lg bg-white/50">
            <div className="col-span-1">
               <p className="font-medium mb-1 text-sm">Full Name</p>
               <Input 

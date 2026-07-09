@@ -19,7 +19,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
         
-        <Image src="/logo.png" width={100} height={30} alt="logo"/>
+        <Image src="/logo.png" width={100} height={30} alt="logo" className="h-auto" priority/>
          
       </SidebarHeader>
       <SidebarContent>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Link } from '@react-pdf/renderer';
-import { ResumeExtraction } from '../editor/types';
+import { ResumeExtraction, CustomSection } from '../editor/types';
 
 const styles = StyleSheet.create({
   page: {
@@ -155,7 +155,7 @@ const ResumePDF: React.FC<ResumePDFProps> = ({ data, fullName }) => {
   };
 
   // Filter out unwanted custom sections - ensure it's an array first
-  const sectionsArray = Array.isArray(customSections) ? customSections : [];
+  const sectionsArray: CustomSection[] = Array.isArray(customSections) ? customSections : [];
   const filteredCustomSections = sectionsArray.filter(section => {
     const name = section?.sectionName?.toLowerCase() || '';
     return !name.includes('job description') &&

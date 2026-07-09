@@ -638,7 +638,7 @@ const ResumeEditor = forwardRef<ResumeEditorRef, ResumeEditorProps>(({ fixes, ex
   // ---------- UI ----------
   return (
     <>
-      <div className="p-4 pl-10 space-y-10">
+      <div className="p-4 md:pl-10 space-y-10">
 
        
         <div ref={containerRef} className="space-y-6">

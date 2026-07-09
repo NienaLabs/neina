@@ -55,7 +55,7 @@ export const EducationSection = ({
   return (
     <section>
       <div className="mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold">Education</h2>
           <Button
             variant="outline"
@@ -87,7 +87,7 @@ export const EducationSection = ({
       <div className="flex flex-col gap-6">
         {/* Safeguard: ensure education is an array */}
         {Array.isArray(education) && education.map((edu, index) => (
-          <div key={index} className="p-5 border rounded-lg relative bg-gray-50">
+          <div key={index} className="p-4 sm:p-5 border border-gray-200/80 rounded-xl relative bg-gray-50/70">
             <div className="flex justify-end mb-2">
               <Button
                 variant="ghost"
@@ -99,7 +99,7 @@ export const EducationSection = ({
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <RemovableInput
                 placeholder="Institution"
                 value={edu.institution}
@@ -157,7 +157,7 @@ export const EducationSection = ({
                 }
                 onRemove={() => handleNestedFieldChange('education', index, 'location', '')}
               />
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <Textarea
                   placeholder="Description"
                   value={edu.description}
@@ -170,7 +170,7 @@ export const EducationSection = ({
               
               {/* Custom Fields */}
               {Array.isArray(edu.customFields) && edu.customFields.map((field, fieldIndex) => (
-                <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
+                <div key={fieldIndex} className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-3 rounded-lg border">
                   <Input
                     placeholder="Field Name"
                     value={field.key}
@@ -189,7 +189,7 @@ export const EducationSection = ({
                 </div>
               ))}
               
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <Button
                   variant="outline"
                   size="sm"

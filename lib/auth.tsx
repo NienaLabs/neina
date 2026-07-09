@@ -68,6 +68,8 @@ export const auth = betterAuth({
       jobType: { type: "string", required: false },
       remotePreference: { type: "string", required: false },
       companyName: { type: "string", required: false },
+      polarCustomerId: { type: "string", required: false, input: false },
+      polarSubscriptionId: { type: "string", required: false, input: false },
     },
   },
   socialProviders: {

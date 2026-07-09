@@ -54,7 +54,7 @@ export const AwardsSection = ({
   return (
     <section>
       <div className="mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold">Awards</h2>
           <Button
             variant="outline"
@@ -81,7 +81,7 @@ export const AwardsSection = ({
       <div className="flex flex-col gap-6">
         {/* Safeguard: ensure awards is an array */}
         {Array.isArray(awards) && awards.map((award, index) => (
-          <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
+          <div key={index} className="p-4 sm:p-5 border border-gray-200/80 rounded-xl relative bg-gray-50/70">
             <div className="flex justify-end mb-2">
               <Button
                 variant="ghost"
@@ -93,7 +93,7 @@ export const AwardsSection = ({
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <RemovableInput
                 placeholder="Title"
                 value={award.title}
@@ -121,7 +121,7 @@ export const AwardsSection = ({
               
               {/* Custom Fields */}
               {Array.isArray(award.customFields) && award.customFields.map((field, fieldIndex) => (
-                <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
+                <div key={fieldIndex} className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-3 rounded-lg border">
                   <Input
                     placeholder="Field Name"
                     value={field.key}
@@ -140,7 +140,7 @@ export const AwardsSection = ({
                 </div>
               ))}
               
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <Button
                   variant="outline"
                   size="sm"

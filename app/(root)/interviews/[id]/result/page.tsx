@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -27,11 +28,7 @@ export default function InterviewResultPage() {
     const [result, setResult] = useState<InterviewResult | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchResult();
-    }, []);
-
-    const fetchResult = async () => {
+    const fetchResult = useCallback(async () => {
         try {
             const res = await fetch(`/api/interviews/${params.id}`);
             if (!res.ok) throw new Error('Failed to fetch result');
@@ -43,7 +40,11 @@ export default function InterviewResultPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [params.id]);
+
+    useEffect(() => {
+        fetchResult();
+    }, [fetchResult]);
 
     if (loading) {
         return (
@@ -83,11 +84,11 @@ export default function InterviewResultPage() {
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Dashboard
                     </Button>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Interview Performance Report</h1>
+                            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Interview Performance Report</h1>
                             <p className="text-muted-foreground mt-1">
-                                {result.role} • {new Date(result.analyzedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                {result.role} • {format(new Date(result.analyzedAt || result.start_time), 'MMMM d, yyyy')}
                             </p>
                         </div>
                         {result && (
@@ -138,6 +139,11 @@ export default function InterviewResultPage() {
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Overall Performance</CardTitle>
                             </CardHeader>
                             <CardContent className="text-center pb-6">
+                                {!result.analysisFeedback && (
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        This session hasn&apos;t been analyzed yet — the score below is a placeholder.
+                                    </p>
+                                )}
                                 <div className="relative inline-flex items-center justify-center">
                                     <svg className="transform -rotate-90 w-40 h-40">
                                         <circle
@@ -193,7 +199,7 @@ export default function InterviewResultPage() {
                                 <Separator />
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-muted-foreground">Analyzed</span>
-                                    <span className="font-medium text-xs">{new Date(result.analyzedAt).toLocaleTimeString()}</span>
+                                    <span className="font-medium text-xs">{result.analyzedAt ? format(new Date(result.analyzedAt), 'h:mm a') : 'Not yet'}</span>
                                 </div>
                             </CardContent>
                         </Card>
@@ -211,14 +217,30 @@ export default function InterviewResultPage() {
                                 <CardDescription>Detailed feedback based on your responses and communication style</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="prose dark:prose-invert max-w-none prose-headings:text-base prose-headings:font-semibold prose-p:text-sm prose-li:text-sm">
-                                    <div dangerouslySetInnerHTML={{
-                                        __html: (result.analysisFeedback || 'No feedback available yet.')
-                                            .replace(/\n/g, '<br />')
-                                            .replace(/### /g, '<h3 class="mt-4 mb-2">')
-                                            .replace(/- /g, '• ')
-                                    }} />
-                                </div>
+                                {result.analysisFeedback ? (
+                                    <div className="prose dark:prose-invert max-w-none prose-headings:text-base prose-headings:font-semibold prose-p:text-sm prose-li:text-sm">
+                                        <div dangerouslySetInnerHTML={{
+                                            __html: result.analysisFeedback
+                                                // Escape raw HTML first so AI output can't inject tags
+                                                .replace(/&/g, '&amp;')
+                                                .replace(/</g, '&lt;')
+                                                .replace(/>/g, '&gt;')
+                                                // Markdown → HTML (headings before newline conversion)
+                                                .replace(/### (.+)/g, '<h3 class="mt-4 mb-2">$1</h3>')
+                                                .replace(/## (.+)/g, '<h2 class="mt-6 mb-2 text-lg font-bold">$1</h2>')
+                                                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                                                .replace(/^- /gm, '• ')
+                                                .replace(/\n/g, '<br />')
+                                        }} />
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <AlertCircle className="h-12 w-12 mx-auto mb-3 text-amber-400" />
+                                        <p className="font-medium">No analysis available for this session.</p>
+                                        <p className="text-sm mt-1">The session may have ended too early or hasn&apos;t been analyzed yet.</p>
+                                        <Button onClick={() => router.push('/interview')} className="mt-4">Start New Interview</Button>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 

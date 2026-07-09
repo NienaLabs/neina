@@ -123,10 +123,10 @@ const PrimaryResumeBuilderContent = ({
     <div
       className="min-h-screen w-full bg-background flex justify-center items-start py-2 px-2 md:py-3 md:px-4 overflow-x-hidden"
     >
-      <div className="w-full min-h-[calc(100vh-2rem)] max-w-[92%] md:max-w-[96%] xl:max-w-[2000px] bg-white dark:bg-card shadow-2xl border border-black/5 rounded-3xl flex flex-col overflow-hidden">
+      <div className="w-full min-h-[calc(100vh-2rem)] max-w-[98%] md:max-w-[96%] xl:max-w-[2000px] bg-white dark:bg-card shadow-2xl border border-black/5 rounded-3xl flex flex-col overflow-hidden">
           {/* Header */}
           <div className="border-b border-black/5 p-3 md:p-4 bg-white/80 dark:bg-black/80 backdrop-blur-md">
-             <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
                 <div>
                      
                       <h1 className="font-serif text-2xl md:text-3xl text-black dark:text-white tracking-tight leading-none uppercase">
@@ -139,7 +139,7 @@ const PrimaryResumeBuilderContent = ({
                       </div>
                 </div>
 
-                <div className="flex items-center gap-3 mr-4 border-x border-black/10 px-4 h-10">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 md:mr-4 md:border-x border-black/10 md:px-4 md:h-10">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -239,7 +239,7 @@ const PrimaryResumeBuilderContent = ({
 
                     {/* Stats Grid */}
                     <div className="flex-1 w-full md:w-auto">
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-4">
                             {isTailored && score && (
                                 <>
                                     <div className="flex flex-col items-center p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">

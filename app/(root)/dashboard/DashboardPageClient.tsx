@@ -20,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
+import { format } from 'date-fns';
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -101,7 +103,21 @@ function SearchParamsHandler() {
     }
   }, [searchParams, applyForRecruiter]);
 
-  return null;
+  return (
+    <Dialog open={showApplicationSuccess} onOpenChange={setShowApplicationSuccess}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Application Submitted! 🎉</DialogTitle>
+          <DialogDescription>
+            Your recruiter application has been received. Our team will review it within 1-2 business days.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button onClick={() => setShowApplicationSuccess(false)}>Got it</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export default function DashboardPage() {
@@ -109,6 +125,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -138,7 +155,7 @@ export default function DashboardPage() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 5) return 'Good evening';
+    if (hour < 5) return 'Good night';
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
@@ -259,7 +276,6 @@ export default function DashboardPage() {
             value={data.credits.toString()}
             icon={Clock}
             description="Minutes remaining"
-            progress={(data.credits / 30) * 100}
             hideProgress
            // gradient="from-amber-500/10 to-orange-500/10"
             iconColor="text-amber-600 dark:text-amber-400"
@@ -301,7 +317,7 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-center">
                           <p className="font-medium text-sm">{activity.title}</p>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(activity.date).toLocaleDateString()}
+                            {format(new Date(activity.date), 'MMM d, yyyy')}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -327,8 +343,10 @@ export default function DashboardPage() {
                               size="sm"
                               variant="default"
                               className="h-8 text-xs font-semibold shadow-sm hover:shadow-md transition-all px-4"
+                              disabled={analyzingId !== null}
                               onClick={async (e) => {
                                 e.stopPropagation();
+                                setAnalyzingId(activity.id);
                                 toast.loading('Generating analysis...', { id: activity.id });
                                 try {
                                   const res = await fetch(`/api/interviews/${activity.id}/analyze`, {
@@ -352,11 +370,17 @@ export default function DashboardPage() {
                                   router.push(`/interviews/${activity.id}/result`);
                                 } catch (error) {
                                   toast.error(error instanceof Error ? error.message : 'Failed to generate analysis', { id: activity.id });
+                                } finally {
+                                  setAnalyzingId(null);
                                 }
                               }}
                             >
-                              <Zap className="h-3.5 w-3.5 mr-1.5" />
-                              Generate Report
+                              {analyzingId === activity.id ? (
+                                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                              ) : (
+                                <Zap className="h-3.5 w-3.5 mr-1.5" />
+                              )}
+                              {analyzingId === activity.id ? 'Analyzing...' : 'Generate Report'}
                             </Button>
                           )}
                         </div>

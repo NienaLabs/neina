@@ -64,7 +64,7 @@ export const ProjectsSection = ({
   return (
     <section>
       <div className="mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold">Projects</h2>
           <Button
             variant="outline"
@@ -93,7 +93,7 @@ export const ProjectsSection = ({
       <div className="flex flex-col gap-6">
         {/* Safeguard: ensure projects is an array */}
         {Array.isArray(projects) && projects.map((proj, index) => (
-          <div key={index} className="p-4 border rounded-lg relative bg-gray-50">
+          <div key={index} className="p-4 sm:p-5 border border-gray-200/80 rounded-xl relative bg-gray-50/70">
             <div className="flex justify-end mb-2">
               <Button
                 variant="ghost"
@@ -105,7 +105,7 @@ export const ProjectsSection = ({
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <RemovableInput
                 placeholder="Project Name"
                 value={proj.name}
@@ -118,7 +118,7 @@ export const ProjectsSection = ({
                 onChange={(e) => handleNestedFieldChange('projects', index, 'role', e.target.value)}
                 onRemove={() => handleNestedFieldChange('projects', index, 'role', '')}
               />
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <Textarea
                   className="w-full"
                   placeholder="Description"
@@ -128,11 +128,11 @@ export const ProjectsSection = ({
                   }
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <p className="font-medium">Technologies</p>
                 {renderStringArray('projects', index, 'technologies', proj.technologies)}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <RemovableInput
                   placeholder="Project Link"
                   value={proj.link}
@@ -143,7 +143,7 @@ export const ProjectsSection = ({
               
               {/* Custom Fields */}
               {Array.isArray(proj.customFields) && proj.customFields.map((field, fieldIndex) => (
-                <div key={fieldIndex} className="col-span-2 grid grid-cols-2 gap-3 bg-white p-2 rounded border">
+                <div key={fieldIndex} className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-3 rounded-lg border">
                   <Input
                     placeholder="Field Name"
                     value={field.key}
@@ -162,7 +162,7 @@ export const ProjectsSection = ({
                 </div>
               ))}
               
-              <div className="col-span-2">
+              <div className="col-span-full">
                 <Button
                   variant="outline"
                   size="sm"

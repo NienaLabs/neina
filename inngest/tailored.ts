@@ -206,6 +206,24 @@ const coverLetterNetwork = createNetwork({
   }
 });
 
+/**
+ * Single-agent networks: each runs its agent exactly once; the agent's
+ * lifecycle writes its JSON output into network.state.data.<agentId>.
+ */
+const createSingleAgentNetwork = (name: string, agent: ReturnType<typeof createAgent>) =>
+  createNetwork({
+    name,
+    agents: [agent],
+    router: ({ callCount }) => (callCount > 0 ? undefined : agent),
+  });
+
+const keywordExtractionNetwork = createSingleAgentNetwork("keyword-extraction-network", keywordExtractorAgent);
+const nudgeTailoringNetwork = createSingleAgentNetwork("nudge-tailoring-network", improveResumeNudgeAgent);
+const keywordsTailoringNetwork = createSingleAgentNetwork("keywords-tailoring-network", improveResumeKeywordsAgent);
+const fullTailoringNetwork = createSingleAgentNetwork("full-tailoring-network", improveResumeFullAgent);
+const refineTailoringNetwork = createSingleAgentNetwork("refine-tailoring-network", improveResumeRefineAgent);
+const enrichTailoringNetwork = createSingleAgentNetwork("enrich-tailoring-network", improveResumeEnrichAgent);
+
 export const tailoredResumeCreated = inngest.createFunction(
   { id: "tailored-resume-AI-workflow", concurrency: 1 },
   { event: "app/tailored-resume.created" },
@@ -264,7 +282,10 @@ export const tailoredResumeCreated = inngest.createFunction(
         }
       }
 
-      // Pre-process content
+      // Pre-process content (event.data.content is markdown on creation, a JSON string on retailor)
+      let resumeContent: string = typeof event.data.content === "string"
+        ? event.data.content
+        : JSON.stringify(event.data.content ?? "");
       try {
         const parsed = JSON.parse(resumeContent);
         resumeContent = JSON.stringify(parsed, null, 2);

@@ -28,6 +28,7 @@ jest.mock('../../components/ui/dropdown-menu', () => ({
 
 describe('AddressSection', () => {
   const mockHandleAddressChange = jest.fn();
+  const mockHandlePersonalInfoChange = jest.fn();
   const mockHandleOtherLinksChange = jest.fn();
   const mockAddNewOtherLink = jest.fn();
   const mockOnUpdate = jest.fn();
@@ -37,7 +38,11 @@ describe('AddressSection', () => {
       email: 'test@example.com',
       location: 'Test City',
     },
+    personalInfo: {
+      name: 'Test User',
+    },
     handleAddressChange: mockHandleAddressChange,
+    handlePersonalInfoChange: mockHandlePersonalInfoChange,
     handleOtherLinksChange: mockHandleOtherLinksChange,
     addNewOtherLink: mockAddNewOtherLink,
     fixes: {},

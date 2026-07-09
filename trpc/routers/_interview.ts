@@ -22,8 +22,8 @@ export const interviewRouter = createTRPCRouter({
         const { role, description, type, questionCount, resumeId, mode } = input;
         const userId = ctx.session.user.id; // User must be authenticated
 
-        // Check User Credits / Minutes
-        const user = await prisma.user.findUnique({
+        // Check User Credits / Minutes (reserved for future enforcement)
+        const _user = await prisma.user.findUnique({
           where: { id: userId },
           select: { interview_minutes: true, resume_credits: true },
         });
@@ -61,8 +61,11 @@ export const interviewRouter = createTRPCRouter({
         });
 
 
-        // Trigger Background Job
-        await inngest.send({
+        // Trigger Background Job (fire-and-forget — do not block session creation)
+        // If Inngest is not configured (missing INNGEST_EVENT_KEY), the interview
+        // record is still created and the user is not blocked.
+        let questionsReady = false;
+        inngest.send({
           name: "app/interview.created",
           data: {
             interviewId: interview.id,
@@ -73,11 +76,20 @@ export const interviewRouter = createTRPCRouter({
             questionCount,
             resumeContent,
           },
+        }).then(() => {
+          console.log(`✅ [Interview] Inngest event sent for ${interview.id}`);
+        }).catch((err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err);
+          console.warn(
+            `⚠️ [Interview] Inngest event failed (interview still created): ${message}. ` +
+            `Make sure INNGEST_EVENT_KEY is set in .env, or run the Inngest Dev Server locally.`
+          );
         });
 
         return {
           interviewId: interview.id,
-          status: 'SCHEDULED'
+          status: 'SCHEDULED',
+          questionsReady,
         };
       } catch (error) {
         console.error("❌ [Interview] createSession failed:", error);

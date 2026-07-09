@@ -74,8 +74,9 @@ export default async function InterviewLayout({
                 </div>
             </header>
 
-            {/* Main Content Area */}
-            <main className="flex-1 relative overflow-hidden z-20">
+            {/* Main Content Area — no z-index here: it would create a stacking
+                context that traps the fullscreen call overlay below the header */}
+            <main className="flex-1 relative overflow-hidden">
                 {children}
             </main>
         </div>

@@ -112,7 +112,7 @@ export const CustomSectionForm: React.FC<CustomSectionFormProps> = ({
 
                 <CollapsibleContent>
                    <div className="p-4 space-y-4 border-t border-gray-100">
-                       <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                            <div className="space-y-1.5">
                                <Label className="text-xs font-semibold text-gray-700">Name / Title / Role</Label>
                                <Input 
@@ -143,7 +143,7 @@ export const CustomSectionForm: React.FC<CustomSectionFormProps> = ({
                            />
                        </div>
 
-                       <div className="grid grid-cols-3 gap-4">
+                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                            <div className="space-y-1.5">
                                <Label className="text-xs font-semibold text-gray-700">Role (Optional)</Label>
                                <Input 

@@ -57,9 +57,17 @@ interface Step {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const formContentRef = useRef<HTMLDivElement>(null);
+
+  // Auth guard: onboarding requires a signed-in user
+  useEffect(() => {
+    if (!isSessionPending && !session) {
+      router.push("/auth/sign-in");
+    }
+  }, [session, isSessionPending, router]);
 
   const [formData, setFormData] = useState<FormData>({
     role: "",
@@ -203,14 +211,18 @@ export default function OnboardingPage() {
     }));
   };
 
+  // Recruiters only need steps 1–2; steps 3–4 (job interests/preferences) are seeker-specific
+  const totalSteps = formData.role === "recruiter" ? 2 : steps.length;
+
   const handleNext = useCallback(async () => {
-    if (currentStep < steps.length) {
+    if (currentStep < totalSteps) {
       setCurrentStep((prev) => prev + 1);
     } else {
       setIsSubmitting(true);
       try {
         await updateProfile.mutateAsync({
           role: formData.role || undefined,
+          name: formData.fullName.trim() || undefined,
           goal: formData.goal,
           referralSource: formData.referralSource,
           jobTitle: formData.jobTitle,
@@ -224,7 +236,7 @@ export default function OnboardingPage() {
         console.error("Onboarding submission error:", err);
       }
     }
-  }, [currentStep, steps.length, formData, updateProfile]);
+  }, [currentStep, totalSteps, formData, updateProfile]);
 
   const handleBack = () => {
     if (currentStep > 1) {
@@ -240,7 +252,12 @@ export default function OnboardingPage() {
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, role: "seeker" }))}
+                onClick={() => setFormData((prev) => ({
+                  ...prev,
+                  role: "seeker",
+                  // A seeker can't have the recruiting goal — clear it to avoid a mismatched profile
+                  goal: prev.goal === "recruiting" ? "" : prev.goal,
+                }))}
                 className={cn(
                   "p-5 rounded-2xl border transition-all flex flex-col items-center text-center gap-3 group relative overflow-hidden bg-white/50 dark:bg-zinc-900/50 hover:bg-white dark:hover:bg-zinc-900",
                   formData.role === "seeker"
@@ -264,7 +281,7 @@ export default function OnboardingPage() {
 
               <button
                 type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, role: "recruiter" }))}
+                onClick={() => setFormData((prev) => ({ ...prev, role: "recruiter", goal: "recruiting" }))}
                 className={cn(
                   "p-5 rounded-2xl border transition-all flex flex-col items-center text-center gap-3 group relative overflow-hidden bg-white/50 dark:bg-zinc-900/50 hover:bg-white dark:hover:bg-zinc-900",
                   formData.role === "recruiter"
@@ -294,7 +311,12 @@ export default function OnboardingPage() {
                   <button
                     key={goal.id}
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, goal: goal.id }))}
+                    onClick={() => setFormData((prev) => ({
+                      ...prev,
+                      goal: goal.id,
+                      // Selecting the Recruiter goal implies the recruiter role (and vice versa)
+                      role: goal.id === "recruiting" ? "recruiter" : (prev.role === "recruiter" ? "seeker" : prev.role),
+                    }))}
                     className={cn(
                       "p-3.5 rounded-xl border transition-all flex items-center gap-4 text-left hover:bg-white dark:hover:bg-zinc-900",
                       formData.goal === goal.id
@@ -502,6 +524,30 @@ export default function OnboardingPage() {
     }
   };
 
+  /** Explains why the Continue button is disabled, shown inline next to it. */
+  const getStepHint = (): string | null => {
+    switch (currentStep) {
+      case 1:
+        if (!formData.role) return "Select a role to continue";
+        if (!formData.goal) return "Pick your primary goal";
+        return null;
+      case 2:
+        if (formData.fullName.trim().length <= 2) return "Enter your full name";
+        if (!formData.referralSource) return "Tell us how you heard about Niena";
+        return null;
+      case 3:
+        if (formData.jobTitle.trim().length <= 2) return "Enter your most recent job title";
+        if (!formData.experienceLevel) return "Select your experience level";
+        if (formData.selectedTopics.length === 0) return "Pick at least one interest";
+        return null;
+      case 4:
+        if (formData.location.trim().length <= 2) return "Enter a preferred location";
+        return null;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div ref={containerRef} className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4 font-sans selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900 text-zinc-900 dark:text-zinc-100">
 
@@ -518,7 +564,7 @@ export default function OnboardingPage() {
           <div className="px-8 pt-8 pb-4">
             <div className="flex items-center justify-between mb-8">
               <div className="flex gap-2">
-                {[1, 2, 3, 4].map((step) => (
+                {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
                   <div
                     key={step}
                     className={cn(
@@ -531,7 +577,7 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-600">
-                Step {currentStep}/4
+                Step {currentStep}/{totalSteps}
               </span>
             </div>
 
@@ -562,27 +608,34 @@ export default function OnboardingPage() {
               Back
             </Button>
 
-            <Button
-              onClick={handleNext}
-              disabled={!isStepValid() || isSubmitting}
-              className={cn(
-                "rounded-xl px-6 h-10 font-semibold transition-all shadow-lg shadow-zinc-200 dark:shadow-zinc-950",
-                "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100",
-                "disabled:opacity-50 disabled:shadow-none"
+            <div className="flex items-center gap-3">
+              {!isStepValid() && !isSubmitting && (
+                <p className="text-xs text-amber-600 dark:text-amber-500 font-medium text-right">
+                  {getStepHint()}
+                </p>
               )}
-            >
-              {isSubmitting ? (
-                "Setting up..."
-              ) : currentStep === steps.length ? (
-                <>
-                  Complete <Rocket className="w-4 h-4 ml-2" />
-                </>
-              ) : (
-                <>
-                  Continue <ChevronRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
+              <Button
+                onClick={handleNext}
+                disabled={!isStepValid() || isSubmitting}
+                className={cn(
+                  "rounded-xl px-6 h-10 font-semibold transition-all shadow-lg shadow-zinc-200 dark:shadow-zinc-950",
+                  "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100",
+                  "disabled:opacity-50 disabled:shadow-none"
+                )}
+              >
+                {isSubmitting ? (
+                  "Setting up..."
+                ) : currentStep === totalSteps ? (
+                  <>
+                    Complete <Rocket className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    Continue <ChevronRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 

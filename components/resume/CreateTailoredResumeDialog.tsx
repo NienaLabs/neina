@@ -81,7 +81,7 @@ const CreateTailoredResumeDialog = ({
         </DialogHeader>
 
         <div className="space-y-5 py-4 overflow-y-auto px-1">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
                 <FileText className="w-4 h-4 text-muted-foreground" />
@@ -117,7 +117,7 @@ const CreateTailoredResumeDialog = ({
                 <Wand2 className="w-4 h-4 text-purple-500" />
                 Tailoring Intensity
             </Label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div 
                     onClick={() => setTailoringMode("nudge")}
                     className={cn(

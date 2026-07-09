@@ -109,8 +109,7 @@ export type ResumeStatus = (typeof ResumeStatus)[keyof typeof ResumeStatus]
 
 
 export const TransactionProvider = {
-  PAYSTACK: 'PAYSTACK',
-  POLAR: 'POLAR'
+  PAYSTACK: 'PAYSTACK'
 } as const
 
 export type TransactionProvider = (typeof TransactionProvider)[keyof typeof TransactionProvider]

@@ -21,8 +21,6 @@ model User {
   interview_minutes        Int                   @default(0)
   planExpiresAt            DateTime?
   plan                     Plan                  @default(FREE)
-  polarCustomerId          String?
-  polarSubscriptionId      String?
   paystackSubscriptionCode String?
   paystackCustomerCode     String?
   preferredProvider        String?               @default("AUTO")
@@ -65,7 +63,6 @@ model Transaction {
   metadata        Json?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
-  polarCheckoutId String?
   provider        TransactionProvider @default(PAYSTACK)
   user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -482,7 +479,6 @@ enum ResumeStatus {
 
 enum TransactionProvider {
   PAYSTACK
-  POLAR
 }
 
 enum BlogCategory {

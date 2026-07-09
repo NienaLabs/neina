@@ -17,7 +17,6 @@ function PaymentVerifier() {
   const searchParams = useSearchParams();
 
   const reference = searchParams.get("reference");     // Paystack flow
-  const checkoutId = searchParams.get("checkout_id"); // Polar flow
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -31,28 +30,16 @@ function PaymentVerifier() {
     },
   });
 
-  // Polar checkout verification
-  const verifyPolar = trpc.payment.verifyPolarCheckout.useMutation({
-    onSuccess: () => setStatus("success"),
-    onError: (error) => {
-      setStatus("error");
-      setMessage(error.message || "Failed to verify checkout");
-    },
-  });
-
   useEffect(() => {
     if (reference) {
       // Paystack flow: verify by transaction reference
       verifyPaystack.mutate({ reference });
-    } else if (checkoutId) {
-      // Polar flow: verify by checkout ID
-      verifyPolar.mutate({ checkoutId });
     } else {
       setStatus("error");
-      setMessage("No transaction reference or checkout ID found in the URL.");
+      setMessage("No transaction reference found in the URL.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reference, checkoutId]);
+  }, [reference]);
 
   // Validate returnUrl to prevent open redirect attacks
   const from = searchParams.get("from");
@@ -118,7 +105,7 @@ function PaymentVerifier() {
 
 /**
  * Payment verification page.
- * Handles both Paystack (?reference=xxx) and Polar (?checkout_id=xxx) redirects.
+ * Handles Paystack (?reference=xxx) redirects.
  */
 export default function VerifyPaymentPage() {
   return (

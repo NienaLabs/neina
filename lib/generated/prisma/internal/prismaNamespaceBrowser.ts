@@ -105,8 +105,6 @@ export const UserScalarFieldEnum = {
   interview_minutes: 'interview_minutes',
   planExpiresAt: 'planExpiresAt',
   plan: 'plan',
-  polarCustomerId: 'polarCustomerId',
-  polarSubscriptionId: 'polarSubscriptionId',
   paystackSubscriptionCode: 'paystackSubscriptionCode',
   paystackCustomerCode: 'paystackCustomerCode',
   preferredProvider: 'preferredProvider',
@@ -139,7 +137,6 @@ export const TransactionScalarFieldEnum = {
   metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  polarCheckoutId: 'polarCheckoutId',
   provider: 'provider'
 } as const
 

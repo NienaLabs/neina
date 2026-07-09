@@ -112,36 +112,8 @@ const CREDIT_PACKS_GHS = [
   { credits: 50, price: 100, priceLabel: "₵100", label: "Agency",   topUpKey: "CREDITS_50" },
 ];
 
-// Pay-As-You-Go credit packs — USD (Polar)
-const CREDIT_PACKS_USD = [
-  { credits: 10, priceLabel: "$5",  label: "Starter",  topUpKey: "CREDITS_10" as const },
-  { credits: 20, priceLabel: "$10", label: "Standard", topUpKey: "CREDITS_20" as const, popular: true },
-  { credits: 30, priceLabel: "$15", label: "Pro",      topUpKey: "CREDITS_30" as const },
-  { credits: 50, priceLabel: "$22", label: "Agency",   topUpKey: "CREDITS_50" as const },
-];
-
-interface PricingClientProps {
-  userCountry: string;
-  isAfricanUser: boolean;
-}
-
-/**
- * Pricing page client component.
- *
- * Displays subscription plans and Pay-As-You-Go top-ups.
- * Automatically selects the payment provider based on the user's detected country:
- *   - African users → Paystack (GHS, recurring subscription via Paystack Plans API)
- *   - International users → Polar (USD, managed subscription)
- *
- * African users can toggle to International pricing if they prefer USD billing.
- * Non-African users always see USD pricing.
- */
-export default function PricingClient({ userCountry, isAfricanUser }: PricingClientProps) {
+export default function PricingClient() {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
-  // African users start on GHS; non-African users always on USD
-  const [preferInternational, setPreferInternational] = useState(!isAfricanUser);
-
-  const showInternational = preferInternational;
   const { data: user, refetch } = trpc.user.getMe.useQuery();
 
   // -------------------------------------------------------------------------
@@ -170,31 +142,7 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
     },
   });
 
-  const managePolarSubscription = trpc.payment.managePolarSubscription.useMutation({
-    onSuccess: (data) => {
-      if (data.type === "portal") {
-        toast.info("Redirecting to subscription settings...");
-      } else {
-        toast.info("Redirecting to secure checkout...");
-      }
-      window.location.href = data.url;
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to manage subscription");
-      setLoadingKey(null);
-    },
-  });
 
-  const initiatePolarTopUp = trpc.payment.initiatePolarTopUp.useMutation({
-    onSuccess: (data) => {
-      toast.info("Redirecting to secure checkout...");
-      window.location.href = data.url;
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to initiate top-up");
-      setLoadingKey(null);
-    },
-  });
 
   // -------------------------------------------------------------------------
   // Event handlers
@@ -210,12 +158,6 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
     if (plan.key === "FREE") return;
 
     setLoadingKey(plan.key);
-
-    if (showInternational) {
-      // Polar checkout — plan code resolved server-side from plan key
-      managePolarSubscription.mutate({ plan: plan.key });
-      return;
-    }
 
     // Paystack subscription — plan code injected by server in initiateTransaction
     initiateTransaction.mutate({
@@ -236,11 +178,6 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
     if (!user) return toast.error("Please sign in");
     setLoadingKey(`credits-${credits}`);
 
-    if (showInternational) {
-      initiatePolarTopUp.mutate({ topUpKey: topUpKey as any });
-      return;
-    }
-
     initiateTransaction.mutate({
       email: user.email,
       amount: (priceGHS ?? 0) * 100,
@@ -254,11 +191,6 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
   const onBuyMinutes = (topUpKey: string, minutes: number, priceGHS?: number) => {
     if (!user) return toast.error("Please sign in");
     setLoadingKey(`minutes-${minutes}`);
-
-    if (showInternational) {
-      initiatePolarTopUp.mutate({ topUpKey: topUpKey as any });
-      return;
-    }
 
     initiateTransaction.mutate({
       email: user.email,
@@ -279,10 +211,7 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
   // -------------------------------------------------------------------------
   // Active provider label for UI hints
   // -------------------------------------------------------------------------
-  const activeProvider = showInternational ? "Polar" : "Paystack";
-  const activeProviderLabel = showInternational
-    ? "Secured by Polar · USD"
-    : "Secured by Paystack · GHS";
+  const activeProviderLabel = "Secured by Paystack · GHS";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-20 px-4 sm:px-6 relative overflow-hidden font-sans">
@@ -318,45 +247,12 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
             From smart resume tailoring to AI interview coaching.
           </p>
 
-          {/* ---------------------------------------------------------------
-              Currency / Provider Toggle — shown to ALL users
-              African users start on GHS/Paystack; non-African start on USD/Polar
-          --------------------------------------------------------------- */}
           <div className="flex flex-col items-center gap-3 pt-2">
-            <div className="bg-white dark:bg-slate-900 p-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm inline-flex">
-              <button
-                onClick={() => setPreferInternational(false)}
-                className={cn(
-                  "px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300",
-                  !preferInternational
-                    ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-md scale-105"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                )}
-              >
-                🇬🇭 African / GHS
-              </button>
-              <button
-                onClick={() => setPreferInternational(true)}
-                className={cn(
-                  "px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300",
-                  preferInternational
-                    ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-md scale-105"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                )}
-              >
-                🌍 International / USD
-              </button>
-            </div>
-            {/* Active provider badge */}
             <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
               <CreditCard className="w-3 h-3" />
               <span>{activeProviderLabel}</span>
               <FeatureGuide
-                description={
-                  showInternational
-                    ? "International payments are processed by Polar. Subscriptions auto-renew monthly in USD."
-                    : "African payments are processed by Paystack. Subscriptions auto-renew monthly in GHS."
-                }
+                description="Payments are processed by Paystack. Subscriptions auto-renew monthly in GHS."
                 className="h-3 w-3"
                 side="right"
               />
@@ -370,7 +266,7 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {PLANS.map((plan) => {
             const isCurrentPlan = user?.plan === plan.key;
-            const displayPrice = showInternational ? plan.priceUSD : plan.priceGHS;
+            const displayPrice = plan.priceGHS;
             const Icon = plan.icon;
             const isDowngrade =
               user?.plan &&
@@ -628,14 +524,10 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
                         <div className="text-indigo-100 text-sm">15 Minutes · Detailed Feedback</div>
                       </div>
                       <div className="text-right">
-                        {showInternational ? (
-                          <div className="text-3xl font-extrabold">$13.99</div>
-                        ) : (
-                          <>
-                            <div className="text-lg font-bold line-through text-indigo-300">₵210</div>
-                            <div className="text-3xl font-extrabold">₵130</div>
-                          </>
-                        )}
+                        <>
+                          <div className="text-lg font-bold line-through text-indigo-300">₵210</div>
+                          <div className="text-3xl font-extrabold">₵130</div>
+                        </>
                       </div>
                     </div>
                     <Button
@@ -680,7 +572,7 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    {(showInternational ? CREDIT_PACKS_USD : CREDIT_PACKS_GHS).map((pack) => (
+                    {CREDIT_PACKS_GHS.map((pack) => (
                       <button
                         key={pack.credits}
                         onClick={() =>

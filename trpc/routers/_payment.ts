@@ -10,19 +10,7 @@ import {
 import prisma from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { TRPCError } from "@trpc/server";
-import { PLANS, PlanKey, POLAR_PRODUCT_IDS, PAYSTACK_PLAN_CODES, POLAR_TOPUP_PRODUCT_IDS } from "@/lib/plans";
-import { Polar } from "@polar-sh/sdk";
-
-/**
- * Creates an authenticated Polar SDK instance pointing to the correct
- * environment (sandbox vs. production) based on NODE_ENV.
- */
-function createPolarClient() {
-  return new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN!,
-    server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-  });
-}
+import { PLANS, PlanKey, PAYSTACK_PLAN_CODES } from "@/lib/plans";
 
 export const paymentRouter = createTRPCRouter({
   /** Returns the full plan data — used to display pricing info on the client. */
@@ -164,177 +152,12 @@ export const paymentRouter = createTRPCRouter({
       }
     }),
 
-  /**
-   * Verifies a Polar checkout by its checkout ID.
-   * Called from the /pricing/verify page when checkout_id is present in the URL.
-   *
-   * Note: Plan/credit fulfillment is handled by the Polar webhook (onOrderPaid in auth.tsx).
-   * This procedure just confirms the checkout status for the UI — does NOT re-apply credits.
-   */
-  verifyPolarCheckout: protectedProcedure
-    .input(z.object({ checkoutId: z.string() }))
-    .mutation(async ({ input }) => {
-      const polar = createPolarClient();
 
-      try {
-        const checkout = await polar.checkouts.get({ id: input.checkoutId });
-
-        if (checkout.status === "confirmed" || checkout.status === "succeeded") {
-          return { status: "SUCCESS" };
-        }
-
-        if (checkout.status === "failed") {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Checkout payment failed. Please try again.",
-          });
-        }
-
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Checkout not yet confirmed. Please wait a moment.",
-        });
-      } catch (err: any) {
-        if (err instanceof TRPCError) throw err;
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: err.message || "Failed to verify checkout",
-        });
-      }
-    }),
-
-  /**
-   * Creates or retrieves a Polar checkout/portal session for international users.
-   *
-   * - Active subscription → redirect to customer portal to manage it.
-   * - No subscription → create a new checkout for the requested plan.
-   *
-   * Passes customerExternalId = user.id so Polar links the purchase to the
-   * correct user (matching the customer created via createCustomerOnSignUp).
-   */
-  managePolarSubscription: protectedProcedure
-    .input(z.object({ plan: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const { user } = ctx.session;
-      const polar = createPolarClient();
-
-      if (user.polarSubscriptionId) {
-        try {
-          const subscription = await polar.subscriptions.get({ id: user.polarSubscriptionId });
-          if (subscription.status === "active" || subscription.status === "past_due") {
-            const portalSession = await polar.customerSessions.create({
-              customerId: user.polarCustomerId!,
-            });
-            return { type: "portal" as const, url: portalSession.customerPortalUrl };
-          }
-        } catch {
-          // Subscription may have been revoked on Polar's end — fall through to checkout
-        }
-      }
-
-      const planKey = input.plan as keyof typeof POLAR_PRODUCT_IDS;
-      const productId = POLAR_PRODUCT_IDS[planKey];
-
-      if (!productId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid plan selected for international payment",
-        });
-      }
-
-      const checkout = await polar.checkouts.create({
-        productId: productId,
-        customerEmail: user.email,
-        customerExternalId: user.id,
-        customerId: user.polarCustomerId || undefined,
-        successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing/verify?checkout_id={CHECKOUT_ID}`,
-      });
-
-      await prisma.transaction.create({
-        data: {
-          reference: checkout.id,
-          userId: user.id,
-          amount: PLANS[planKey as PlanKey]?.priceValUSD ?? 0,
-          type: "SUBSCRIPTION",
-          status: "PENDING",
-          plan: planKey as any,
-          provider: "POLAR",
-          polarCheckoutId: checkout.id,
-          currency: "USD",
-        },
-      });
-
-      return { type: "checkout" as const, url: checkout.url };
-    }),
-
-  /**
-   * Initiates a one-time Polar checkout for a credit or minute top-up.
-   * Used by international (USD/Polar) users to purchase credits/minutes à la carte.
-   *
-   * Each topUpKey maps to a ONE-TIME product in the Polar dashboard.
-   * Fulfillment is handled by the onOrderPaid webhook in auth.tsx.
-   *
-   * Required env vars (one product per pack size):
-   *   POLAR_PRODUCT_CREDITS_10, POLAR_PRODUCT_CREDITS_20,
-   *   POLAR_PRODUCT_CREDITS_30, POLAR_PRODUCT_CREDITS_50,
-   *   POLAR_PRODUCT_MINUTES_15
-   */
-  initiatePolarTopUp: protectedProcedure
-    .input(
-      z.object({
-        topUpKey: z.enum(["CREDITS_10", "CREDITS_20", "CREDITS_30", "CREDITS_50", "MINUTES_15"]),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { user } = ctx.session;
-      const polar = createPolarClient();
-
-      const productId = POLAR_TOPUP_PRODUCT_IDS[input.topUpKey];
-      if (!productId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Product not configured for ${input.topUpKey}. Add POLAR_PRODUCT_${input.topUpKey} to your env vars.`,
-        });
-      }
-
-      const checkout = await polar.checkouts.create({
-        productId,
-        customerEmail: user.email,
-        customerExternalId: user.id,
-        customerId: user.polarCustomerId || undefined,
-        successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing/verify?checkout_id={CHECKOUT_ID}`,
-      });
-
-      const creditAmounts: Record<string, number> = {
-        CREDITS_10: 10, CREDITS_20: 20, CREDITS_30: 30, CREDITS_50: 50,
-      };
-      const credits = creditAmounts[input.topUpKey] ?? null;
-      const minutes = input.topUpKey === "MINUTES_15" ? 15 : null;
-
-      await prisma.transaction.create({
-        data: {
-          reference: checkout.id,
-          userId: user.id,
-          amount: 0, // Actual amount set by Polar product price
-          type: credits ? "CREDIT_PURCHASE" : "MINUTE_PURCHASE",
-          status: "PENDING",
-          provider: "POLAR",
-          polarCheckoutId: checkout.id,
-          currency: "USD",
-          ...(credits ? { credits } : {}),
-          ...(minutes ? { minutes } : {}),
-        },
-      });
-
-      return { url: checkout.url };
-    }),
 
   /**
    * Cancels the current user's active subscription.
    *
-   * Handles both providers:
-   *   - Polar: calls polar.subscriptions.cancel()
-   *   - Paystack: calls the subscription disable API
+   * Handles Paystack by calling the subscription disable API
    *
    * Immediately sets plan = FREE in DB.
    */
@@ -344,7 +167,6 @@ export const paymentRouter = createTRPCRouter({
       select: {
         id: true,
         plan: true,
-        polarSubscriptionId: true,
         paystackSubscriptionCode: true,
         email: true,
       },
@@ -361,15 +183,6 @@ export const paymentRouter = createTRPCRouter({
       });
     }
 
-    if (user.polarSubscriptionId) {
-      const polar = createPolarClient();
-      try {
-        await polar.subscriptions.cancel({ id: user.polarSubscriptionId });
-      } catch (err: any) {
-        console.warn("[cancelSubscription] Polar cancel error (may already be canceled):", err.message);
-      }
-    }
-
     if (user.paystackSubscriptionCode) {
       try {
         const sub = await getSubscription(user.paystackSubscriptionCode);
@@ -379,7 +192,7 @@ export const paymentRouter = createTRPCRouter({
       }
     }
 
-    if (!user.polarSubscriptionId && !user.paystackSubscriptionCode) {
+    if (!user.paystackSubscriptionCode) {
       try {
         const subs = await listCustomerSubscriptions(user.email);
         const activeSub = subs.find((s) => s.status === "active");
@@ -400,7 +213,6 @@ export const paymentRouter = createTRPCRouter({
       data: {
         plan: "FREE",
         planExpiresAt: null,
-        polarSubscriptionId: null,
         paystackSubscriptionCode: null,
       },
     });

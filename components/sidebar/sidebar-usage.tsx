@@ -12,19 +12,15 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const PLAN_PRICES: Record<string, number> = {
-  SILVER: 2900,
-  GOLD: 4900,
-  DIAMOND: 9900,
-};
-
 export default function SidebarUsage() {
   const { data: user, isLoading } = trpc.user.getMe.useQuery();
   const [isRenewing, setIsRenewing] = useState(false);
 
-  const initiateTransaction = trpc.payment.initiateTransaction.useMutation({
+  // Renewals go through the hosted Moolre checkout — the server resolves the
+  // plan price, we just redirect to the payment page
+  const initiateHostedCheckout = trpc.payment.initiateHostedCheckout.useMutation({
     onSuccess: (data) => {
-      window.location.href = data.authorization_url;
+      window.location.href = data.url;
     },
     onError: (err) => {
       toast.error(err.message || "Failed to initiate renewal");
@@ -56,32 +52,26 @@ export default function SidebarUsage() {
   const days = Math.floor(totalHoursLeft / 24);
   const hours = totalHoursLeft % 24;
 
-  let timeLeftString = "Suscription expired";
+  let timeLeftString = "Plan expired";
   if (totalHoursLeft > 0) {
     const parts = [];
     if (days > 0) parts.push(`${days}d`);
     if (hours > 0) parts.push(`${hours}h`);
-    if (parts.length === 0) timeLeftString = "Renews soon"; 
-    else timeLeftString = `Renews in ${parts.join(' ')}`;
+    if (parts.length === 0) timeLeftString = "Expires soon";
+    else timeLeftString = `Expires in ${parts.join(' ')}`;
   }
-  
+
   const showRenew = totalHoursLeft <= 24;
 
   const handleRenew = () => {
     if (!user.plan || user.plan === "FREE") return;
-    const price = PLAN_PRICES[user.plan];
-    if (!price) {
-      toast.error("Could not determine plan price");
-      return;
-    }
 
     setIsRenewing(true);
-    initiateTransaction.mutate({
-      email: user.email,
-      amount: price,
-      type: "SUBSCRIPTION",
-      plan: user.plan as "SILVER" | "GOLD" | "DIAMOND",
-      callbackUrl: `${window.location.origin}/pricing/verify?from=/dashboard`,
+    initiateHostedCheckout.mutate({
+      purchase: {
+        type: "SUBSCRIPTION",
+        plan: user.plan as "SILVER" | "GOLD" | "DIAMOND",
+      },
     });
   };
 

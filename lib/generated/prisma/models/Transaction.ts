@@ -51,7 +51,6 @@ export type TransactionMinAggregateOutputType = {
   minutes: number | null
   createdAt: Date | null
   updatedAt: Date | null
-  polarCheckoutId: string | null
   provider: $Enums.TransactionProvider | null
 }
 
@@ -68,7 +67,6 @@ export type TransactionMaxAggregateOutputType = {
   minutes: number | null
   createdAt: Date | null
   updatedAt: Date | null
-  polarCheckoutId: string | null
   provider: $Enums.TransactionProvider | null
 }
 
@@ -86,7 +84,6 @@ export type TransactionCountAggregateOutputType = {
   metadata: number
   createdAt: number
   updatedAt: number
-  polarCheckoutId: number
   provider: number
   _all: number
 }
@@ -117,7 +114,6 @@ export type TransactionMinAggregateInputType = {
   minutes?: true
   createdAt?: true
   updatedAt?: true
-  polarCheckoutId?: true
   provider?: true
 }
 
@@ -134,7 +130,6 @@ export type TransactionMaxAggregateInputType = {
   minutes?: true
   createdAt?: true
   updatedAt?: true
-  polarCheckoutId?: true
   provider?: true
 }
 
@@ -152,7 +147,6 @@ export type TransactionCountAggregateInputType = {
   metadata?: true
   createdAt?: true
   updatedAt?: true
-  polarCheckoutId?: true
   provider?: true
   _all?: true
 }
@@ -257,7 +251,6 @@ export type TransactionGroupByOutputType = {
   metadata: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
-  polarCheckoutId: string | null
   provider: $Enums.TransactionProvider
   _count: TransactionCountAggregateOutputType | null
   _avg: TransactionAvgAggregateOutputType | null
@@ -298,7 +291,6 @@ export type TransactionWhereInput = {
   metadata?: Prisma.JsonNullableFilter<"Transaction">
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
-  polarCheckoutId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   provider?: Prisma.EnumTransactionProviderFilter<"Transaction"> | $Enums.TransactionProvider
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -317,7 +309,6 @@ export type TransactionOrderByWithRelationInput = {
   metadata?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrderInput | Prisma.SortOrder
   provider?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -339,7 +330,6 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   metadata?: Prisma.JsonNullableFilter<"Transaction">
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
-  polarCheckoutId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   provider?: Prisma.EnumTransactionProviderFilter<"Transaction"> | $Enums.TransactionProvider
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "reference">
@@ -358,7 +348,6 @@ export type TransactionOrderByWithAggregationInput = {
   metadata?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrderInput | Prisma.SortOrder
   provider?: Prisma.SortOrder
   _count?: Prisma.TransactionCountOrderByAggregateInput
   _avg?: Prisma.TransactionAvgOrderByAggregateInput
@@ -384,7 +373,6 @@ export type TransactionScalarWhereWithAggregatesInput = {
   metadata?: Prisma.JsonNullableWithAggregatesFilter<"Transaction">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Transaction"> | Date | string
-  polarCheckoutId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   provider?: Prisma.EnumTransactionProviderWithAggregatesFilter<"Transaction"> | $Enums.TransactionProvider
 }
 
@@ -401,7 +389,6 @@ export type TransactionCreateInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  polarCheckoutId?: string | null
   provider?: $Enums.TransactionProvider
   user: Prisma.UserCreateNestedOneWithoutTransactionsInput
 }
@@ -420,7 +407,6 @@ export type TransactionUncheckedCreateInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  polarCheckoutId?: string | null
   provider?: $Enums.TransactionProvider
 }
 
@@ -437,7 +423,6 @@ export type TransactionUpdateInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
   user?: Prisma.UserUpdateOneRequiredWithoutTransactionsNestedInput
 }
@@ -456,7 +441,6 @@ export type TransactionUncheckedUpdateInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
 }
 
@@ -474,7 +458,6 @@ export type TransactionCreateManyInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  polarCheckoutId?: string | null
   provider?: $Enums.TransactionProvider
 }
 
@@ -491,7 +474,6 @@ export type TransactionUpdateManyMutationInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
 }
 
@@ -509,7 +491,6 @@ export type TransactionUncheckedUpdateManyInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
 }
 
@@ -537,7 +518,6 @@ export type TransactionCountOrderByAggregateInput = {
   metadata?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
 }
 
@@ -560,7 +540,6 @@ export type TransactionMaxOrderByAggregateInput = {
   minutes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
 }
 
@@ -577,7 +556,6 @@ export type TransactionMinOrderByAggregateInput = {
   minutes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  polarCheckoutId?: Prisma.SortOrder
   provider?: Prisma.SortOrder
 }
 
@@ -666,7 +644,6 @@ export type TransactionCreateWithoutUserInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  polarCheckoutId?: string | null
   provider?: $Enums.TransactionProvider
 }
 
@@ -683,7 +660,6 @@ export type TransactionUncheckedCreateWithoutUserInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  polarCheckoutId?: string | null
   provider?: $Enums.TransactionProvider
 }
 
@@ -730,7 +706,6 @@ export type TransactionScalarWhereInput = {
   metadata?: Prisma.JsonNullableFilter<"Transaction">
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
-  polarCheckoutId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   provider?: Prisma.EnumTransactionProviderFilter<"Transaction"> | $Enums.TransactionProvider
 }
 
@@ -747,7 +722,6 @@ export type TransactionCreateManyUserInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  polarCheckoutId?: string | null
   provider?: $Enums.TransactionProvider
 }
 
@@ -764,7 +738,6 @@ export type TransactionUpdateWithoutUserInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
 }
 
@@ -781,7 +754,6 @@ export type TransactionUncheckedUpdateWithoutUserInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
 }
 
@@ -798,7 +770,6 @@ export type TransactionUncheckedUpdateManyWithoutUserInput = {
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  polarCheckoutId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   provider?: Prisma.EnumTransactionProviderFieldUpdateOperationsInput | $Enums.TransactionProvider
 }
 
@@ -818,7 +789,6 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  polarCheckoutId?: boolean
   provider?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["transaction"]>
@@ -837,7 +807,6 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  polarCheckoutId?: boolean
   provider?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["transaction"]>
@@ -856,7 +825,6 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  polarCheckoutId?: boolean
   provider?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["transaction"]>
@@ -875,11 +843,10 @@ export type TransactionSelectScalar = {
   metadata?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  polarCheckoutId?: boolean
   provider?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "reference" | "userId" | "amount" | "currency" | "status" | "type" | "plan" | "credits" | "minutes" | "metadata" | "createdAt" | "updatedAt" | "polarCheckoutId" | "provider", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "reference" | "userId" | "amount" | "currency" | "status" | "type" | "plan" | "credits" | "minutes" | "metadata" | "createdAt" | "updatedAt" | "provider", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -909,7 +876,6 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     metadata: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
-    polarCheckoutId: string | null
     provider: $Enums.TransactionProvider
   }, ExtArgs["result"]["transaction"]>
   composites: {}
@@ -1348,7 +1314,6 @@ export interface TransactionFieldRefs {
   readonly metadata: Prisma.FieldRef<"Transaction", 'Json'>
   readonly createdAt: Prisma.FieldRef<"Transaction", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Transaction", 'DateTime'>
-  readonly polarCheckoutId: Prisma.FieldRef<"Transaction", 'String'>
   readonly provider: Prisma.FieldRef<"Transaction", 'TransactionProvider'>
 }
     

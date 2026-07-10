@@ -7,7 +7,7 @@ import { SSEEvent } from '@/lib/events';
  * Hook to listen for server-sent events
  * @param onEvent Callback function triggered when a new event arrives
  */
-export function useServerEvents(onEvent: (event: SSEEvent) => void) {
+export function useServerEvents(onEvent: (event: SSEEvent) => void, enabled: boolean = true) {
     const onEventRef = useRef(onEvent);
 
     // Keep the ref updated so we don't restart the effect on every render
@@ -16,6 +16,8 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
     }, [onEvent]);
 
     useEffect(() => {
+        if (!enabled) return;
+
         let eventSource: EventSource | null = null;
         let retryCount = 0;
         let retryTimeoutId: NodeJS.Timeout | null = null;
@@ -79,8 +81,10 @@ export function useServerEvents(onEvent: (event: SSEEvent) => void) {
             if (retryTimeoutId) {
                 clearTimeout(retryTimeoutId);
             }
-            console.log("🔌 Closing SSE connection");
-            eventSource?.close();
+            if (eventSource) {
+                console.log("🔌 Closing SSE connection");
+                eventSource.close();
+            }
         };
-    }, []);
+    }, [enabled]);
 }

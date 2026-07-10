@@ -1,6 +1,10 @@
 /**
- * Centralized plan definitions shared across tRPC routers, Polar integration,
- * Paystack integration, and the pricing UI.
+ * Centralized plan and top-up definitions shared across the payment router,
+ * Moolre integration, webhook fulfillment, and the pricing UI.
+ *
+ * All prices are in GHS (major unit). Payments are collected via Moolre
+ * (mobile money + hosted checkout). There is no recurring billing — a plan
+ * purchase grants 30 days of access (tracked via user.planExpiresAt).
  */
 
 export const PLANS = {
@@ -12,8 +16,7 @@ export const PLANS = {
     credits: 3,
     minutes: 0,
     matches: 10,
-    priceVal: 0,       // GHS (pesewas for Paystack: multiply by 100)
-    priceValUSD: 0,    // USD cents
+    priceVal: 0, // GHS
     description: "Perfect for new users exploring the platform.",
   },
   SILVER: {
@@ -24,8 +27,7 @@ export const PLANS = {
     credits: 10,
     minutes: 0,
     matches: 30,
-    priceVal: 450,      // GHS
-    priceValUSD: 2900,  // USD cents ($29)
+    priceVal: 450, // GHS
     description: "Affordable for early job seekers.",
   },
   GOLD: {
@@ -36,8 +38,7 @@ export const PLANS = {
     credits: 20,
     minutes: 15,
     matches: 60,
-    priceVal: 750,      // GHS
-    priceValUSD: 4900,  // USD cents ($49)
+    priceVal: 750, // GHS
     description: "Best for active job seekers.",
   },
   DIAMOND: {
@@ -48,50 +49,30 @@ export const PLANS = {
     credits: 30,
     minutes: 60,
     matches: 1000,
-    priceVal: 1500,     // GHS
-    priceValUSD: 9900,  // USD cents ($99)
+    priceVal: 1500, // GHS
     description: "For serious job hunters who want maximum advantage.",
   },
 } as const;
 
-/**
- * Polar product IDs — map to products created in the Polar dashboard.
- * These IDs are the same in sandbox and production (separate organizations).
- */
-export const POLAR_PRODUCT_IDS = {
-  SILVER:  "f30a8e41-4d9a-423a-9638-4ddbc0c22a27",
-  GOLD:    "cb97ea94-750b-4904-b23f-c4379bb194b5",
-  DIAMOND: "d9b65b5f-9d18-4c4f-add6-02aa3aaf3804",
-} as const;
-
-/**
- * Polar product IDs for one-time top-up purchases (credits & minutes).
- * These must be created as ONE-TIME (non-subscription) products in the Polar dashboard.
- * Copy the product ID from Polar Dashboard → Products → (product) → ID.
- */
-export const POLAR_TOPUP_PRODUCT_IDS = {
-  CREDITS_10: process.env.POLAR_PRODUCT_CREDITS_10!,
-  CREDITS_20: process.env.POLAR_PRODUCT_CREDITS_20!,
-  CREDITS_30: process.env.POLAR_PRODUCT_CREDITS_30!,
-  CREDITS_50: process.env.POLAR_PRODUCT_CREDITS_50!,
-  MINUTES_15: process.env.POLAR_PRODUCT_MINUTES_15!,
-} as const;
-
-export type PolarTopUpKey = keyof typeof POLAR_TOPUP_PRODUCT_IDS;
-
-/**
- * Paystack Plan codes — created in the Paystack dashboard with a monthly interval.
- * Stored in environment variables so they can differ between sandbox and production.
- *
- * To create plans in Paystack dashboard:
- *   Plans → Create Plan → set amount (in kobo for NGN or pesewas for GHS), interval = monthly
- *
- * Copy the `plan_code` value (e.g. "PLN_xxxxxxxxxx") into your .env file.
- */
-export const PAYSTACK_PLAN_CODES = {
-  SILVER:  process.env.PAYSTACK_PLAN_CODE_SILVER!,
-  GOLD:    process.env.PAYSTACK_PLAN_CODE_GOLD!,
-  DIAMOND: process.env.PAYSTACK_PLAN_CODE_DIAMOND!,
-} as const;
-
 export type PlanKey = keyof typeof PLANS;
+
+/**
+ * Pay-As-You-Go resume credit packs.
+ * Prices are authoritative here — the client only sends the pack key and the
+ * server derives the charge amount, so amounts can never be tampered with.
+ */
+export const CREDIT_PACKS = {
+  CREDITS_10: { credits: 10, priceGHS: 25, label: "Starter" },
+  CREDITS_20: { credits: 20, priceGHS: 45, label: "Standard" },
+  CREDITS_30: { credits: 30, priceGHS: 65, label: "Pro" },
+  CREDITS_50: { credits: 50, priceGHS: 100, label: "Agency" },
+} as const;
+
+export type CreditPackKey = keyof typeof CREDIT_PACKS;
+
+/** Pay-As-You-Go interview minute packs. */
+export const MINUTE_PACKS = {
+  MINUTES_15: { minutes: 15, priceGHS: 130, label: "Full Mock Interview" },
+} as const;
+
+export type MinutePackKey = keyof typeof MINUTE_PACKS;

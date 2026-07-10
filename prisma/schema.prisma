@@ -21,11 +21,6 @@ model User {
   interview_minutes        Int                   @default(0)
   planExpiresAt            DateTime?
   plan                     Plan                  @default(FREE)
-  polarCustomerId          String?
-  polarSubscriptionId      String?
-  paystackSubscriptionCode String?
-  paystackCustomerCode     String?
-  preferredProvider        String?               @default("AUTO")
   experienceLevel          String?
   goal                     String?
   jobTitle                 String?
@@ -56,7 +51,7 @@ model Transaction {
   reference       String              @unique
   userId          String
   amount          Int
-  currency        String              @default("NGN")
+  currency        String              @default("GHS")
   status          TransactionStatus   @default(PENDING)
   type            TransactionType
   plan            Plan?
@@ -65,8 +60,7 @@ model Transaction {
   metadata        Json?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
-  polarCheckoutId String?
-  provider        TransactionProvider @default(PAYSTACK)
+  provider        TransactionProvider @default(MOOLRE)
   user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -481,6 +475,8 @@ enum ResumeStatus {
 }
 
 enum TransactionProvider {
+  MOOLRE
+  // Legacy values kept so historical transaction rows remain readable
   PAYSTACK
   POLAR
 }

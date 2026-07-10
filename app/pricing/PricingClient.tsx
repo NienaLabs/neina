@@ -4,8 +4,8 @@ import { useState } from "react";
 import { trpc } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
 import {
-  Check, X, Loader2, Globe, Sparkles, Mic, FileText,
-  Zap, Crown, Shield, AlertTriangle, CreditCard
+  Check, X, Loader2, Sparkles, Mic, FileText,
+  Zap, Crown, Shield, AlertTriangle, Smartphone
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -26,17 +26,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import MoolrePaymentDialog, { PaymentItem } from "./MoolrePaymentDialog";
 
 // ---------------------------------------------------------------------------
-// Plan definitions (client-side display only — prices, labels, features)
-// Note: PAYSTACK_PLAN_CODES are server-only and passed via tRPC, never imported here
+// Plan definitions (client-side display only — labels and features)
+// Charge amounts are resolved server-side in lib/plans.ts and never trusted
+// from the client.
 // ---------------------------------------------------------------------------
 const PLANS = [
   {
     key: "FREE",
     name: "Starter",
     priceGHS: "Free",
-    priceUSD: "Free",
     description: "Essential tools to start your journey.",
     features: [
       { text: "Unlimited Job Recommendations", included: true },
@@ -46,15 +47,12 @@ const PLANS = [
       { text: "Interview AI access", included: false },
     ],
     highlight: false,
-    priceVal: 0,
-    priceValUSD: 0,
     icon: Sparkles,
   },
   {
     key: "SILVER",
     name: "Silver",
     priceGHS: "₵450",
-    priceUSD: "$29",
     description: "Perfect for active job seekers.",
     features: [
       { text: "Unlimited Job Recommendations", included: true },
@@ -63,15 +61,12 @@ const PLANS = [
       { text: "Interview AI access", included: false },
     ],
     highlight: false,
-    priceVal: 450,
-    priceValUSD: 2900,
     icon: Zap,
   },
   {
     key: "GOLD",
     name: "Gold",
     priceGHS: "₵750",
-    priceUSD: "$49",
     description: "Most popular for ambitious professionals.",
     features: [
       { text: "Unlimited Job Recommendations", included: true },
@@ -80,15 +75,12 @@ const PLANS = [
       { text: "15 mins Interview AI per month", included: true },
     ],
     highlight: true,
-    priceVal: 750,
-    priceValUSD: 4900,
     icon: Crown,
   },
   {
     key: "DIAMOND",
     name: "Diamond",
     priceGHS: "₵1,500",
-    priceUSD: "$99",
     description: "Maximum power for serious career moves.",
     features: [
       { text: "Unlimited Job Recommendations", included: true },
@@ -98,174 +90,77 @@ const PLANS = [
       { text: "4 Interview Sessions (15m each)", included: true },
     ],
     highlight: false,
-    priceVal: 1500,
-    priceValUSD: 9900,
     icon: Shield,
   },
 ];
 
-// Pay-As-You-Go credit packs — GHS (Paystack)
-const CREDIT_PACKS_GHS = [
-  { credits: 10, price: 25,  priceLabel: "₵25",  label: "Starter",  topUpKey: "CREDITS_10" },
-  { credits: 20, price: 45,  priceLabel: "₵45",  label: "Standard", topUpKey: "CREDITS_20", popular: true },
-  { credits: 30, price: 65,  priceLabel: "₵65",  label: "Pro",      topUpKey: "CREDITS_30" },
-  { credits: 50, price: 100, priceLabel: "₵100", label: "Agency",   topUpKey: "CREDITS_50" },
+// Pay-As-You-Go resume credit packs (GHS via Moolre)
+const CREDIT_PACKS = [
+  { credits: 10, priceLabel: "₵25",  label: "Starter",  packKey: "CREDITS_10" as const },
+  { credits: 20, priceLabel: "₵45",  label: "Standard", packKey: "CREDITS_20" as const, popular: true },
+  { credits: 30, priceLabel: "₵65",  label: "Pro",      packKey: "CREDITS_30" as const },
+  { credits: 50, priceLabel: "₵100", label: "Agency",   packKey: "CREDITS_50" as const },
 ];
-
-// Pay-As-You-Go credit packs — USD (Polar)
-const CREDIT_PACKS_USD = [
-  { credits: 10, priceLabel: "$5",  label: "Starter",  topUpKey: "CREDITS_10" as const },
-  { credits: 20, priceLabel: "$10", label: "Standard", topUpKey: "CREDITS_20" as const, popular: true },
-  { credits: 30, priceLabel: "$15", label: "Pro",      topUpKey: "CREDITS_30" as const },
-  { credits: 50, priceLabel: "$22", label: "Agency",   topUpKey: "CREDITS_50" as const },
-];
-
-interface PricingClientProps {
-  userCountry: string;
-  isAfricanUser: boolean;
-}
 
 /**
  * Pricing page client component.
  *
- * Displays subscription plans and Pay-As-You-Go top-ups.
- * Automatically selects the payment provider based on the user's detected country:
- *   - African users → Paystack (GHS, recurring subscription via Paystack Plans API)
- *   - International users → Polar (USD, managed subscription)
+ * All payments are collected in GHS through Moolre:
+ *   - Mobile money (MTN / Telecel / AT) with an in-app USSD approval flow
+ *   - Hosted Moolre Web POS checkout for cards and other methods
  *
- * African users can toggle to International pricing if they prefer USD billing.
- * Non-African users always see USD pricing.
+ * Plans are 30-day passes — Moolre has no recurring billing, so nothing
+ * auto-renews and "cancelling" simply returns the account to Free.
  */
-export default function PricingClient({ userCountry, isAfricanUser }: PricingClientProps) {
+export default function PricingClient() {
+  const [paymentItem, setPaymentItem] = useState<PaymentItem | null>(null);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
-  // African users start on GHS; non-African users always on USD
-  const [preferInternational, setPreferInternational] = useState(!isAfricanUser);
 
-  const showInternational = preferInternational;
   const { data: user, refetch } = trpc.user.getMe.useQuery();
-
-  // -------------------------------------------------------------------------
-  // tRPC mutations
-  // -------------------------------------------------------------------------
-
-  const initiateTransaction = trpc.payment.initiateTransaction.useMutation({
-    onSuccess: (data) => {
-      window.location.href = data.authorization_url;
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to initiate payment");
-      setLoadingKey(null);
-    },
-  });
 
   const cancelSubscription = trpc.payment.cancelSubscription.useMutation({
     onSuccess: () => {
-      toast.success("Subscription cancelled. You are now on the Free plan.");
+      toast.success("Plan cancelled. You are now on the Free plan.");
       setLoadingKey(null);
       refetch();
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to cancel subscription");
-      setLoadingKey(null);
-    },
-  });
-
-  const managePolarSubscription = trpc.payment.managePolarSubscription.useMutation({
-    onSuccess: (data) => {
-      if (data.type === "portal") {
-        toast.info("Redirecting to subscription settings...");
-      } else {
-        toast.info("Redirecting to secure checkout...");
-      }
-      window.location.href = data.url;
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to manage subscription");
-      setLoadingKey(null);
-    },
-  });
-
-  const initiatePolarTopUp = trpc.payment.initiatePolarTopUp.useMutation({
-    onSuccess: (data) => {
-      toast.info("Redirecting to secure checkout...");
-      window.location.href = data.url;
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to initiate top-up");
+      toast.error(err.message || "Failed to cancel plan");
       setLoadingKey(null);
     },
   });
 
   // -------------------------------------------------------------------------
-  // Event handlers
+  // Event handlers — each opens the Moolre payment dialog with a purchase
   // -------------------------------------------------------------------------
 
-  /**
-   * Handles subscription button click.
-   * Routes to Paystack (GHS) or Polar (USD) based on toggle state.
-   */
   const onSubscribe = (plan: typeof PLANS[0]) => {
     if (!user) return toast.error("Please sign in to subscribe");
     if (plan.key === user.plan) return;
     if (plan.key === "FREE") return;
 
-    setLoadingKey(plan.key);
-
-    if (showInternational) {
-      // Polar checkout — plan code resolved server-side from plan key
-      managePolarSubscription.mutate({ plan: plan.key });
-      return;
-    }
-
-    // Paystack subscription — plan code injected by server in initiateTransaction
-    initiateTransaction.mutate({
-      email: user.email,
-      amount: plan.priceVal * 100, // GHS to pesewas
-      type: "SUBSCRIPTION",
-      plan: plan.key as any,
-      callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`,
+    setPaymentItem({
+      purchase: { type: "SUBSCRIPTION", plan: plan.key as "SILVER" | "GOLD" | "DIAMOND" },
+      label: `${plan.name} Plan (30 days)`,
+      amountLabel: plan.priceGHS,
     });
   };
 
-  /** Handles one-time credit pack purchase — GHS (Paystack) or USD (Polar). */
-  const onBuyCredits = (
-    topUpKey: string,
-    credits: number,
-    priceGHS?: number
-  ) => {
+  const onBuyCredits = (pack: typeof CREDIT_PACKS[0]) => {
     if (!user) return toast.error("Please sign in");
-    setLoadingKey(`credits-${credits}`);
-
-    if (showInternational) {
-      initiatePolarTopUp.mutate({ topUpKey: topUpKey as any });
-      return;
-    }
-
-    initiateTransaction.mutate({
-      email: user.email,
-      amount: (priceGHS ?? 0) * 100,
-      type: "CREDIT_PURCHASE",
-      credits,
-      callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`,
+    setPaymentItem({
+      purchase: { type: "CREDIT_PURCHASE", packKey: pack.packKey },
+      label: `${pack.credits} Resume Credits`,
+      amountLabel: pack.priceLabel,
     });
   };
 
-  /** Handles one-time interview minute purchase — GHS (Paystack) or USD (Polar). */
-  const onBuyMinutes = (topUpKey: string, minutes: number, priceGHS?: number) => {
+  const onBuyMinutes = () => {
     if (!user) return toast.error("Please sign in");
-    setLoadingKey(`minutes-${minutes}`);
-
-    if (showInternational) {
-      initiatePolarTopUp.mutate({ topUpKey: topUpKey as any });
-      return;
-    }
-
-    initiateTransaction.mutate({
-      email: user.email,
-      amount: Math.round((priceGHS ?? 0) * 100),
-      type: "MINUTE_PURCHASE",
-      minutes,
-      callbackUrl: `${window.location.origin}/pricing/verify?from=/pricing`,
+    setPaymentItem({
+      purchase: { type: "MINUTE_PURCHASE", packKey: "MINUTES_15" },
+      label: "Full Mock Interview (15 minutes)",
+      amountLabel: "₵130",
     });
   };
 
@@ -276,16 +171,15 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
 
   const isAnyLoading = loadingKey !== null;
 
-  // -------------------------------------------------------------------------
-  // Active provider label for UI hints
-  // -------------------------------------------------------------------------
-  const activeProvider = showInternational ? "Polar" : "Paystack";
-  const activeProviderLabel = showInternational
-    ? "Secured by Polar · USD"
-    : "Secured by Paystack · GHS";
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-20 px-4 sm:px-6 relative overflow-hidden font-sans">
+
+      {/* Moolre payment dialog — opens for any purchase */}
+      <MoolrePaymentDialog
+        item={paymentItem}
+        onClose={() => setPaymentItem(null)}
+        onSuccess={() => refetch()}
+      />
 
       {/* Background decorations */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-indigo-100/20 via-slate-50/50 to-slate-100/50 dark:from-indigo-900/10 dark:via-slate-950/50 dark:to-slate-950 -z-10" />
@@ -318,49 +212,15 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
             From smart resume tailoring to AI interview coaching.
           </p>
 
-          {/* ---------------------------------------------------------------
-              Currency / Provider Toggle — shown to ALL users
-              African users start on GHS/Paystack; non-African start on USD/Polar
-          --------------------------------------------------------------- */}
-          <div className="flex flex-col items-center gap-3 pt-2">
-            <div className="bg-white dark:bg-slate-900 p-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm inline-flex">
-              <button
-                onClick={() => setPreferInternational(false)}
-                className={cn(
-                  "px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300",
-                  !preferInternational
-                    ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-md scale-105"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                )}
-              >
-                🇬🇭 African / GHS
-              </button>
-              <button
-                onClick={() => setPreferInternational(true)}
-                className={cn(
-                  "px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300",
-                  preferInternational
-                    ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-md scale-105"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                )}
-              >
-                🌍 International / USD
-              </button>
-            </div>
-            {/* Active provider badge */}
-            <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
-              <CreditCard className="w-3 h-3" />
-              <span>{activeProviderLabel}</span>
-              <FeatureGuide
-                description={
-                  showInternational
-                    ? "International payments are processed by Polar. Subscriptions auto-renew monthly in USD."
-                    : "African payments are processed by Paystack. Subscriptions auto-renew monthly in GHS."
-                }
-                className="h-3 w-3"
-                side="right"
-              />
-            </div>
+          {/* Provider badge */}
+          <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+            <Smartphone className="w-3 h-3" />
+            <span>Pay with MTN MoMo, Telecel Cash, AT Money or card · Secured by Moolre · GHS</span>
+            <FeatureGuide
+              description="Payments are processed by Moolre. Plans are 30-day passes — nothing auto-renews, top up whenever you need."
+              className="h-3 w-3"
+              side="right"
+            />
           </div>
         </div>
 
@@ -370,7 +230,6 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {PLANS.map((plan) => {
             const isCurrentPlan = user?.plan === plan.key;
-            const displayPrice = showInternational ? plan.priceUSD : plan.priceGHS;
             const Icon = plan.icon;
             const isDowngrade =
               user?.plan &&
@@ -435,9 +294,9 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
 
                   {/* Price */}
                   <div className="flex items-baseline text-slate-900 dark:text-white">
-                    <span className="text-4xl font-extrabold tracking-tight">{displayPrice}</span>
+                    <span className="text-4xl font-extrabold tracking-tight">{plan.priceGHS}</span>
                     {plan.key !== "FREE" && (
-                      <span className="ml-1 text-slate-500 font-medium">/mo</span>
+                      <span className="ml-1 text-slate-500 font-medium">/30 days</span>
                     )}
                   </div>
 
@@ -472,11 +331,7 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
                         (plan.key === "FREE" && (user?.plan ?? "FREE") !== "FREE")
                       }
                     >
-                      {loadingKey === plan.key ? (
-                        <span className="flex items-center justify-center">
-                          <Loader2 className="animate-spin h-5 w-5" />
-                        </span>
-                      ) : isCurrentPlan ? (
+                      {isCurrentPlan ? (
                         "Current Plan"
                       ) : plan.key === "FREE" ? (
                         "Get Started Free"
@@ -510,7 +365,7 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
                               Cancel your {plan.name} plan?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Your subscription will be cancelled and you&apos;ll be moved to the Free plan immediately.
+                              You&apos;ll be moved to the Free plan immediately.
                               Any unused credits or interview minutes will remain in your account.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
@@ -576,7 +431,6 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
 
         {/* ================================================================
             Pay As You Go
-            — Always visible. GHS section for Paystack, USD section for Polar.
         ================================================================ */}
         <div className="space-y-12 pt-10 border-t border-slate-200 dark:border-slate-800">
           <div className="text-center space-y-4">
@@ -585,7 +439,7 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
             </h2>
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
               Need extra credits or practice time without a subscription?
-              Top up your account instantly — no commitment required.
+              Top up instantly with Mobile Money — no commitment required.
             </p>
           </div>
 
@@ -628,24 +482,15 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
                         <div className="text-indigo-100 text-sm">15 Minutes · Detailed Feedback</div>
                       </div>
                       <div className="text-right">
-                        {showInternational ? (
-                          <div className="text-3xl font-extrabold">$13.99</div>
-                        ) : (
-                          <>
-                            <div className="text-lg font-bold line-through text-indigo-300">₵210</div>
-                            <div className="text-3xl font-extrabold">₵130</div>
-                          </>
-                        )}
+                        <div className="text-lg font-bold line-through text-indigo-300">₵210</div>
+                        <div className="text-3xl font-extrabold">₵130</div>
                       </div>
                     </div>
                     <Button
                       className="w-full bg-white text-indigo-600 hover:bg-slate-100 font-bold"
-                      onClick={() => onBuyMinutes("MINUTES_15", 15, 130)}
+                      onClick={onBuyMinutes}
                       disabled={isAnyLoading}
                     >
-                      {loadingKey === "minutes-15" && (
-                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                      )}
                       Get Full Session
                     </Button>
                   </div>
@@ -680,16 +525,10 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    {(showInternational ? CREDIT_PACKS_USD : CREDIT_PACKS_GHS).map((pack) => (
+                    {CREDIT_PACKS.map((pack) => (
                       <button
                         key={pack.credits}
-                        onClick={() =>
-                          onBuyCredits(
-                            pack.topUpKey,
-                            pack.credits,
-                            (pack as any).price ?? undefined
-                          )
-                        }
+                        onClick={() => onBuyCredits(pack)}
                         disabled={isAnyLoading}
                         className={cn(
                           "flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 relative",
@@ -703,21 +542,15 @@ export default function PricingClient({ userCountry, isAfricanUser }: PricingCli
                             Popular
                           </span>
                         )}
-                        {loadingKey === `credits-${pack.credits}` ? (
-                          <Loader2 className="animate-spin h-5 w-5 text-emerald-600" />
-                        ) : (
-                          <>
-                            <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                              {pack.credits}
-                            </div>
-                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-1">
-                              {pack.label}
-                            </div>
-                            <div className="mt-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                              {pack.priceLabel}
-                            </div>
-                          </>
-                        )}
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                          {pack.credits}
+                        </div>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-1">
+                          {pack.label}
+                        </div>
+                        <div className="mt-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                          {pack.priceLabel}
+                        </div>
                       </button>
                     ))}
                   </div>

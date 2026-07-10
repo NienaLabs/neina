@@ -19,12 +19,15 @@ import {
     pushCheckingStatusAtom
 } from '@/hooks/usePushNotifications';
 
+import { useSession } from '@/auth-client';
+
 export function NotificationSSEProvider({ children }: { children: React.ReactNode }) {
     const setNotifications = useSetAtom(notificationsAtom);
     const setUnreadCount = useSetAtom(unreadCountAtom);
     const setIsLoading = useSetAtom(isLoadingAtom);
     const setPushSubscribed = useSetAtom(pushSubscribedAtom);
     const setPushCheckingStatus = useSetAtom(pushCheckingStatusAtom);
+    const { data: session } = useSession();
 
     useServerEvents((event) => {
         if (event.type === 'INITIAL_STATE') {
@@ -90,7 +93,7 @@ export function NotificationSSEProvider({ children }: { children: React.ReactNod
             setPushSubscribed(event.data.isSubscribed);
             setPushCheckingStatus(false);
         }
-    });
+    }, !!session);
 
     return <>{children}</>;
 }

@@ -1,58 +1,86 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trpc } from "@/trpc/client";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
+/** How long we poll Moolre for confirmation before giving up (ms). */
+const POLL_TIMEOUT_MS = 2 * 60 * 1000;
+const POLL_INTERVAL_MS = 4000;
+
 /**
- * Inner component that reads URL params and triggers the appropriate
- * verification flow — Paystack (reference) or Polar (checkout_id).
+ * Inner component that reads the ?reference= param (set when we generated the
+ * Moolre checkout/redirect URL) and polls the server, which verifies against
+ * Moolre's status API and fulfills the purchase.
  * Must be wrapped in a Suspense boundary because it uses useSearchParams.
  */
 function PaymentVerifier() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const reference = searchParams.get("reference");     // Paystack flow
-  const checkoutId = searchParams.get("checkout_id"); // Polar flow
+  const reference = searchParams.get("reference");
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
 
-  // Paystack verification
-  const verifyPaystack = trpc.payment.verifyTransaction.useMutation({
-    onSuccess: () => setStatus("success"),
-    onError: (error) => {
-      setStatus("error");
-      setMessage(error.message || "Failed to verify transaction");
-    },
-  });
-
-  // Polar checkout verification
-  const verifyPolar = trpc.payment.verifyPolarCheckout.useMutation({
-    onSuccess: () => setStatus("success"),
-    onError: (error) => {
-      setStatus("error");
-      setMessage(error.message || "Failed to verify checkout");
-    },
-  });
+  const checkTransaction = trpc.payment.checkTransaction.useMutation();
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    if (reference) {
-      // Paystack flow: verify by transaction reference
-      verifyPaystack.mutate({ reference });
-    } else if (checkoutId) {
-      // Polar flow: verify by checkout ID
-      verifyPolar.mutate({ checkoutId });
-    } else {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
+    if (!reference) {
       setStatus("error");
-      setMessage("No transaction reference or checkout ID found in the URL.");
+      setMessage("No transaction reference found in the URL.");
+      return;
     }
+
+    const startedAt = Date.now();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const res = await checkTransaction.mutateAsync({ reference });
+        if (cancelled) return;
+        if (res.status === "SUCCESS") {
+          setStatus("success");
+          return;
+        }
+        if (res.status === "FAILED") {
+          setStatus("error");
+          setMessage(res.message || "Payment failed verification");
+          return;
+        }
+      } catch (err: any) {
+        if (cancelled) return;
+        setStatus("error");
+        setMessage(err.message || "Failed to verify transaction");
+        return;
+      }
+      // Still pending — Moolre may take a moment to settle the charge
+      if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+        setStatus("error");
+        setMessage(
+          "We couldn't confirm your payment yet. If you completed it, your account will be updated automatically in a few minutes."
+        );
+        return;
+      }
+      timer = setTimeout(poll, POLL_INTERVAL_MS);
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reference, checkoutId]);
+  }, [reference]);
 
   // Validate returnUrl to prevent open redirect attacks
   const from = searchParams.get("from");
@@ -69,7 +97,7 @@ function PaymentVerifier() {
             <Loader2 className="h-16 w-16 text-primary animate-spin mx-auto" />
             <h2 className="text-2xl font-bold">Verifying Payment...</h2>
             <p className="text-muted-foreground">
-              Please wait while we confirm your transaction.
+              Please wait while we confirm your transaction with Moolre.
             </p>
           </>
         )}
@@ -118,7 +146,7 @@ function PaymentVerifier() {
 
 /**
  * Payment verification page.
- * Handles both Paystack (?reference=xxx) and Polar (?checkout_id=xxx) redirects.
+ * Handles the redirect back from Moolre hosted checkout (?reference=xxx).
  */
 export default function VerifyPaymentPage() {
   return (

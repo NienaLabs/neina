@@ -105,7 +105,6 @@ export const UserScalarFieldEnum = {
   interview_minutes: 'interview_minutes',
   planExpiresAt: 'planExpiresAt',
   plan: 'plan',
-  preferredProvider: 'preferredProvider',
   experienceLevel: 'experienceLevel',
   goal: 'goal',
   jobTitle: 'jobTitle',

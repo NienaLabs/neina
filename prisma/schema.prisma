@@ -21,7 +21,6 @@ model User {
   interview_minutes        Int                   @default(0)
   planExpiresAt            DateTime?
   plan                     Plan                  @default(FREE)
-  preferredProvider        String?               @default("AUTO")
   experienceLevel          String?
   goal                     String?
   jobTitle                 String?

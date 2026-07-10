@@ -54,20 +54,7 @@ export const PLANS = {
   },
 } as const;
 
-/**
- * Paystack Plan codes — created in the Paystack dashboard with a monthly interval.
- * Stored in environment variables so they can differ between sandbox and production.
- *
- * To create plans in Paystack dashboard:
- *   Plans → Create Plan → set amount (in kobo for NGN or pesewas for GHS), interval = monthly
- *
- * Copy the `plan_code` value (e.g. "PLN_xxxxxxxxxx") into your .env file.
- */
-export const PAYSTACK_PLAN_CODES = {
-  SILVER:  process.env.PAYSTACK_PLAN_CODE_SILVER!,
-  GOLD:    process.env.PAYSTACK_PLAN_CODE_GOLD!,
-  DIAMOND: process.env.PAYSTACK_PLAN_CODE_DIAMOND!,
-} as const;
+
 export type PlanKey = keyof typeof PLANS;
 
 /**

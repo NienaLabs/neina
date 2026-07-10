@@ -123,7 +123,7 @@ export default function PricingClient() {
       setLoadingKey(null);
       refetch();
     },
-    onError: (err) => {
+    onError: (err: any) => {
       toast.error(err.message || "Failed to cancel plan");
       setLoadingKey(null);
     },

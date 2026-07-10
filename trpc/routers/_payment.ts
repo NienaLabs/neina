@@ -18,7 +18,6 @@ import {
   MINUTE_PACKS,
   CreditPackKey,
   MinutePackKey,
-  PAYSTACK_PLAN_CODES,
 } from "@/lib/plans";
 
 /**
@@ -288,9 +287,6 @@ export const paymentRouter = createTRPCRouter({
    * Moolre payments are one-time 30-day passes (no recurring billing), so
    * cancelling simply downgrades to FREE immediately. Unused credits and
    * interview minutes are kept.
-   *
-   * Handles Paystack by calling the subscription disable API if a paystackSubscriptionCode is present.
-   */
    */
   cancelSubscription: protectedProcedure.mutation(async ({ ctx }) => {
     const user = await prisma.user.findUnique({
@@ -298,8 +294,6 @@ export const paymentRouter = createTRPCRouter({
       select: {
         id: true,
         plan: true,
-        paystackSubscriptionCode: true,
-        email: true,
       },
     });
 
@@ -314,19 +308,11 @@ export const paymentRouter = createTRPCRouter({
       });
     }
 
-    // We don't have getSubscription, cancelPaystackSubscription, listCustomerSubscriptions imported here,
-    // so we can't execute Paystack cancellation logic directly unless those functions are added.
-    // Assuming this branch removed Paystack from this file completely, I will just update the user DB for now,
-    // as Moolre is the main provider. Wait, the incoming branch had the Paystack cancellation functions imported?
-    // Let me check if they were imported in the incoming branch.
-    // They were not in the snippet... I will just do the DB update for plan = FREE and paystackSubscriptionCode = null.
-    
     await prisma.user.update({
       where: { id: user.id },
       data: {
         plan: "FREE",
         planExpiresAt: null,
-        paystackSubscriptionCode: null,
       },
     });
 

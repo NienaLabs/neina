@@ -115,7 +115,6 @@ const CREDIT_PACKS = [
 export default function PricingClient() {
   const [paymentItem, setPaymentItem] = useState<PaymentItem | null>(null);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
-
   const { data: user, refetch } = trpc.user.getMe.useQuery();
 
   const cancelSubscription = trpc.payment.cancelSubscription.useMutation({
@@ -170,6 +169,7 @@ export default function PricingClient() {
   };
 
   const isAnyLoading = loadingKey !== null;
+
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-20 px-4 sm:px-6 relative overflow-hidden font-sans">
@@ -230,6 +230,7 @@ export default function PricingClient() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {PLANS.map((plan) => {
             const isCurrentPlan = user?.plan === plan.key;
+
             const Icon = plan.icon;
             const isDowngrade =
               user?.plan &&

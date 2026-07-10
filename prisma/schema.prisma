@@ -21,6 +21,9 @@ model User {
   interview_minutes        Int                   @default(0)
   planExpiresAt            DateTime?
   plan                     Plan                  @default(FREE)
+  paystackSubscriptionCode String?
+  paystackCustomerCode     String?
+  preferredProvider        String?               @default("AUTO")
   experienceLevel          String?
   goal                     String?
   jobTitle                 String?
@@ -478,7 +481,6 @@ enum TransactionProvider {
   MOOLRE
   // Legacy values kept so historical transaction rows remain readable
   PAYSTACK
-  POLAR
 }
 
 enum BlogCategory {

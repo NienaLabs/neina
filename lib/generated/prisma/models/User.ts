@@ -50,6 +50,9 @@ export type UserMinAggregateOutputType = {
   interview_minutes: number | null
   planExpiresAt: Date | null
   plan: $Enums.Plan | null
+  paystackSubscriptionCode: string | null
+  paystackCustomerCode: string | null
+  preferredProvider: string | null
   experienceLevel: string | null
   goal: string | null
   jobTitle: string | null
@@ -75,6 +78,9 @@ export type UserMaxAggregateOutputType = {
   interview_minutes: number | null
   planExpiresAt: Date | null
   plan: $Enums.Plan | null
+  paystackSubscriptionCode: string | null
+  paystackCustomerCode: string | null
+  preferredProvider: string | null
   experienceLevel: string | null
   goal: string | null
   jobTitle: string | null
@@ -100,6 +106,9 @@ export type UserCountAggregateOutputType = {
   interview_minutes: number
   planExpiresAt: number
   plan: number
+  paystackSubscriptionCode: number
+  paystackCustomerCode: number
+  preferredProvider: number
   experienceLevel: number
   goal: number
   jobTitle: number
@@ -138,6 +147,9 @@ export type UserMinAggregateInputType = {
   interview_minutes?: true
   planExpiresAt?: true
   plan?: true
+  paystackSubscriptionCode?: true
+  paystackCustomerCode?: true
+  preferredProvider?: true
   experienceLevel?: true
   goal?: true
   jobTitle?: true
@@ -163,6 +175,9 @@ export type UserMaxAggregateInputType = {
   interview_minutes?: true
   planExpiresAt?: true
   plan?: true
+  paystackSubscriptionCode?: true
+  paystackCustomerCode?: true
+  preferredProvider?: true
   experienceLevel?: true
   goal?: true
   jobTitle?: true
@@ -188,6 +203,9 @@ export type UserCountAggregateInputType = {
   interview_minutes?: true
   planExpiresAt?: true
   plan?: true
+  paystackSubscriptionCode?: true
+  paystackCustomerCode?: true
+  preferredProvider?: true
   experienceLevel?: true
   goal?: true
   jobTitle?: true
@@ -301,6 +319,9 @@ export type UserGroupByOutputType = {
   interview_minutes: number
   planExpiresAt: Date | null
   plan: $Enums.Plan
+  paystackSubscriptionCode: string | null
+  paystackCustomerCode: string | null
+  preferredProvider: string | null
   experienceLevel: string | null
   goal: string | null
   jobTitle: string | null
@@ -350,6 +371,9 @@ export type UserWhereInput = {
   interview_minutes?: Prisma.IntFilter<"User"> | number
   planExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.StringNullableFilter<"User"> | string | null
+  paystackCustomerCode?: Prisma.StringNullableFilter<"User"> | string | null
+  preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
   experienceLevel?: Prisma.StringNullableFilter<"User"> | string | null
   goal?: Prisma.StringNullableFilter<"User"> | string | null
   jobTitle?: Prisma.StringNullableFilter<"User"> | string | null
@@ -387,6 +411,9 @@ export type UserOrderByWithRelationInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   experienceLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   goal?: Prisma.SortOrderInput | Prisma.SortOrder
   jobTitle?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -427,6 +454,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   interview_minutes?: Prisma.IntFilter<"User"> | number
   planExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.StringNullableFilter<"User"> | string | null
+  paystackCustomerCode?: Prisma.StringNullableFilter<"User"> | string | null
+  preferredProvider?: Prisma.StringNullableFilter<"User"> | string | null
   experienceLevel?: Prisma.StringNullableFilter<"User"> | string | null
   goal?: Prisma.StringNullableFilter<"User"> | string | null
   jobTitle?: Prisma.StringNullableFilter<"User"> | string | null
@@ -464,6 +494,9 @@ export type UserOrderByWithAggregationInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   experienceLevel?: Prisma.SortOrderInput | Prisma.SortOrder
   goal?: Prisma.SortOrderInput | Prisma.SortOrder
   jobTitle?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -498,6 +531,9 @@ export type UserScalarWhereWithAggregatesInput = {
   interview_minutes?: Prisma.IntWithAggregatesFilter<"User"> | number
   planExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   plan?: Prisma.EnumPlanWithAggregatesFilter<"User"> | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  paystackCustomerCode?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  preferredProvider?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   experienceLevel?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   goal?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   jobTitle?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -524,6 +560,9 @@ export type UserCreateInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -561,6 +600,9 @@ export type UserUncheckedCreateInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -598,6 +640,9 @@ export type UserUpdateInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -635,6 +680,9 @@ export type UserUncheckedUpdateInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -672,6 +720,9 @@ export type UserCreateManyInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -698,6 +749,9 @@ export type UserUpdateManyMutationInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -724,6 +778,9 @@ export type UserUncheckedUpdateManyInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -758,6 +815,9 @@ export type UserCountOrderByAggregateInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrder
   plan?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrder
   experienceLevel?: Prisma.SortOrder
   goal?: Prisma.SortOrder
   jobTitle?: Prisma.SortOrder
@@ -789,6 +849,9 @@ export type UserMaxOrderByAggregateInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrder
   plan?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrder
   experienceLevel?: Prisma.SortOrder
   goal?: Prisma.SortOrder
   jobTitle?: Prisma.SortOrder
@@ -814,6 +877,9 @@ export type UserMinOrderByAggregateInput = {
   interview_minutes?: Prisma.SortOrder
   planExpiresAt?: Prisma.SortOrder
   plan?: Prisma.SortOrder
+  paystackSubscriptionCode?: Prisma.SortOrder
+  paystackCustomerCode?: Prisma.SortOrder
+  preferredProvider?: Prisma.SortOrder
   experienceLevel?: Prisma.SortOrder
   goal?: Prisma.SortOrder
   jobTitle?: Prisma.SortOrder
@@ -1044,6 +1110,9 @@ export type UserCreateWithoutTransactionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1080,6 +1149,9 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1132,6 +1204,9 @@ export type UserUpdateWithoutTransactionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1168,6 +1243,9 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1204,6 +1282,9 @@ export type UserCreateWithoutSessionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1240,6 +1321,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1292,6 +1376,9 @@ export type UserUpdateWithoutSessionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1328,6 +1415,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1364,6 +1454,9 @@ export type UserCreateWithoutAccountsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1400,6 +1493,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1452,6 +1548,9 @@ export type UserUpdateWithoutAccountsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1488,6 +1587,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1524,6 +1626,9 @@ export type UserCreateWithoutResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1560,6 +1665,9 @@ export type UserUncheckedCreateWithoutResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1612,6 +1720,9 @@ export type UserUpdateWithoutResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1648,6 +1759,9 @@ export type UserUncheckedUpdateWithoutResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1684,6 +1798,9 @@ export type UserCreateWithoutTailoredResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1720,6 +1837,9 @@ export type UserUncheckedCreateWithoutTailoredResumesInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1772,6 +1892,9 @@ export type UserUpdateWithoutTailoredResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1808,6 +1931,9 @@ export type UserUncheckedUpdateWithoutTailoredResumesInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1844,6 +1970,9 @@ export type UserCreateWithoutInterviewInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1880,6 +2009,9 @@ export type UserUncheckedCreateWithoutInterviewInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -1932,6 +2064,9 @@ export type UserUpdateWithoutInterviewInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1968,6 +2103,9 @@ export type UserUncheckedUpdateWithoutInterviewInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2004,6 +2142,9 @@ export type UserCreateWithoutSupportTicketsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2040,6 +2181,9 @@ export type UserUncheckedCreateWithoutSupportTicketsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2092,6 +2236,9 @@ export type UserUpdateWithoutSupportTicketsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2128,6 +2275,9 @@ export type UserUncheckedUpdateWithoutSupportTicketsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2164,6 +2314,9 @@ export type UserCreateWithoutAnnouncement_readInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2200,6 +2353,9 @@ export type UserUncheckedCreateWithoutAnnouncement_readInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2252,6 +2408,9 @@ export type UserUpdateWithoutAnnouncement_readInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2288,6 +2447,9 @@ export type UserUncheckedUpdateWithoutAnnouncement_readInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2324,6 +2486,9 @@ export type UserCreateWithoutRecruiterApplicationInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2360,6 +2525,9 @@ export type UserUncheckedCreateWithoutRecruiterApplicationInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2412,6 +2580,9 @@ export type UserUpdateWithoutRecruiterApplicationInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2448,6 +2619,9 @@ export type UserUncheckedUpdateWithoutRecruiterApplicationInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2484,6 +2658,9 @@ export type UserCreateWithoutRecruiterJobsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2520,6 +2697,9 @@ export type UserUncheckedCreateWithoutRecruiterJobsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2572,6 +2752,9 @@ export type UserUpdateWithoutRecruiterJobsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2608,6 +2791,9 @@ export type UserUncheckedUpdateWithoutRecruiterJobsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2644,6 +2830,9 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2680,6 +2869,9 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   interview_minutes?: number
   planExpiresAt?: Date | string | null
   plan?: $Enums.Plan
+  paystackSubscriptionCode?: string | null
+  paystackCustomerCode?: string | null
+  preferredProvider?: string | null
   experienceLevel?: string | null
   goal?: string | null
   jobTitle?: string | null
@@ -2732,6 +2924,9 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2768,6 +2963,9 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   interview_minutes?: Prisma.IntFieldUpdateOperationsInput | number
   planExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  paystackSubscriptionCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paystackCustomerCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferredProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   experienceLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   goal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   jobTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2916,6 +3114,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
+  preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
   jobTitle?: boolean
@@ -2954,6 +3155,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
+  preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
   jobTitle?: boolean
@@ -2980,6 +3184,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
+  preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
   jobTitle?: boolean
@@ -3006,6 +3213,9 @@ export type UserSelectScalar = {
   interview_minutes?: boolean
   planExpiresAt?: boolean
   plan?: boolean
+  paystackSubscriptionCode?: boolean
+  paystackCustomerCode?: boolean
+  preferredProvider?: boolean
   experienceLevel?: boolean
   goal?: boolean
   jobTitle?: boolean
@@ -3018,7 +3228,7 @@ export type UserSelectScalar = {
   companyName?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan" | "experienceLevel" | "goal" | "jobTitle" | "jobType" | "location" | "onboardingCompleted" | "referralSource" | "remotePreference" | "selectedTopics" | "companyName", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "isSuspended" | "resume_credits" | "role" | "interview_minutes" | "planExpiresAt" | "plan" | "paystackSubscriptionCode" | "paystackCustomerCode" | "preferredProvider" | "experienceLevel" | "goal" | "jobTitle" | "jobType" | "location" | "onboardingCompleted" | "referralSource" | "remotePreference" | "selectedTopics" | "companyName", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   announcement_read?: boolean | Prisma.User$announcement_readArgs<ExtArgs>
@@ -3065,6 +3275,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     interview_minutes: number
     planExpiresAt: Date | null
     plan: $Enums.Plan
+    paystackSubscriptionCode: string | null
+    paystackCustomerCode: string | null
+    preferredProvider: string | null
     experienceLevel: string | null
     goal: string | null
     jobTitle: string | null
@@ -3522,6 +3735,9 @@ export interface UserFieldRefs {
   readonly interview_minutes: Prisma.FieldRef<"User", 'Int'>
   readonly planExpiresAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly plan: Prisma.FieldRef<"User", 'Plan'>
+  readonly paystackSubscriptionCode: Prisma.FieldRef<"User", 'String'>
+  readonly paystackCustomerCode: Prisma.FieldRef<"User", 'String'>
+  readonly preferredProvider: Prisma.FieldRef<"User", 'String'>
   readonly experienceLevel: Prisma.FieldRef<"User", 'String'>
   readonly goal: Prisma.FieldRef<"User", 'String'>
   readonly jobTitle: Prisma.FieldRef<"User", 'String'>

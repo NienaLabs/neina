@@ -22,9 +22,14 @@ import "server-only";
  *   MOOLRE_ENV             — "live" | "sandbox" (defaults to sandbox outside production)
  */
 
+// Only an explicit "sandbox" selects the sandbox — anything else ("live",
+// "production", typos) uses the live API so a misconfigured value can never
+// silently route real payments to the sandbox. Unset falls back on NODE_ENV.
 const MOOLRE_ENV =
-  process.env.MOOLRE_ENV ??
-  (process.env.NODE_ENV === "production" ? "live" : "sandbox");
+  (process.env.MOOLRE_ENV ??
+    (process.env.NODE_ENV === "production" ? "live" : "sandbox")) === "sandbox"
+    ? "sandbox"
+    : "live";
 
 export const MOOLRE_BASE_URL =
   MOOLRE_ENV === "live" ? "https://api.moolre.com" : "https://sandbox.moolre.com";

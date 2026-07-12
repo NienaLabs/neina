@@ -47,7 +47,7 @@ export default async function Page() {
                 "@type": "Organization",
                 "name": "Niena Labs",
                 "url": "https://app.nienalabs.com",
-                "logo": "https://app.nienalabs.com/logo.png",
+                "logo": "https://app.nienalabs.com/logo-black.svg",
                 "sameAs": [
                   "https://twitter.com/nienalabs"
                 ]

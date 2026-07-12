@@ -131,10 +131,11 @@ export default function Footer4Col() {
           <div className="footer-col">
 
             <Image
-              src={'/company_logo.png'}
-              alt="logo"
-              width={100}
-              height={20}
+              src={'/logo-black.svg'}
+              alt="Niena logo"
+              width={40}
+              height={52}
+              className="object-contain dark:invert"
             />
             <p className="text-foreground/50 mt-6 max-w-md text-center leading-relaxed sm:max-w-xs sm:text-left">
               {data.company.description}

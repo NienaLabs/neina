@@ -191,6 +191,9 @@ export async function POST(request: Request) {
                      When you determine that the interview is over (e.g. you have asked all questions and the candidate has answered, or the candidate successfully ends the conversation), you MUST say exactly this phrase to end the call:
                      "Thank you for the interview. I will now end the session."
 
+                     IMPORTANT:
+                     If the candidate asks to end the interview at ANY point (for example they say "end call", "end the interview", "stop the interview", "I have to go", or anything similar), do not try to convince them to continue. Briefly acknowledge, then immediately say the exact ending phrase above.
+
                      Do not say anything else after this phrase.
                      `;
                  }

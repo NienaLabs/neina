@@ -19,7 +19,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
         
-        <Image src="/logo.png" width={100} height={30} alt="logo" className="h-auto" priority/>
+        <Image src="/logo-black.svg" width={40} height={52} alt="Niena logo" className="h-auto object-contain dark:invert" priority/>
          
       </SidebarHeader>
       <SidebarContent>

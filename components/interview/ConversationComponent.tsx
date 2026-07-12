@@ -241,20 +241,42 @@ export default function ConversationComponent({
           );
 
           // CHECK FOR COMMANDS
-          // Check for specific closing phrase from the agent
-          const endCallCommand = sortedMessages.find(msg => {
-            if (!msg.text) return false;
-            const normalizedText = msg.text.toLowerCase().trim();
-            // Check for the exact phrase or key parts of it
-            return normalizedText.includes("i will now end the session");
+          // uid 0 (or the configured agent UID) is the AI agent; anything else is the user
+          const isAgentMsg = (msg: IMessageListItem) =>
+            msg.uid === 0 || msg.uid.toString() === agentUID;
+
+          // Agent's closing phrase — only honored when spoken BY the agent
+          const agentEndPhrase = sortedMessages.find(msg => {
+            if (!msg.text || !isAgentMsg(msg)) return false;
+            return msg.text.toLowerCase().includes("i will now end the session");
           });
 
-          if (endCallCommand && !endCallScheduledRef.current) {
+          // User verbally asking to end ("end call", "stop the interview", "hang up"...).
+          // Only completed turns are checked so a partial transcript can't trigger it,
+          // and only SHORT utterances count — a long behavioral answer that merely
+          // mentions "end the call" must not terminate the interview.
+          const USER_END_COMMAND =
+            /\b(end|stop|finish)\s+(the\s+|this\s+)?(call|interview|session|conversation)\b|\bhang\s+up\b/i;
+          const userEndCommand = sortedMessages.find(msg => {
+            if (!msg.text || isAgentMsg(msg)) return false;
+            if (msg.status !== EMessageStatus.END) return false;
+            if (msg.text.trim().length > 60) return false;
+            return USER_END_COMMAND.test(msg.text);
+          });
+
+          if (agentEndPhrase && !endCallScheduledRef.current) {
             endCallScheduledRef.current = true;
             console.log("ConversationComponent: Received end_call phrase from Agent. Ending conversation in 5s.");
             setTimeout(() => {
               stopConversationRef.current();
             }, 5000); // 5 second delay to let the audio finish
+          } else if (userEndCommand && !endCallScheduledRef.current) {
+            endCallScheduledRef.current = true;
+            console.log("ConversationComponent: User asked to end the call. Ending conversation in 2s.");
+            toast.info("Ending your interview...");
+            setTimeout(() => {
+              stopConversationRef.current();
+            }, 2000); // short delay so the user hears the wrap-up rather than an abrupt cut
           }
 
           const visibleMessages = sortedMessages.filter(

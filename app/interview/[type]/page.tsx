@@ -200,6 +200,10 @@ export default function InterviewPage() {
         { interviewId: createdInterviewId! },
         {
             enabled: !!createdInterviewId && isPolling,
+            // Poll while waiting: SSE can't reach us in production (the Inngest
+            // job runs in a separate serverless invocation from the SSE stream,
+            // so the in-memory INTERVIEW_READY event never arrives).
+            refetchInterval: isPolling ? 4000 : false,
         }
     );
 

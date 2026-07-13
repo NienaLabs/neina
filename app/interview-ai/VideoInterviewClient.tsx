@@ -127,7 +127,10 @@ const VideoInterview = () => {
     { interviewId: currentInterviewId! },
     {
       enabled: !!currentInterviewId,
-      // refetchInterval: isPolling ? 3000 : false, // Removed in favor of SSE
+      // Poll while waiting for question generation — SSE alone doesn't work in
+      // production because the Inngest job emits INTERVIEW_READY in a different
+      // serverless invocation than the one holding the SSE stream.
+      refetchInterval: isPolling ? 3000 : false,
     }
   );
 

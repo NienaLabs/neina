@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/Transaction'
+export type * from './models/UssdSession'
 export type * from './models/Session'
 export type * from './models/Account'
 export type * from './models/Verification'

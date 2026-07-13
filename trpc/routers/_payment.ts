@@ -79,14 +79,14 @@ function resolvePurchase(purchase: PurchaseInput): ResolvedPurchase {
 }
 
 /**
- * Normalizes a Ghanaian phone number to international digits (233XXXXXXXXX),
- * the format Moolre reports payers in.
+ * Normalizes a Ghanaian phone number to the local format Moolre requires for
+ * collections (0XXXXXXXXX — Moolre rejects numbers with the 233 country code).
  */
 function normalizeGhanaPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("233")) return digits;
-  if (digits.startsWith("0")) return `233${digits.slice(1)}`;
-  return `233${digits}`;
+  if (digits.startsWith("233")) return `0${digits.slice(3)}`;
+  if (digits.startsWith("0")) return digits;
+  return `0${digits}`;
 }
 
 /** Creates a PENDING transaction row for a resolved purchase. */

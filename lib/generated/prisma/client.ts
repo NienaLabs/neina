@@ -50,6 +50,12 @@ export type User = Prisma.UserModel
  */
 export type Transaction = Prisma.TransactionModel
 /**
+ * Model UssdSession
+ * State for an in-flight Moolre USSD session (*203# menus). One row per
+ * Moolre sessionid; rows are short-lived and cleaned up opportunistically.
+ */
+export type UssdSession = Prisma.UssdSessionModel
+/**
  * Model Session
  * 
  */

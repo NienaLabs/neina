@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Transaction: 'Transaction',
+  UssdSession: 'UssdSession',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
@@ -138,6 +139,18 @@ export const TransactionScalarFieldEnum = {
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
+
+
+export const UssdSessionScalarFieldEnum = {
+  id: 'id',
+  msisdn: 'msisdn',
+  stage: 'stage',
+  data: 'data',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UssdSessionScalarFieldEnum = (typeof UssdSessionScalarFieldEnum)[keyof typeof UssdSessionScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {

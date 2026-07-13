@@ -34,11 +34,36 @@ auto-renews. `user.planExpiresAt` tracks expiry and the sidebar offers renewal.
 
 ```env
 MOOLRE_ENV=sandbox            # "sandbox" or "live"
-MOOLRE_API_USER=              # your Moolre username
+MOOLRE_API_USER=              # your Moolre USERNAME (not the email!)
 MOOLRE_ACCOUNT_NUMBER=        # your Moolre wallet/account number
-MOOLRE_API_KEY=               # PRIVATE key — live only
-MOOLRE_API_PUBKEY=            # PUBLIC key — live only
+MOOLRE_API_KEY=               # PRIVATE key from Security → Generate API Keys
+MOOLRE_API_PUBKEY=            # PUBLIC key from Security → Generate API Keys
+MOOLRE_API_VASKEY=            # VAS key — required for SMS (and USSD services)
+MOOLRE_SMS_SENDER_ID=Niena    # approved sender ID (max 11 chars)
 ```
+
+⚠️ Gotchas learned the hard way:
+- `X-API-USER` must be the Moolre account **username**, not the login email.
+- The "Secret Key" under API Information → Callback Information is the
+  **webhook secret**, NOT the private API key — don't put it in MOOLRE_API_KEY.
+- Payer phone numbers must be sent in **local format** (0244123456); Moolre
+  rejects numbers with the 233 country code.
+
+## SMS receipts
+
+[lib/moolre-sms.ts](lib/moolre-sms.ts) sends a payment receipt SMS (via
+Moolre's SMS API) after every successful momo fulfillment. It requires
+`MOOLRE_API_VASKEY` and an approved sender ID; without them it logs and skips —
+payments are never blocked by SMS failures.
+
+## USSD service
+
+[app/api/ussd/moolre/route.ts](app/api/ussd/moolre/route.ts) implements a
+Moolre USSD menu (balance check, buy resume credits, pricing, help). Configure
+your USSD service's callback URL on app.moolre.com to
+`https://<your-domain>/api/ussd/moolre`. Session state lives in the
+`ussd_session` table; callers are matched to accounts via the phone number on
+their previous momo payments.
 
 Sandbox (`https://sandbox.moolre.com`) only needs `MOOLRE_API_USER` and
 `MOOLRE_ACCOUNT_NUMBER` — no API keys required.

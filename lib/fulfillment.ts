@@ -2,6 +2,7 @@ import "server-only";
 
 import prisma from "@/lib/prisma";
 import { PLANS, PlanKey } from "@/lib/plans";
+import { sendSms } from "@/lib/moolre-sms";
 
 /**
  * Marks a transaction SUCCESS and grants the purchase to the user
@@ -53,6 +54,27 @@ export async function fulfillTransaction(reference: string): Promise<boolean> {
   console.log(
     `[Moolre] Fulfilled ${transaction.type} for user ${transaction.userId} (ref ${reference})`
   );
+
+  // Best-effort receipt via Moolre SMS — momo purchases carry the payer's
+  // number in metadata; a send failure must never fail the fulfillment.
+  const payer = (transaction.metadata as { payer?: string } | null)?.payer;
+  if (payer) {
+    const amountGHS = (transaction.amount / 100).toFixed(2);
+    const what =
+      transaction.type === "SUBSCRIPTION" && transaction.plan
+        ? `${PLANS[transaction.plan as PlanKey].name} Plan (30 days)`
+        : transaction.type === "CREDIT_PURCHASE"
+          ? `${transaction.credits} resume credits`
+          : `${transaction.minutes} interview minutes`;
+    // Awaited because serverless functions freeze after responding — a voided
+    // promise would often never complete. sendSms never throws.
+    await sendSms({
+      recipient: payer,
+      message: `Payment received: GHS ${amountGHS} for ${what}. Your Niena account has been updated. Thank you!`,
+      ref: reference,
+    });
+  }
+
   return true;
 }
 

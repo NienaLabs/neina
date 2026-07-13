@@ -68,6 +68,19 @@ model Transaction {
   @@map("transaction")
 }
 
+/// State for an in-flight Moolre USSD session (*203# menus). One row per
+/// Moolre sessionid; rows are short-lived and cleaned up opportunistically.
+model UssdSession {
+  id        String   @id
+  msisdn    String
+  stage     String
+  data      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ussd_session")
+}
+
 model Session {
   id        String   @id
   expiresAt DateTime
@@ -476,6 +489,9 @@ enum ResumeStatus {
 
 enum TransactionProvider {
   MOOLRE
+  // Historical providers — kept because old transaction rows still reference them
+  PAYSTACK
+  POLAR
 }
 
 enum BlogCategory {

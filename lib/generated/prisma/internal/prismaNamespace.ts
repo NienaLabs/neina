@@ -386,6 +386,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Transaction: 'Transaction',
+  UssdSession: 'UssdSession',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
@@ -421,7 +422,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "transaction" | "session" | "account" | "verification" | "resume" | "tailoredResume" | "interview" | "rateLimiterFlexible" | "job_categories" | "job_ingest_runs" | "jobs" | "supportTicket" | "ticketMessage" | "announcement" | "announcement_read" | "recruiterApplication" | "recruiterJob" | "candidatePipeline" | "jobView" | "blog_post" | "pushSubscription"
+    modelProps: "user" | "transaction" | "ussdSession" | "session" | "account" | "verification" | "resume" | "tailoredResume" | "interview" | "rateLimiterFlexible" | "job_categories" | "job_ingest_runs" | "jobs" | "supportTicket" | "ticketMessage" | "announcement" | "announcement_read" | "recruiterApplication" | "recruiterJob" | "candidatePipeline" | "jobView" | "blog_post" | "pushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -570,6 +571,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.TransactionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.TransactionCountAggregateOutputType> | number
+        }
+      }
+    }
+    UssdSession: {
+      payload: Prisma.$UssdSessionPayload<ExtArgs>
+      fields: Prisma.UssdSessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UssdSessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UssdSessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>
+        }
+        findFirst: {
+          args: Prisma.UssdSessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UssdSessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>
+        }
+        findMany: {
+          args: Prisma.UssdSessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>[]
+        }
+        create: {
+          args: Prisma.UssdSessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>
+        }
+        createMany: {
+          args: Prisma.UssdSessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UssdSessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>[]
+        }
+        delete: {
+          args: Prisma.UssdSessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>
+        }
+        update: {
+          args: Prisma.UssdSessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.UssdSessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UssdSessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UssdSessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.UssdSessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UssdSessionPayload>
+        }
+        aggregate: {
+          args: Prisma.UssdSessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUssdSession>
+        }
+        groupBy: {
+          args: Prisma.UssdSessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UssdSessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UssdSessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UssdSessionCountAggregateOutputType> | number
         }
       }
     }
@@ -2141,6 +2216,18 @@ export const TransactionScalarFieldEnum = {
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
 
 
+export const UssdSessionScalarFieldEnum = {
+  id: 'id',
+  msisdn: 'msisdn',
+  stage: 'stage',
+  data: 'data',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UssdSessionScalarFieldEnum = (typeof UssdSessionScalarFieldEnum)[keyof typeof UssdSessionScalarFieldEnum]
+
+
 export const SessionScalarFieldEnum = {
   id: 'id',
   expiresAt: 'expiresAt',
@@ -2854,6 +2941,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   transaction?: Prisma.TransactionOmit
+  ussdSession?: Prisma.UssdSessionOmit
   session?: Prisma.SessionOmit
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit

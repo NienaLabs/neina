@@ -15,7 +15,7 @@ const InterviewAI = () => {
       ]}
       media={{
         type: 'image',
-        src: '/interview.png',
+        src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=2000&auto=format&fit=crop',
         alt: 'Interview AI Feature',
       }}
       ctaText="Start Practicing"

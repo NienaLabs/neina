@@ -44,7 +44,7 @@ const Demo = () => {
               <div className="aspect-video rounded-xl overflow-hidden bg-gray-900 relative">
                 <iframe
                   className="w-full h-full absolute inset-0"
-                  src="https://www.youtube.com/embed/ZK-rNEhJIDs"
+                  src="https://www.youtube.com/embed/3U9qoDYStJc"
                   title="Niena Demo"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"

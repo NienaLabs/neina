@@ -13,18 +13,26 @@ const styles = StyleSheet.create({
     color: '#000',
     flexDirection: 'row',
   },
-  sidebar: {
+  // Fixed height would prevent react-pdf from breaking content across pages
+  // (long resumes get crammed onto one page), so the columns grow freely and
+  // a `fixed` background strip paints the sidebar color on every page.
+  sidebarBg: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
     width: '32%',
     backgroundColor: '#f9fafb',
     borderRightWidth: 1,
     borderRightColor: '#e5e7eb',
+  },
+  sidebar: {
+    width: '32%',
     padding: 25,
-    height: '100%',
   },
   main: {
     width: '68%',
     padding: 30,
-    height: '100%',
   },
   sidebarHeader: {
     marginBottom: 20,
@@ -128,6 +136,7 @@ export const ClassicTwoColumnPDF: React.FC<{ data: ResumeData }> = ({ data }) =>
 
   return (
     <Page size="A4" style={styles.page}>
+      <View style={styles.sidebarBg} fixed />
       <View style={styles.sidebar}>
         <View style={styles.sidebarHeader}>
           <Text style={styles.name}>{personalInfo?.name || 'Your Name'}</Text>

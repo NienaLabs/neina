@@ -120,7 +120,7 @@ export const userRouter = createTRPCRouter({
                     const notification = {
                         title: `📬 Support Ticket: ${input.subject}`,
                         body: `From ${user.name || user.email}`,
-                        icon: '/logo-black.svg',
+                        icon: '/niena-logo.png',
                     };
 
                     const data = {

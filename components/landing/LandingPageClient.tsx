@@ -15,7 +15,6 @@ import { useEffect, useRef} from 'react'
 import {ScrollTrigger} from 'gsap/ScrollTrigger'
 import {useGSAP} from '@gsap/react'
 import {HeroSection} from './Hero'
-import HowWeHelp from './HowWeHelp'
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,12 +64,12 @@ export default function LandingPage() {
         autoRaf: false ,
       }} ref={lenisRef}/>
 
-      <div className="flex overflow-hidden min-h-screen flex-col bg-white dark:bg-gray-900">
+      <div className="flex min-h-screen flex-col bg-white dark:bg-gray-900">
         <Header/>
         <HeroSection/>
-        <HowWeHelp/>
-        <FeatureCards/>
-        <Demo/>
+        {/* Demo slides in on top of the revealed hero image */}
+        <div className="relative z-10 shadow-[0_-12px_60px_rgba(0,0,0,0.08)]">
+          <Demo/>
         <div id="features-container" className="relative h-full  w-full overflow-hidden">
         <div className="svg-path w-full h-full">
       <svg id="feature-svg" className="w-full h-full" preserveAspectRatio="xMidYMid slice" width="525" height="1238" viewBox="0 0 525 1238" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,6 +99,7 @@ export default function LandingPage() {
         <ResumeAI/>
         <JobSearchFeature/>
         <InterviewAI/>
+        </div>
         </div>
         <Testimonials />
         <HowItWorks />

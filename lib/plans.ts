@@ -22,34 +22,34 @@ export const PLANS = {
   SILVER: {
     key: "SILVER",
     name: "Silver",
-    price: 450,
+    price: 35,
     features: ["30 job matches/week", "10 Resume AI credits/month"],
     credits: 10,
     minutes: 0,
     matches: 30,
-    priceVal: 450, // GHS
+    priceVal: 35, // GHS
     description: "Affordable for early job seekers.",
   },
   GOLD: {
     key: "GOLD",
     name: "Gold",
-    price: 750,
-    features: ["60 job matches/week", "20 Resume AI credits/month", "15 interview mins/month"],
+    price: 65,
+    features: ["60 job matches/week", "20 Resume AI credits/month", "15 voice interview mins/month"],
     credits: 20,
     minutes: 15,
     matches: 60,
-    priceVal: 750, // GHS
+    priceVal: 65, // GHS
     description: "Best for active job seekers.",
   },
   DIAMOND: {
     key: "DIAMOND",
     name: "Diamond",
-    price: 1500,
-    features: ["Unlimited matches", "30 Resume AI credits/month", "60 interview mins/month"],
+    price: 119,
+    features: ["Unlimited matches", "30 Resume AI credits/month", "60 voice interview mins/month", "4 video interview sessions (15m each)"],
     credits: 30,
     minutes: 60,
     matches: 1000,
-    priceVal: 1500, // GHS
+    priceVal: 119, // GHS
     description: "For serious job hunters who want maximum advantage.",
   },
 } as const;

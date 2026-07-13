@@ -52,13 +52,13 @@ const PLANS = [
   {
     key: "SILVER",
     name: "Silver",
-    priceGHS: "₵450",
+    priceGHS: "₵35",
     description: "Perfect for active job seekers.",
     features: [
       { text: "Unlimited Job Recommendations", included: true },
       { text: "Free Resume Autofix", included: true },
       { text: "10 Resume AI credits per month", included: true },
-      { text: "Interview AI access", included: false },
+      { text: "Voice Interview AI access", included: false },
     ],
     highlight: false,
     icon: Zap,
@@ -66,13 +66,13 @@ const PLANS = [
   {
     key: "GOLD",
     name: "Gold",
-    priceGHS: "₵750",
+    priceGHS: "₵65",
     description: "Most popular for ambitious professionals.",
     features: [
       { text: "Unlimited Job Recommendations", included: true },
       { text: "Free Resume Autofix", included: true },
       { text: "20 Resume AI credits per month", included: true },
-      { text: "15 mins Interview AI per month", included: true },
+      { text: "15 mins of voice Interview AI per month", included: true },
     ],
     highlight: true,
     icon: Crown,
@@ -80,14 +80,14 @@ const PLANS = [
   {
     key: "DIAMOND",
     name: "Diamond",
-    priceGHS: "₵1,500",
+    priceGHS: "₵119",
     description: "Maximum power for serious career moves.",
     features: [
       { text: "Unlimited Job Recommendations", included: true },
       { text: "Free Resume Autofix", included: true },
       { text: "30 Resume AI credits per month", included: true },
-      { text: "60 Interview AI mins per month", included: true },
-      { text: "4 Interview Sessions (15m each)", included: true },
+      { text: "60 mins of voice Interview AI per month", included: true },
+      { text: "4 Video Interview Sessions (15m each)", included: true },
     ],
     highlight: false,
     icon: Shield,
@@ -96,10 +96,10 @@ const PLANS = [
 
 // Pay-As-You-Go resume credit packs (GHS via Moolre)
 const CREDIT_PACKS = [
-  { credits: 10, priceLabel: "₵25",  label: "Starter",  packKey: "CREDITS_10" as const },
-  { credits: 20, priceLabel: "₵45",  label: "Standard", packKey: "CREDITS_20" as const, popular: true },
-  { credits: 30, priceLabel: "₵65",  label: "Pro",      packKey: "CREDITS_30" as const },
-  { credits: 50, priceLabel: "₵100", label: "Agency",   packKey: "CREDITS_50" as const },
+  { credits: 10, priceLabel: "₵25", label: "Starter", packKey: "CREDITS_10" as const },
+  { credits: 20, priceLabel: "₵45", label: "Standard", packKey: "CREDITS_20" as const, popular: true },
+  { credits: 30, priceLabel: "₵65", label: "Pro", packKey: "CREDITS_30" as const },
+  { credits: 50, priceLabel: "₵100", label: "Agency", packKey: "CREDITS_50" as const },
 ];
 
 /**
@@ -308,22 +308,22 @@ export default function PricingClient() {
                         backgroundColor: isCurrentPlan
                           ? undefined
                           : plan.highlight
-                          ? "#4f46e5"
-                          : plan.key === "FREE"
-                          ? "#1e293b"
-                          : plan.key === "SILVER"
-                          ? "#334155"
-                          : "#6d28d9",
+                            ? "#4f46e5"
+                            : plan.key === "FREE"
+                              ? "#1e293b"
+                              : plan.key === "SILVER"
+                                ? "#334155"
+                                : "#6d28d9",
                       }}
                       className={cn(
                         "w-full h-12 rounded-md text-base font-semibold transition-all duration-200 text-white px-4 cursor-pointer",
                         "disabled:opacity-50 disabled:cursor-not-allowed",
                         isCurrentPlan &&
-                          "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-default",
+                        "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-default",
                         plan.highlight && !isCurrentPlan &&
-                          "shadow-lg hover:opacity-90",
+                        "shadow-lg hover:opacity-90",
                         !plan.highlight && !isCurrentPlan &&
-                          "hover:opacity-85"
+                        "hover:opacity-85"
                       )}
                       onClick={() => onSubscribe(plan)}
                       disabled={

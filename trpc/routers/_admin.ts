@@ -721,7 +721,7 @@ export const adminRouter = createTRPCRouter({
                                     {
                                         title: input.title,
                                         body: personalizedBody,
-                                        icon: '/logo-black.svg',
+                                        icon: '/niena-logo.png',
                                     },
                                     {
                                         url: '/dashboard',
@@ -1096,7 +1096,7 @@ export const adminRouter = createTRPCRouter({
                 const notification = {
                     title: notificationTitle,
                     body: notificationBody,
-                    icon: '/logo-black.svg',
+                    icon: '/niena-logo.png',
                 };
 
                 const data = {
@@ -1198,7 +1198,7 @@ export const adminRouter = createTRPCRouter({
                 const notification = {
                     title: notificationTitle,
                     body: notificationBody,
-                    icon: '/logo-black.svg',
+                    icon: '/niena-logo.png',
                 };
                 const data = {
                     type: 'job_alert',
@@ -1278,7 +1278,7 @@ export const adminRouter = createTRPCRouter({
                 const notification = {
                     title: input.title,
                     body: input.body,
-                    icon: '/logo-black.svg',
+                    icon: '/niena-logo.png',
                 };
 
                 const data = {

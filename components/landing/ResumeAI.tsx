@@ -16,7 +16,7 @@ const ResumeAI = () => {
       ]}
       media={{
         type: 'image',
-        src: '/resume.png',
+        src: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=2000&auto=format&fit=crop',
         alt: 'Resume AI',
       }}
       ctaText="Start Building Your Resume"

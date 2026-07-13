@@ -40,7 +40,7 @@ const Header = () => {
             <div className=" px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/">
-                    <Image src="/logo-black.svg" className="mr-auto cursor-pointer h-auto object-contain" height={50} width={39} alt="Niena logo" priority />
+                    <Image src="/niena-logo.png" className="mr-auto cursor-pointer h-auto object-contain" height={50} width={39} alt="Niena logo" priority />
                 </Link>
                 {/* Navigation */}
                 <nav className="hidden md:flex items-center justify-center flex-1 space-x-8">

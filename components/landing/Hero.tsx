@@ -1,175 +1,339 @@
+"use client"
 import * as React from "react"
+import { useRef, useEffect } from "react"
 import { ChevronRight, Sparkles } from "lucide-react"
-import Link from 'next/link'
-import Image from 'next/image'
+import Link from "next/link"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
-interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string
-  subtitle?: {
-    regular: string
-    gradient: string
-  }
-  description?: string
-  ctaText?: string
-  ctaHref?: string
-}
+gsap.registerPlugin(ScrollTrigger)
+
+// ─── Unique IDs for SVG clip/mask elements ───────────────────────────────────
 
 /**
- * Premium radial gradient background composed of multiple layered gradients.
- * Creates a rich, deep atmospheric effect behind the hero content.
+ * Renders the cloud SVG <path> used as both the visible shape and clip mask.
  */
-const PremiumGradientBackground = () => {
+const cloudD = `
+  M 260 80
+  C 200 80 160 110 155 155
+  C 110 155 75 185 75 225
+  C 75 268 108 300 152 300
+  L 370 300
+  C 412 300 445 268 445 228
+  C 445 192 420 163 388 157
+  C 385 112 345 80 300 80
+  C 288 80 273 83 260 88
+  Z
+`
+
+/**
+ * HeroSection – Immersive cloud-masked hero with GSAP scroll-driven
+ * zoom reveal. On scroll the cloud zooms into the full-page image,
+ * a white gradient overlay fades in, then the Demo section slides in on top.
+ */
+export function HeroSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const stickyRef = useRef<HTMLDivElement>(null)
+  const cloudDecorRef = useRef<SVGSVGElement>(null)
+  const imageMaskRef = useRef<SVGSVGElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const textTopRef = useRef<HTMLDivElement>(null)
+  const textBottomRef = useRef<HTMLDivElement>(null)
+  const statsLeftRef = useRef<HTMLDivElement>(null)
+  const statsRightRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "+=250%",
+          scrub: 1.2,
+          pin: stickyRef.current,
+          pinSpacing: true,
+          anticipatePin: 1,
+        },
+      })
+
+      // Phase 1: text & stats fade away
+      tl.to(
+        [textTopRef.current, statsLeftRef.current, statsRightRef.current],
+        { opacity: 0, y: -50, ease: "power2.in", duration: 0.35 },
+        0
+      )
+      tl.to(
+        textBottomRef.current,
+        { opacity: 0, y: 60, ease: "power2.in", duration: 0.35 },
+        0
+      )
+
+      // Phase 2: cloud/image SVG zooms to fill viewport
+      tl.to(
+        imageMaskRef.current,
+        {
+          scale: 30,
+          transformOrigin: "50% 50%",
+          ease: "power2.inOut",
+          duration: 0.7,
+        },
+        0.15
+      )
+
+      // Decorative cloud outline fades out
+      tl.to(
+        cloudDecorRef.current,
+        { opacity: 0, ease: "power2.in", duration: 0.25 },
+        0.15
+      )
+
+      // Phase 3: white overlay fades in
+      tl.to(
+        overlayRef.current,
+        { opacity: 1, ease: "power1.in", duration: 0.3 },
+        0.7
+      )
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      {/* Base layer – deep dark wash */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,80,200,0.18),transparent)]" />
+    <section
+      ref={sectionRef}
+      className="relative w-full"
+      style={{ height: "300svh" }}
+    >
+      {/* ── Sticky viewport ── */}
+      <div
+        ref={stickyRef}
+        className="sticky top-0 w-full h-svh overflow-hidden bg-white"
+      >
+        {/* Subtle purple haze at top */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden="true"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 55% at 50% -5%, rgba(139,92,246,0.08) 0%, transparent 65%)",
+          }}
+        />
 
-      {/* Top-left accent – warm purple */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_600px_at_10%_20%,rgba(147,51,234,0.12),transparent)]" />
+        {/* ══════════════════════════════════════════════════
+            BACKGROUND IMAGE (revealed by scroll)
+        ══════════════════════════════════════════════════ */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none">
+          <img
+            src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1920&q=80&fit=crop"
+            alt="Hero background"
+            className="w-full h-full object-cover"
+          />
+        </div>
 
-      {/* Top-right accent – cool blue */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_85%_15%,rgba(59,130,246,0.10),transparent)]" />
+        {/* ══════════════════════════════════════════════════
+            CLOUD MASK (centre of viewport, zooms on scroll)
+        ══════════════════════════════════════════════════ */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Decorative outer glow rings – fade on scroll */}
+          <svg
+            ref={cloudDecorRef}
+            viewBox="0 0 480 340"
+            width="530"
+            height="375"
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute z-10"
+            style={{ overflow: "visible" }}
+            aria-hidden="true"
+          >
+            {/* Wide soft glow */}
+            <path d={cloudD} fill="none" stroke="rgba(139,92,246,0.18)" strokeWidth="40" strokeLinejoin="round" />
+            {/* Dashed accent */}
+            <path d={cloudD} fill="none" stroke="rgba(139,92,246,0.5)" strokeWidth="1.5" strokeDasharray="7 11" strokeLinejoin="round" />
+          </svg>
 
-      {/* Center highlight – soft lavender */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_50%_50%,rgba(167,139,250,0.06),transparent)]" />
+          {/* SVG mask that zooms to reveal the background image */}
+          <svg
+            ref={imageMaskRef}
+            viewBox="0 0 480 340"
+            width="480"
+            height="340"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ overflow: "visible", transformOrigin: "center" }}
+            aria-hidden="true"
+            className="z-10"
+          >
+            <defs>
+              <mask id="hole-mask">
+                {/* White background to make the mask opaque outside the cloud */}
+                <rect x="-4000" y="-4000" width="9000" height="9000" fill="white" />
+                {/* Black cloud to create a transparent hole */}
+                <path d={cloudD} fill="black" />
+              </mask>
+            </defs>
 
-      {/* Bottom fade – keeps footer transition clean */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_60%_at_50%_110%,rgba(120,80,200,0.08),transparent)]" />
+            {/* The white overlay that hides the image, with a hole in the middle */}
+            <rect
+              x="-4000"
+              y="-4000"
+              width="9000"
+              height="9000"
+              fill="white"
+              mask="url(#hole-mask)"
+            />
 
-      {/* Animated floating orbs for depth */}
-      <div className="absolute top-[10%] left-[15%] w-[400px] h-[400px] rounded-full bg-purple-500/[0.07] blur-[100px] animate-blob" />
-      <div className="absolute top-[20%] right-[15%] w-[350px] h-[350px] rounded-full bg-blue-500/[0.06] blur-[100px] animate-blob animation-delay-2000" />
-      <div className="absolute bottom-[20%] left-[35%] w-[300px] h-[300px] rounded-full bg-violet-400/[0.05] blur-[100px] animate-blob animation-delay-4000" />
+            {/* Inner rim highlights */}
+            <path
+              d={cloudD}
+              fill="none"
+              stroke="rgba(0,0,0,0.15)"
+              strokeWidth="8"
+            />
+            <path
+              d={cloudD}
+              fill="none"
+              stroke="rgba(255,255,255,0.9)"
+              strokeWidth="3"
+            />
+          </svg>
+        </div>
 
-      {/* Dark mode enhancements */}
-      <div className="absolute inset-0 dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,80,200,0.30),transparent)]" />
-      <div className="absolute inset-0 dark:bg-[radial-gradient(circle_600px_at_10%_20%,rgba(147,51,234,0.20),transparent)]" />
-      <div className="absolute inset-0 dark:bg-[radial-gradient(circle_500px_at_85%_15%,rgba(59,130,246,0.15),transparent)]" />
-    </div>
-  )
-}
+        {/* ══════════════════════════════════════════════════
+            WHITE OVERLAY (reveals on scroll end)
+        ══════════════════════════════════════════════════ */}
+        <div
+          ref={overlayRef}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            opacity: 0,
+            background:
+              "linear-gradient(to bottom, rgba(255,255,255,0.97) 0%, #ffffff 100%)",
+          }}
+          aria-hidden="true"
+        />
 
-/**
- * Scrolls smoothly to the features section when invoked.
- */
-const scrollToFeatures = (e: React.MouseEvent<HTMLAnchorElement>) => {
-  e.preventDefault()
-  const featuresEl = document.getElementById("features")
-  if (featuresEl) {
-    featuresEl.scrollIntoView({ behavior: "smooth" })
-  }
-}
-
-/**
- * HeroSection – main landing page hero with premium radial gradients,
- * side-by-side layout on md+ screens, dual CTA buttons, and a floating
- * image animation with a glowing backdrop.
- */
-const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
-  (
-    {
-      title = "Lets build your dream together",
-      subtitle = {
-        regular: "Achieve your career goals",
-        gradient: " with AI-powered tools",
-      },
-      description = "Land your next role with our AI-powered tools that help you create the perfect resume, ace your interviews and match the right job.",
-      ctaText = "Get Started",
-      ctaHref = "/auth/sign-up",
-    },
-  ) => {
-    return (
-      <section className="relative w-full min-h-[100svh] flex flex-col items-center justify-center overflow-hidden">
-        {/* Premium gradient background */}
-        <PremiumGradientBackground />
-
-        {/* Decorative top-edge line */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
-
-        {/* Main content container */}
-        <div className="relative z-10 max-w-screen-xl mx-auto px-4 py-16 md:py-20 md:px-8 w-full">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 lg:gap-16">
-
-            {/* ─── Text column ─── */}
-            <div className="flex-1 space-y-6 text-center md:text-left">
-              {/* Badge pill */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-purple-200/60 dark:border-purple-500/20 bg-white/60 dark:bg-white/5 backdrop-blur-sm px-4 py-1.5 text-xs font-medium text-purple-700 dark:text-purple-300 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5" />
-                AI-Powered Career Platform
-              </div>
-
-              {/* Headline */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl tracking-tighter font-geist leading-[1.1] bg-clip-text text-transparent bg-[linear-gradient(180deg,_#000_0%,_rgba(0,_0,_0,_0.75)_100%)] dark:bg-[linear-gradient(180deg,_#FFF_0%,_rgba(255,_255,_255,_0.00)_202.08%)]">
-                {subtitle.regular}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-300 dark:to-orange-200">
-                  {subtitle.gradient}
-                </span>
-              </h1>
-
-              {/* Description */}
-              <p className="max-w-lg text-base md:text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                {description}
-              </p>
-
-              {/* CTA buttons */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start pt-2">
-                {/* Primary – Get Started */}
-                <span className="relative inline-block overflow-hidden rounded-full p-[1.5px]">
-                  <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-                  <div className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-white dark:bg-gray-950 text-sm font-medium backdrop-blur-3xl">
-                    <Link
-                      href={ctaHref}
-                      className="inline-flex rounded-full text-center group items-center w-full justify-center bg-gradient-to-tr from-zinc-300/20 via-purple-400/30 to-transparent dark:from-zinc-300/5 dark:via-purple-400/20 text-gray-900 dark:text-white border-input border hover:bg-gradient-to-tr hover:from-zinc-300/30 hover:via-purple-400/40 hover:to-transparent dark:hover:from-zinc-300/10 dark:hover:via-purple-400/30 transition-all py-3 px-8"
-                    >
-                      {ctaText}
-                      <ChevronRight className="ml-1.5 w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                    </Link>
-                  </div>
-                </span>
-
-                {/* Secondary – Learn More */}
-                <a
-                  href="#features"
-                  onClick={scrollToFeatures}
-                  className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-200/80 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-white/10 hover:border-purple-300/60 dark:hover:border-purple-500/30 transition-all duration-300"
-                >
-                  Learn More
-                  <ChevronRight className="w-4 h-4" />
-                </a>
-              </div>
-
-
+        {/* ══════════════════════════════════════════════════
+            TEXT CONTENT WRAPPER
+        ══════════════════════════════════════════════════ */}
+        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-20 pb-8 md:pb-12 pt-20 md:pt-28">
+          {/* TEXT – TOP (badge + headline) */}
+          <div
+            ref={textTopRef}
+            className="flex flex-col items-center px-4 text-center pointer-events-auto"
+          >
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50/80 backdrop-blur-sm px-4 py-1.5 text-xs font-semibold text-violet-700 shadow-sm mb-6 md:mb-7">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI-Powered Career Platform
             </div>
 
-            {/* ─── Image column ─── */}
-            <div className="flex-1 flex items-center justify-center relative">
-              {/* Glowing backdrop behind the image – gives the "pop" look */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-                <div className="w-[80%] h-[70%] rounded-full bg-gradient-to-br from-purple-500/25 via-pink-400/15 to-blue-500/20 dark:from-purple-500/30 dark:via-pink-400/20 dark:to-blue-500/25 blur-[80px]" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-                <div className="w-[60%] h-[50%] rounded-full bg-gradient-to-tr from-violet-400/20 to-fuchsia-300/15 dark:from-violet-400/25 dark:to-fuchsia-300/20 blur-[60px]" />
-              </div>
+            {/* Headline */}
+            <h1
+              className="text-4xl md:text-6xl lg:text-[5.5rem] font-bold tracking-tight leading-[1.04] max-w-3xl"
+              style={{
+                background:
+                  "linear-gradient(180deg, #0f0f0f 0%, rgba(15,15,15,0.6) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Achieve your career{" "}
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                goals
+              </span>
+            </h1>
+          </div>
 
-              {/* Floating image */}
-              <Image
-                src="/bobby.png"
-                alt="AI Career Assistant"
-                width={520}
-                height={390}
-                className="relative z-10 animate-hero-float drop-shadow-2xl"
-                priority
-              />
+          {/* TEXT – BOTTOM (CTAs + description) */}
+          <div
+            ref={textBottomRef}
+            className="flex flex-col items-center px-4 text-center pointer-events-auto"
+          >
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 md:mb-8">
+              <span className="relative inline-block overflow-hidden rounded-full p-[1.5px]">
+                <span className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#7c3aed_50%,#E2CBFF_100%)]" />
+                <div className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-white text-sm font-semibold backdrop-blur-3xl">
+                  <Link
+                    href="/auth/sign-up"
+                    id="hero-cta-primary"
+                    className="inline-flex rounded-full items-center gap-2 bg-gradient-to-tr from-violet-50 via-purple-100/60 to-transparent text-gray-900 border border-violet-200/60 hover:bg-violet-100/80 transition-all py-3 px-8 group"
+                  >
+                    Get Started Free
+                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                </div>
+              </span>
+
+              <a
+                href="#features"
+                id="hero-cta-secondary"
+                onClick={(e) => {
+                  e.preventDefault()
+                  document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })
+                }}
+                className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-medium text-gray-600 border border-gray-200 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-violet-200 hover:text-violet-700 transition-all duration-300"
+              >
+                Watch Demo
+                <ChevronRight className="w-4 h-4" />
+              </a>
             </div>
+
+            <p className="text-base md:text-lg text-gray-600 max-w-md leading-relaxed font-medium">
+              Land your next role with AI tools that craft the perfect resume, coach
+              you through interviews, and surface the right opportunities.
+            </p>
           </div>
         </div>
 
-        {/* Bottom decorative gradient fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
-      </section>
-    )
-  },
-)
-HeroSection.displayName = "HeroSection"
+        {/* ══════════════════════════════════════════════════
+            FLOATING STAT PILLS
+        ══════════════════════════════════════════════════ */}
+        <div
+          ref={statsLeftRef}
+          className="absolute left-[5%] top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 z-20"
+          aria-label="Platform statistics"
+        >
+          {[
+            { value: "98%", label: "Interview success" },
+            { value: "3.2×", label: "Faster placement" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-white/90 backdrop-blur-md border border-violet-100 shadow-lg rounded-2xl px-5 py-4 text-center"
+            >
+              <div className="text-2xl font-bold text-violet-700">{stat.value}</div>
+              <div className="text-[11px] text-gray-500 mt-0.5 whitespace-nowrap">{stat.label}</div>
+            </div>
+          ))}
+        </div>
 
-export { HeroSection }
+        <div
+          ref={statsRightRef}
+          className="absolute right-[5%] top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 z-20"
+          aria-label="Platform statistics"
+        >
+          {[
+            { value: "50k+", label: "Careers launched" },
+            { value: "4.9★", label: "User rating" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-white/90 backdrop-blur-md border border-violet-100 shadow-lg rounded-2xl px-5 py-4 text-center"
+            >
+              <div className="text-2xl font-bold text-violet-700">{stat.value}</div>
+              <div className="text-[11px] text-gray-500 mt-0.5 whitespace-nowrap">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default HeroSection

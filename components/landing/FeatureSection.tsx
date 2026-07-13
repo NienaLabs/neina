@@ -23,6 +23,31 @@ interface FeatureSectionProps {
   reversed?: boolean
 }
 
+const cloudD = `
+  M 320 40
+  C 400 40 470 80 500 130
+  C 580 140 620 200 610 270
+  C 610 350 550 420 470 440
+  C 440 500 350 520 260 480
+  C 200 510 100 480 80 410
+  C 30 380 20 310 40 250
+  C 10 170 60 110 140 100
+  C 180 50 250 30 320 40
+  Z
+`;
+
+const cloudSvgEncoded = encodeURIComponent(`<svg viewBox="0 0 640 540" xmlns="http://www.w3.org/2000/svg"><path d="${cloudD}" fill="black"/></svg>`);
+const maskStyle = {
+  WebkitMaskImage: `url("data:image/svg+xml;utf8,${cloudSvgEncoded}")`,
+  WebkitMaskSize: 'contain',
+  WebkitMaskRepeat: 'no-repeat',
+  WebkitMaskPosition: 'center',
+  maskImage: `url("data:image/svg+xml;utf8,${cloudSvgEncoded}")`,
+  maskSize: 'contain',
+  maskRepeat: 'no-repeat',
+  maskPosition: 'center',
+};
+
 const FeatureSection = ({
   featureName,
   catchPhrase,
@@ -53,28 +78,34 @@ const FeatureSection = ({
         {/* Content Grid */}
         <div className={`grid grid-cols-1 md:grid-cols-2  gap-0 md:gap-12 items-center ${reversed ? 'md:flex md:flex-row-reverse justify-around' : ''}`}>
           {/* Media */}
-          <div className={cn(
-            "relative place-self-center flex items-center overflow-hidden",
-            media.type === 'image' 
-              ? "w-full max-w-[500px] aspect-[1216/880] rounded-xl shadow-2xl" 
-              : "h-[400px] w-[300px]"
-          )}>
-            {media.type === 'image' ? (
-                <Image
+          <div className="relative place-self-center flex items-center justify-center w-full max-w-[500px] aspect-[640/540] drop-shadow-2xl">
+            <div 
+              className="absolute inset-0 w-full h-full"
+              style={maskStyle}
+            >
+              {media.type === 'image' ? (
+                  <Image
+                    src={media.src}
+                    alt={media.alt || featureName}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+              ) : (
+                <video
                   src={media.src}
-                  alt={media.alt || featureName}
-                  fill
-                  unoptimized={featureName==="Job Search"}
+                  autoPlay
+                  loop
+                  muted
+                  className="w-full h-full object-cover"
                 />
-            ) : (
-              <video
-                src={media.src}
-                autoPlay
-                loop
-                muted
-                className="w-full rounded-xl border border-white/10 shadow-2xl"
-              />
-            )}
+              )}
+            </div>
+            
+            {/* Optional decorative SVG stroke overlay */}
+            <svg viewBox="0 0 640 540" className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-xl" aria-hidden="true">
+              <path d={cloudD} fill="none" stroke="rgba(139,92,246,0.5)" strokeWidth="4" />
+            </svg>
           </div>
 
           {/* Features & CTA */}

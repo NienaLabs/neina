@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function Page() {
   let session = null;
   try {
-     session = await auth.api.getSession({ headers: await headers() });
+    session = await auth.api.getSession({ headers: await headers() });
   } catch (error) {
     console.error("Failed to retrieve session:", error);
     // Continue as if not logged in
@@ -47,7 +47,7 @@ export default async function Page() {
                 "@type": "Organization",
                 "name": "Niena Labs",
                 "url": "https://app.nienalabs.com",
-                "logo": "https://app.nienalabs.com/logo-black.svg",
+                "logo": "https://app.nienalabs.com/niena-logo.png",
                 "sameAs": [
                   "https://twitter.com/nienalabs"
                 ]
